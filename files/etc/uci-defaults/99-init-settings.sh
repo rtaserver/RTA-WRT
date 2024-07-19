@@ -94,34 +94,6 @@ echo "Setup custom Repo By kiddin9"
 sed -i 's/option check_signature/# option check_signature/g' /etc/opkg.conf
 echo "src/gz custom_arch https://dl.openwrt.ai/latest/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
 
-# setting firewall for samba4
-echo "Setup SAMBA4 firewall"
-uci -q delete firewall.samba_nsds_nt
-uci set firewall.samba_nsds_nt="rule"
-uci set firewall.samba_nsds_nt.name="NoTrack-Samba/NS/DS"
-uci set firewall.samba_nsds_nt.src="lan"
-uci set firewall.samba_nsds_nt.dest="lan"
-uci set firewall.samba_nsds_nt.dest_port="137-138"
-uci set firewall.samba_nsds_nt.proto="udp"
-uci set firewall.samba_nsds_nt.target="NOTRACK"
-uci -q delete firewall.samba_ss_nt
-uci set firewall.samba_ss_nt="rule"
-uci set firewall.samba_ss_nt.name="NoTrack-Samba/SS"
-uci set firewall.samba_ss_nt.src="lan"
-uci set firewall.samba_ss_nt.dest="lan"
-uci set firewall.samba_ss_nt.dest_port="139"
-uci set firewall.samba_ss_nt.proto="tcp"
-uci set firewall.samba_ss_nt.target="NOTRACK"
-uci -q delete firewall.samba_smb_nt
-uci set firewall.samba_smb_nt="rule"
-uci set firewall.samba_smb_nt.name="NoTrack-Samba/SMB"
-uci set firewall.samba_smb_nt.src="lan"
-uci set firewall.samba_smb_nt.dest="lan"
-uci set firewall.samba_smb_nt.dest_port="445"
-uci set firewall.samba_smb_nt.proto="tcp"
-uci set firewall.samba_smb_nt.target="NOTRACK"
-uci commit firewall
-
 # set argon as default theme
 echo "Setup Default Theme"
 uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
@@ -155,9 +127,6 @@ chmod +x /etc/init.d/vnstat_backup
 bash /etc/init.d/vnstat_backup enable
 
 # adjusting app catagory
-sed -i 's/services/nas/g' /usr/lib/lua/luci/controller/aria2.lua 2>/dev/null || sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-aria2.json
-sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-samba4.json
-sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-hd-idle.json
 sed -i 's/services/modem/g' /usr/share/luci/menu.d/luci-app-lite-watchdog.json
 
 # setup misc settings
@@ -171,7 +140,6 @@ chmod +x /usr/bin/neofetch
 chmod +x /usr/bin/clock
 chmod +x /usr/bin/mount_hdd
 chmod +x /usr/bin/openclash.sh
-chmod +x /usr/bin/cek_sms.sh
 
 # configurating openclash
 if opkg list-installed | grep luci-app-openclash > /dev/null; then
@@ -208,10 +176,6 @@ fi
 if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
   echo -e "\ndtparam=i2c1=on\ndtparam=spi=on\ndtparam=i2s=on" >> /boot/config.txt
 fi
-
-# enable adguardhome
-chmod +x /usr/bin/adguardhome
-#bash /usr/bin/adguardhome enable_agh
 
 echo "All first boot setup complete!"
 

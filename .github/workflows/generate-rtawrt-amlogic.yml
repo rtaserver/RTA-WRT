@@ -10,7 +10,7 @@
 #
 #=====================================================================================
 
-name: Generate friWrt Amlogic Firmware
+name: Generate RTA-WRT Amlogic Firmware
 
 on:
   workflow_dispatch:
@@ -21,10 +21,8 @@ on:
         default: "openwrt:23.05.3"
         type: choice
         options:
-          - openwrt:21.02.7
           - openwrt:23.05.2
           - openwrt:23.05.3
-          - immortalwrt:21.02.7
           - immortalwrt:23.05.1
           - immortalwrt:23.05.2
       target:
@@ -316,7 +314,7 @@ jobs:
           auto_kernel: ${{ inputs.auto_kernel }}
           kernel_repo: ${{ inputs.kernel_repo }}
           kernel_usage: ${{ inputs.kernel_usage }}
-          builder_name: friWrt
+          builder_name: RTA-WRT
 
       - name: Prepare file before upload
         if: ${{ env.PACKAGED_STATUS }} == 'success' && !cancelled()
@@ -325,28 +323,11 @@ jobs:
           cd $WORKING_DIR
           for file in compiled_images/*rootfs.tar.gz; do mv "$file" ${{ env.PACKAGED_OUTPUTPATH }}; done
           cd ${{ env.PACKAGED_OUTPUTPATH }}
-          for file in *.img.gz; do mv "$file" fri_$(basename "$file" .img.gz)$( echo "_$TUNNEL" )$([ "$REVISION_TAG" == "true" ] && echo _rev).img.gz; done
-          for file in *rootfs.tar.gz; do mv "$file" fri_$(basename "$file" .tar.gz)$( echo "_$TUNNEL" )$([ "$REVISION_TAG" == "true" ] && echo _rev).tar.gz; done
-          if wget -q https://github.com/frizkyiman/friWrt-MyWrtBuilder/releases/download/amlogic-${{ env.openwrt_board }}-${{ env.BASE }}-${{ env.BRANCH }}-${{ env.DATEMONTH }}/sha256sums; then
-             rm -r *.sha && sha256sum *.gz >> sha256sums
-          else
-             rm -r *.sha && sha256sum *.gz > sha256sums
-          fi
+          for file in *.img.gz; do mv "$file" RTA-WRT_$(basename "$file" .img.gz)$( echo "_$TUNNEL" )$([ "$REVISION_TAG" == "true" ] && echo _rev).img.gz; done
+          for file in *rootfs.tar.gz; do mv "$file" RTA-WRT_$(basename "$file" .tar.gz)$( echo "_$TUNNEL" )$([ "$REVISION_TAG" == "true" ] && echo _rev).tar.gz; done
+          rm -r *.sha && sha256sum *.gz > sha256sums
           ls -l
           echo "status=success" >> $GITHUB_OUTPUT
-
-      - name: Add changelog info and set tag name to new release
-        if: ${{ env.PACKAGED_STATUS }} == 'success' && !cancelled()
-        id: changelog
-        shell: bash
-        run: |
-          cd $WORKING_DIR
-          echo "RELEASE_TAG=amlogic-${{ env.openwrt_board }}-$BASE-$BRANCH-$DATEMONTH$([ "$REVISION_TAG" == "true" ] && echo -rev)" >> $GITHUB_ENV
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' changelog_amlogic.md)
-          r="${r//'%'/'%25'}"
-          r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"  
-          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
 
       - name: Upload Firmware to Release
         uses: svenstaro/upload-release-action@v2
@@ -356,23 +337,18 @@ jobs:
           file_glob: true
           file: ${{ env.PACKAGED_OUTPUTPATH }}/*
           asset_name: ${{ github.event.repository.name }}-${{ github.sha }}
-          tag: ${{ env.RELEASE_TAG }}
-          release_name: ${{ env.RELEASE_TAG }}
+          tag: amlogic
+          release_name: "RTA-WRT Amlogic Update : $DATEMONTH"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
           body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/frizkyiman/friWrt-MyWrtBuilder/${{ env.RELEASE_TAG }}/total?style=for-the-badge&logo=Openwrt)
-            ### friWrt ${{ env.BASE }}-${{ env.BRANCH }} Image information
+            ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
             Build date: ${{ env.DATETIME }}
             
-            ${{ steps.changelog.outputs.CHANGELOG }}
-            
-            See [here](https://github.com/frizkyiman/friWrt-MyWrtBuilder?tab=readme-ov-file#firmware-details) for more detail feature and other information.
             - Default IP: 192.168.1.1
             - Default username: root
-            - Default password: friwrt
-            - Default WIFI name: friWrt_2g | friWrt_5g (if device supported)
-            - Default WIFI password: friwrt2024 (if device supported)
+            - Default password: RTAWRT
+            - Default WIFI name: RTA-WRT_2g | RTA-WRT_5g (if device supported)
             
             ### Install to EMMC
             - Login to OpenWrt → System → Amlogic Service → Install OpenWrt

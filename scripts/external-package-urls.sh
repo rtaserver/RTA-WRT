@@ -64,7 +64,6 @@ if [ "$TYPE" == "AMLOGIC" ]; then
 fi
 
 files2+=(
-    "luci-app-adguardhome|https://api.github.com/repos/kongfl888/luci-app-adguardhome/releases/latest"
     "luci-app-sms-tool-js|https://api.github.com/repos/4IceG/luci-app-sms-tool-js/releases/latest"
     "luci-app-modemband|https://api.github.com/repos/4IceG/luci-app-modemband/releases/latest"
     "modemband|https://api.github.com/repos/4IceG/luci-app-modemband/releases/latest"

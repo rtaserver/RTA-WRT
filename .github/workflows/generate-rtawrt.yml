@@ -257,7 +257,7 @@ jobs:
         if: github.event.inputs.upload-artifacts == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ $DATEMONTH }}
+          name: "$DATEMONTH"
           path: ${{ env.WORKING_DIR }}/compiled_images//*
 
           
@@ -269,8 +269,8 @@ jobs:
           file_glob: true
           file: ${{ env.WORKING_DIR }}/compiled_images//*
           asset_name: ${{ github.event.repository.name }}-${{ github.sha }}
-          tag: "Amlogic_${{ $DATEMONTH }}"
-          release_name: "RTA-WRT Update : ${{ $DATEMONTH }}"
+          tag: "Amlogic_$DATEMONTH"
+          release_name: "RTA-WRT Update : $DATEMONTH"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
           body: |

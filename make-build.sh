@@ -110,8 +110,5 @@ fi
 # Custom Files
 FILES="files"
 
-# Disable service
-DISABLED_SERVICES="AdGuardHome"
-
 # Start build firmware
 make image PROFILE="$1" PACKAGES="$PACKAGES $EXCLUDED" FILES="$FILES" DISABLED_SERVICES="$DISABLED_SERVICES"
