@@ -1,0 +1,13 @@
+config watchdog
+	option iface 'wan'
+	option restartcmd 'AT^RESET'
+	option dest '8.8.8.8'
+	option delay '60'
+	option period '1'
+	option period_count '2'
+	option enabled '0'
+	option action 'wan'
+	option log 'all'
+	option modemrestart '1'
+	option set_port '/dev/ttyUSB0'
+	option ledstatus '0'

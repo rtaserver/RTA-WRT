@@ -1,0 +1,30 @@
+AT Check;AT
+Modem Info;ATI
+Debug Info;ATI^DEBUG?
+Restart Modem;AT^RESET
+Airplane Mode On;AT+CFUN=4
+Airplane Mode Off;AT+CFUN=1
+Check IMSI SIM;AT+CIMI
+Check IMEI;AT+GSN
+Enable Carrier Aggregation;AT^CA_ENABLE=0
+Disable Carrier Aggregation;AT^CA_ENABLE=1
+Check band Carrier Aggregation;AT^CA_INFO?
+Check signal band neighbour;AT+VZWRSRP?
+Check signal strength;AT+CSQ;AT+CSQ
+Get the temperature of MT;AT+QTEMP;AT+QTEMP
+Set WCDMA only;AT^SLMODE=1,14
+Set 4G-LTE only;AT^SLMODE=1,30
+Set WCDMA & LTE;AT^SLMODE=1,35
+Check USB mode USB 2.0/USB 3.0;AT^USBTYPE
+Check modem CAT;AT^GETLTECAT?
+Disable GPS;AT+GPS=0
+Volt Check;AT+VOLT?
+Temp Check;AT^TEMP?
+Check Lock Band;AT^SLBAND?
+Reset Lock Band;AT^SLBAND
+Lock Band B1;AT^SLBAND=LTE,2,1
+Lock Band B3;AT^SLBAND=LTE,2,3
+Lock Band B8;AT^SLBAND=LTE,2,8
+Lock Band B40;AT^SLBAND=LTE,2,40
+Lock Band B1 & B3;AT^SLBAND=LTE,2,1,3
+Lock Band B1, B3 & B40;AT^SLBAND=LTE,2,1,3,40

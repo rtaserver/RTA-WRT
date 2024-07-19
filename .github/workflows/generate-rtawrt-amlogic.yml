@@ -1,0 +1,378 @@
+#=====================================================================================
+#
+# Description:   Build OpenWrt with Image Builder
+# This file is a part of the make OpenWrt for Amlogic s9xxx tv box
+# https://github.com/ophub/amlogic-s9xxx-openwrt
+#
+# Documentation: https://openwrt.org/docs/guide-user/additional-software/imagebuilder
+# Download from: https://downloads.openwrt.org/releases
+#                https://downloads.immortalwrt.org/releases
+#
+#=====================================================================================
+
+name: Generate friWrt Amlogic Firmware
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_branch:
+        description: "Select the release branch:"
+        required: true
+        default: "openwrt:23.05.3"
+        type: choice
+        options:
+          - openwrt:21.02.7
+          - openwrt:23.05.2
+          - openwrt:23.05.3
+          - immortalwrt:21.02.7
+          - immortalwrt:23.05.1
+          - immortalwrt:23.05.2
+      target:
+        description: "Select device board"
+        required: false
+        default: "hg680p"
+        type: choice
+        options:
+          - all
+          - hg680p
+          - b860h
+          - nanopi-r5s
+      openwrt_kernel:
+        description: "Select kernel version"
+        required: false
+        default: "5.15.1_6.1.1"
+        type: choice
+        options:
+          - 5.4.1_5.10.1
+          - 5.15.1_6.1.1
+          - 5.4.1
+          - 5.10.1
+          - 5.15.1
+          - 6.1.1
+      auto_kernel:
+        description: "Auto use the latest kernel"
+        required: false
+        default: true
+        type: boolean
+      kernel_repo:
+        description: "Set the kernel repository"
+        required: false
+        default: "ophub/kernel"
+        type: choice
+        options:
+          - ophub/kernel
+      kernel_usage:
+        description: "Set the tags of the stable kernel."
+        required: false
+        default: "stable"
+        type: choice
+        options:
+          - stable
+          - flippy
+          - dev
+          - beta
+      tunnel:
+        description: "Select VPN Client app (!neko and passwall only support for newer branch with fw4 firewall!):"
+        required: true
+        default: "openclash"
+        type: choice
+        options:
+          - all
+          - openclash
+          - neko
+          - passwall
+          - neko-openclash
+          - openclash-passwall
+          - neko-passwall
+          - openclash-passwall-neko
+          - no-tunnel
+      clean:
+        description: "Do 'make clean' for each run"
+        required: false
+        default: "true"
+        type: boolean
+      upload-prerelease:
+        description: "Upload as pre-release"
+        required: false
+        default: "false"
+        type: boolean
+      revision-tag:
+        description: "Revision img tag"
+        required: false
+        default: "false"
+        type: boolean
+
+env:
+  TYPE: AMLOGIC
+  TARGET: ${{ inputs.target }}
+  RELEASE_BRANCH: ${{ inputs.release_branch }}
+  TUNNEL: ${{ inputs.tunnel }}
+  CLEAN: ${{ inputs.clean }}
+  TZ: Asia/Jakarta
+  PRE_RELEASE: ${{ inputs.upload-prerelease }}
+  REVISION_TAG: ${{ inputs.revision-tag }}
+
+jobs:
+  Generate:
+    name: amlogic-${{ inputs.target }}-${{ inputs.release_branch }}-${{ inputs.tunnel }}
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checking Tunnel Option
+        id: tunnelopt
+        run: |
+          if [[ ("$TUNNEL" == "neko" || "$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "neko-passwall" || "$TUNNEL" == "neko-openclash" || "$TUNNEL" == "openclash-passwall-neko") && "${RELEASE_BRANCH#*:}" == "21.02.7" ]]; then
+            echo "Cannot continue the process because the selected tunnel [$TUNNEL]"
+            echo "only support for newer branch with fw4 firewall!"
+            exit 1
+          else
+            echo "Selected tunnel option: [$TUNNEL]"
+            echo "status=success" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Initialization environment (normal)
+        if: github.event.inputs.target != 'all' && steps.tunnelopt.outputs.status == 'success' && !cancelled()
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs
+          sudo timedatectl set-timezone "$TZ"
+          
+      - name: Initialization environment (deep)
+        id: init
+        if: github.event.inputs.target == 'all' && steps.tunnelopt.outputs.status == 'success' && !cancelled()
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          docker rmi $(docker images -q) 2>/dev/null
+          [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
+          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
+          sudo swapoff -a
+          sudo rm -f /swapfile /mnt/swapfile
+          sudo -E apt-get -y update
+          sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+          sudo -E apt-get -y install $(curl -fsSL https://is.gd/depend_ubuntu2204_openwrt)
+          sudo -E systemctl daemon-reload
+          #sudo -E apt-get -y full-upgrade
+          sudo -E apt-get -y autoremove --purge
+          sudo -E apt-get clean
+          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
+          sudo rm -rf ~/{.cargo,.dotnet,.rustup}
+          sudo timedatectl set-timezone "${TZ}"
+          echo "status=success" >> ${GITHUB_OUTPUT}
+
+      - name: Create simulated physical disk
+        if: github.event.inputs.target == 'all'
+        run: |
+          mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
+          root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
+          sudo truncate -s "${mnt_size}"G /mnt/mnt.img
+          sudo truncate -s "${root_size}"G /root.img
+          sudo losetup /dev/loop6 /mnt/mnt.img
+          sudo losetup /dev/loop7 /root.img
+          sudo pvcreate /dev/loop6
+          sudo pvcreate /dev/loop7
+          sudo vgcreate github /dev/loop6 /dev/loop7
+          sudo lvcreate -n runner -l 100%FREE github
+          sudo mkfs.xfs /dev/github/runner
+          sudo mkdir -p /builder
+          sudo mount /dev/github/runner /builder
+          sudo chown -R runner.runner /builder
+          df -Th
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: 
+          path: origin
+
+      - name: Setup Environment Variables
+        run: |
+          if [ "$TARGET" == "all" ]; then
+            echo "openwrt_board=all" >> $GITHUB_ENV
+          elif [ "$TARGET" == "hg680p" ] || [ "$TARGET" == "b860h" ]; then
+            echo "openwrt_board=s905x" >> $GITHUB_ENV
+          elif [ "$TARGET" == "nanopi-r5s" ]; then
+            echo "openwrt_board=rk3568" >> $GITHUB_ENV
+          fi
+          if [ "$(echo "${RELEASE_BRANCH#*:}" | cut -d'.' -f1)" == "23" ]; then
+            echo "PROFILE=generic" >> $GITHUB_ENV
+            echo "TARGET_SYSTEM=armsr/armv8" >> $GITHUB_ENV
+            echo "TARGET_NAME=armsr-armv8" >> $GITHUB_ENV
+            TARGET_NAME="armsr-armv8"
+            echo "ARCH_1=arm64" >> $GITHUB_ENV
+            echo "ARCH_2=aarch64" >> $GITHUB_ENV
+            echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
+          else
+            echo "PROFILE=Default" >> $GITHUB_ENV
+            echo "TARGET_SYSTEM=armvirt/64" >> $GITHUB_ENV
+            echo "TARGET_NAME=armvirt-64" >> $GITHUB_ENV
+            TARGET_NAME="armvirt-64"
+            echo "ARCH_1=arm64" >> $GITHUB_ENV
+            echo "ARCH_2=aarch64" >> $GITHUB_ENV
+            echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
+          fi
+          echo "WORKING_DIR="${RELEASE_BRANCH%:*}"-imagebuilder-"$TARGET_NAME".Linux-x86_64" >> $GITHUB_ENV
+          echo "DOWNLOAD_BASE=https://downloads."${RELEASE_BRANCH%:*}".org" >> $GITHUB_ENV
+          echo "BASE=${RELEASE_BRANCH%:*}" >> $GITHUB_ENV
+          echo "BRANCH=${RELEASE_BRANCH#*:}" >> $GITHUB_ENV
+          echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+          echo "DATETIME=$(date +'%Y.%m.%d-%H:%M:%S')" >> $GITHUB_ENV
+          echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
+
+      - name: Download Image Builder
+        id: download
+        run: |
+          RELEASE="$DOWNLOAD_BASE/releases/$BRANCH/targets/$TARGET_SYSTEM/$BASE-imagebuilder-$BRANCH-$TARGET_NAME.Linux-x86_64.tar.xz"
+          wget -nv "$RELEASE"
+          tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz && mv *-imagebuilder-* $WORKING_DIR && sync
+          cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
+          if [ "$TARGET" == "all" ]; then
+             mkdir -p /builder/$WORKING_DIR
+             ln -sf /builder/$WORKING_DIR $GITHUB_WORKSPACE/$WORKING_DIR
+             ln -sf /builder/$WORKING_DIR /home/runner/work/_actions/ophub/amlogic-s9xxx-openwrt/main/openwrt
+          fi
+          echo "status=success" >> $GITHUB_OUTPUT
+      
+      - name: Download External Packages
+        id: packages
+        if: steps.download.outputs.status == 'success' && !cancelled()
+        run: |
+          cd $WORKING_DIR
+          bash scripts/external-package-urls.sh
+          echo "status=success" >> $GITHUB_OUTPUT
+         
+      - name: Run Patch and DIY Scripts
+        id: scripts
+        if: steps.packages.outputs.status == 'success' && !cancelled()
+        run: |
+          cd $WORKING_DIR
+          bash scripts/builder-patch.sh
+          bash scripts/agh-core.sh
+          bash scripts/misc.sh
+          if [[ "$TUNNEL" == "all" && "$BRANCH" != "21.02.7" ]]; then 
+              echo "VPN Client: $TUNNEL"
+              bash scripts/tunnel_app.sh openclash-passwall-neko
+          elif [[ ("$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "neko-passwall" || "$TUNNEL" == "neko-openclash" || "$TUNNEL" == "openclash-passwall-neko") && "$BRANCH" != "21.02.7" || "$TUNNEL" == "openclash" || "$TUNNEL" == "neko" ]]; then
+              echo "VPN Client: $TUNNEL"
+              bash scripts/tunnel_app.sh "$TUNNEL"
+          elif [[ "$TUNNEL" == "all" && "$BRANCH" = "21.02.7" ]]; then 
+              echo "VPN Client: $TUNNEL"
+              bash scripts/tunnel_app.sh openclash
+          else
+              echo "No VPN Client selected"
+          fi
+          if [ "$TUNNEL" = "openclash" ] || [ "$TUNNEL" = "openclash-passwall" ]; then bash scripts/clash-core.sh; fi
+          if [ "$TUNNEL" = "neko" ] || [ "$TUNNEL" = "neko-passwall" ]; then bash scripts/neko_core.sh; fi
+          if [ "$TUNNEL" = "openclash-passwall-neko" ] || [ "$TUNNEL" == "neko-openclash" ] || [ "$TUNNEL" = "all" ]; then bash scripts/clash-core.sh; bash scripts/neko_core.sh; fi
+          echo "Total custom packages: $(find packages -type f -name "*.ipk" | wc -l)"
+          ls packages
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo -e "Server space usage before starting to compile: \n$(df -hT ${PWD}) \n"
+
+      - name: Build Rootfs ${{ inputs.release_branch }}
+        id: compile
+        if: steps.scripts.outputs.status == 'success' && !cancelled()
+        run: |
+          cd $WORKING_DIR
+          mkdir -p compiled_images
+          if [[ "$TUNNEL" == "all" && "$BRANCH" != "21.02.7" ]]; then
+            for t in openclash-passwall neko-passwall neko-openclash openclash-passwall-neko openclash passwall neko no-tunnel; do
+              echo "Compiling with VPN Client: $t"
+              if [ "$CLEAN" == "true" ]; echo "Start 'make clean' before building images."; then make clean; fi
+              time bash make-build.sh $PROFILE $t
+              for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do mv "$file" compiled_images; done
+            done
+          elif [[ "$TUNNEL" == "all" && "$BRANCH" = "21.02.7" ]]; then
+            for t in openclash no-tunnel; do
+              echo "Compiling with VPN Client: $t"
+              if [ "$CLEAN" == "true" ]; echo "Start 'make clean' before building images."; then make clean; fi
+              time bash make-build.sh $PROFILE $t
+              for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do mv "$file" compiled_images; done
+            done
+          elif [[ ("$TUNNEL" == "neko" || "$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "neko-passwall" || "$TUNNEL" == "neko-openclash" || "$TUNNEL" == "openclash-passwall-neko") && "$BRANCH" != "21.02.7" || "$TUNNEL" == "openclash" || "$TUNNEL" == "no-tunnel" ]]; then
+            echo "Compiling with VPN Client: $TUNNEL"
+            bash make-build.sh $PROFILE $TUNNEL
+            for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do mv "$file" compiled_images; done
+          fi
+          ls -l compiled_images
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo -e "Server space usage after compilation: \n$(df -hT ${PWD}) \n"
+
+      - name: Clear server space
+        if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
+        run: |
+          cd $WORKING_DIR
+          rm -rf $(ls . | grep -vE "^compiled_images$|^changelog_amlogic.md$" | xargs) 2>/dev/null
+          df -hT ${PWD}
+
+      - name: Packaging ${{ inputs.release_branch }}
+        if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
+        uses: ophub/amlogic-s9xxx-openwrt@main
+        with:
+          openwrt_path: $WORKING_DIR/compiled_images/*rootfs.tar.gz
+          openwrt_board: ${{ env.openwrt_board }}
+          openwrt_kernel: ${{ inputs.openwrt_kernel }}
+          auto_kernel: ${{ inputs.auto_kernel }}
+          kernel_repo: ${{ inputs.kernel_repo }}
+          kernel_usage: ${{ inputs.kernel_usage }}
+          builder_name: friWrt
+
+      - name: Prepare file before upload
+        if: ${{ env.PACKAGED_STATUS }} == 'success' && !cancelled()
+        id: prep_upload
+        run: |
+          cd $WORKING_DIR
+          for file in compiled_images/*rootfs.tar.gz; do mv "$file" ${{ env.PACKAGED_OUTPUTPATH }}; done
+          cd ${{ env.PACKAGED_OUTPUTPATH }}
+          for file in *.img.gz; do mv "$file" fri_$(basename "$file" .img.gz)$( echo "_$TUNNEL" )$([ "$REVISION_TAG" == "true" ] && echo _rev).img.gz; done
+          for file in *rootfs.tar.gz; do mv "$file" fri_$(basename "$file" .tar.gz)$( echo "_$TUNNEL" )$([ "$REVISION_TAG" == "true" ] && echo _rev).tar.gz; done
+          if wget -q https://github.com/frizkyiman/friWrt-MyWrtBuilder/releases/download/amlogic-${{ env.openwrt_board }}-${{ env.BASE }}-${{ env.BRANCH }}-${{ env.DATEMONTH }}/sha256sums; then
+             rm -r *.sha && sha256sum *.gz >> sha256sums
+          else
+             rm -r *.sha && sha256sum *.gz > sha256sums
+          fi
+          ls -l
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Add changelog info and set tag name to new release
+        if: ${{ env.PACKAGED_STATUS }} == 'success' && !cancelled()
+        id: changelog
+        shell: bash
+        run: |
+          cd $WORKING_DIR
+          echo "RELEASE_TAG=amlogic-${{ env.openwrt_board }}-$BASE-$BRANCH-$DATEMONTH$([ "$REVISION_TAG" == "true" ] && echo -rev)" >> $GITHUB_ENV
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' changelog_amlogic.md)
+          r="${r//'%'/'%25'}"
+          r="${r//$'\n'/'%0A'}"
+          r="${r//$'\r'/'%0D'}"  
+          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
+
+      - name: Upload Firmware to Release
+        uses: svenstaro/upload-release-action@v2
+        if: ${{ steps.prep_upload.outputs.status }} == 'success' && !cancelled()
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          file: ${{ env.PACKAGED_OUTPUTPATH }}/*
+          asset_name: ${{ github.event.repository.name }}-${{ github.sha }}
+          tag: ${{ env.RELEASE_TAG }}
+          release_name: ${{ env.RELEASE_TAG }}
+          overwrite: true
+          prerelease: ${{ env.PRE_RELEASE }}
+          body: |
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/frizkyiman/friWrt-MyWrtBuilder/${{ env.RELEASE_TAG }}/total?style=for-the-badge&logo=Openwrt)
+            ### friWrt ${{ env.BASE }}-${{ env.BRANCH }} Image information
+            Build date: ${{ env.DATETIME }}
+            
+            ${{ steps.changelog.outputs.CHANGELOG }}
+            
+            See [here](https://github.com/frizkyiman/friWrt-MyWrtBuilder?tab=readme-ov-file#firmware-details) for more detail feature and other information.
+            - Default IP: 192.168.1.1
+            - Default username: root
+            - Default password: friwrt
+            - Default WIFI name: friWrt_2g | friWrt_5g (if device supported)
+            - Default WIFI password: friwrt2024 (if device supported)
+            
+            ### Install to EMMC
+            - Login to OpenWrt → System → Amlogic Service → Install OpenWrt
