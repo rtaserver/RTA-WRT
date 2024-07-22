@@ -94,11 +94,6 @@ on:
         required: false
         default: "false"
         type: boolean
-      revision-tag:
-        description: "Revision img tag"
-        required: false
-        default: "false"
-        type: boolean
 
 env:
   TYPE: AMLOGIC
@@ -108,7 +103,6 @@ env:
   CLEAN: ${{ inputs.clean }}
   TZ: Asia/Jakarta
   PRE_RELEASE: ${{ inputs.upload-prerelease }}
-  REVISION_TAG: ${{ inputs.revision-tag }}
 
 jobs:
   Generate:
@@ -322,8 +316,8 @@ jobs:
           cd $WORKING_DIR
           for file in compiled_images/*rootfs.tar.gz; do mv "$file" ${{ env.PACKAGED_OUTPUTPATH }}; done
           cd ${{ env.PACKAGED_OUTPUTPATH }}
-          for file in *.img.gz; do mv "$file" RTA-WRT_$(basename "$file" .img.gz)$( echo "_$TUNNEL" )$([ "$REVISION_TAG" == "true" ] && echo _rev).img.gz; done
-          for file in *rootfs.tar.gz; do mv "$file" RTA-WRT_$(basename "$file" .tar.gz)$( echo "_$TUNNEL" )$([ "$REVISION_TAG" == "true" ] && echo _rev).tar.gz; done
+          for file in *.img.gz; do mv "$file" RTA-WRT_$(basename "$file" .img.gz).img.gz; done
+          for file in *rootfs.tar.gz; do mv "$file" RTA-WRT_$(basename "$file" .tar.gz).tar.gz; done
           rm -r *.sha && sha256sum *.gz > sha256sums
           ls -l
           echo "status=success" >> $GITHUB_OUTPUT
@@ -335,8 +329,8 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: ${{ env.PACKAGED_OUTPUTPATH }}/*
-          tag: "OpenWrt-Amlogic"
-          release_name: "RTA-WRT Amlogic Update : $DATEMONTH"
+          tag: "OpenWrt-Amlogic-Latest"
+          release_name: "RTA-WRT Amlogic Update : ${{ env.DATETIME }}"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
           body: |

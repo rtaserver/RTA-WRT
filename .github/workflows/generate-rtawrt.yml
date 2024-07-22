@@ -66,11 +66,6 @@ on:
         required: false
         default: "false"
         type: boolean
-      revision-tag:
-        description: "Revision img tag"
-        required: false
-        default: "false"
-        type: boolean
 
 env:
   RELEASE_BRANCH: ${{ inputs.release_branch }}
@@ -79,7 +74,6 @@ env:
   CLEAN: ${{ inputs.clean }}
   TZ: Asia/Jakarta
   PRE_RELEASE: ${{ inputs.upload-prerelease }}
-  REVISION_TAG: ${{ inputs.revision-tag }}
 
 jobs:
   prebuild:
@@ -247,7 +241,7 @@ jobs:
             for file in bin/targets/"$TARGET_SYSTEM"/*-"$TARGET_NAME"-*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz)$( echo "_$TUNNEL" ).img.gz; done
           fi
           ls -l compiled_images
-          echo "RELEASE_TAG=$PROFILE-$BASE-$BRANCH-$DATEMONTH$([ "$REVISION_TAG" == "true" ] && echo -rev)" >> $GITHUB_ENV
+          echo "RELEASE_TAG=$PROFILE-$BASE-$BRANCH-$DATEMONTH" >> $GITHUB_ENV
           echo "status=success" >> $GITHUB_OUTPUT
           echo -e "Server space usage after compilation: \n$(df -hT ${PWD}) \n"
 
@@ -265,7 +259,7 @@ jobs:
           file_glob: true
           file: ${{ env.WORKING_DIR }}/compiled_images//*
           tag: "OpenWrt-Latest"
-          release_name: "RTA-WRT Update : $DATEMONTH"
+          release_name: "RTA-WRT Update : ${{ env.DATETIME }}"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
           body: |
