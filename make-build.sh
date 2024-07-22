@@ -41,9 +41,6 @@ elif [ "$2" == "openclash-passwall-neko" ]; then
     PACKAGES+=" $([ "$(echo "$BRANCH" | cut -d'.' -f1)" == "21" ] && echo "$OPENCLASH_FW3" || echo "$OPENCLASH_FW4") $NEKO $PASSWALL"
 fi
 
-# Adguardhome
-PACKAGES+=" luci-app-adguardhome ca-certificates ca-bundle tar unzip bind-tools"
-
 # NAS and Hard disk tools
 PACKAGES+=" luci-app-diskman luci-app-hd-idle luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
 PACKAGES+=" luci-app-tinyfm"
