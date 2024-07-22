@@ -330,7 +330,7 @@ jobs:
           file_glob: true
           file: ${{ env.PACKAGED_OUTPUTPATH }}/*
           tag: "OpenWrt-Amlogic-Latest"
-          release_name: "RTA-WRT Amlogic Update : ${{ env.DATETIME }}"
+          release_name: "RTA-WRT Amlogic Update : Latest"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
           body: |

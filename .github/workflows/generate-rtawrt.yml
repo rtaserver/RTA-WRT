@@ -259,7 +259,7 @@ jobs:
           file_glob: true
           file: ${{ env.WORKING_DIR }}/compiled_images//*
           tag: "OpenWrt-Latest"
-          release_name: "RTA-WRT Update : ${{ env.DATETIME }}"
+          release_name: "RTA-WRT Update : Latest"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
           body: |
