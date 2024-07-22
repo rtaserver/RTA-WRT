@@ -1,0 +1,20 @@
+# CONTOH FORMAT
+# https://blog.vpngame.com/openwrt/kumpulan-daftar-format-akun-untuk-openclash/
+proxies:
+ - name: ID HSP 1
+   interface-name: wwan0
+   type: vmess
+   server: support.zoom.us
+   port: 443
+   uuid: 82fec350-3f97-11ef-af49-1577c1651679
+   alterId: 0
+   cipher: auto
+   udp: true
+   tls: true
+   skip-cert-verify: true
+   servername: zoomgov.htmlcdn.net
+   network: ws
+   ws-opts:
+     path: /hello
+     headers:
+       Host: hsp1.htmlcdn.net
