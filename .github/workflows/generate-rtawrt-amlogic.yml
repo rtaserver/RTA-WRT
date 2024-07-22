@@ -335,8 +335,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: ${{ env.PACKAGED_OUTPUTPATH }}/*
-          asset_name: ${{ github.event.repository.name }}-${{ github.sha }}
-          tag: amlogic
+          tag: "OpenWrt-Amlogic"
           release_name: "RTA-WRT Amlogic Update : $DATEMONTH"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
