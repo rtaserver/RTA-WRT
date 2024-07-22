@@ -246,14 +246,12 @@ jobs:
             rm -rf bin/targets/"$TARGET_SYSTEM"/*.{json,manifest,bin,*-rootfs*,*factory*,sha256sums}
             for file in bin/targets/"$TARGET_SYSTEM"/*-"$TARGET_NAME"-*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz)$( echo "_$TUNNEL" )_$DATE$([ "$REVISION_TAG" == "true" ] && echo _rev).img.gz; done
           fi
-          sha256sum compiled_images/RTA-WRT_*.img.gz > compiled_images/sha256sums
           ls -l compiled_images
           echo "RELEASE_TAG=$PROFILE-$BASE-$BRANCH-$DATEMONTH$([ "$REVISION_TAG" == "true" ] && echo -rev)" >> $GITHUB_ENV
           echo "status=success" >> $GITHUB_OUTPUT
           echo -e "Server space usage after compilation: \n$(df -hT ${PWD}) \n"
 
       - name: Upload All Firmware to Artifacts
-        if: github.event.inputs.upload-artifacts == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: "$DATEMONTH"
@@ -267,8 +265,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: ${{ env.WORKING_DIR }}/compiled_images//*
-          asset_name: ${{ github.event.repository.name }}-${{ github.sha }}
-          tag: "Amlogic_$DATEMONTH"
+          tag: "OpenWrt-Latest"
           release_name: "RTA-WRT Update : $DATEMONTH"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
