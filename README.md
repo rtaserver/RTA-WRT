@@ -47,10 +47,10 @@ Preview
 
 * Login View
 <p align="center">
-    <img src="./pictures/Login.png">
+    <img src="/pictures/Login.png">
 </p>
 
 * Main View
 <p align="center">
-    <img src="./pictures/Status.png">
+    <img src="/pictures/Status.png">
 </p>
