@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="./pictures/logo.png" alt="Clash" width="100">
+  <img src="/pictures/logo.png" alt="Clash" width="100">
   <br>RTA WRT - OpenWrt<br>
 
 </h1>
