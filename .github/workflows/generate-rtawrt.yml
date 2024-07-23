@@ -270,7 +270,19 @@ jobs:
             - Default username: root
             - Default password: RTAWRT
             - Default WIFI name: RTA-WRT_2g | RTA-WRT_5g (if device supported)
-      
+
+  update-readme:
+    needs: Generate
+    runs-on: ubuntu-latest
+    name: "update-readme"
+    steps:
+      - name: Set up Git repository
+        uses: actions/checkout@v2
+
+      - name: Set up environment variables
+        run: |
+          echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+          
       - name: Update README.md
         run: |
           sed -i "s|https://img.shields.io/badge/Build_Latest-0000-blue?style=for-the-badge&logo=openwrt|https://img.shields.io/badge/Build_Latest-${DATE}-blue?style=for-the-badge&logo=openwrt|g" README.md
