@@ -1,18 +1,18 @@
 # CONTOH FORMAT
 # https://blog.vpngame.com/openwrt/kumpulan-daftar-format-akun-untuk-openclash/
 proxies:
-- name: SG PATH 1
-  interface-name: wwan0
-  server: support.zoom.us
+- name: NAME
+  # interface-name: wwan0
+  server: host/ip
   port: 443
   type: trojan
-  password: e77b4080-3f97-11ef-96d9-1577c1651679
+  password: PW
   skip-cert-verify: true
-  sni: zoomgov.xmbb.net
+  sni: host
   network: ws
   ws-opts:
     path: /welcome
     headers:
-      Host: sg.xmbb.net
+      Host: host
   udp: true
 

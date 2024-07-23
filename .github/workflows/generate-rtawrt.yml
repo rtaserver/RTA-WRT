@@ -258,8 +258,8 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: ${{ env.WORKING_DIR }}/compiled_images//*
-          tag: ${{ env.DATE }}
-          release_name: "RTA-WRT Update : Latest"
+          tag: "OpenWrt-${{ env.DATE }}"
+          release_name: "RTA-WRT Update : ${{ env.DATE }}"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
           body: |
