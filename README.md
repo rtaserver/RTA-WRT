@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="pictures/logo.png" alt="Clash" width="100">
+  <img src="./pictures/logo.png" alt="Clash" width="100">
   <br>RTA WRT - OpenWrt<br>
 
 </h1>
@@ -47,10 +47,10 @@ Preview
 
 * Login View
 <p align="center">
-    <img src="pictures/Login.png">
+    <img src="./pictures/Login.png">
 </p>
 
 * Main View
 <p align="center">
-    <img src="pictures/Status.png">
+    <img src="./pictures/Status.png">
 </p>
