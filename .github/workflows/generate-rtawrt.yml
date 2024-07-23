@@ -270,3 +270,15 @@ jobs:
             - Default username: root
             - Default password: RTAWRT
             - Default WIFI name: RTA-WRT_2g | RTA-WRT_5g (if device supported)
+      
+      - name: Update README.md
+        run: |
+          sed -i "s|https://img.shields.io/badge/Build%20Latest-0000-blue?style=for-the-badge&logo=openwrt|https://img.shields.io/badge/Build%20Latest-${DATE}-blue?style=for-the-badge&logo=openwrt|g" README.md
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add README.md
+          git commit -m "Update build badge with latest build date"
+          git push
