@@ -206,7 +206,7 @@ on:
       tunnel:
         description: "Select VPN Client app (!neko and passwall only support for newer branch with fw4 firewall!):"
         required: true
-        default: "openclash"
+        default: "openclash-passwall"
         type: choice
         options:
           - all
@@ -428,7 +428,7 @@ jobs:
         if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
         run: |
           cd $WORKING_DIR
-          rm -rf $(ls . | grep -vE "^compiled_images$|^changelog_amlogic.md$" | xargs) 2>/dev/null
+          rm -rf $(ls . | grep -vE "^compiled_images$" | xargs) 2>/dev/null
           df -hT ${PWD}
 
       - name: Packaging ${{ inputs.release_branch }}
@@ -501,5 +501,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add README.md
-          git commit -m "Update build badge with latest build date"
+          git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')"
           git push
