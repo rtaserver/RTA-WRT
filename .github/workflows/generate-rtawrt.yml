@@ -292,5 +292,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add README.md
-          git commit -m "Update build badge with latest build date"
+          git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')"
           git push
