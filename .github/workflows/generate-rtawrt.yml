@@ -29,6 +29,7 @@ on:
         options:
           - openwrt:23.05.2
           - openwrt:23.05.3
+          - openwrt:23.05.4
           - immortalwrt:23.05.1
           - immortalwrt:23.05.2
       tunnel:
