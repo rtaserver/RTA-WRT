@@ -46,7 +46,7 @@ PACKAGES+=" luci-app-diskman luci-app-hd-idle luci-app-disks-info smartmontools 
 # PACKAGES+=" luci-app-tinyfm"
 PACKAGES+=" luci-app-tinyfilemanager"
 
-PACKAGES+=" quickstart luci-app-quickstart"
+# PACKAGES+=" quickstart luci-app-quickstart"
 
 # Bandwidth And Network Monitoring
 PACKAGES+=" internet-detector luci-app-internet-detector internet-detector-mod-modem-restart nlbwmon luci-app-nlbwmon vnstat2 vnstati2 luci-app-vnstat2 luci-app-netmonitor"
