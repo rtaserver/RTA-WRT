@@ -69,6 +69,7 @@ files2+=(
     "luci-app-rtaconfig|https://api.github.com/repos/rtaserver/RTA-Theme-OpenWrt/releases/latest"
     "luci-theme-alpha|https://api.github.com/repos/derisamedia/luci-theme-alpha/releases/latest"
     "luci-app-alpha-config|https://api.github.com/repos/derisamedia/luci-theme-alpha/releases/latest"
+    "luci-app-quickstart|https://api.github.com/repos/animegasan/luci-app-quickstart/releases/latest"
 )
 
 echo "#########################################"
