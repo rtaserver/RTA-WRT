@@ -25,6 +25,13 @@ files1=(
     "luci-app-ramfree|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
     "quickstart|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
     "luci-app-tinyfilemanager|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
+    "dns2socks|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
+    "dns2tcp|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
+    "chinadns-ng|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
+    "xray-plugin|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
+    "trojan-plus|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
+    "ipt2socks|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
+    "pdnsd-alt|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
 )
 
 echo "###########################################################"
