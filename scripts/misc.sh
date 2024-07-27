@@ -3,10 +3,7 @@
 echo "Start Downloading Misc files and setup configuration!"
 echo "Current Path: $PWD"
 
-FILE_PATH="repositories.conf"
-EXISTING_LINE="src/gz openwrt_telephony https://downloads.openwrt.org/releases/$BRANCH/packages/$ARCH_3/telephony"
-NEW_REPO="src/gz kiddin9 https://dl.openwrt.ai/packages-23.05/$ARCH_3/kiddin9"
-sed -i "/^$EXISTING_LINE$/a $NEW_REPO" "$FILE_PATH"
+sed -i '/src\/gz openwrt_telephony/a src\/gz kiddin9 https:\/\/dl\.openwrt\.ai\/packages-23\.05\/x86_64\/kiddin9' repositories.conf
 
 #setup custom setting for openwrt and immortalwrt
 sed -i "s/Ouc3kNF6/$DATE/g" files/etc/uci-defaults/99-init-settings.sh
