@@ -24,6 +24,7 @@ files1=(
     "librespeed-go|https://downloads.openwrt.org/releases/packages-$(echo "$BRANCH" | cut -d'.' -f1-2)/$ARCH_3/packages"
     "luci-app-ramfree|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
     "quickstart|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
+    "luci-app-tinyfilemanager|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
 )
 
 echo "###########################################################"
