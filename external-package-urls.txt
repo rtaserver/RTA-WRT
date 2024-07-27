@@ -48,7 +48,6 @@ amlogic https://github.com/lrdrdn/my-opkg-repo/raw/main/aarch64_generic/atinout_
 #      Branch version snapshots and 23.05 custom external package urls list    #
 ################################################################################
 #
-all https://github.com/animegasan/luci-app-quickstart/releases/download/1.0.2/luci-app-quickstart_1.0.2-20230817_all.ipk
 all https://github.com/lrdrdn/my-opkg-repo/raw/main/generic/luci-app-mmconfig_0.0.5-4_all.ipk
 all https://github.com/lrdrdn/my-opkg-repo/raw/main/generic/luci-app-poweroff_20200726_all.ipk
 all https://github.com/lrdrdn/my-opkg-repo/raw/main/generic/luci-app-tinyfm_2.6_all.ipk
