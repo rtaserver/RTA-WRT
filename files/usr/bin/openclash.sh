@@ -10,7 +10,7 @@ opkg_updated=false
 openclash_api="https://api.github.com/repos/vernesong/OpenClash/releases"
 openclash_file="luci-app-openclash"
 openclash_file_down="$(curl -s "${openclash_api}" | grep "browser_download_url" | grep -oE "https.*${openclash_file}.*.ipk" | head -n 1)"
-patchoc="https://raw.githubusercontent.com/frizkyiman/friWrt-MyWrtBuilder/main/files/usr/bin/patchoc.sh"
+patchoc="https://raw.githubusercontent.com/rtaserver/RTA-WRT/main/files/usr/bin/patchoc.sh"
 
 check_and_install_packages() {
     required_packages=("wget-ssl" "bash" "curl" "gzip" "tar")
