@@ -3,11 +3,6 @@
 echo "Start Downloading Misc files and setup configuration!"
 echo "Current Path: $PWD"
 
-sed -i '1i src-git kiddin9 https://github.com/kiddin9/openwrt-packages' feeds.conf.default
-
-./scripts/feeds update -a
-./scripts/feeds install -a
-
 #setup custom setting for openwrt and immortalwrt
 sed -i "s/Ouc3kNF6/$DATE/g" files/etc/uci-defaults/99-init-settings.sh
 if [[ "$BASE" == "openwrt" ]]; then
