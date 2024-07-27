@@ -18,7 +18,7 @@ on:
       release_branch:
         description: "Select the release branch:"
         required: true
-        default: "openwrt:23.05.3"
+        default: "openwrt:23.05.4"
         type: choice
         options:
           - openwrt:23.05.2
@@ -205,19 +205,15 @@ on:
           - dev
           - beta
       tunnel:
-        description: "Select VPN Client app (!neko and passwall only support for newer branch with fw4 firewall!):"
+        description: "Select VPN Client app (!passwall only support for newer branch with fw4 firewall!):"
         required: true
         default: "openclash-passwall"
         type: choice
         options:
           - all
           - openclash
-          - neko
           - passwall
-          - neko-openclash
           - openclash-passwall
-          - neko-passwall
-          - openclash-passwall-neko
           - no-tunnel
       clean:
         description: "Do 'make clean' for each run"
@@ -248,14 +244,8 @@ jobs:
       - name: Checking Tunnel Option
         id: tunnelopt
         run: |
-          if [[ ("$TUNNEL" == "neko" || "$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "neko-passwall" || "$TUNNEL" == "neko-openclash" || "$TUNNEL" == "openclash-passwall-neko") && "${RELEASE_BRANCH#*:}" == "21.02.7" ]]; then
-            echo "Cannot continue the process because the selected tunnel [$TUNNEL]"
-            echo "only support for newer branch with fw4 firewall!"
-            exit 1
-          else
-            echo "Selected tunnel option: [$TUNNEL]"
-            echo "status=success" >> $GITHUB_OUTPUT
-          fi
+          echo "Selected tunnel option: [$TUNNEL]"
+          echo "status=success" >> $GITHUB_OUTPUT
           
       - name: Initialization environment (normal)
         if: github.event.inputs.target != 'all' && steps.tunnelopt.outputs.status == 'success' && !cancelled()
@@ -378,8 +368,8 @@ jobs:
           bash scripts/misc.sh
           if [[ "$TUNNEL" == "all" && "$BRANCH" != "21.02.7" ]]; then 
               echo "VPN Client: $TUNNEL"
-              bash scripts/tunnel_app.sh openclash-passwall-neko
-          elif [[ ("$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "neko-passwall" || "$TUNNEL" == "neko-openclash" || "$TUNNEL" == "openclash-passwall-neko") && "$BRANCH" != "21.02.7" || "$TUNNEL" == "openclash" || "$TUNNEL" == "neko" ]]; then
+              bash scripts/tunnel_app.sh openclash-passwall
+          elif [[ ("$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall") && "$BRANCH" != "21.02.7" || "$TUNNEL" == "openclash" ]]; then
               echo "VPN Client: $TUNNEL"
               bash scripts/tunnel_app.sh "$TUNNEL"
           elif [[ "$TUNNEL" == "all" && "$BRANCH" = "21.02.7" ]]; then 
@@ -388,9 +378,7 @@ jobs:
           else
               echo "No VPN Client selected"
           fi
-          if [ "$TUNNEL" = "openclash" ] || [ "$TUNNEL" = "openclash-passwall" ]; then bash scripts/clash-core.sh; fi
-          if [ "$TUNNEL" = "neko" ] || [ "$TUNNEL" = "neko-passwall" ]; then bash scripts/neko_core.sh; fi
-          if [ "$TUNNEL" = "openclash-passwall-neko" ] || [ "$TUNNEL" == "neko-openclash" ] || [ "$TUNNEL" = "all" ]; then bash scripts/clash-core.sh; bash scripts/neko_core.sh; fi
+          if [ "$TUNNEL" = "openclash-passwall" ] || [ "$TUNNEL" == "openclash" ] || [ "$TUNNEL" = "all" ]; then bash scripts/clash-core.sh; fi
           echo "Total custom packages: $(find packages -type f -name "*.ipk" | wc -l)"
           ls packages
           echo "status=success" >> $GITHUB_OUTPUT
@@ -403,7 +391,7 @@ jobs:
           cd $WORKING_DIR
           mkdir -p compiled_images
           if [[ "$TUNNEL" == "all" && "$BRANCH" != "21.02.7" ]]; then
-            for t in openclash-passwall neko-passwall neko-openclash openclash-passwall-neko openclash passwall neko no-tunnel; do
+            for t in openclash-passwall openclash passwall no-tunnel; do
               echo "Compiling with VPN Client: $t"
               if [ "$CLEAN" == "true" ]; echo "Start 'make clean' before building images."; then make clean; fi
               time bash make-build.sh $PROFILE $t
@@ -416,7 +404,7 @@ jobs:
               time bash make-build.sh $PROFILE $t
               for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do mv "$file" compiled_images; done
             done
-          elif [[ ("$TUNNEL" == "neko" || "$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "neko-passwall" || "$TUNNEL" == "neko-openclash" || "$TUNNEL" == "openclash-passwall-neko") && "$BRANCH" != "21.02.7" || "$TUNNEL" == "openclash" || "$TUNNEL" == "no-tunnel" ]]; then
+          elif [[ ("$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall") && "$BRANCH" != "21.02.7" || "$TUNNEL" == "openclash" || "$TUNNEL" == "no-tunnel" ]]; then
             echo "Compiling with VPN Client: $TUNNEL"
             bash make-build.sh $PROFILE $TUNNEL
             for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do mv "$file" compiled_images; done
