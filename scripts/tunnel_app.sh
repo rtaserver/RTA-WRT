@@ -14,7 +14,6 @@ neko_file_down="$(curl -s https://api.github.com/repos/nosignals/neko/releases/l
 passwall_api="https://api.github.com/repos/xiaorouji/openwrt-passwall2/releases"
 passwall_file="passwall2_packages_ipk_$ARCH_3.zip"
 passwall_file_down="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*${passwall_file}" | head -n 1)"
-passwall_ipk="https://github.com/xiaorouji/openwrt-passwall/releases/download/4.71-2/luci-app-passwall_4.71-2_all.ipk"
 
 # passwall2
 passwall2_api="https://api.github.com/repos/rtaserver/openwrt-passwall2/releases"
@@ -39,7 +38,6 @@ elif [ "$1" == "neko" ]; then
 elif [ "$1" == "passwall" ]; then
     echo "Downloading Passwall packages ipk"
     wget "$passwall_file_down" -nv -P packages
-    wget "$passwall_ipk" -nv -P packages
     wget "${passwall_ipk_packages[@]}" -nv -P packages
     wget "${passwall2_file_down}" -nv -P packages
     unzip -qq packages/"$passwall_file" -d packages && rm packages/"$passwall_file"
@@ -56,7 +54,6 @@ elif [ "$1" == "openclash-passwall" ]; then
     wget ${openclash_file_down} -nv -P packages
     echo "Downloading Passwall packages ipk"
     wget "$passwall_file_down" -nv -P packages
-    wget "$passwall_ipk" -nv -P packages
     wget "${passwall_ipk_packages[@]}" -nv -P packages
     wget "${passwall2_file_down}" -nv -P packages
     unzip -qq packages/"$passwall_file" -d packages && rm packages/"$passwall_file"
@@ -66,7 +63,6 @@ elif [ "$1" == "neko-passwall" ]; then
     wget "${neko_file_down}" -nv -P packages
     echo "Downloading Passwall packages ipk"
     wget "$passwall_file_down" -nv -P packages
-    wget "$passwall_ipk" -nv -P packages
     wget "${passwall_ipk_packages[@]}" -nv -P packages
     wget "${passwall2_file_down}" -nv -P packages
     unzip -qq packages/"$passwall_file" -d packages && rm packages/"$passwall_file"
@@ -78,7 +74,6 @@ elif [ "$1" == "openclash-passwall-neko" ]; then
     wget "${neko_file_down}" -nv -P packages
     echo "Downloading Passwall packages ipk"
     wget "$passwall_file_down" -nv -P packages
-    wget "$passwall_ipk" -nv -P packages
     wget "${passwall_ipk_packages[@]}" -nv -P packages
     wget "${passwall2_file_down}" -nv -P packages
     unzip -qq packages/"$passwall_file" -d packages && rm packages/"$passwall_file"
