@@ -5,7 +5,7 @@
 </h1>
 
   <p align="center">
-    <img src="https://img.shields.io/badge/Build_Latest-20240723-blue?style=for-the-badge&logo=openwrtlogo=openwrt">
+    <img src="https://img.shields.io/badge/Build_Latest-20240802-blue?style=for-the-badgehttps://img.shields.io/badge/Build_Latest-20240723-blue?style=for-the-badge&logo=openwrtlogo=openwrtlogo=openwrt">
     <img src="https://img.shields.io/badge/Amlogic_Latest-20240723-blue?style=for-the-badge&logo=openwrt">
     <img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/total?label=Downloads&color=green&style=for-the-badge">
   </p>
