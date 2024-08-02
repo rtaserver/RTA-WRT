@@ -16,7 +16,7 @@ files1=(
     #"luci-app-disks-info|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
     #"luci-app-log|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
     #"luci-app-temp-status|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    "luci-app-internet-detector|https://fantastic-packages.github.io/packages/releases/$(echo "$BRANCH" | cut -d'.' -f1-2)/packages/x86_64/luci"
+    #"luci-app-internet-detector|https://fantastic-packages.github.io/packages/releases/$(echo "$BRANCH" | cut -d'.' -f1-2)/packages/x86_64/luci"
     "internet-detector|https://fantastic-packages.github.io/packages/releases/$(echo "$BRANCH" | cut -d'.' -f1-2)/packages/x86_64/packages"
     "internet-detector-mod-modem-restart|https://fantastic-packages.github.io/packages/releases/23.05/packages/x86_64/packages"
     "luci-app-netspeedtest|https://fantastic-packages.github.io/packages/releases/$(echo "$BRANCH" | cut -d'.' -f1-2)/packages/x86_64/luci"
@@ -74,16 +74,15 @@ if [ "$TYPE" == "AMLOGIC" ]; then
 fi
 
 files2+=(
-    "luci-app-sms-tool-js|https://api.github.com/repos/4IceG/luci-app-sms-tool-js/releases/latest"
-    "luci-app-modemband|https://api.github.com/repos/4IceG/luci-app-modemband/releases/latest"
-    "modemband|https://api.github.com/repos/4IceG/luci-app-modemband/releases/latest"
-    "luci-app-lite-watchdog|https://api.github.com/repos/4IceG/luci-app-lite-watchdog/releases/latest"
-    "luci-app-3ginfo-lite|https://api.github.com/repos/4IceG/luci-app-3ginfo-lite/releases/latest"
+    #"luci-app-sms-tool-js|https://api.github.com/repos/4IceG/luci-app-sms-tool-js/releases/latest"
+    #"luci-app-modemband|https://api.github.com/repos/4IceG/luci-app-modemband/releases/latest"
+    #"modemband|https://api.github.com/repos/4IceG/luci-app-modemband/releases/latest"
+    #"luci-app-lite-watchdog|https://api.github.com/repos/4IceG/luci-app-lite-watchdog/releases/latest"
+    #"luci-app-3ginfo-lite|https://api.github.com/repos/4IceG/luci-app-3ginfo-lite/releases/latest"
     "luci-app-netmonitor|https://api.github.com/repos/rtaserver/rta-packages/releases"
     "luci-app-base64|https://api.github.com/repos/rtaserver/rta-packages/releases"
     "luci-theme-rta|https://api.github.com/repos/rtaserver/RTA-Theme-OpenWrt/releases/latest"
     "luci-app-rtaconfig|https://api.github.com/repos/rtaserver/RTA-Theme-OpenWrt/releases/latest"
-    # "uci-app-argon-config|https://api.github.com/repos/jerrykuku/luci-app-argon-config/releases/latest"
     "luci-theme-alpha|https://api.github.com/repos/derisamedia/luci-theme-alpha/releases/latest"
     "luci-app-alpha-config|https://api.github.com/repos/derisamedia/luci-theme-alpha/releases/latest"
     "luci-app-quickstart|https://api.github.com/repos/animegasan/luci-app-quickstart/releases/latest"
@@ -151,6 +150,7 @@ wget --no-check-certificate -i output_url.txt -nv -P packages
 
     #===============================================
     input_packages=(
+        "luci-app-internet-detector"
     "luci-theme-argon"
     "luci-app-cpu-status-mini"
     "luci-app-diskman"
@@ -164,6 +164,11 @@ wget --no-check-certificate -i output_url.txt -nv -P packages
     "atinout"
     "luci-app-poweroff"
     "xmm-modem"
+    "luci-app-3ginfo-lite"
+    "luci-app-lite-watchdog"
+    "modemband"
+    "luci-app-modemband"
+    "luci-app-sms-tool-js"
     )
     #================================================
     
