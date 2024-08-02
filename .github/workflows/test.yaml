@@ -9,10 +9,7 @@ jobs:
     name: "Update README.md"
     steps:
       - name: Set up Git repository
-        uses: actions/checkout@v2
-        with:
-          # Ensure the repository is fetched with its history
-          fetch-depth: 0
+        uses: actions/checkout@v3
 
       - name: Set up environment variables
         run: |
