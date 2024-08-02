@@ -5,7 +5,6 @@ on:
 
 jobs:
   update-readme:
-    needs: Generate
     runs-on: ubuntu-latest
     name: "Update README.md"
     steps:
