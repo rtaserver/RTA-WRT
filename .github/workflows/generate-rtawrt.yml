@@ -266,15 +266,18 @@ jobs:
   update-readme:
     needs: Generate
     runs-on: ubuntu-latest
-    name: "update-readme"
+    name: "Update README.md"
     steps:
       - name: Set up Git repository
         uses: actions/checkout@v2
+        with:
+          # Ensure the repository is fetched with its history
+          fetch-depth: 0
 
       - name: Set up environment variables
         run: |
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
-          
+
       - name: Update README.md
         run: |
           sed -i "s|https://img.shields.io/badge/Build_Latest-[0-9]\{8\}-blue?style=for-the-badge&logo=openwrt|https://img.shields.io/badge/Build_Latest-${DATE}-blue?style=for-the-badge&logo=openwrt|g" README.md
@@ -283,6 +286,11 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          
+          # Fetch the latest changes from the remote branch
+          git pull origin main --rebase
+          
           git add README.md
           git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')"
-          git push
+          git push origin main
+
