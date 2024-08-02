@@ -10,25 +10,25 @@ files1=(
     "libqmi|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
     "sms-tool|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
     "luci-app-argon-config|https://fantastic-packages.github.io/packages/releases/$(echo "$BRANCH" | cut -d'.' -f1-2)/packages/x86_64/luci"
-    "luci-theme-argon|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    "luci-app-cpu-status-mini|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    "luci-app-diskman|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    "luci-app-disks-info|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    "luci-app-log|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    "luci-app-temp-status|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    "luci-app-internet-detector|https://fantastic-packages.github.io/packages/releases/$(echo "$BRANCH" | cut -d'.' -f1-2)/packages/$ARCH_3/luci"
-    "internet-detector|https://fantastic-packages.github.io/packages/releases/$(echo "$BRANCH" | cut -d'.' -f1-2)/packages/$ARCH_3/packages"
-    "internet-detector-mod-modem-restart|https://fantastic-packages.github.io/packages/releases/23.05/packages/$ARCH_3/packages"
+    #"luci-theme-argon|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
+    #"luci-app-cpu-status-mini|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
+    #"luci-app-diskman|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
+    #"luci-app-disks-info|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
+    #"luci-app-log|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
+    #"luci-app-temp-status|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
+    "luci-app-internet-detector|https://fantastic-packages.github.io/packages/releases/$(echo "$BRANCH" | cut -d'.' -f1-2)/packages/x86_64/luci"
+    "internet-detector|https://fantastic-packages.github.io/packages/releases/$(echo "$BRANCH" | cut -d'.' -f1-2)/packages/x86_64/packages"
+    "internet-detector-mod-modem-restart|https://fantastic-packages.github.io/packages/releases/23.05/packages/x86_64/packages"
     "luci-app-netspeedtest|https://fantastic-packages.github.io/packages/releases/$(echo "$BRANCH" | cut -d'.' -f1-2)/packages/x86_64/luci"
     "python3-speedtest-cli|https://downloads.openwrt.org/releases/packages-$(echo "$BRANCH" | cut -d'.' -f1-2)/$ARCH_3/packages"
     "librespeed-go|https://downloads.openwrt.org/releases/packages-$(echo "$BRANCH" | cut -d'.' -f1-2)/$ARCH_3/packages"
-    "luci-app-ramfree|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    "quickstart|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    "luci-app-tinyfilemanager|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    "modeminfo|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    "atinout|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    "luci-app-poweroff|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    "xmm-modem|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
+    #"luci-app-ramfree|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
+    #"quickstart|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
+    #"luci-app-tinyfilemanager|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
+    #"modeminfo|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
+    #"atinout|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
+    #"luci-app-poweroff|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
+    #"xmm-modem|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
 )
 
 echo "###########################################################"
@@ -136,3 +136,65 @@ fi
 wget --no-check-certificate -i output_url.txt -nv -P packages
 
 #################################################################################################################################
+
+
+{
+    echo "###################################################"
+    echo "Downloading packages from external-kiddin9"
+    echo "###################################################"
+    echo "#"
+    BASE_URL="https://dl.openwrt.ai/packages-23.05/$ARCH_3/kiddin9"
+    BASE_LIST="https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9/Packages.gz"
+
+    PACKAGES_GZ="Packages.gz"
+    PACKAGES_FILE="Packages"
+
+    #===============================================
+    input_packages=(
+    "luci-theme-argon"
+    "luci-app-cpu-status-mini"
+    "luci-app-diskman"
+    "luci-app-disks-info"
+    "luci-app-log"
+    "luci-app-temp-status"
+    "luci-app-ramfree"
+    "quickstart"
+    "luci-app-tinyfilemanager"
+    "modeminfo"
+    "atinout"
+    "luci-app-poweroff"
+    "xmm-modem"
+    )
+    #================================================
+    
+    echo "Downloading $PACKAGES_GZ from $BASE_LIST..."
+    curl -L "$BASE_LIST" -o "$PACKAGES_GZ"
+
+    echo "Extracting $PACKAGES_GZ..."
+    gunzip "$PACKAGES_GZ"
+
+    declare -A files_map
+
+    while IFS= read -r line; do
+        if [[ $line == Package:* ]]; then
+            package_name=$(echo $line | awk '{print $2}')
+        elif [[ $line == Filename:* ]]; then
+            filename=$(echo $line | awk '{print $2}')
+            files_map["$package_name"]="$filename"
+        fi
+    done < "$PACKAGES_FILE"
+
+    for input_package in "${input_packages[@]}"; do
+        if [[ -n ${files_map[$input_package]} ]]; then
+            FILENAME=${files_map[$input_package]}
+            URL="$BASE_URL/$FILENAME"
+            SAVE_AS="packages/${input_package}.ipk"
+            echo "Downloading $FILENAME from $URL..."
+            curl -L "$URL" -o "$SAVE_AS"
+        else
+            echo "Paket '$input_package' tidak ditemukan dalam daftar."
+        fi
+    done
+
+    rm -f "$PACKAGES_GZ" "$PACKAGES_FILE"
+}
