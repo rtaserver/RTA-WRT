@@ -17,8 +17,7 @@ jobs:
 
       - name: Update README.md
         run: |
-          sed -i -E "s/Build_Latest-[*]-blue?style=for-the-badge&logo=openwrt/Build_Latest-${{ env.DATE }}-blue?style=for-the-badge&logo=openwrt/g" README.md
-          sed -i -E "s/Amlogic_Latest-[*]-blue?style=for-the-badge&logo=openwrt/Amlogic_Latest-${{ env.DATE }}-blue?style=for-the-badge&logo=openwrt/g" README.md
+          sed -i -E "s/Latest-[*]-blue?style=for-the-badge&logo=openwrt/Latest-${{ env.DATE }}-blue?style=for-the-badge&logo=openwrt/g" README.md
 
       - name: Commit changes
         run: |
