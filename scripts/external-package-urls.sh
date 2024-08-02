@@ -38,19 +38,31 @@ echo "#"
 for entry in "${files1[@]}"; do
     IFS="|" read -r filename1 base_url <<< "$entry"
     echo "Processing file: $filename1"
-    file_urls=$(curl -sL "$base_url" | grep -oE "${filename1}_[0-9a-zA-Z\._~-]*\.ipk" | sort -V | tail -n 1)
-    for file_url in $file_urls; do
-        if [ ! -z "$file_url" ]; then
-            echo "Downloading $file_url"
-            echo "from $base_url/$file_url"
-            curl -Lo "packages/$file_url" "$base_url/$file_url"
-            echo "Packages [$filename1] downloaded successfully!."
-            echo "#"
-            break
+
+    file_urls=$(curl -sL "$base_url" | grep -oE "${filename1}_[0-9a-zA-Z\._~-]*\.ipk" | grep -v 'git' | sort -V | tail -n 1)
+
+    if [ -z "$file_urls" ]; then
+        echo "No matching stable file found. Trying general search..."
+        file_urls=$(curl -sL "$base_url" | grep -oE "${filename1}_[0-9a-zA-Z\._~-]*\.ipk" | sort -V | tail -n 1)
+    fi
+
+    echo "Matching files found:"
+    echo "$file_urls"
+
+    if [ -n "$file_urls" ]; then
+        full_url="$base_url/$file_urls"
+        echo "Downloading $filename1 from $full_url"
+        curl -Lo "packages/${filename1}.ipk" "$full_url"
+        
+        if [ $? -eq 0 ]; then
+            echo "Package [$filename1] downloaded successfully."
         else
-            echo "Failed to retrieve packages [$filename1] because it's different from $base_url/$file_url. Retrying before exit..."
+            echo "Failed to download package [$filename1]."
         fi
-    done
+    else
+        echo "No matching file found for [$filename1] at $base_url."
+    fi
+    echo "#"
 done
 }
 
