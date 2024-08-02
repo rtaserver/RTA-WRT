@@ -25,6 +25,10 @@ files1=(
     "luci-app-ramfree|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
     "quickstart|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
     "luci-app-tinyfilemanager|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
+    "modeminfo|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
+    "atinout|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
+    "luci-app-poweroff|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
+    "xmm-modem|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9/"
 )
 
 echo "###########################################################"

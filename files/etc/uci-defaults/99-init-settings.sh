@@ -151,6 +151,12 @@ if opkg list-installed | grep luci-app-openclash > /dev/null; then
       mv /usr/share/openclash/ui/yacd.new /usr/share/openclash/ui/yacd
     fi
   fi
+  if [ -f "/etc/config/openclash" ]; then
+    rm -rf /etc/config/openclash
+    mv /etc/config/openclash1 /etc/config/openclash
+  else
+    mv /etc/config/openclash1 /etc/config/openclash
+  fi
   echo "Configuring Core..."
   chmod +x /etc/openclash/core/clash
   chmod +x /etc/openclash/core/clash_tun
