@@ -18,8 +18,11 @@ on:
           - all
           - Raspberry Pi 3B
           - Raspberry Pi 4B
-          - NanoPi-R2S
-          - NanoPi-R5S
+          - NanoPi R2C
+          - NanoPi R2S
+          - NanoPi R4S
+          - Orange Pi R1 Plus
+          - Orange Pi R1 Plus LTS
           - x86-64
       release_branch:
         description: "Select the release branch:"
@@ -80,7 +83,7 @@ jobs:
         id: set-matrix
         run: |
           if [ "${{ inputs.target }}" == "all" ]; then
-             echo "target=['NanoPi-R2S','NanoPi-R5S','Raspberry Pi 3B','Raspberry Pi 4B','x86-64']" >> $GITHUB_OUTPUT
+             echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','NanoPi R2C','NanoPi R2S','NanoPi R4S','Orange Pi R1 Plus','Orange Pi R1 Plus LTS','x86-64']" >> $GITHUB_OUTPUT
           else
              echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
           fi
@@ -131,7 +134,15 @@ jobs:
             echo "ARCH_1=arm64" >> $GITHUB_ENV
             echo "ARCH_2=aarch64" >> $GITHUB_ENV
             echo "ARCH_3=aarch64_cortex-a72" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi-R2S" ]; then
+          elif [ "$TARGET" == "NanoPi R2C" ]; then
+            echo "PROFILE=friendlyarm_nanopi-r2c" >> $GITHUB_ENV
+            echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
+            echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
+            TARGET_NAME="rockchip-armv8"
+            echo "ARCH_1=armv8" >> $GITHUB_ENV
+            echo "ARCH_2=aarch64" >> $GITHUB_ENV
+            echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
+          elif [ "$TARGET" == "NanoPi R2S" ]; then
             echo "PROFILE=friendlyarm_nanopi-r2s" >> $GITHUB_ENV
             echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
             echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
@@ -139,8 +150,24 @@ jobs:
             echo "ARCH_1=armv8" >> $GITHUB_ENV
             echo "ARCH_2=aarch64" >> $GITHUB_ENV
             echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi-R5S" ]; then
-            echo "PROFILE=friendlyarm_nanopi-r5s" >> $GITHUB_ENV
+          elif [ "$TARGET" == "NanoPi R4S" ]; then
+            echo "PROFILE=friendlyarm_nanopi-r4s" >> $GITHUB_ENV
+            echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
+            echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
+            TARGET_NAME="rockchip-armv8"
+            echo "ARCH_1=armv8" >> $GITHUB_ENV
+            echo "ARCH_2=aarch64" >> $GITHUB_ENV
+            echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
+          elif [ "$TARGET" == "Orange Pi R1 Plus" ]; then
+            echo "PROFILE=xunlong_orangepi-r1-plus" >> $GITHUB_ENV
+            echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
+            echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
+            TARGET_NAME="rockchip-armv8"
+            echo "ARCH_1=armv8" >> $GITHUB_ENV
+            echo "ARCH_2=aarch64" >> $GITHUB_ENV
+            echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
+          elif [ "$TARGET" == "Orange Pi R1 Plus LTS" ]; then
+            echo "PROFILE=xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
             echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
             echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
             TARGET_NAME="rockchip-armv8"
