@@ -80,7 +80,7 @@ jobs:
         id: set-matrix
         run: |
           if [ "${{ inputs.target }}" == "all" ]; then
-             echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','x86-64']" >> $GITHUB_OUTPUT
+             echo "target=['NanoPi-R2S','NanoPi-R5S','Raspberry Pi 3B','Raspberry Pi 4B','x86-64']" >> $GITHUB_OUTPUT
           else
              echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
           fi
@@ -250,8 +250,8 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: ${{ env.WORKING_DIR }}/compiled_images//*
-          tag: "OpenWrt-${{ env.DATE }}-${{ env.TARGET_NAME }}"
-          release_name: "RTA-WRT OpenWrt ${{ env.BRANCH }} ${{ env.TARGET_NAME }} : ${{ env.DATE }}"
+          tag: "OpenWrt-${{ env.DATE }}-${{ env.PROFILE }}"
+          release_name: "RTA-WRT OpenWrt ${{ env.BRANCH }} ${{ env.PROFILE }} : ${{ env.DATE }}"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
           body: |
