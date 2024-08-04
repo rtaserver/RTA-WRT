@@ -304,10 +304,8 @@ jobs:
         run: |
           if [ "$TARGET" == "all" ]; then
             echo "openwrt_board=all" >> $GITHUB_ENV
-          elif [ "$TARGET" == "hg680p" ] || [ "$TARGET" == "b860h" ]; then
-            echo "openwrt_board=s905x" >> $GITHUB_ENV
-          elif [ "$TARGET" == "nanopi-r5s" ]; then
-            echo "openwrt_board=rk3568" >> $GITHUB_ENV
+          else
+            echo "openwrt_board=$TARGET" >> $GITHUB_ENV
           fi
           if [ "$(echo "${RELEASE_BRANCH#*:}" | cut -d'.' -f1)" == "23" ]; then
             echo "PROFILE=generic" >> $GITHUB_ENV
