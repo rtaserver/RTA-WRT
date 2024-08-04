@@ -36,7 +36,10 @@ uci commit system
 # configure wan interface
 chmod +x /usr/lib/ModemManager/connection.d/10-report-down
 echo "Setup WAN and LAN Interface"
+uci set network.lan.device='br-lan'
+uci set network.lan.proto='static'
 uci set network.lan.ipaddr="192.168.1.1"
+uci set network.lan.netmask='255.255.255.0'
 uci set network.wan=interface 
 uci set network.wan.proto='modemmanager'
 uci set network.wan.device='/sys/devices/platform/scb/fd500000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/usb2/2-1'

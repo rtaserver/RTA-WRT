@@ -363,15 +363,12 @@ jobs:
           cd $WORKING_DIR
           bash scripts/builder-patch.sh
           bash scripts/misc.sh
-          if [[ "$TUNNEL" == "all" && "$BRANCH" != "21.02.7" ]]; then 
+          if [[ "$TUNNEL" == "all" ]]; then 
               echo "VPN Client: $TUNNEL"
               bash scripts/tunnel_app.sh openclash-passwall
-          elif [[ ("$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall") && "$BRANCH" != "21.02.7" || "$TUNNEL" == "openclash" ]]; then
+          elif [[ "$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "openclash" ]]; then
               echo "VPN Client: $TUNNEL"
               bash scripts/tunnel_app.sh "$TUNNEL"
-          elif [[ "$TUNNEL" == "all" && "$BRANCH" = "21.02.7" ]]; then 
-              echo "VPN Client: $TUNNEL"
-              bash scripts/tunnel_app.sh openclash
           else
               echo "No VPN Client selected"
           fi
@@ -387,21 +384,14 @@ jobs:
         run: |
           cd $WORKING_DIR
           mkdir -p compiled_images
-          if [[ "$TUNNEL" == "all" && "$BRANCH" != "21.02.7" ]]; then
+          if [[ "$TUNNEL" == "all" ]]; then
             for t in openclash-passwall openclash passwall no-tunnel; do
               echo "Compiling with VPN Client: $t"
               if [ "$CLEAN" == "true" ]; echo "Start 'make clean' before building images."; then make clean; fi
               time bash make-build.sh $PROFILE $t
               for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do mv "$file" compiled_images; done
             done
-          elif [[ "$TUNNEL" == "all" && "$BRANCH" = "21.02.7" ]]; then
-            for t in openclash no-tunnel; do
-              echo "Compiling with VPN Client: $t"
-              if [ "$CLEAN" == "true" ]; echo "Start 'make clean' before building images."; then make clean; fi
-              time bash make-build.sh $PROFILE $t
-              for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do mv "$file" compiled_images; done
-            done
-          elif [[ ("$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall") && "$BRANCH" != "21.02.7" || "$TUNNEL" == "openclash" || "$TUNNEL" == "no-tunnel" ]]; then
+          elif [[ "$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "openclash" || "$TUNNEL" == "no-tunnel" ]]; then
             echo "Compiling with VPN Client: $TUNNEL"
             bash make-build.sh $PROFILE $TUNNEL
             for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do mv "$file" compiled_images; done
