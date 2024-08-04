@@ -479,7 +479,7 @@ jobs:
 
       - name: Update README.md
         run: |
-          sed -i -E "s/Amlogic_Latest-[*]-blue?style=for-the-badge&logo=openwrt/Amlogic_Latest-$(date +'%Y-%m-%d %H:%M:%S')-blue?style=for-the-badge&logo=openwrt/g" README.md
+          sed -i -E "s|Amlogic_Latest-[0-9]{8}-blue|Amlogic_Latest-$(date +'%Y%m%d')-blue|g" README.md
 
       - name: Commit changes
         run: |

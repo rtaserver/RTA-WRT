@@ -302,7 +302,7 @@ jobs:
 
       - name: Update README.md
         run: |
-          sed -i -E "s/Build_Latest-[*]-blue?style=for-the-badge&logo=openwrt/Build_Latest-$(date +'%Y-%m-%d %H:%M:%S')-blue?style=for-the-badge&logo=openwrt/g" README.md
+          sed -i -E "s|Build_Latest-[0-9]{8}-blue|Build_Latest-$(date +'%Y%m%d')-blue|g" README.md
 
       - name: Commit changes
         run: |
