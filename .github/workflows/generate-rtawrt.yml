@@ -282,6 +282,8 @@ jobs:
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
           body: |
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.RELEASE_TAG }}/total?style=for-the-badge&logo=Openwrt)
+            
             ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
             Build date: ${{ env.DATETIME }}
             
@@ -296,18 +298,11 @@ jobs:
     name: "Update README.md"
     steps:
       - name: Set up Git repository
-        uses: actions/checkout@v2
-        with:
-          # Ensure the repository is fetched with its history
-          fetch-depth: 0
-
-      - name: Set up environment variables
-        run: |
-          echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+        uses: actions/checkout@v3
 
       - name: Update README.md
         run: |
-          sed -i -E "s/Build_Latest-[*]-blue?style=for-the-badge&logo=openwrt/Build_Latest-${{ env.DATE }}-blue?style=for-the-badge&logo=openwrt/g" README.md
+          sed -i -E "s/Build_Latest-[*]-blue?style=for-the-badge&logo=openwrt/Build_Latest-$(date +'%Y-%m-%d %H:%M:%S')-blue?style=for-the-badge&logo=openwrt/g" README.md
 
       - name: Commit changes
         run: |
