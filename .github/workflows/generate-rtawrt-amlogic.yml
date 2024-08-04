@@ -440,6 +440,7 @@ jobs:
           for file in *rootfs.tar.gz; do mv "$file" RTA-WRT_$(basename "$file" .tar.gz)$( echo "_$TUNNEL" ).tar.gz; done
           rm -r *.sha && sha256sum *.gz > sha256sums
           ls -l
+          echo "RELEASE_TAG=OpenWrt-Amlogic-${{ env.DATE }}-${{ env.TARGET_NAME }}" >> $GITHUB_ENV
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Upload Firmware to Release
@@ -449,7 +450,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: ${{ env.PACKAGED_OUTPUTPATH }}/*
-          tag: "OpenWrt-Amlogic-${{ env.DATE }}-${{ env.TARGET_NAME }}"
+          tag: ${{ env.RELEASE_TAG }}
           release_name: "RTA-WRT Amlogic OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}

@@ -260,7 +260,7 @@ jobs:
             for file in bin/targets/"$TARGET_SYSTEM"/*-"$TARGET_NAME"-*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz)$( echo "_$TUNNEL" ).img.gz; done
           fi
           ls -l compiled_images
-          echo "RELEASE_TAG=$PROFILE-$BASE-$BRANCH-$DATEMONTH" >> $GITHUB_ENV
+          echo "RELEASE_TAG=OpenWrt-${{ env.DATE }}-${{ env.PROFILE }}" >> $GITHUB_ENV
           echo "status=success" >> $GITHUB_OUTPUT
           echo -e "Server space usage after compilation: \n$(df -hT ${PWD}) \n"
 
@@ -277,7 +277,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: ${{ env.WORKING_DIR }}/compiled_images//*
-          tag: "OpenWrt-${{ env.DATE }}-${{ env.PROFILE }}"
+          tag: ${{ env.RELEASE_TAG }}
           release_name: "RTA-WRT OpenWrt ${{ env.BRANCH }} ${{ env.TARGET }} : ${{ env.DATE }}"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
