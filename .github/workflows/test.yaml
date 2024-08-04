@@ -11,13 +11,9 @@ jobs:
       - name: Set up Git repository
         uses: actions/checkout@v3
 
-      - name: Set up environment variables
-        run: |
-          echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
-
       - name: Update README.md
         run: |
-          sed -i -E "s/Latest-[*]-blue?style=for-the-badge&logo=openwrt/Latest-${{ env.DATE }}-blue?style=for-the-badge&logo=openwrt/g" README.md
+          sed -i -E "s/Latest-[*]-blue?style=for-the-badge&logo=openwrt/Latest-$(date +'%Y-%m-%d %H:%M:%S')-blue?style=for-the-badge&logo=openwrt/g" README.md
 
       - name: Commit changes
         run: |
