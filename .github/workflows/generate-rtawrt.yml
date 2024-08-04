@@ -278,12 +278,12 @@ jobs:
           file_glob: true
           file: ${{ env.WORKING_DIR }}/compiled_images//*
           tag: "OpenWrt-${{ env.DATE }}-${{ env.PROFILE }}"
-          release_name: "RTA-WRT OpenWrt ${{ env.BRANCH }} ${{ env.PROFILE }} : ${{ env.DATE }}"
+          release_name: "RTA-WRT OpenWrt ${{ env.BRANCH }} ${{ env.TARGET }} : ${{ env.DATE }}"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
           body: |
             ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.RELEASE_TAG }}/total?style=for-the-badge&logo=Openwrt)
-            
+
             ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
             Build date: ${{ env.DATETIME }}
             
