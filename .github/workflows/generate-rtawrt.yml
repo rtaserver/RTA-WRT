@@ -306,13 +306,9 @@ jobs:
 
       - name: Commit changes
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          
-          # Fetch the latest changes from the remote branch
-          git pull origin main --rebase
-          
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
           git add README.md
           git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')"
-          git push origin main
+          git push
 
