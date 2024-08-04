@@ -436,8 +436,8 @@ jobs:
           cd $WORKING_DIR
           for file in compiled_images/*rootfs.tar.gz; do mv "$file" ${{ env.PACKAGED_OUTPUTPATH }}; done
           cd ${{ env.PACKAGED_OUTPUTPATH }}
-          for file in *.img.gz; do mv "$file" RTA-WRT_$(basename "$file" .img.gz).img.gz; done
-          for file in *rootfs.tar.gz; do mv "$file" RTA-WRT_$(basename "$file" .tar.gz).tar.gz; done
+          for file in *.img.gz; do mv "$file" RTA-WRT_$(basename "$file" .img.gz)$( echo "_$TUNNEL" ).img.gz; done
+          for file in *rootfs.tar.gz; do mv "$file" RTA-WRT_$(basename "$file" .tar.gz)$( echo "_$TUNNEL" ).tar.gz; done
           rm -r *.sha && sha256sum *.gz > sha256sums
           ls -l
           echo "status=success" >> $GITHUB_OUTPUT
