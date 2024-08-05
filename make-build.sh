@@ -18,7 +18,7 @@ kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-uti
 kmod-phy-broadcom kmod-phylib-broadcom"
 
 if [ "$BRANCH" == "snapshots" ]; then
-    # PACKAGES+=" "
+    PACKAGES+=" "
 else
     PACKAGES+=" kmod-tg3"
 fi
