@@ -114,7 +114,7 @@ jobs:
       - name: Initialization System Environment
         run: |
           sudo apt-get -qq update
-          sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs
+          sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs zstd
           sudo timedatectl set-timezone "$TZ"
           echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
 
@@ -209,10 +209,39 @@ jobs:
       - name: Download Image Builder
         id: download
         run: |
-          SNAPSHOTS="$DOWNLOAD_BASE/$BRANCH/targets/$TARGET_SYSTEM/$BASE-imagebuilder-$TARGET_NAME.Linux-x86_64.tar.xz"
+          SNAPSHOTS="$DOWNLOAD_BASE/$BRANCH/targets/$TARGET_SYSTEM/$BASE-imagebuilder-$TARGET_NAME.Linux-x86_64.tar.zst"
           RELEASE="$DOWNLOAD_BASE/releases/$BRANCH/targets/$TARGET_SYSTEM/$BASE-imagebuilder-$BRANCH-$TARGET_NAME.Linux-x86_64.tar.xz"
           [ "$BRANCH" == "snapshots" ] && wget -nv "$SNAPSHOTS" || wget -nv "$RELEASE"
-          tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz && mv *-imagebuilder-* $WORKING_DIR && sync
+          # tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz && mv *-imagebuilder-* $WORKING_DIR && sync
+          # cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
+          # echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Try extracting with -xJf
+        run: |
+          set -e
+          tar -xJf *-imagebuilder-* && sync
+        continue-on-error: true
+
+      - name: Check if extraction with -xJf succeeded
+        id: check-extraction
+        run: |
+          if ls *-imagebuilder-* | grep -q 'imagebuilder-'; then
+            echo "extracted=true" >> $GITHUB_ENV
+          else
+            echo "extracted=false" >> $GITHUB_ENV
+          fi
+
+      - name: Extract with -I zstd if the first extraction failed
+        if: env.extracted == 'false'
+        run: |
+          set -e
+          tar -I zstd -xvf *-imagebuilder-* && sync
+
+      - name: Clean up
+        run: |
+          rm -f *-imagebuilder-*.tar.xz || true
+          rm -f *-imagebuilder-*.tar.zst || true
+          mv *-imagebuilder-* $WORKING_DIR && sync
           cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
           echo "status=success" >> $GITHUB_OUTPUT
       
