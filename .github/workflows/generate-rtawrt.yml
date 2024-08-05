@@ -215,33 +215,17 @@ jobs:
           # tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz && mv *-imagebuilder-* $WORKING_DIR && sync
           # cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
           # echo "status=success" >> $GITHUB_OUTPUT
-
-      - name: Try extracting with -xJf
-        run: |
-          set -e
-          tar -xJf *-imagebuilder-* && sync
-        continue-on-error: true
-
-      - name: Check if extraction with -xJf succeeded
-        id: check-extraction
-        run: |
-          if ls *-imagebuilder-* | grep -q 'imagebuilder-'; then
-            echo "extracted=true" >> $GITHUB_ENV
+          if tar -xJf *-imagebuilder-*; then
+            sync
+            rm -f *-imagebuilder-*.tar.xz
           else
-            echo "extracted=false" >> $GITHUB_ENV
+            # If xz extraction fails, try zstd extraction
+            tar -I zstd -xvf *-imagebuilder-*
+            sync
+            rm -f *-imagebuilder-*.tar.zst
           fi
-
-      - name: Extract with -I zstd if the first extraction failed
-        if: env.extracted == 'false'
-        run: |
-          set -e
-          tar -I zstd -xvf *-imagebuilder-* && sync
-
-      - name: Clean up
-        run: |
-          rm -f *-imagebuilder-*.tar.xz || true
-          rm -f *-imagebuilder-*.tar.zst || true
-          mv *-imagebuilder-* $WORKING_DIR && sync
+          mv *-imagebuilder-* $WORKING_DIR
+          sync
           cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
           echo "status=success" >> $GITHUB_OUTPUT
       
