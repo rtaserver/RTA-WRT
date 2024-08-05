@@ -215,18 +215,13 @@ jobs:
           # tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz && mv *-imagebuilder-* $WORKING_DIR && sync
           # cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
           # echo "status=success" >> $GITHUB_OUTPUT
-          if tar -xJf *-imagebuilder-*; then
-            sync
-            rm -f *-imagebuilder-*.tar.xz
+          if [ "$BRANCH" == "snapshots" ]; then
+            tar -I zstd -xvf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz && mv *-imagebuilder-* $WORKING_DIR && sync
+            cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
           else
-            # If xz extraction fails, try zstd extraction
-            tar -I zstd -xvf *-imagebuilder-*
-            sync
-            rm -f *-imagebuilder-*.tar.zst
+            tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz && mv *-imagebuilder-* $WORKING_DIR && sync
+            cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
           fi
-          mv *-imagebuilder-* $WORKING_DIR
-          sync
-          cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
           echo "status=success" >> $GITHUB_OUTPUT
       
       - name: Download External Packages
