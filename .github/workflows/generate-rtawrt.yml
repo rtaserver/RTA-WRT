@@ -177,7 +177,7 @@ jobs:
             echo "ARCH_2=aarch64" >> $GITHUB_ENV
             echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
           elif [ "$TARGET" == "Orange Pi Zero 3" ]; then
-            echo "PROFILE=xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
+            echo "PROFILE=xunlong_orangepi-zero3" >> $GITHUB_ENV
             echo "TARGET_SYSTEM=sunxi/cortexa53" >> $GITHUB_ENV
             echo "TARGET_NAME=sunxi-cortexa53" >> $GITHUB_ENV
             TARGET_NAME="sunxi-cortexa53"
