@@ -40,22 +40,6 @@ else
     rm packages/luci-app-oled_1.0_all.ipk
 fi
 
-if [ "$TYPE" == "AMLOGIC" ]; then
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/dhcp-get-server.sh' files/etc/uci-defaults/99-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/dhcp.script' files/etc/uci-defaults/99-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/dhcpv6.script' files/etc/uci-defaults/99-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/ppp6-up' files/etc/uci-defaults/99-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/ppp-down' files/etc/uci-defaults/99-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/ppp6-down' files/etc/uci-defaults/99-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/ppp-up' files/etc/uci-defaults/99-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/wireless/mac80211.sh' files/etc/uci-defaults/99-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/proto/dhcp.sh' files/etc/uci-defaults/99-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/nefitd/proto/dhcpv6.sh' files/etc/uci-defaults/99-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/proto/ppp.sh' files/etc/uci-defaults/99-init-settings.sh
-else
-    rm -rf files/lib
-fi
-
 # custom script files urls
 echo "Downloading custom script" 
 sync_time="https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/sbin/sync_time.sh"

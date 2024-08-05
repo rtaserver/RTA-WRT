@@ -136,12 +136,10 @@ sed -i 's/services/modem/g' /usr/share/luci/menu.d/luci-app-lite-watchdog.json
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
 sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/neofetch/' /etc/profile
 chmod +x /root/fix-tinyfm.sh && bash /root/fix-tinyfm.sh
-chmod +x /root/install2.sh && bash /root/install2.sh
 chmod +x /sbin/sync_time.sh
 chmod +x /sbin/free.sh
 chmod +x /usr/bin/neofetch
 chmod +x /usr/bin/clock
-chmod +x /usr/bin/mount_hdd
 chmod +x /usr/bin/openclash.sh
 
 # configurating openclash
@@ -174,11 +172,6 @@ else
   uci delete internet-detector.Openclash
   uci commit internet-detector
   service internet-detector restart
-fi
-
-# configurating neko
-if opkg list-installed | grep luci-app-neko > /dev/null; then
-  chmod +x /etc/neko/core/mihomo
 fi
 
 # adding new line for enable i2c oled display
