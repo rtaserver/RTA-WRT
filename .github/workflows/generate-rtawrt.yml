@@ -31,7 +31,7 @@ on:
         default: "openwrt:23.05.4"
         type: choice
         options:
-          - snapshots
+          - openwrt:snapshots
           - openwrt:23.05.4
           - immortalwrt:23.05.3
       tunnel:
