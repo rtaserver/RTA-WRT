@@ -52,10 +52,10 @@ PACKAGES+=" luci-app-base64"
 PACKAGES+=" luci-theme-argon luci-app-argon-config"
 
 # Alpha Theme
-PACKAGES+=" luci-theme-alpha luci-app-alpha-config"
+# PACKAGES+=" luci-theme-alpha luci-app-alpha-config"
 
 # RTA Theme
-PACKAGES+=" luci-theme-rta luci-app-rtaconfig"
+# PACKAGES+=" luci-theme-rta luci-app-rtaconfig"
 
 # PHP8
 PACKAGES+=" libc php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring coreutils-stat zoneinfo-asia"
