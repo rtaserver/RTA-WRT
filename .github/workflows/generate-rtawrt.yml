@@ -32,6 +32,7 @@ on:
         type: choice
         options:
           - openwrt:snapshots
+          - openwrt:22.03.7
           - openwrt:23.05.4
           - immortalwrt:23.05.3
       tunnel:
