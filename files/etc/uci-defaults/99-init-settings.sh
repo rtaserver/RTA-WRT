@@ -55,8 +55,7 @@ uci commit dhcp
 echo "Setup Wireless if available"
 uci set wireless.@wifi-device[0].disabled='0'
 uci set wireless.@wifi-iface[0].disabled='0'
-uci set wireless.@wifi-iface[0].encryption='psk2'
-uci set wireless.@wifi-iface[0].key='rtawrt2024'
+uci set wireless.@wifi-iface[0].encryption='none'
 uci set wireless.@wifi-device[0].country='ID'
 if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
   uci set wireless.@wifi-iface[0].ssid='rtaWrt_5g'

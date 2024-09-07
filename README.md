@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="./pictures/logo.png" alt="OpenWrt" width="100">
+  <img src="/pictures/logo.png" alt="OpenWrt" width="100">
   <br>RTA WRT - OpenWrt<br>
 
 </h1>
@@ -36,16 +36,19 @@ Custom Script By FriWrt
 
 Firmware details
 ---
+Tunneling Include
+* OpenWrt Latest : Openclash And Passwall
+* Openwrt Snapshots : OpenClash
+---
 * 192.168.1.1 | user: root | password: rtawrt
 * SSID: RTA-WRT_2g / RTA-WRT_5g
-* Modemmanager protocol for connecting 4g/5g modems (tested using Dell DW5821e Snapdragon X20 LTE),
 * Modemmanager with auto-reconnect,
 * Automatically expand root partition and filesystem to available free space! (Please be patient because the initial boot process takes a little longer to extend the disk and it also requires two reboot attempts),
 * Openclash with latest beta release and latest MetaCubeX Mihomo core,
 * Passwall as alternate tunneling app,
 * TinyFm file manager,
 * Internet Detector and Lite Watchdog,
-* Argon, RTA and Alpha Theme with some cool custom login image,
+* Argon Theme with some cool custom login image,
 * 3ginfo lite and Modeminfo, sms-tool, and other modem support app,
 * OLED Display support (only Raspberrry Pi 4B tested),
 * etc~
@@ -56,10 +59,10 @@ Preview
 
 * Login View
 <p align="center">
-    <img src="./pictures/Login.png">
+    <img src="/pictures/Login.png">
 </p>
 
 * Main View
 <p align="center">
-    <img src="./pictures/Status.png">
+    <img src="/pictures/Status.png">
 </p>
