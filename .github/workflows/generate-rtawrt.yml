@@ -277,7 +277,7 @@ jobs:
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
           body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.RELEASE_TAG }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
 
             ### RTA-WRT OpenWrt ${{ env.BRANCH }} Image information
             Build date: ${{ env.DATETIME }}

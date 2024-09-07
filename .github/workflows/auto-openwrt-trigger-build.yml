@@ -21,9 +21,13 @@ jobs:
           if [[ $(date +'%u') -eq 7 ]]; then
             sed -i -E "s|Build_Latest-[0-9]{8}-blue|Build_Latest-$TODAY-blue|g" README.md
             sed -i -E "s|Amlogic_Latest-[0-9]{8}-blue|Amlogic_Latest-$TODAY-blue|g" README.md
+            sed -i -E "s|23.05.4-[0-9]{8}-blue|23.05.4-$TODAY-blue|g" README.md
+            sed -i -E "s|23.05.4-amlogic-[0-9]{8}-blue|23.05.4-amlogic-$TODAY-blue|g" README.md
           else
             sed -i -E "s|Build_Snapshots-[0-9]{8}-blue|Build_Snapshots-$TODAY-blue|g" README.md
             sed -i -E "s|Amlogic_Snapshots-[0-9]{8}-blue|Amlogic_Snapshots-$TODAY-blue|g" README.md
+            sed -i -E "s|snapshots-[0-9]{8}-blue|snapshots-$TODAY-blue|g" README.md
+            sed -i -E "s|snapshots-amlogic-[0-9]{8}-blue|snapshots-amlogic-$TODAY-blue|g" README.md
           fi
       
       - name: Commit changes
