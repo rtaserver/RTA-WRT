@@ -12,8 +12,8 @@
 
 <h3 align="center">Latest Openwrt - Snapshots</h3>
 <p align="center">
-<img src="https://img.shields.io/badge/Build_Snapshots-00000000-blue?style=for-the-badge&logo=openwrt">
-<img src="https://img.shields.io/badge/Amlogic_Snapshots-00000000-blue?style=for-the-badge&logo=openwrt">
+<img src="https://img.shields.io/badge/Build_Snapshots-20240907-blue?style=for-the-badge&logo=openwrt">
+<img src="https://img.shields.io/badge/Amlogic_Snapshots-20240907-blue?style=for-the-badge&logo=openwrt">
 </p>
 <p align="center">
 <img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/total?label=Total_Downloads&color=green&style=for-the-badge">
