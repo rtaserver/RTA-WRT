@@ -2,7 +2,8 @@ name: Auto Trigger Build Openwrt
 
 on:
   schedule:
-    - cron: '0 2 * * *'  # Setiap hari jam 02:00 UTC
+    - cron: '0 2 * * *'  # Snapshots every day at 02:00 UTC
+    - cron: '0 2 * * 0'  # Latest build every Sunday at 02:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -16,10 +17,14 @@ jobs:
 
       - name: Update README.md
         run: |
-          sed -i -E "s|Build_Latest-[0-9]{8}-blue|Build_Latest-$(date +'%Y%m%d')-blue|g" README.md
-          sed -i -E "s|Amlogic_Latest-[0-9]{8}-blue|Amlogic_Latest-$(date +'%Y%m%d')-blue|g" README.md
-          sed -i -E "s|Build_Snapshots-[0-9]{8}-blue|Build_Snapshots-$(date +'%Y%m%d')-blue|g" README.md
-          sed -i -E "s|Amlogic_Snapshots-[0-9]{8}-blue|Amlogic_Snapshots-$(date +'%Y%m%d')-blue|g" README.md
+          TODAY=$(date +'%Y%m%d')
+          if [[ $(date +'%u') -eq 7 ]]; then
+            sed -i -E "s|Build_Latest-[0-9]{8}-blue|Build_Latest-$TODAY-blue|g" README.md
+            sed -i -E "s|Amlogic_Latest-[0-9]{8}-blue|Amlogic_Latest-$TODAY-blue|g" README.md
+          else
+            sed -i -E "s|Build_Snapshots-[0-9]{8}-blue|Build_Snapshots-$TODAY-blue|g" README.md
+            sed -i -E "s|Amlogic_Snapshots-[0-9]{8}-blue|Amlogic_Snapshots-$TODAY-blue|g" README.md
+          fi
       
       - name: Commit changes
         run: |
@@ -30,6 +35,7 @@ jobs:
           git push
 
   trigger-generate-rtawrt-latest:
+    if: ${{ github.event.schedule == 'cron' && github.event.schedule == '0 2 * * 0' }}
     runs-on: ubuntu-latest
     steps:
       - name: Trigger generate-rtawrt
@@ -42,6 +48,7 @@ jobs:
           inputs: '{"release_branch": "23.05.4", "tunnel": "openclash-passwall"}'
   
   trigger-generate-rtawrt-amlogic-latest:
+    if: ${{ github.event.schedule == 'cron' && github.event.schedule == '0 2 * * 0' }}
     runs-on: ubuntu-latest
     steps:
       - name: Trigger generate-rtawrt-amlogic
@@ -54,6 +61,7 @@ jobs:
           inputs: '{"release_branch": "23.05.4", "tunnel": "openclash-passwall"}'
 
   trigger-generate-rtawrt-snapshots:
+    if: ${{ github.event.schedule == 'cron' && github.event.schedule != '0 2 * * 0' }}
     runs-on: ubuntu-latest
     steps:
       - name: Trigger generate-rtawrt
@@ -66,6 +74,7 @@ jobs:
           inputs: '{"release_branch": "snapshots", "tunnel": "openclash"}'
   
   trigger-generate-rtawrt-amlogic-snapshots:
+    if: ${{ github.event.schedule == 'cron' && github.event.schedule != '0 2 * * 0' }}
     runs-on: ubuntu-latest
     steps:
       - name: Trigger generate-rtawrt-amlogic
