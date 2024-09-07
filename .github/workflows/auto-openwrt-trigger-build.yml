@@ -42,7 +42,7 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: generate-rtawrt.yml
-          repo: rtaserver/MyOpenWRT
+          repo: rtaserver/RTA-WRT
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
           inputs: '{"release_branch": "23.05.4", "tunnel": "openclash-passwall"}'
@@ -55,7 +55,7 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: generate-rtawrt-amlogic.yml
-          repo: rtaserver/MyOpenWRT
+          repo: rtaserver/RTA-WRT
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
           inputs: '{"release_branch": "23.05.4", "tunnel": "openclash-passwall"}'
@@ -68,7 +68,7 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: generate-rtawrt.yml
-          repo: rtaserver/MyOpenWRT
+          repo: rtaserver/RTA-WRT
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
           inputs: '{"release_branch": "snapshots", "tunnel": "openclash"}'
@@ -81,7 +81,7 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: generate-rtawrt-amlogic.yml
-          repo: rtaserver/MyOpenWRT
+          repo: rtaserver/RTA-WRT
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
           inputs: '{"release_branch": "snapshots", "tunnel": "openclash"}'
