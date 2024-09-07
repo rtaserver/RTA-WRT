@@ -9,10 +9,6 @@ cd $GITHUB_WORKSPACE/$WORKING_DIR || exit
 {
 if [[ "${RELEASE_BRANCH%:*}" == "openwrt" ]]; then
     echo "${RELEASE_BRANCH%:*}"
-elif [[ "${RELEASE_BRANCH%:*}" == "immortalwrt" ]]; then
-    echo "${RELEASE_BRANCH%:*}"
-    # Remove redundant default packages
-    sed -i "/luci-app-cpufreq/d" include/target.mk
 fi
 }
 

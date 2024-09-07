@@ -23,22 +23,19 @@ on:
           - NanoPi R4S
           - Orange Pi R1 Plus
           - Orange Pi R1 Plus LTS
-          - Orange Pi Zero 3
           - x86-64
       release_branch:
         description: "Select the release branch:"
         required: true
-        default: "openwrt:23.05.4"
+        default: "snapshots"
         type: choice
         options:
-          - openwrt:snapshots
-          - openwrt:22.03.7
-          - openwrt:23.05.4
-          - immortalwrt:23.05.3
+          - snapshots
+          - 23.05.4
       tunnel:
         description: "Select VPN Client app (!passwall only support for newer branch with fw4 firewall!):"
         required: true
-        default: "all"
+        default: "openclash"
         type: choice
         options:
           - all
@@ -64,12 +61,12 @@ on:
       upload-prerelease:
         description: "Upload as pre-release"
         required: false
-        default: "false"
+        default: "true"
         type: boolean
 
 env:
-  RELEASE_BRANCH: ${{ inputs.release_branch }}
   ROOTFS_SQUASHFS: ${{ inputs.squashfs }}
+  RELEASE_BRANCH: ${{ inputs.release_branch }}
   TUNNEL: ${{ inputs.tunnel }}
   CLEAN: ${{ inputs.clean }}
   TZ: Asia/Jakarta
@@ -86,20 +83,14 @@ jobs:
         id: set-matrix
         run: |
           if [ "${{ inputs.target }}" == "all" ]; then
-             echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','NanoPi R2C','NanoPi R2S','NanoPi R4S','Orange Pi R1 Plus','Orange Pi R1 Plus LTS','Orange Pi Zero 3','x86-64']" >> $GITHUB_OUTPUT
+             echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','NanoPi R2C','NanoPi R2S','NanoPi R4S','Orange Pi R1 Plus','Orange Pi R1 Plus LTS','x86-64']" >> $GITHUB_OUTPUT
           else
              echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
           fi
           
       - name: Checking Tunnel Option
         run: |
-          if [[ ("$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall") && "${RELEASE_BRANCH#*:}" == "21.02.7" ]]; then
-            echo "Cannot continue the process because the selected tunnel [ $TUNNEL ]"
-            echo "only support for newer branch with fw4 firewall!"
-            exit 1
-          else
-            echo "Selected tunnel option: [ $TUNNEL ]"
-          fi
+          echo "Selected tunnel option: [ $TUNNEL ]"
 
   Generate:
     needs: prebuild
@@ -177,14 +168,6 @@ jobs:
             echo "ARCH_1=armv8" >> $GITHUB_ENV
             echo "ARCH_2=aarch64" >> $GITHUB_ENV
             echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Orange Pi Zero 3" ]; then
-            echo "PROFILE=xunlong_orangepi-zero3" >> $GITHUB_ENV
-            echo "TARGET_SYSTEM=sunxi/cortexa53" >> $GITHUB_ENV
-            echo "TARGET_NAME=sunxi-cortexa53" >> $GITHUB_ENV
-            TARGET_NAME="sunxi-cortexa53"
-            echo "ARCH_1=armv7" >> $GITHUB_ENV
-            echo "ARCH_2=aarch64" >> $GITHUB_ENV
-            echo "ARCH_3=aarch64_cortex-a53" >> $GITHUB_ENV
           elif [ "$TARGET" == "x86-64" ]; then
             echo "PROFILE=generic" >> $GITHUB_ENV
             echo "TARGET_SYSTEM=x86/64" >> $GITHUB_ENV
@@ -194,10 +177,10 @@ jobs:
             echo "ARCH_2=x86_64" >> $GITHUB_ENV
             echo "ARCH_3=x86_64" >> $GITHUB_ENV
           fi
-          echo "WORKING_DIR="${RELEASE_BRANCH%:*}"-imagebuilder-"$TARGET_NAME".Linux-x86_64" >> $GITHUB_ENV
-          echo "DOWNLOAD_BASE=https://downloads."${RELEASE_BRANCH%:*}".org" >> $GITHUB_ENV
-          echo "BASE=${RELEASE_BRANCH%:*}" >> $GITHUB_ENV
-          echo "BRANCH=${RELEASE_BRANCH#*:}" >> $GITHUB_ENV
+          echo "WORKING_DIR=openwrt-imagebuilder-"$TARGET_NAME".Linux-x86_64" >> $GITHUB_ENV
+          echo "DOWNLOAD_BASE=https://downloads.openwrt.org" >> $GITHUB_ENV
+          echo "BASE=openwrt" >> $GITHUB_ENV
+          echo "BRANCH=${RELEASE_BRANCH}" >> $GITHUB_ENV
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
           echo "DATETIME=$(date +'%Y.%m.%d-%H:%M:%S')" >> $GITHUB_ENV
           echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
@@ -210,19 +193,16 @@ jobs:
       - name: Download Image Builder
         id: download
         run: |
-          SNAPSHOTS="$DOWNLOAD_BASE/$BRANCH/targets/$TARGET_SYSTEM/$BASE-imagebuilder-$TARGET_NAME.Linux-x86_64.tar.zst"
-          RELEASE="$DOWNLOAD_BASE/releases/$BRANCH/targets/$TARGET_SYSTEM/$BASE-imagebuilder-$BRANCH-$TARGET_NAME.Linux-x86_64.tar.xz"
-          [ "$BRANCH" == "snapshots" ] && wget -nv "$SNAPSHOTS" || wget -nv "$RELEASE"
-          # tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz && mv *-imagebuilder-* $WORKING_DIR && sync
-          # cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
-          # echo "status=success" >> $GITHUB_OUTPUT
           if [ "$BRANCH" == "snapshots" ]; then
-            tar -I zstd -xvf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.zst && mv *-imagebuilder-* $WORKING_DIR && sync
-            cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
+            SNAPSHOTS="$DOWNLOAD_BASE/snapshots/targets/$TARGET_SYSTEM/$BASE-imagebuilder-$TARGET_NAME.Linux-x86_64.tar.zst"
+            wget -nv "$SNAPSHOTS"
+            tar -xvf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.zst && mv *-imagebuilder-* $WORKING_DIR && sync
           else
+            RELEASE="$DOWNLOAD_BASE/releases/$BRANCH/targets/$TARGET_SYSTEM/$BASE-imagebuilder-$BRANCH-$TARGET_NAME.Linux-x86_64.tar.xz"
+            wget -nv "$RELEASE"
             tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz && mv *-imagebuilder-* $WORKING_DIR && sync
-            cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
           fi
+          cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
           echo "status=success" >> $GITHUB_OUTPUT
       
       - name: Download External Packages
@@ -240,15 +220,12 @@ jobs:
           cd $WORKING_DIR
           bash scripts/builder-patch.sh
           bash scripts/misc.sh
-          if [[ "$TUNNEL" == "all" && "$BRANCH" != "21.02.7" ]]; then 
+          if [[ "$TUNNEL" == "all" ]]; then 
               echo "VPN Client: $TUNNEL"
               bash scripts/tunnel_app.sh openclash-passwall
-          elif [[ ("$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall") && "$BRANCH" != "21.02.7" || "$TUNNEL" == "openclash" ]]; then
+          elif [[ "$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "openclash" ]]; then
               echo "VPN Client: $TUNNEL"
               bash scripts/tunnel_app.sh "$TUNNEL"
-          elif [[ "$TUNNEL" == "all" && "$BRANCH" = "21.02.7" ]]; then 
-              echo "VPN Client: $TUNNEL"
-              bash scripts/tunnel_app.sh openclash
           else
               echo "No VPN Client selected"
           fi
@@ -264,22 +241,22 @@ jobs:
         run: |
           cd $WORKING_DIR
           mkdir -p compiled_images
-          if [[ "$TUNNEL" == "all" && "$BRANCH" != "21.02.7" ]]; then
+          if [[ "$TUNNEL" == "all" ]]; then
             for t in openclash-passwall openclash passwall no-tunnel; do
               echo "Compiling with VPN Client: $t"
               if [ "$CLEAN" == "true" ]; echo "Start 'make clean' before building images."; then make clean; fi
               time bash make-build.sh $PROFILE $t
               rm -rf bin/targets/"$TARGET_SYSTEM"/*.{json,manifest,bin,*-rootfs*,*factory*,sha256sums}
-              for file in bin/targets/"$TARGET_SYSTEM"/*-"$TARGET_NAME"-*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz)$( echo "_$t" ).img.gz; done
+              for file in bin/targets/"$TARGET_SYSTEM"/*-"$TARGET_NAME"-*.img.gz; do mv "$file" compiled_images/rta_$(basename "$file" .img.gz)$( echo "_$t" ).img.gz; done
             done
-          elif [[ ("$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall") && "$BRANCH" != "21.02.7" || "$TUNNEL" == "openclash" || "$TUNNEL" == "no-tunnel" ]]; then
+          elif [[ "$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "openclash" || "$TUNNEL" == "no-tunnel" ]]; then
             echo "Compiling with VPN Client: $TUNNEL"
             bash make-build.sh $PROFILE $TUNNEL
             rm -rf bin/targets/"$TARGET_SYSTEM"/*.{json,manifest,bin,*-rootfs*,*factory*,sha256sums}
-            for file in bin/targets/"$TARGET_SYSTEM"/*-"$TARGET_NAME"-*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz)$( echo "_$TUNNEL" ).img.gz; done
+            for file in bin/targets/"$TARGET_SYSTEM"/*-"$TARGET_NAME"-*.img.gz; do mv "$file" compiled_images/rta_$(basename "$file" .img.gz)$( echo "_$TUNNEL" ).img.gz; done
           fi
           ls -l compiled_images
-          echo "RELEASE_TAG=OpenWrt-${{ env.DATE }}-${{ env.PROFILE }}" >> $GITHUB_ENV
+          echo "RELEASE_TAG=$PROFILE-$BASE-$BRANCH-$DATEMONTH" >> $GITHUB_ENV
           echo "status=success" >> $GITHUB_OUTPUT
           echo -e "Server space usage after compilation: \n$(df -hT ${PWD}) \n"
 
@@ -289,45 +266,37 @@ jobs:
           name: ${{ matrix.target }}
           path: ${{ env.WORKING_DIR }}/compiled_images//*
 
-          
       - name: Upload Firmware to Release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: ${{ env.WORKING_DIR }}/compiled_images//*
-          tag: ${{ env.RELEASE_TAG }}
-          release_name: "RTA-WRT OpenWrt ${{ env.BRANCH }} ${{ env.TARGET }} : ${{ env.DATE }}"
+          tag: ${{ env.BRANCH }}-${{ env.DATE }}
+          release_name: "RTA-WRT OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
           body: |
             ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.RELEASE_TAG }}/total?style=for-the-badge&logo=Openwrt)
 
-            ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
+            ### RTA-WRT OpenWrt ${{ env.BRANCH }} Image information
             Build date: ${{ env.DATETIME }}
             
             - Default IP: 192.168.1.1
             - Default username: root
-            - Default password: RTAWRT
+            - Default password: rtawrt
             - Default WIFI name: RTA-WRT_2g | RTA-WRT_5g (if device supported)
 
-  update-readme:
-    needs: Generate
+  del_runs:
     runs-on: ubuntu-latest
-    name: "Update README.md"
+    permissions:
+      actions: write
+      contents: read
     steps:
-      - name: Set up Git repository
-        uses: actions/checkout@v3
-
-      - name: Update README.md
-        run: |
-          sed -i -E "s|Build_Latest-[0-9]{8}-blue|Build_Latest-$(date +'%Y%m%d')-blue|g" README.md
-
-      - name: Commit changes
-        run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git add README.md
-          git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')"
-          git push
-
+      - name: Delete old workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 1

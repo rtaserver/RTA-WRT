@@ -9,22 +9,17 @@ echo "Processor: $(ubus call system board | grep '\"system\"' | sed 's/ \+/ /g' 
 echo "Device Model: $(ubus call system board | grep '\"model\"' | sed 's/ \+/ /g' | awk -F'\"' '{print $4}')"
 echo "Device Board: $(ubus call system board | grep '\"board_name\"' | sed 's/ \+/ /g' | awk -F'\"' '{print $4}')"
 sed -i "s#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' / ':'')+(luciversion||''),#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' build by RTA-WRT [Ouc3kNF6]':''),#g" /www/luci-static/resources/view/status/include/10_system.js
-if grep -q "ImmortalWrt" /etc/openwrt_release; then
-  sed -i "s/\(DISTRIB_DESCRIPTION='ImmortalWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
-  echo Branch version: "$(grep 'DISTRIB_DESCRIPTION=' /etc/openwrt_release | awk -F"'" '{print $2}')"
-elif grep -q "OpenWrt" /etc/openwrt_release; then
-  sed -i "s/\(DISTRIB_DESCRIPTION='OpenWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
-  echo Branch version: "$(grep 'DISTRIB_DESCRIPTION=' /etc/openwrt_release | awk -F"'" '{print $2}')"
-fi
-echo "Tunnel Installed: $(opkg list-installed | grep -e luci-app-openclash -e luci-app-neko -e luci-app-passwall | awk '{print $1}' | tr '\n' ' ')"
+sed -i "s/\(DISTRIB_DESCRIPTION='OpenWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
+echo Branch version: "$(grep 'DISTRIB_DESCRIPTION=' /etc/openwrt_release | awk -F"'" '{print $2}')"
+echo "Tunnel Installed: $(opkg list-installed | grep -e luci-app-openclash -e luci-app-passwall | awk '{print $1}' | tr '\n' ' ')"
 echo "###############################################"
 
 # Set login root password
-(echo "RTAWRT"; sleep 1; echo "RTAWRT") | passwd > /dev/null
+(echo "rtawrt"; sleep 1; echo "rtawrt") | passwd > /dev/null
 
 # Set hostname and Timezone to Asia/Jakarta
 echo "Setup NTP Server and Time Zone to Asia/Jakarta"
-uci set system.@system[0].hostname='RTA-WRT'
+uci set system.@system[0].hostname='rtaWrt'
 uci set system.@system[0].timezone='WIB-7'
 uci set system.@system[0].zonename='Asia/Jakarta'
 uci -q delete system.ntp.server
@@ -36,10 +31,7 @@ uci commit system
 # configure wan interface
 chmod +x /usr/lib/ModemManager/connection.d/10-report-down
 echo "Setup WAN and LAN Interface"
-uci set network.lan.device='br-lan'
-uci set network.lan.proto='static'
 uci set network.lan.ipaddr="192.168.1.1"
-uci set network.lan.netmask='255.255.255.0'
 uci set network.wan=interface 
 uci set network.wan.proto='modemmanager'
 uci set network.wan.device='/sys/devices/platform/scb/fd500000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/usb2/2-1'
@@ -63,14 +55,16 @@ uci commit dhcp
 echo "Setup Wireless if available"
 uci set wireless.@wifi-device[0].disabled='0'
 uci set wireless.@wifi-iface[0].disabled='0'
+uci set wireless.@wifi-iface[0].encryption='psk2'
+uci set wireless.@wifi-iface[0].key='rtawrt2024'
 uci set wireless.@wifi-device[0].country='ID'
 if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
-  uci set wireless.@wifi-iface[0].ssid='RTA-WRT_5g'
+  uci set wireless.@wifi-iface[0].ssid='rtaWrt_5g'
   uci set wireless.@wifi-device[0].channel='149'
   uci set wireless.radio0.htmode='HT40'
   uci set wireless.radio0.band='5g'
 else
-  uci set wireless.@wifi-iface[0].ssid='RTA-WRT_2g'
+  uci set wireless.@wifi-iface[0].ssid='rtaWrt_2g'
   uci set wireless.@wifi-device[0].channel='1'
   uci set wireless.@wifi-device[0].band='2g'
 fi
@@ -130,34 +124,27 @@ chmod +x /etc/init.d/vnstat_backup
 bash /etc/init.d/vnstat_backup enable
 
 # adjusting app catagory
+sed -i 's/services/nas/g' /usr/lib/lua/luci/controller/aria2.lua 2>/dev/null || sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-aria2.json
+sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-samba4.json
+sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-hd-idle.json
 sed -i 's/services/modem/g' /usr/share/luci/menu.d/luci-app-lite-watchdog.json
 
 # setup misc settings
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
 sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/neofetch/' /etc/profile
 chmod +x /root/fix-tinyfm.sh && bash /root/fix-tinyfm.sh
+chmod +x /root/install2.sh && bash /root/install2.sh
 chmod +x /sbin/sync_time.sh
 chmod +x /sbin/free.sh
 chmod +x /usr/bin/neofetch
 chmod +x /usr/bin/clock
+chmod +x /usr/bin/mount_hdd
 chmod +x /usr/bin/openclash.sh
+chmod +x /usr/bin/cek_sms.sh
 
 # configurating openclash
 if opkg list-installed | grep luci-app-openclash > /dev/null; then
   echo "Openclash Detected!"
-  echo "Start Patch YACD and Openclash Core"
-  if [ -d "/usr/share/openclash/ui/yacd.new" ]; then
-    echo "Configuring YACD..."
-    if mv /usr/share/openclash/ui/yacd /usr/share/openclash/ui/yacd.old; then
-      mv /usr/share/openclash/ui/yacd.new /usr/share/openclash/ui/yacd
-    fi
-  fi
-  if [ -f "/etc/config/openclash" ]; then
-    rm -rf /etc/config/openclash
-    mv /etc/config/openclash1 /etc/config/openclash
-  else
-    mv /etc/config/openclash1 /etc/config/openclash
-  fi
   echo "Configuring Core..."
   chmod +x /etc/openclash/core/clash
   chmod +x /etc/openclash/core/clash_tun

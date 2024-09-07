@@ -5,30 +5,16 @@
 # Download packages from official snapshots, stable repo's urls and custom repo's.
 {
 files1=(
-    "modemmanager|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
-    "libmbim|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
+    "modemmanager-rpcd|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
+    "luci-proto-modemmanager|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
     "libqmi|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
+    "libmbim|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
+    "modemmanager|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
     "sms-tool|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
     "luci-app-argon-config|https://fantastic-packages.github.io/packages/releases/23.05/packages/x86_64/luci"
-    #"luci-theme-argon|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    #"luci-app-cpu-status-mini|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    #"luci-app-diskman|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    #"luci-app-disks-info|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    #"luci-app-log|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    #"luci-app-temp-status|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    #"luci-app-internet-detector|https://fantastic-packages.github.io/packages/releases/$(echo "$BRANCH" | cut -d'.' -f1-2)/packages/x86_64/luci"
-    "internet-detector|https://fantastic-packages.github.io/packages/releases/23.05/packages/x86_64/packages"
-    "internet-detector-mod-modem-restart|https://fantastic-packages.github.io/packages/releases/23.05/packages/x86_64/packages"
     "luci-app-netspeedtest|https://fantastic-packages.github.io/packages/releases/23.05/packages/x86_64/luci"
-    "python3-speedtest-cli|https://downloads.openwrt.org/releases/packages-$(echo "$BRANCH" | cut -d'.' -f1-2)/$ARCH_3/packages"
-    "librespeed-go|https://downloads.openwrt.org/releases/packages-$(echo "$BRANCH" | cut -d'.' -f1-2)/$ARCH_3/packages"
-    #"luci-app-ramfree|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    #"quickstart|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    #"luci-app-tinyfilemanager|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    #"modeminfo|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    #"atinout|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    #"luci-app-poweroff|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
-    #"xmm-modem|https://dl.openwrt.ai/23.05/packages/$ARCH_3/kiddin9"
+    #"python3-speedtest-cli|https://downloads.openwrt.org/releases/packages-$(echo "$BRANCH" | cut -d'.' -f1-2)/$ARCH_3/packages"
+    #"librespeed-go|https://downloads.openwrt.org/releases/packages-$(echo "$BRANCH" | cut -d'.' -f1-2)/$ARCH_3/packages"
 )
 
 echo "###########################################################"
@@ -74,18 +60,8 @@ if [ "$TYPE" == "AMLOGIC" ]; then
 fi
 
 files2+=(
-    #"luci-app-sms-tool-js|https://api.github.com/repos/4IceG/luci-app-sms-tool-js/releases/latest"
-    #"luci-app-modemband|https://api.github.com/repos/4IceG/luci-app-modemband/releases/latest"
-    #"modemband|https://api.github.com/repos/4IceG/luci-app-modemband/releases/latest"
-    #"luci-app-lite-watchdog|https://api.github.com/repos/4IceG/luci-app-lite-watchdog/releases/latest"
-    #"luci-app-3ginfo-lite|https://api.github.com/repos/4IceG/luci-app-3ginfo-lite/releases/latest"
     "luci-app-netmonitor|https://api.github.com/repos/rtaserver/rta-packages/releases"
     "luci-app-base64|https://api.github.com/repos/rtaserver/rta-packages/releases"
-    "luci-theme-rta|https://api.github.com/repos/rtaserver/RTA-Theme-OpenWrt/releases/latest"
-    "luci-app-rtaconfig|https://api.github.com/repos/rtaserver/RTA-Theme-OpenWrt/releases/latest"
-    "luci-theme-alpha|https://api.github.com/repos/derisamedia/luci-theme-alpha/releases/latest"
-    "luci-app-alpha-config|https://api.github.com/repos/derisamedia/luci-theme-alpha/releases/latest"
-    "luci-app-quickstart|https://api.github.com/repos/animegasan/luci-app-quickstart/releases/latest"
 )
 
 echo "#########################################"
@@ -111,31 +87,6 @@ for entry in "${files2[@]}"; do
 done
 }
 
-#################################################################################################################################
-# Download custom packages from external-package-urls.txt
-
-echo "###################################################"
-echo "Downloading packages from external-package-urls.txt"
-echo "###################################################"
-echo "#"
-[ "$ARCH_1" == "amd64" ] && ARCH_1=x86
-if [[ "$BRANCH" == "21.02.7" ]]; then
-    if [[ "$TYPE" == "AMLOGIC" ]]; then
-      grep -E "^all-all|^old-21.02|^amlogic-21.02|^amlogic" external-package-urls.txt | awk '{print $2}' > output_url.txt
-    else
-      grep -E "^all-all|^old-21.02|^$ARCH_1-21.02|^$ARCH_1" external-package-urls.txt | awk '{print $2}' > output_url.txt
-    fi
-else
-    if [[ "$TYPE" == "AMLOGIC" ]]; then
-      grep -E "^all-all|^all|^amlogic" external-package-urls.txt | grep -vE "^amlogic-21.02" | awk '{print $2}' > output_url.txt
-    else
-      grep -E "^all-all|^all|^$ARCH_1" external-package-urls.txt | grep -vE "^$ARCH_1-21.02" | awk '{print $2}' > output_url.txt
-    fi
-fi
-wget --no-check-certificate -i output_url.txt -nv -P packages
-
-#################################################################################################################################
-
 
 {
     echo "###################################################"
@@ -150,7 +101,14 @@ wget --no-check-certificate -i output_url.txt -nv -P packages
 
     #===============================================
     input_packages=(
-        "luci-app-internet-detector"
+    #"luci-app-passwall"
+    #"luci-app-openclash"
+    "luci-app-mmconfig"
+    "pdnsd-alt"
+    "brook"
+    "luci-app-internet-detector"
+    "internet-detector"
+    "internet-detector-mod-modem-restart"
     "luci-theme-argon"
     "luci-app-cpu-status-mini"
     "luci-app-diskman"
@@ -158,7 +116,6 @@ wget --no-check-certificate -i output_url.txt -nv -P packages
     "luci-app-log"
     "luci-app-temp-status"
     "luci-app-ramfree"
-    "quickstart"
     "luci-app-tinyfilemanager"
     "modeminfo"
     "atinout"
