@@ -4,13 +4,13 @@
 
 </h1>
 
-<h3 align="center">Latest Openwrt - 23.05.4</h3>
+<h3 align="center">Openwrt Terbaru - 23.05.4</h3>
 <p align="center">
 <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.4-20240907"><img src="https://img.shields.io/badge/Build_Latest-20240907-blue?style=for-the-badge&logo=openwrt"></a>
 <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.4-amlogic-20240907"><img src="https://img.shields.io/badge/Amlogic_Latest-20240907-blue?style=for-the-badge&logo=openwrt"></a>
 </p>
 
-<h3 align="center">Latest Openwrt - Snapshots</h3>
+<h3 align="center">Openwrt Pengembangan - Snapshots</h3>
 <p align="center">
 <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/snapshots-20240907"><img src="https://img.shields.io/badge/Build_Snapshots-20240907-blue?style=for-the-badge&logo=openwrt"></a>
 <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/snapshots-amlogic-20240907"><img src="https://img.shields.io/badge/Amlogic_Snapshots-20240907-blue?style=for-the-badge&logo=openwrt"></a>
@@ -34,56 +34,55 @@ Custom Script By FriWrt
 * [MyWrtBuilder](https://github.com/Revincx/MyWrtBuilder) by [Revincx](https://github.com/Revincx)
 * [RadiusMonitor](https://github.com/Maizil41/RadiusMonitor) by [Revincx](https://github.com/Maizil41)
 
-Warning for First Installation: 
+Peringatan untuk Instalasi Pertama:
 ---
-```Initial boot takes a little while due to Repartitioning Storage and additional configuration```
+```Booting awal memerlukan waktu agak lama karena Penyimpanan Partisi Ulang dan konfigurasi tambahan```
 
 
-Firmware details
+Detail firmware
 ---
-Tunneling Include
-* OpenWrt Latest : Openclash And Passwall
+Termasuk Tunneling
+* OpenWrt Terbaru : Openclash Dan Passwall
 * Openwrt Snapshots : OpenClash
 ---
-Hotspot Voucher Settings
-1. Change Network Settings -> Interface -> Device -> br-hotspot . click the Configure button..
-2. Change the Bridge ports section for Voucher Output
-3. Click Save Then Save & Apply
-4. Next, just restart Chilli and Freeradius
+Pengaturan Voucher Hotspot
+1. Ubah Pengaturan Jaringan -> Antarmuka -> Perangkat -> br-hotspot . klik tombol *Configure...*
+2. Ubah bagian *Bridge ports* untuk *Output Voucher*
+3. Klik *Save* Kemudian *Save & Apply*
+4. Selanjutnya tinggal restart Chilli dan Freeradius
     * ```/etc/init.d/chilli/restart```
     * ```/etc/init.d/radiusd restart```
-5. Now Reconnect Device :)
+5. Sekarang Hubungkan Kembali Perangkat :)
 ---
-Database Information
-* MySQL For Admin DB Username = ```root``` & Password = ```radius```
-* MySQL For Radius DB Username = ```radius``` Password = ```radius```
+Informasi *Database*
+* MySQL Untuk Admin DB Nama Pengguna = ```root``` Kata Sandi = ```radius```
+* MySQL Untuk Radius DB Nama Pengguna = ```radius``` Kata Sandi = ```radius```
 ---
-Information
-* 192.168.1.1 | user: root | password: rtawrt
+Informasi
+* 192.168.1.1 | pengguna: root | kata sandi: rtawrt
 
 ---
 * SSID: RTA-WRT_2g / RTA-WRT_5g
-* Modemmanager with auto-reconnect,
-* Automatically expand root partition and filesystem to available free space! (Please be patient because the initial boot process takes a little longer to extend the disk and it also requires two reboot attempts),
-* Openclash with latest beta release and latest MetaCubeX Mihomo core,
-* Passwall as alternate tunneling app,
+* Modemmanager dengan koneksi ulang otomatis,
+* Openclash dengan rilis beta terbaru dan inti MetaCubeX Mihomo terbaru,
+* Passwall sebagai aplikasi *Tunneling* alternatif,
 * TinyFm file manager,
-* Internet Detector and Lite Watchdog,
-* Argon Theme with some cool custom login image,
-* 3ginfo lite and Modeminfo, sms-tool, and other modem support app,
-* OLED Display support (only Raspberrry Pi 4B tested),
-* etc~
+* Internet Detector Dan Lite Watchdog,
+*Tema Argon dengan beberapa gambar login kustom yang keren,
+* 3ginfo lite dan Modeminfo, sms-tool, dan aplikasi dukungan modem lainnya,
+* Dukungan Layar OLED (hanya Raspberrry Pi 4B yang diuji),
+* dll.~
 ---
-Preview
+Pratinjau
 ---
 
 
-* Login View
+* Tampilan Masuk
 <p align="center">
     <img src="/pictures/Login.png">
 </p>
 
-* Main View
+* Tampilan Utama
 <p align="center">
     <img src="/pictures/Status.png">
 </p>
