@@ -183,6 +183,34 @@ sed -i -E "s|127.0.0.1|0.0.0.0|g" /etc/mysql/conf.d/50-server.cnf
 /etc/init.d/mysqld restart
 /etc/init.d/mysqld reload
 
+
+cd /etc/freeradius3/mods-enabled
+rm -rf *
+ln -s ../mods-available/always
+ln -s ../mods-available/attr_filter
+ln -s ../mods-available/chap
+ln -s ../mods-available/detail
+ln -s ../mods-available/digest
+ln -s ../mods-available/eap
+ln -s ../mods-available/exec
+ln -s ../mods-available/expiration
+ln -s ../mods-available/expr
+ln -s ../mods-available/files
+ln -s ../mods-available/logintime
+ln -s ../mods-available/mschap
+ln -s ../mods-available/pap
+ln -s ../mods-available/preprocess
+ln -s ../mods-available/radutmp
+ln -s ../mods-available/realm
+ln -s ../mods-available/sql
+ln -s ../mods-available/sradutmp
+ln -s ../mods-available/unix
+
+cd /etc/freeradius3/sites-enabled
+rm -rf *
+ln -s ../sites-available/default
+ln -s ../sites-available/inner-tunnel
+
 mysql -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('radius');"
 mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'radius';"
 mysql -u root -p"radius" <<EOF
@@ -310,6 +338,9 @@ else
 fi
 
 uci commit firewall
+
+/etc/init.d/radiusd restar
+/etc/init.d/chilli restart
 
 echo "All first boot setup complete!"
 reboot
