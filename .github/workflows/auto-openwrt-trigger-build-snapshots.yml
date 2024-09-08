@@ -16,7 +16,7 @@ jobs:
           repo: rtaserver/RTA-WRT
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
-          inputs: '{"release_branch": "snapshots", "tunnel": "openclash"}'
+          inputs: '{"release_branch": "snapshots", "tunnel": "openclash", "upload-prerelease": "true"}'
   
   trigger-generate-rtawrt-amlogic-snapshots:
     runs-on: ubuntu-latest
@@ -28,7 +28,7 @@ jobs:
           repo: rtaserver/RTA-WRT
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
-          inputs: '{"target": "all", "release_branch": "snapshots", "tunnel": "openclash"}'
+          inputs: '{"target": "all", "release_branch": "snapshots", "tunnel": "openclash", "upload-prerelease": "true"}'
 
   del_runs:
     runs-on: ubuntu-latest
