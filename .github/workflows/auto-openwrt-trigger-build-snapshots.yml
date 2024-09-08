@@ -28,7 +28,7 @@ jobs:
           repo: rtaserver/RTA-WRT
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
-          inputs: '{"release_branch": "snapshots", "tunnel": "openclash"}'
+          inputs: '{"target": "all", "release_branch": "snapshots", "tunnel": "openclash"}'
 
   del_runs:
     runs-on: ubuntu-latest

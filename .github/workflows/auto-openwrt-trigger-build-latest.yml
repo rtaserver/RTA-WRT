@@ -28,7 +28,7 @@ jobs:
           repo: rtaserver/RTA-WRT
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: main
-          inputs: '{"release_branch": "23.05.4", "tunnel": "openclash-passwall"}'
+          inputs: '{"target": "all", "release_branch": "23.05.4", "tunnel": "openclash-passwall"}'
 
   del_runs:
     runs-on: ubuntu-latest
