@@ -10,7 +10,7 @@ opkg_updated=false
 openclash_api="https://api.github.com/repos/vernesong/OpenClash/releases"
 openclash_file="luci-app-openclash"
 openclash_file_down="$(curl -s "${openclash_api}" | grep "browser_download_url" | grep -oE "https.*${openclash_file}.*.ipk" | head -n 1)"
-patchoc="https://raw.githubusercontent.com/frizkyiman/friWrt-MyWrtBuilder/main/files/usr/bin/patchoc.sh"
+patchoc="https://raw.githubusercontent.com/rtaserver/RTA-WRT/main/files/usr/bin/patchoc.sh"
 
 check_and_install_packages() {
     required_packages=("wget-ssl" "bash" "curl" "gzip" "tar")
@@ -76,7 +76,7 @@ install_openclash_core() {
     core_dir="/etc/openclash/core"
     ARCH_1=$(uname -m) && { [ "$ARCH_1" == "aarch64" ] && ARCH_1="arm64"; } || { [ "$ARCH_1" == "x86_64" ] && ARCH_1="amd64" && ARCH_2="x86_64"; }
     rm -r "$core_dir"
-    wget -qO- https://github.com/frizkyiman/friWrt-MyWrtBuilder/raw/main/scripts/clash-core.sh | bash -s "$yacd_dir" "$core_dir" "$ARCH_1" "$ARCH_2"
+    wget -qO- https://github.com/ratserver/RTA-WRT/raw/main/scripts/clash-core.sh | bash -s "$yacd_dir" "$core_dir" "$ARCH_1" "$ARCH_2"
     echo -e "${SUCCESS} Done!"
     if [ -d "$yacd_dir/yacd.new" ]; then
         [ -d "$yacd_dir/yacd.old" ] && rm -rf "$yacd_dir/yacd.old"
