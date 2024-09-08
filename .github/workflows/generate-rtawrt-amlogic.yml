@@ -302,6 +302,7 @@ jobs:
           release_name: "RTA-WRT Amlogic OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
           overwrite: true
           prerelease: ${{ env.PRE_RELEASE }}
+          make_latest: true
           body: |
             ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-amlogic-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
 
