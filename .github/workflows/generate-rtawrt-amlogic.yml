@@ -328,12 +328,13 @@ jobs:
 
       - name: Update README.md
         run: |
+          DATE="$(date +'%Y%m%d')"
           if [ "$BRANCH" == "snapshots" ]; then
-            sed -i -E "s|Amlogic_Snapshots-[0-9]{8}-blue|Amlogic_Snapshots-${{ env.DATE }}-blue|g" README.md
-            sed -i -E "s|snapshots-amlogic-[0-9]{8}-blue|snapshots-amlogic-${{ env.DATE }}-blue|g" README.md
+            sed -i -E "s|Amlogic_Snapshots-[0-9]{8}-blue|Amlogic_Snapshots-$DATE-blue|g" README.md
+            sed -i -E "s|snapshots-amlogic-[0-9]{8}-blue|snapshots-amlogic-$DATE-blue|g" README.md
           else
-            sed -i -E "s|Amlogic_Latest-[0-9]{8}-blue|Amlogic_Latest-${{ env.DATE }}-blue|g" README.md
-            sed -i -E "s|23.05.4-amlogic-[0-9]{8}-blue|23.05.4-amlogic-${{ env.DATE }}-blue|g" README.md
+            sed -i -E "s|Amlogic_Latest-[0-9]{8}-blue|Amlogic_Latest-$DATE-blue|g" README.md
+            sed -i -E "s|23.05.4-amlogic-[0-9]{8}-blue|23.05.4-amlogic-$DATE-blue|g" README.md
           fi
       
       - name: Commit changes
