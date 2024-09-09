@@ -17,7 +17,7 @@ Custom Script By FriWrt
 * [Apache License 2.0](https://github.com/rtaserver/RTA-WRT/blob/main/LICENSE)
 * [friWrt-MyWrtBuilder](https://github.com/frizkyiman/friWrt-MyWrtBuilder) by [frizkyiman](https://github.com/frizkyiman)
 * [MyWrtBuilder](https://github.com/Revincx/MyWrtBuilder) by [Revincx](https://github.com/Revincx)
-* [RadiusMonitor](https://github.com/Maizil41/RadiusMonitor) by [Revincx](https://github.com/Maizil41)
+* [RadiusMonitor](https://github.com/Maizil41/RadiusMonitor) by [Maizil41](https://github.com/Maizil41)
 
 Warning for First Installation: 
 ---
