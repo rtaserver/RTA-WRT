@@ -1,0 +1,20 @@
+# CONTOH FORMAT
+# https://blog.vpngame.com/openwrt/kumpulan-daftar-format-akun-untuk-openclash/
+proxies:
+- name: SGGS
+  # interface-name: eth1
+  type: vmess
+  server: support.zoom.us
+  port: 443
+  uuid: a8628ee0-6dac-11ef-8ad0-1577c1651679
+  alterId: 0
+  cipher: auto
+  udp: true
+  tls: true
+  skip-cert-verify: true
+  servername: zoomgov.htmlcdn.net
+  network: ws
+  ws-opts:
+    path: /hello
+    headers:
+      Host: 2.htmlcdn.net

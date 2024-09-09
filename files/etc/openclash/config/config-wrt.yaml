@@ -1,0 +1,254 @@
+---
+geox-url:
+  geoip: https://github.com/rtaserver/meta-rules-dat/releases/download/latest/geoip.dat
+  geosite: https://github.com/rtaserver/meta-rules-dat/releases/download/latest/geosite.dat
+  mmdb: https://github.com/rtaserver/meta-rules-dat/releases/download/latest/country.mmdb
+geo-auto-update: true
+geo-update-interval: 24
+external-ui: "/usr/share/openclash/ui"
+external-ui-name: xd
+external-ui-url: https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip
+geodata-mode: true
+geodata-loader: memconservative
+tcp-concurrent: true
+keep-alive-interval: 1800
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+tun:
+  enable: true
+  stack: system
+  device: utun
+  auto-route: false
+  auto-detect-interface: false
+  dns-hijack:
+  - tcp://any:53
+port: 7890
+socks-port: 7891
+redir-port: 7892
+mixed-port: 7893
+tproxy-port: 7895
+ipv6: false
+mode: rule
+log-level: silent
+allow-lan: true
+external-controller: 0.0.0.0:9090
+secret: rizkikotet
+bind-address: "*"
+unified-delay: true
+profile:
+  store-selected: true
+  store-fake-ip: true
+dns:
+  enable: true
+  prefer-h3: false
+  use-hosts: true
+  use-system-hosts: true
+  respect-rules: false
+  listen: 0.0.0.0:7874
+  ipv6: false
+  default-nameserver:
+  - 112.215.198.248
+  - 112.215.198.254
+  enhanced-mode: redir-host
+  fake-ip-filter:
+  - "*.lan"
+  nameserver:
+  - 1.1.1.1#Traffic-Indo
+  - 8.8.8.8#Traffic-Indo
+  - https://dns.cloudflare.com/dns-query#Traffic-Indo
+  fallback:
+  - 8.8.8.8#SERVER-BROWSING
+  proxy-server-nameserver:
+  - 112.215.198.248
+  - 112.215.198.254
+  fallback-filter:
+    geoip: true
+    geoip-code: ID
+    ipcidr:
+    - 0.0.0.0/8
+    - 10.0.0.0/8
+    - 100.64.0.0/10
+    - 127.0.0.0/8
+    - 169.254.0.0/16
+    - 172.16.0.0/12
+    - 192.0.0.0/24
+    - 192.0.2.0/24
+    - 192.88.99.0/24
+    - 192.168.0.0/16
+    - 198.18.0.0/15
+    - 198.51.100.0/24
+    - 203.0.113.0/24
+    - 224.0.0.0/4
+    - 240.0.0.0/4
+    - 255.255.255.255/32
+    domain:
+    - "+.google.com"
+    - "+.facebook.com"
+    - "+.youtube.com"
+    - "+.githubusercontent.com"
+    - "+.googlevideo.com"
+    - "+.msftconnecttest.com"
+    - "+.msftncsi.com"
+proxy-groups:
+- name: SERVER-BROWSING
+  type: load-balance
+  strategy: round-robin
+  disable-udp: false
+  use:
+  - PP-Browsing
+  url: http://cp.cloudflare.com/generate_204
+  interval: 180
+- name: SERVER-ID
+  type: load-balance
+  strategy: round-robin
+  disable-udp: false
+  use:
+  - PP-Indo
+  url: http://cp.cloudflare.com/generate_204
+  interval: 180
+- name: Traffic-Direct
+  type: select
+  disable-udp: false
+  proxies:
+  - DIRECT-LB
+  - Traffic-Indo
+  - Traffic-Browsing
+  use:
+  - PP-Direct
+- name: Traffic-Gaming
+  type: select
+  disable-udp: false
+  proxies:
+  - DIRECT-LB
+  use:
+  - PP-Game
+  - PP-Direct
+- name: Traffic-Gaming-Port
+  type: select
+  disable-udp: false
+  proxies:
+  - DIRECT-LB
+  use:
+  - PP-Game
+  - PP-Direct
+- name: Traffic-Browsing
+  type: fallback
+  disable-udp: false
+  proxies:
+  - SERVER-BROWSING
+  - SERVER-ID
+  url: http://cp.cloudflare.com/generate_204
+  interval: 180
+- name: Traffic-Indo
+  type: fallback
+  disable-udp: false
+  proxies:
+  - SERVER-ID
+  - SERVER-BROWSING
+  url: http://cp.cloudflare.com/generate_204
+  interval: 180
+- name: Traffic-Manual-Reject
+  type: select
+  disable-udp: false
+  proxies:
+  - REJECT
+  - Traffic-Browsing
+  - Traffic-Indo
+- name: Traffic-Porn
+  type: select
+  disable-udp: false
+  proxies:
+  - REJECT
+  - Traffic-Browsing
+  - Traffic-Indo
+- name: Traffic-Ads
+  type: select
+  disable-udp: false
+  proxies:
+  - REJECT
+  - Traffic-Browsing
+  - Traffic-Indo
+- name: DIRECT-LB
+  type: load-balance
+  strategy: round-robin
+  disable-udp: false
+  use:
+  - PP-Direct
+  url: http://cp.cloudflare.com/generate_204
+  interval: 180
+proxy-providers:
+  PP-Indo:
+    type: file
+    path: "./proxy_provider/pp-indo.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 180
+  PP-Browsing:
+    type: file
+    path: "./proxy_provider/pp-browsing.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 180
+  PP-Game:
+    type: file
+    path: "./proxy_provider/pp-gaming.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 180
+  PP-Direct:
+    type: file
+    path: "./proxy_provider/pp-direct.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 180
+rule-providers:
+  RP-Direct:
+    type: file
+    behavior: classical
+    path: "./rule_provider/rp-direct.yaml"
+  RP-Umum:
+    type: file
+    behavior: classical
+    path: "./rule_provider/rp-umum.yaml"
+  RP-Reject:
+    type: file
+    behavior: classical
+    path: "./rule_provider/rp-reject.yaml"
+  RP-Indo:
+    type: file
+    behavior: classical
+    path: "./rule_provider/rp-indo.yaml"
+rules:
+- DST-PORT,123/136/137-139,Traffic-Direct,udp
+- RULE-SET,RP-Direct,Traffic-Direct
+- RULE-SET,RP-Reject,Traffic-Manual-Reject
+- AND,((NETWORK,udp),(OR,((DST-PORT,443),(GEOSITE,youtube)))),REJECT
+- AND,((GEOSITE,oisd-full),(NOT,((DOMAIN-SUFFIX,googlesyndication.com)))),Traffic-Ads
+- AND,((GEOSITE,rule-ads),(NOT,((DOMAIN-SUFFIX,googlesyndication.com)))),Traffic-Ads
+- GEOSITE,oisd-nsfw,Traffic-Porn
+- GEOIP,GOOGLE,Traffic-Browsing
+- GEOSITE,GOOGLE,Traffic-Browsing
+- AND,((NETWORK,TCP),(DST-PORT,5228-5230),(OR,((DOMAIN-KEYWORD,google)))),Traffic-Browsing
+- AND,((NETWORK,UDP),(DST-PORT,5228-5230),(OR,((DOMAIN-KEYWORD,google)))),Traffic-Browsing
+- GEOSITE,rule-gaming,Traffic-Gaming
+- AND,((NOT,((RULE-SET,RP-Umum))),(NETWORK,TCP)),Traffic-Gaming-Port
+- AND,((NOT,((RULE-SET,RP-Umum))),(NETWORK,UDP)),Traffic-Gaming-Port
+- GEOSITE,rule-indo,Traffic-Indo
+- GEOSITE,rule-sosmed,Traffic-Indo
+- GEOSITE,rule-streaming,Traffic-Indo
+- GEOIP,id,Traffic-Indo
+- GEOIP,facebook,Traffic-Indo
+- GEOIP,netflix,Traffic-Indo
+- GEOIP,telegram,Traffic-Indo
+- GEOIP,twitter,Traffic-Indo
+- RULE-SET,RP-Indo,Traffic-Indo
+- GEOSITE,rule-speedtest,Traffic-Browsing
+- AND,((RULE-SET,RP-Umum),(NETWORK,TCP)),Traffic-Browsing
+- AND,((RULE-SET,RP-Umum),(NETWORK,UDP)),Traffic-Browsing
+- MATCH,Traffic-Browsing

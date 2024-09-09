@@ -330,11 +330,11 @@ jobs:
         run: |
           DATE="$(date +'%Y%m%d')"
           if [ "$BRANCH" == "snapshots" ]; then
-            sed -i -E "s|Amlogic_Snapshots-[0-9]{8}-blue|Amlogic_Snapshots-$DATE-blue|g" README.md
-            sed -i -E "s|snapshots-amlogic-[0-9]{8}-blue|snapshots-amlogic-$DATE-blue|g" README.md
+            sed -i -E "s|Amlogic_Snapshots-[0-9]{8}-blue|Amlogic_Snapshots-$DATE-blue|g" origin/README.md
+            sed -i -E "s|snapshots-amlogic-[0-9]{8}-blue|snapshots-amlogic-$DATE-blue|g" origin/README.md
           else
-            sed -i -E "s|Amlogic_Latest-[0-9]{8}-blue|Amlogic_Latest-$DATE-blue|g" README.md
-            sed -i -E "s|23.05.4-amlogic-[0-9]{8}-blue|23.05.4-amlogic-$DATE-blue|g" README.md
+            sed -i -E "s|Amlogic_Latest-[0-9]{8}-blue|Amlogic_Latest-$DATE-blue|g" origin/README.md
+            sed -i -E "s|23.05.4-amlogic-[0-9]{8}-blue|23.05.4-amlogic-$DATE-blue|g" origin/README.md
           fi
       
       - name: Commit changes
@@ -342,7 +342,7 @@ jobs:
         with:
           author_name: github-actions
           author_email: github-actions@github.com
-          message: "Auto Update $(date +'%Y-%m-%d %H:%M:%S')"
+          message: "Auto Update"
 
 
   del_runs:

@@ -1,0 +1,18 @@
+proxies:
+- name: ISP 1
+  type: direct
+  udp: true
+  ip-version: ipv4
+  interface-name: eth1
+
+- name: ISP 2
+  type: direct
+  udp: true
+  ip-version: ipv4
+  interface-name: wwan0
+
+- name: ISP 3
+  type: direct
+  udp: true
+  ip-version: ipv4
+  interface-name: usb0
