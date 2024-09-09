@@ -4,17 +4,17 @@ proxies:
 - name: SGGS
   # interface-name: eth1
   type: vmess
-  server: support.zoom.us
+  server: HOST
   port: 443
-  uuid: a8628ee0-6dac-11ef-8ad0-1577c1651679
+  uuid: UUID
   alterId: 0
   cipher: auto
   udp: true
   tls: true
   skip-cert-verify: true
-  servername: zoomgov.htmlcdn.net
+  servername: HOST
   network: ws
   ws-opts:
-    path: /hello
+    path: /PATH
     headers:
-      Host: 2.htmlcdn.net
+      Host: HOST
