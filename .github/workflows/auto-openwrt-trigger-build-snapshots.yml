@@ -19,6 +19,7 @@ jobs:
           inputs: '{"release_branch": "snapshots", "tunnel": "openclash", "upload-prerelease": "true"}'
   
   trigger-generate-rtawrt-amlogic-snapshots:
+    needs: trigger-generate-rtawrt-snapshots
     runs-on: ubuntu-latest
     steps:
       - name: Trigger generate-rtawrt-amlogic
@@ -30,16 +31,28 @@ jobs:
           ref: main
           inputs: '{"target": "all", "release_branch": "snapshots", "tunnel": "openclash", "upload-prerelease": "true"}'
 
-  del_runs:
+  stale:
+    needs: trigger-generate-rtawrt-amlogic-snapshots
     runs-on: ubuntu-latest
-    permissions:
-      actions: write
-      contents: read
     steps:
-      - name: Delete old workflow runs
-        uses: Mattraks/delete-workflow-runs@v2
+      - uses: actions/stale@v7.0.0
+        with:
+          stale-issue-message: "Stale Issue"
+          stale-pr-message: "Stale PR"
+          stale-issue-label: "no-issue-activity"
+          exempt-issue-labels: "awaiting-approval,awaiting,work-in-progress"
+          stale-pr-label: "no-pr-activity"
+          exempt-pr-labels: "awaiting-approval,awaiting,work-in-progress"
+          # only-labels: 'bug,enhancement'
+          days-before-issue-stale: 10
+          days-before-pr-stale: 10
+          days-before-issue-close: 5
+          days-before-pr-close: -1
+          operations-per-run: 500
+
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2.0.3
         with:
           token: ${{ github.token }}
           repository: ${{ github.repository }}
           retain_days: 0
-          keep_minimum_runs: 1
