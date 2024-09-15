@@ -30,19 +30,7 @@ Tunneling Include
 * OpenWrt Latest : Openclash And Passwall
 * Openwrt Snapshots : OpenClash
 ---
-Hotspot Voucher Settings
-1. Change Network Settings -> Interface -> Device -> br-hotspot . click the Configure button..
-2. Change the Bridge ports section for Voucher Output
-3. Click Save Then Save & Apply
-4. Next, just restart Chilli and Freeradius
-    * ```/etc/init.d/chilli/restart```
-    * ```/etc/init.d/radiusd restart```
-5. Now Reconnect Device :)
----
-Database Information
-* MySQL For Admin DB Username = ```root``` & Password = ```radius```
-* MySQL For Radius DB Username = ```radius``` Password = ```radius```
----
+
 Information
 * 192.168.1.1 | user: root | password: rtawrt
 

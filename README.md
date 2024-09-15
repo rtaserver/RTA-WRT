@@ -45,19 +45,7 @@ Termasuk Tunneling
 * OpenWrt Terbaru : Openclash Dan Passwall
 * Openwrt Snapshots : OpenClash
 ---
-Pengaturan Voucher Hotspot
-1. Ubah Pengaturan Jaringan -> Antarmuka -> Perangkat -> br-hotspot . klik tombol *Configure...*
-2. Ubah bagian *Bridge ports* untuk *Output Voucher*
-3. Klik *Save* Kemudian *Save & Apply*
-4. Selanjutnya tinggal restart Chilli dan Freeradius
-    * ```/etc/init.d/chilli/restart```
-    * ```/etc/init.d/radiusd restart```
-5. Sekarang Hubungkan Kembali Perangkat :)
----
-Informasi *Database*
-* MySQL Untuk Admin DB Nama Pengguna = ```root``` Kata Sandi = ```radius```
-* MySQL Untuk Radius DB Nama Pengguna = ```radius``` Kata Sandi = ```radius```
----
+
 Informasi
 * 192.168.1.1 | pengguna: root | kata sandi: rtawrt
 
