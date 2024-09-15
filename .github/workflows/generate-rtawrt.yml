@@ -309,11 +309,12 @@ jobs:
           fi
       
       - name: Commit changes
-        uses: EndBug/add-and-commit@v9
-        with:
-          author_name: github-actions
-          author_email: github-actions@github.com
-          message: "Auto Update"
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add README.md
+          git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')"
+          git push
 
 
   del_runs:

@@ -5,5 +5,4 @@
 # change to your drive path and uncomment below
 #mount_hdd /dev/sda1 /mnt/sda1
 
-/etc/init.d/radiusd restart
 exit 0

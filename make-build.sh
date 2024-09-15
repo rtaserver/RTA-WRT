@@ -57,21 +57,6 @@ php8-mod-fileinfo php8-mod-filter php8-mod-gd php8-mod-iconv php8-mod-intl php8-
 php8-mod-mysqlnd php8-mod-opcache php8-mod-openssl php8-mod-pdo php8-mod-pdo-mysql php8-mod-phar php8-mod-session \
 php8-mod-xml php8-mod-xmlreader php8-mod-xmlwriter php8-mod-zip"
 
-# MARIADB
-PACKAGES+=" mariadb-server mariadb-server-extra mariadb-client mariadb-client-extra libmariadb"
-
-PACKAGES+=" freeradius3 freeradius3-common freeradius3-default freeradius3-mod-always freeradius3-mod-attr-filter \
-freeradius3-mod-chap freeradius3-mod-detail freeradius3-mod-digest freeradius3-mod-eap \
-freeradius3-mod-eap-gtc freeradius3-mod-eap-md5 freeradius3-mod-eap-mschapv2 freeradius3-mod-eap-peap \
-freeradius3-mod-eap-pwd freeradius3-mod-eap-tls freeradius3-mod-eap-ttls freeradius3-mod-exec \
-freeradius3-mod-expiration freeradius3-mod-expr freeradius3-mod-files freeradius3-mod-logintime \
-freeradius3-mod-mschap freeradius3-mod-pap freeradius3-mod-preprocess freeradius3-mod-radutmp \
-freeradius3-mod-realm freeradius3-mod-sql freeradius3-mod-sql-mysql freeradius3-mod-sqlcounter \
-freeradius3-mod-unix freeradius3-utils libfreetype wget-ssl curl unzip tar zoneinfo-asia"
-
-PACKAGES+=" coova-chilli"
-
-
 # Misc and some custom .ipk files
 misc+=" luci-app-temp-status luci-app-cpu-status-mini"
 
