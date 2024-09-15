@@ -127,6 +127,7 @@ sed -i 's/services/nas/g' /usr/lib/lua/luci/controller/aria2.lua 2>/dev/null || 
 sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-samba4.json
 sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-hd-idle.json
 sed -i 's/services/modem/g' /usr/share/luci/menu.d/luci-app-lite-watchdog.json
+sed -i -E "s|status|services|g" /usr/lib/lua/luci/controller/base64.lua
 
 # setup misc settings
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
