@@ -56,7 +56,7 @@ Informasi
 * Passwall sebagai aplikasi *Tunneling* alternatif,
 * TinyFm file manager,
 * Internet Detector Dan Lite Watchdog,
-*Tema Argon dengan beberapa gambar login kustom yang keren,
+* Tema Argon dengan beberapa gambar login kustom yang keren,
 * 3ginfo lite dan Modeminfo, sms-tool, dan aplikasi dukungan modem lainnya,
 * Dukungan Layar OLED (hanya Raspberrry Pi 4B yang diuji),
 * dll.~
