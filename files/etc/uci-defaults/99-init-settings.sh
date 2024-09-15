@@ -152,6 +152,8 @@ if opkg list-installed | grep luci-app-openclash > /dev/null; then
   echo "Patching Openclash Overview"
   bash /usr/bin/patchoc.sh
   sed -i '/exit 0/i #/usr/bin/patchoc.sh' /etc/rc.local
+  ln -s /etc/openclash/history/config-wrt.db /etc/openclash/cache.db
+  ln -s /etc/openclash/core/clash_meta  /etc/openclash/clash
   echo "YACD and Core setup complete!"
 else
   echo "No Openclash Detected."
