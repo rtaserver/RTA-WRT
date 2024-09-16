@@ -92,7 +92,7 @@ echo "src/gz custom_arch https://dl.openwrt.ai/latest/packages/$(grep "OPENWRT_A
 
 # set argon as default theme
 echo "Setup Default Theme"
-uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
+uci set luci.main.mediaurlbase='/luci-static/material' && uci commit
 
 echo "Setup misc settings"
 # remove login password required when accessing terminal
