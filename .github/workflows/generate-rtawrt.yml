@@ -300,10 +300,10 @@ jobs:
           DATE="$(date +'%Y%m%d')"
           if [ "$BRANCH" == "snapshots" ]; then
             sed -i -E "s|Build_Snapshots-[0-9]{8}-blue|Build_Snapshots-$DATE-blue|g" README.md
-            sed -i -E "s|snapshots-[0-9]{8}-blue|snapshots-$DATE-blue|g" README.md
+            sed -i -E "s|snapshots-[0-9]{8}|snapshots-$DATE|g" README.md
           else
             sed -i -E "s|Build_Latest-[0-9]{8}-blue|Build_Latest-$DATE-blue|g" README.md
-            sed -i -E "s|23.05.4-[0-9]{8}-blue|23.05.4-$DATE-blue|g" README.md
+            sed -i -E "s|23.05.4-[0-9]{8}|23.05.4-$DATE|g" README.md
           fi
       
       - name: Commit changes
