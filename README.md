@@ -12,7 +12,7 @@
 
 <h3 align="center">Openwrt Pengembangan - Snapshots</h3>
 <p align="center">
-<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/snapshots-20240907"><img src="https://img.shields.io/badge/Build_Snapshots-20240907-blue?style=for-the-badge&logo=openwrt"></a>
+<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/snapshots-20240916"><img src="https://img.shields.io/badge/Build_Snapshots-20240916-blue?style=for-the-badge&logo=openwrt"></a>
 <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/snapshots-amlogic-20240907"><img src="https://img.shields.io/badge/Amlogic_Snapshots-20240907-blue?style=for-the-badge&logo=openwrt"></a>
 </p>
 <p align="center">
