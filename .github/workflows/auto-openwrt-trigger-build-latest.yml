@@ -2,7 +2,7 @@ name: Auto Trigger Build Openwrt Latest
 
 on:
   schedule:
-    - cron: '0 2 * * 0'  # Latest build every Sunday at 02:00 UTC
+    - cron: '0 0 * * 0'  # Latest build every Sunday at 00:00 UTC
   workflow_dispatch:
 
 jobs:
