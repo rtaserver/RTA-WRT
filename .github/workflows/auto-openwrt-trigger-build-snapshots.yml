@@ -9,27 +9,39 @@ jobs:
   trigger-generate-rtawrt-snapshots:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger generate-rtawrt
-        uses: benc-uk/workflow-dispatch@v1
+      - name: Trigger and Wait for generate-rtawrt
+        uses: convictional/trigger-workflow-and-wait@v1.6.1
         with:
-          workflow: generate-rtawrt.yml
-          repo: rtaserver/RTA-WRT
-          token: ${{ secrets.GITHUB_TOKEN }}
+          owner: rtaserver
+          repo: RTA-WRT
+          github_token: ${{ secrets.GITHUB_PERSONAL_ACCESS_TOKEN }}
+          github_user: rtaserver
+          workflow_file_name: generate-rtawrt.yml
           ref: main
-          inputs: '{"release_branch": "snapshots", "tunnel": "openclash", "upload-prerelease": "true"}'
-  
+          wait_interval: 10
+          client_payload: '{"release_branch": "snapshots", "tunnel": "openclash", "upload-prerelease": "true"}'
+          propagate_failure: true
+          trigger_workflow: true
+          wait_workflow: true
+
   trigger-generate-rtawrt-amlogic-snapshots:
-    needs: trigger-generate-rtawrt-snapshots
+    needs: trigger-generate-rtawrt-latest
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger generate-rtawrt-amlogic
-        uses: benc-uk/workflow-dispatch@v1
+      - name: Trigger and Wait for generate-rtawrt-amlogic
+        uses: convictional/trigger-workflow-and-wait@v1.6.1
         with:
-          workflow: generate-rtawrt-amlogic.yml
-          repo: rtaserver/RTA-WRT
-          token: ${{ secrets.GITHUB_TOKEN }}
+          owner: rtaserver
+          repo: RTA-WRT
+          github_token: ${{ secrets.GITHUB_PERSONAL_ACCESS_TOKEN }}
+          github_user: rtaserver
+          workflow_file_name: generate-rtawrt-amlogic.yml
           ref: main
-          inputs: '{"target": "all", "release_branch": "snapshots", "tunnel": "openclash", "upload-prerelease": "true"}'
+          wait_interval: 10
+          client_payload: '{"target": "all", "release_branch": "snapshots", "tunnel": "openclash", "upload-prerelease": "true"}'
+          propagate_failure: true
+          trigger_workflow: true
+          wait_workflow: true
 
   stale:
     needs: trigger-generate-rtawrt-amlogic-snapshots
