@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger and Wait for generate-rtawrt
-        uses: convictional/trigger-workflow-and-wait@v1.6.1
+        uses: convictional/trigger-workflow-and-wait@v1.6.5
         with:
           owner: rtaserver
           repo: RTA-WRT
@@ -25,11 +25,11 @@ jobs:
           wait_workflow: true
 
   trigger-generate-rtawrt-amlogic-snapshots:
-    needs: trigger-generate-rtawrt-latest
+    needs: trigger-generate-rtawrt-snapshots
     runs-on: ubuntu-latest
     steps:
       - name: Trigger and Wait for generate-rtawrt-amlogic
-        uses: convictional/trigger-workflow-and-wait@v1.6.1
+        uses: convictional/trigger-workflow-and-wait@v1.6.5
         with:
           owner: rtaserver
           repo: RTA-WRT
