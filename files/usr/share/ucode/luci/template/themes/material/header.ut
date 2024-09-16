@@ -202,7 +202,7 @@
     <nav id="menu">
     <input type="checkbox" id="responsive-menu" onclick="updatemenu()"><label></label>
     <ul>
-	    <li><a href="https://github.com/rtaserver/RTA-WRT">About</a></li>
+	    <li><a href="https://github.com/rtaserver/RTA-WRT" target="_blank">About</a></li>
         <li><a href="http://192.168.8.1/" target="_blank">Modem</a></li>    
         <li><a href="/cgi-bin/luci/admin/services/ttyd">Terminal</a></li>
 	    <li><a id="yacd" target="_blank" href="http://192.168.1.1:9090/ui/yacd/?hostname=192.168.1.1&amp;port=9090&amp;secret=rizkikotet"><p>Yacd</p></a></li>
