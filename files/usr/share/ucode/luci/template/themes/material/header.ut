@@ -40,7 +40,7 @@
 <meta name="application-name" content="{{ hostname }} - LuCI">
 <meta name="apple-mobile-web-app-title" content="{{ hostname }} - LuCI">
 <link rel="stylesheet" href="{{ media }}/cascade.css?v=git-24.089.55517-835ac75">
-<link rel="shortcut icon" href="{{ media }}/RTA WRT.png">
+<link rel="shortcut icon" href="{{ media }}/logo.png">
 {% if (node?.css): %}
 <link rel="stylesheet" href="{{ resource }}/{{ node.css }}">
 {% endif %}
