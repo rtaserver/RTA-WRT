@@ -56,7 +56,7 @@
 	<div class="fill">
 	    <div class="container">
 			<span class="showSide"></span>
-			 <a id="logo" href="#"><img src="/luci-static/material/WRT.png" alt="OpenWrt"></a>
+			 <a id="logo" href="http://192.168.1.1"><img src="/luci-static/material/WRT.png" alt="OpenWrt"></a>
 			 <a href="/cgi-bin/luci/admin/services/openclash"><img src="/luci-static/material/navbar/clash.png" width="35" height="35"></a>
 			 <a href="/cgi-bin/luci/admin/services/passwall"><img src="/luci-static/material/navbar/passwall.png" width="35" height="35"></a>
 			 <a href="/cgi-bin/luci/admin/nas/tinyfilemanager"><img src="/luci-static/material/navbar/tinyfm.png" width="35" height="35"></a>
