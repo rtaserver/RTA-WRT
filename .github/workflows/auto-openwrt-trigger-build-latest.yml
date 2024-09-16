@@ -22,7 +22,7 @@ jobs:
           client_payload: '{"release_branch": "23.05.4", "tunnel": "openclash-passwall", "upload-prerelease": "false"}'
           propagate_failure: true
           trigger_workflow: true
-          wait_workflow: true
+          wait_workflow: false
 
   trigger-generate-rtawrt-amlogic-latest:
     needs: trigger-generate-rtawrt-latest
@@ -41,7 +41,7 @@ jobs:
           client_payload: '{"target": "all", "release_branch": "23.05.4", "tunnel": "openclash-passwall", "upload-prerelease": "false"}'
           propagate_failure: true
           trigger_workflow: true
-          wait_workflow: true
+          wait_workflow: false
 
   stale:
     needs: trigger-generate-rtawrt-amlogic-latest

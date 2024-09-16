@@ -314,6 +314,7 @@ jobs:
           git config --global user.email 'github-actions@github.com'
           git add README.md
           git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit, marking as successful"
+          git pull --rebase origin main
           git push || echo "No changes to push, marking as successful"
 
   stale:
