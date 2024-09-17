@@ -62,7 +62,7 @@ misc+=" luci-app-temp-status luci-app-cpu-status-mini"
 if [ "$1" == "rpi-4" ]; then
     misc+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio luci-app-oled"
 elif [ "$ARCH_2" == "x86_64" ]; then
-    misc+=" kmod-iwlwifi iw-full pciutils coreutils-stty"
+    misc+=" kmod-iwlwifi iw-full pciutils coreutils-stty lolcat"
 fi
 
 if [ "$TYPE" == "AMLOGIC" ]; then
