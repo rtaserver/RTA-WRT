@@ -32,17 +32,28 @@ uci commit system
 chmod +x /usr/lib/ModemManager/connection.d/10-report-down
 echo "Setup WAN and LAN Interface"
 uci set network.lan.ipaddr="192.168.1.1"
-uci set network.wan=interface 
-uci set network.wan.proto='modemmanager'
-uci set network.wan.device='/sys/devices/platform/scb/fd500000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/usb2/2-1'
-uci set network.wan.apn='internet'
-uci set network.wan.auth='none'
-uci set network.wan.iptype='ipv4'
+uci set network.modemmanager=interface
+uci set network.modemmanager.proto='modemmanager'
+uci set network.modemmanager.device='/sys/devices/pci0000:00/0000:00:15.0/usb2/2-1/2-1.1'
+uci set network.modemmanager.apn='internet'
+uci set network.modemmanager.auth='none'
+uci set network.modemmanager.iptype='ipv4'
+uci set network.modemmanager.loglevel='ERR'
+uci set network.modemmanager.metric='10'
 uci set network.tethering=interface
 uci set network.tethering.proto='dhcp'
 uci set network.tethering.device='usb0'
+uci set network.tethering.metric='20'
+uci set network.wan=interface
+uci set network.wan.proto='dhcp'
+uci set network.wan.device='eth1'
+uci set network.wan.metric='1'
+uci set network.wan2=interface
+uci set network.wan2.proto='dhcp'
+uci set network.wan2.device='eth2'
+uci set network.wan2.metric='2'
 uci commit network
-uci set firewall.@zone[1].network='wan tethering'
+uci set firewall.@zone[1].network='wan wan2 modemmanager tethering'
 uci commit firewall
 
 # configure ipv6
@@ -131,12 +142,12 @@ sed -i -E "s|status|services|g" /usr/lib/lua/luci/controller/base64.lua
 
 # setup misc settings
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
-sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/neofetch/' /etc/profile
+sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/rtawrt/' /etc/profile
 chmod +x /root/fix-tinyfm.sh && bash /root/fix-tinyfm.sh
 chmod +x /root/install2.sh && bash /root/install2.sh
 chmod +x /sbin/sync_time.sh
 chmod +x /sbin/free.sh
-chmod +x /usr/bin/neofetch
+chmod +x /usr/bin/rtawrt
 chmod +x /usr/bin/clock
 chmod +x /usr/bin/mount_hdd
 chmod +x /usr/bin/openclash.sh

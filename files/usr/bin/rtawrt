@@ -1,0 +1,79 @@
+#!/bin/bash
+clear
+######################################################################
+terminal_width=$(stty size | awk '{print $2}')
+logorta="
+█▀█ ▀█▀ ▄▀█   █░█░█ █▀█ ▀█▀
+█▀▄ ░█░ █▀█   ▀▄▀▄▀ █▀▄ ░█░
+"
+logo(){
+  while IFS= read -r line; do
+    line_length=${#line}
+    padding=$(( (terminal_width - line_length) / 2 ))
+    printf "%${padding}s%s\n" "" "$line" | lolcat -g 006786:5bc0de
+  done <<< "$logorta"
+}
+
+txt(){
+  local char="${1:-}"
+  while IFS= read -r line; do
+    line_length=${#line}
+    padding=$(( (terminal_width - line_length) / 2 ))
+    printf "%${padding}s%s\n" "" "$line" | lolcat -h 0.1 -v 1 -g ffffff:00ff3b
+  done <<< "$char"
+}
+
+garis() {
+  local char="${1:-=}"
+  printf "%${terminal_width}s\n" | tr ' ' "$char" | lolcat -h 0.1 -v 1
+}
+######################################################################
+
+function print_info() {
+  local os=$(grep 'DISTRIB_DESCRIPTION' /etc/openwrt_release | cut -d "'" -f 2)
+  local host=$(cat /proc/device-tree/model 2>/dev/null || echo "$(cat /sys/devices/virtual/dmi/id/board_vendor 2>/dev/null) $(cat /sys/devices/virtual/dmi/id/board_name 2>/dev/null)")
+  local kernel=$(uname -r)
+  local uptime=$(awk '{print int($1/86400)" days, "int($1%86400/3600)" hours, "int(($1%3600)/60)" minutes"}' /proc/uptime)
+  local packages=$(opkg list-installed | wc -l)
+  local cpu_model=$(awk -F ': ' '/model name/ { print $2; exit }' /proc/cpuinfo)
+  local cpu_temp=$(cat /sys/class/thermal/thermal_zone*/temp | awk '{print $1/1000"°C"; exit}')
+  local cpu_cores=$(grep -c ^processor /proc/cpuinfo) # Replacing `nproc`
+  local mem_usage=$(free -m | awk '/Mem:/ {print $3}')
+  local mem_total=$(free -m | awk '/Mem:/ {print $2}')
+  local disk_usage=$(df -h / | awk 'NR==2 {print $3" / "$2" ("$5")"}')
+  local local_ip=$(uci get network.lan.ipaddr)
+
+  local public_ip_info=$(curl -s https://api.myip.com/ || echo "no_internet")
+  
+  if [[ "$public_ip_info" == "no_internet" ]]; then
+    local public_ip="$local_ip"
+    local country="N/A"
+    local country_code="N/A"
+  else
+    local public_ip=$(echo "$public_ip_info" | awk -F'"' '/"ip":/ {print $4}')
+    local country=$(echo "$public_ip_info" | awk -F'"' '/"country":/ {print $8}')
+    local country_code=$(echo "$public_ip_info" | awk -F'"' '/"cc":/ {print $12}')
+  fi
+
+  txt "OS: $os"
+  txt "Host: $host"
+  txt "Kernel: $kernel"
+  txt "Uptime: $uptime"
+  txt "Packages: $packages (opkg)"
+  txt "CPU: $cpu_model ($cpu_cores cores) @ MHz [$cpu_temp]"
+  txt "Memory: ${mem_usage}MiB / ${mem_total}MiB ($(awk "BEGIN {printf \"%.0f\", ($mem_usage/$mem_total*100)}")%)"
+  txt "Disk (/): $disk_usage"
+  txt "Local IP: $local_ip"
+  txt "Public IP: $public_ip"
+  txt "Country: $country ($country_code)"
+}
+
+######################################################################
+## MENU
+garis
+logo
+txt "Created By RizkiKotet"
+garis
+print_info
+garis
+######################################################################
