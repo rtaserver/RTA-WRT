@@ -14,6 +14,8 @@ external-ui: "/usr/share/openclash/ui"
 ipv6: false
 geodata-mode: true
 geodata-loader: memconservative
+global-client-fingerprint: chrome
+keep-alive-interval: 15
 dns:
   enable: true
   ipv6: false
@@ -58,8 +60,8 @@ proxy-groups:
   type: select
   disable-udp: false
   proxies:
-  - SERVER-ID
   - SERVER-BROWSING
+  - SERVER-ID
   use:
   - PP-Direct
   url: http://cp.cloudflare.com/generate_204
@@ -198,9 +200,13 @@ rule-providers:
     behavior: classical
     path: "./rule_provider/rp-reject.yaml"
   RP-Indo:
-    type: file
-    behavior: classical
+    type: http
     path: "./rule_provider/rp-indo.yaml"
+    url: https://raw.githubusercontent.com/rtaserver/Clash-Rule-IP-Indo/main/rule-indo.yaml
+    interval: 600
+    proxy: Traffic-Browsing
+    behavior: classical
+    format: yaml
 rules:
 - DST-PORT,7895,REJECT
 - DST-PORT,7892,REJECT
@@ -232,4 +238,3 @@ rules:
 - AND,((RULE-SET,RP-Umum),(NETWORK,TCP)),Traffic-Browsing
 - AND,((RULE-SET,RP-Umum),(NETWORK,UDP)),Traffic-Browsing
 - MATCH,Traffic-Browsing
-keep-alive-interval: 15
