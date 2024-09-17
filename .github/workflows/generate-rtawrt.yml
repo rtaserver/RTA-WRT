@@ -300,7 +300,7 @@ jobs:
       - name: Update README.md
         run: |
           DATE="$(date +'%Y%m%d')"
-          if [ "$BRANCH" == "snapshots" ]; then
+          if [ "$RELEASE_BRANCH" == "snapshots" ]; then
             sed -i -E "s|Build_Snapshots-[0-9]{8}-blue|Build_Snapshots-$DATE-blue|g" README.md
             sed -i -E "s|snapshots-[0-9]{8}|snapshots-$DATE|g" README.md
           else

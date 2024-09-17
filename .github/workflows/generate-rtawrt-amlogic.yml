@@ -329,7 +329,7 @@ jobs:
       - name: Update README.md
         run: |
           DATE="$(date +'%Y%m%d')"
-          if [ "$BRANCH" == "snapshots" ]; then
+          if [ "$RELEASE_BRANCH" == "snapshots" ]; then
             sed -i -E "s|Amlogic_Snapshots-[0-9]{8}-blue|Amlogic_Snapshots-$DATE-blue|g" README.md
             sed -i -E "s|snapshots-amlogic-[0-9]{8}-blue|snapshots-amlogic-$DATE-blue|g" README.md
           else
