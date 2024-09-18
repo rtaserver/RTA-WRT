@@ -5,30 +5,6 @@ clear1() {
 alias clear1='clear1'
 clear1
 
-LatestScriptVer() {
-    local URL="https://github.com/rtaserver/RTA-WRT/raw/main/files/usr/bin/rtawrt"
-    curl -s --max-time 3 -o "/tmp/rtawrt" "$URL"
-    local HASH=$(sha256sum "/tmp/rtawrt" | awk '{ print $1 }')
-    rm -rf /tmp/rtawrt
-    echo "$HASH"
-}
-
-CurrentScriptVer() {
-    local HASH=$(sha256sum "/usr/bin/rtawrt" | awk '{ print $1 }')
-    echo "$HASH"
-}
-
-CheckVersiScript() {
-    local current_hash=$(CurrentScriptVer)
-    local latest_hash=$(LatestScriptVer)
-
-    if [[ "$current_hash" != "$latest_hash" ]]; then
-        echo "New Script Update Available"
-    else
-        echo "Script is up-to-date."
-    fi
-}
-
 ######################################################################
 terminal_width=$(stty size | awk '{print $2}')
 logorta="
@@ -57,7 +33,6 @@ logo(){
     printf "%${padding}s%s\n" "" "$line" | lolcat -g 006786:5bc0de
   done <<< "$logorta"
   txt "Created By RizkiKotet"
-  txt "$(CheckVersiScript)"
   garis
 }
 ######################################################################
