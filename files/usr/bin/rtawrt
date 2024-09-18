@@ -104,6 +104,7 @@ else
   sleep 2
 fi
 rm -f "$TEMP_FILE"
+rtawrt
 else
 garis
 logo
