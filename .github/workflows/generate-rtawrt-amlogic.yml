@@ -22,7 +22,7 @@ on:
         type: choice
         options:
           - snapshots
-          - 23.05.4
+          - latest
       target:
         description: "Select device board"
         required: false
@@ -187,7 +187,13 @@ jobs:
           echo "WORKING_DIR=openwrt-imagebuilder-"$TARGET_NAME".Linux-x86_64" >> $GITHUB_ENV
           echo "DOWNLOAD_BASE=https://downloads.openwrt.org" >> $GITHUB_ENV
           echo "BASE=openwrt" >> $GITHUB_ENV
-          echo "BRANCH=${RELEASE_BRANCH}" >> $GITHUB_ENV
+          openwrt_page=$(curl -s https://api.github.com/repos/openwrt/openwrt/releases/latest)
+          if [ "$RELEASE_BRANCH" == "snapshots" ]; then
+            latest_tag=snapshots
+          else
+            latest_tag=$(echo "$page" | grep -oP '(?<="tag_name": "v)[0-9.]+')
+          fi
+          echo "BRANCH=${latest_tag}" >> $GITHUB_ENV
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
           echo "DATETIME=$(date +'%Y.%m.%d-%H:%M:%S')" >> $GITHUB_ENV
           echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
@@ -330,14 +336,14 @@ jobs:
       - name: Update README.md
         run: |
           DATE="$(date +'%Y%m%d')"
-          if [ "$RELEASE_BRANCH" == "snapshots" ]; then
-            sed -i -E "s|Amlogic_Snapshots-[0-9]{8}-blue|Amlogic_Snapshots-$DATE-blue|g" README.md
-            sed -i -E "s|snapshots-amlogic-[0-9]{8}|snapshots-amlogic-$DATE|g" README.md
-          else
+          openwrt_page=$(curl -s https://api.github.com/repos/openwrt/openwrt/releases/latest)
+          latest_tag=$(echo "$page" | grep -oP '(?<="tag_name": "v)[0-9.]+')
+          if [ "$RELEASE_BRANCH" != "snapshots" ]; then
             sed -i -E "s|Amlogic_Latest-[0-9]{8}-blue|Amlogic_Latest-$DATE-blue|g" README.md
-            sed -i -E "s|23.05.4-amlogic-[0-9]{8}|23.05.4-amlogic-$DATE|g" README.md
+            sed -i -E "s|[0-9.]{7}-amlogic-[0-9]{8}|[0-9.]{7}-amlogic-$DATE|g" README.md
+            sed -i -E "s|Openwrt Terbaru - [0-9.]{7}|Openwrt Terbaru - $latest_tag|g" README.md
           fi
-      
+
       - name: Commit changes
         run: |
           git config --global user.name 'github-actions'
