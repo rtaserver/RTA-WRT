@@ -62,7 +62,7 @@ function print_info() {
   local local_ip=$(uci get network.lan.ipaddr 2>/dev/null)
   [ -z "$local_ip" ] && local_ip="null"
 
-  local public_ip_info=$(curl -s  https://api.myip.com/ || echo "no_internet")
+  local public_ip_info=$(curl -s --max-time 3 https://api.myip.com/ || echo "no_internet")
   
   if [[ "$public_ip_info" == "no_internet" ]]; then
     local public_ip="$local_ip"
