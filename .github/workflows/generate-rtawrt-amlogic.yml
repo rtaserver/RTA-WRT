@@ -165,7 +165,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-        with: 
+        with:
+          fetch-depth: 0
           path: origin
 
       - name: Setup Environment Variables
@@ -212,12 +213,6 @@ jobs:
           fi
           cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
           echo "status=success" >> $GITHUB_OUTPUT
-
-      - name: Update package lists
-        run: |
-          cd $WORKING_DIR
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
       
       - name: Download External Packages
         id: packages
