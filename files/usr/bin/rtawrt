@@ -1,5 +1,9 @@
 #!/bin/bash
-clear
+clear1() {
+  clear
+}
+alias clear1='clear1'
+clear1
 ######################################################################
 terminal_width=$(stty size | awk '{print $2}')
 logorta="
