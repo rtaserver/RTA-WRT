@@ -72,18 +72,11 @@ patch_openclash() {
 
 install_openclash_core() {
     echo -e "${INFO} Start downloading core..."
-    yacd_dir="/usr/share/openclash/ui"
     core_dir="/etc/openclash/core"
     ARCH_1=$(uname -m) && { [ "$ARCH_1" == "aarch64" ] && ARCH_1="arm64"; } || { [ "$ARCH_1" == "x86_64" ] && ARCH_1="amd64" && ARCH_2="x86_64"; }
     rm -r "$core_dir"
-    wget -qO- https://github.com/ratserver/RTA-WRT/raw/main/scripts/clash-core.sh | bash -s "$yacd_dir" "$core_dir" "$ARCH_1" "$ARCH_2"
+    wget -qO- https://github.com/ratserver/RTA-WRT/raw/main/scripts/clash-core.sh | bash -s "$core_dir" "$ARCH_1" "$ARCH_2"
     echo -e "${SUCCESS} Done!"
-    if [ -d "$yacd_dir/yacd.new" ]; then
-        [ -d "$yacd_dir/yacd.old" ] && rm -rf "$yacd_dir/yacd.old"
-        if mv "$yacd_dir/yacd" "$yacd_dir/yacd.old"; then
-            mv "$yacd_dir/yacd.new" "$yacd_dir/yacd"
-        fi
-    fi
     chmod +x "$core_dir/clash"
     chmod +x "$core_dir/clash_tun"
     chmod +x "$core_dir/clash_meta"
@@ -116,6 +109,7 @@ setup() {
             install_openclash_depands
             install_openclash
             install_openclash_core
+            patch_openclash
             ;;
         patch-only)
             patch_openclash
