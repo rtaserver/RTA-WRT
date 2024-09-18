@@ -18,7 +18,7 @@ on:
       release_branch:
         description: "Select the release branch:"
         required: true
-        default: "snapshots"
+        default: "latest"
         type: choice
         options:
           - snapshots
