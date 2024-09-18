@@ -118,6 +118,8 @@ while true; do
     clear1
   fi
   sleep 5
+  clear1
+  clear
 done
 }
 
@@ -139,6 +141,8 @@ function update_script(){
     txt "The script is up to date, no update needed."
   fi
   rm -rf "$TEMP_FILE"
+  clear1
+  clear
 }
 
 function sub_menu(){
@@ -235,7 +239,7 @@ else
   # If $1 has a value, check what command it is and execute
   case "$1" in
     menu)
-      update_script
+      sub_menu
       ;;
     update)
       update_script
