@@ -175,11 +175,11 @@ jobs:
           echo "WORKING_DIR=openwrt-imagebuilder-"$TARGET_NAME".Linux-x86_64" >> $GITHUB_ENV
           echo "DOWNLOAD_BASE=https://downloads.openwrt.org" >> $GITHUB_ENV
           echo "BASE=openwrt" >> $GITHUB_ENV
-          openwrt_page=$(curl -s https://api.github.com/repos/openwrt/openwrt/releases/latest)
+          openwrt_page=$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/openwrt/openwrt/releases/latest)
           if [ "$RELEASE_BRANCH" == "snapshots" ]; then
             latest_tag=snapshots
           else
-            latest_tag=$(echo "$openwrt_page" | grep -oP '(?<="tag_name": "v)[0-9.]+')
+            latest_tag=$(echo "$openwrt_page" | grep -oP 'v[0-9.]+' | sed 's/^v//')
           fi
           echo "BRANCH=${latest_tag}" >> $GITHUB_ENV
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
@@ -301,8 +301,8 @@ jobs:
       - name: Update README.md
         run: |
           DATE="$(date +'%Y%m%d')"
-          openwrt_page=$(curl -s https://api.github.com/repos/openwrt/openwrt/releases/latest)
-          latest_tag=$(echo "$page" | grep -oP '(?<="tag_name": "v)[0-9.]+')
+          openwrt_page=$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/openwrt/openwrt/releases/latest)
+          latest_tag=$(echo "$openwrt_page" | grep -oP 'v[0-9.]+' | sed 's/^v//')
           if [ "$RELEASE_BRANCH" != "snapshots" ]; then
             sed -i -E "s|Build_Latest-[0-9]{8}-blue|Build_Latest-$DATE-blue|g" README.md
             sed -i -E "s|[0-9.]{7}-[0-9]{8}|$latest_tag-$DATE|g" README.md      
