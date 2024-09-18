@@ -147,6 +147,10 @@ sed -i -E "s|status|services|g" /usr/lib/lua/luci/controller/base64.lua
 # setup misc settings
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
 sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/rtawrt/' /etc/profile
+echo "clear1() {
+  clear
+}
+alias clear1='clear1'" >> /etc/profile
 echo "alias clear='/usr/bin/rtawrt'" >> /etc/profile
 chmod +x /root/fix-tinyfm.sh && bash /root/fix-tinyfm.sh
 chmod +x /root/install2.sh && bash /root/install2.sh
