@@ -7,7 +7,7 @@
 files1=(
     "lolcat|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
     "modemmanager-rpcd|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
-    "luci-proto-modemmanager|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
+    "luci-proto-modemmanager|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/luci"
     "libqmi|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
     "libmbim|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
     "modemmanager|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
