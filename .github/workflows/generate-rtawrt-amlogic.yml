@@ -341,7 +341,7 @@ jobs:
           latest_tag=$(echo "$openwrt_page" | grep -oP 'v[0-9.]+' | sed 's/^v//')
           if [ "$RELEASE_BRANCH" != "snapshots" ]; then
             sed -i -E "s|Amlogic_Latest-[0-9]{8}-blue|Amlogic_Latest-$DATE-blue|g" README.md
-            sed -i -E "s|[0-9.]{7}-amlogic-[0-9]{8}|[0-9.]{7}-amlogic-$DATE|g" README.md
+            sed -i -E "s|[0-9.]{7}-amlogic-[0-9]{8}|$latest_tag-amlogic-$DATE|g" README.md
             sed -i -E "s|Openwrt Terbaru - [0-9.]{7}|Openwrt Terbaru - $latest_tag|g" README.md
           fi
 
