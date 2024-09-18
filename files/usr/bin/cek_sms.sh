@@ -7,6 +7,9 @@ modem_id=$(mmcli -L | awk -F'/Modem/' 'NF>1{print $2; exit}' | awk '{print $1}')
 sms_list=$(mmcli -m "$modem_id" --messaging-list-sms)
 
 log_file="/root/sms_message.log"
+if [ ! -f "$log_file" ]; then
+  touch "$log_file"
+fi
 max_file_size=524288 #0.5MB
 
 if [ "$(mmcli -L)" == "No modems were found" ]; then
