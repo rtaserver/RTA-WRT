@@ -125,7 +125,6 @@ done
     "modemband"
     "luci-app-modemband"
     "luci-app-sms-tool-js"
-    "v2ray-core"
     )
     #================================================
     

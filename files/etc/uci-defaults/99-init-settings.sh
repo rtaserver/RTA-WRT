@@ -178,6 +178,12 @@ else
   service internet-detector restart
 fi
 
+if opkg list-installed | grep luci-app-passwall > /dev/null; then
+  echo "Passwall Detected!"
+else
+  sed -i '/<a href="\/cgi-bin\/luci\/admin\/services\/passwall">/d' /usr/share/ucode/luci/template/themes/material/header.ut
+fi
+
 # adding new line for enable i2c oled display
 if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
   echo -e "\ndtparam=i2c1=on\ndtparam=spi=on\ndtparam=i2s=on" >> /boot/config.txt
