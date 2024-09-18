@@ -5,6 +5,7 @@
 # Download packages from official snapshots, stable repo's urls and custom repo's.
 {
 files1=(
+    "lolcat|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
     "modemmanager-rpcd|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
     "luci-proto-modemmanager|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
     "libqmi|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
