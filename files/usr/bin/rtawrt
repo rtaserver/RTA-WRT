@@ -83,6 +83,15 @@ function print_info() {
 ######################################################################
 ## MENU
 
+main_menu(){
+  garis
+  logo
+  txt "Created By RizkiKotet"
+  garis
+  print_info
+  garis
+}
+
 if [ "$1" == "update" ]; then
 echo "Currently checking script updates..." | lolcat
 GITHUB_URL="https://github.com/rtaserver/RTA-WRT/raw/main/files/usr/bin/rtawrt"
@@ -105,12 +114,7 @@ else
 fi
 rm -f "$TEMP_FILE"
 rtawrt
-else
-garis
-logo
-txt "Created By RizkiKotet"
-garis
-print_info
-garis
 fi
 ######################################################################
+
+main_menu
