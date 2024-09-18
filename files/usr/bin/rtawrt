@@ -90,30 +90,50 @@ main_menu(){
   garis
   print_info
   garis
+  txt "Usage: rtawrt [option]"
+  txt "Available options:"
+  txt "  update - Check and update the script"
+  garis
 }
 
-if [ "$1" == "update" ]; then
-echo "Currently checking script updates..." | lolcat
-GITHUB_URL="https://github.com/rtaserver/RTA-WRT/raw/main/files/usr/bin/rtawrt"
-LOCAL_SCRIPT="/usr/bin/rtawrt"
-LOCAL_HASH=$(sha256sum "$LOCAL_SCRIPT" | awk '{ print $1 }')
-TEMP_FILE="/tmp/rtawrt"
-aria2c --out=${TEMP_FILE} "${GITHUB_URL}" &>/dev/null
-REMOTE_HASH=$(sha256sum "$TEMP_FILE" | awk '{ print $1 }')
-clear
-if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
-  echo "Update local scripts with the latest scripts." | lolcat
-  sleep 3
-  cp "$LOCAL_SCRIPT" "${LOCAL_SCRIPT}.bak"
-  mv "$TEMP_FILE" "$LOCAL_SCRIPT"
-  chmod +x "$LOCAL_SCRIPT"
-  exec "$LOCAL_SCRIPT"
-else
-  echo "The script is up to date, no update needed." | lolcat
-  sleep 2
-fi
-rm -f "$TEMP_FILE"
-fi
+function update_script(){
+  echo "Currently checking script updates..." | lolcat
+  GITHUB_URL="https://github.com/rtaserver/RTA-WRT/raw/main/files/usr/bin/rtawrt"
+  LOCAL_SCRIPT="/usr/bin/rtawrt"
+  LOCAL_HASH=$(sha256sum "$LOCAL_SCRIPT" | awk '{ print $1 }')
+  TEMP_FILE="/tmp/rtawrt"
+  aria2c --out=${TEMP_FILE} "${GITHUB_URL}" &>/dev/null
+  REMOTE_HASH=$(sha256sum "$TEMP_FILE" | awk '{ print $1 }')
+  clear
+  if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
+    echo "Update local scripts with the latest scripts." | lolcat
+    sleep 3
+    cp "$LOCAL_SCRIPT" "${LOCAL_SCRIPT}.bak"
+    mv "$TEMP_FILE" "$LOCAL_SCRIPT"
+    chmod +x "$LOCAL_SCRIPT"
+    exec "$LOCAL_SCRIPT"
+  else
+    echo "The script is up to date, no update needed." | lolcat
+    sleep 2
+  fi
+  rm -f "$TEMP_FILE"
+}
+
 ######################################################################
 
-main_menu
+if [ -z "$1" ]; then
+  # If $1 is empty, show the menu
+  main_menu
+else
+  # If $1 has a value, check what command it is and execute
+  case "$1" in
+    update)
+      update_script
+      ;;
+    *)
+      echo "Invalid option: $1" | lolcat
+      ;;
+  esac
+  # After executing the function, return to the menu
+  main_menu
+fi
