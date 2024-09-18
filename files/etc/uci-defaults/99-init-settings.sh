@@ -32,6 +32,7 @@ uci commit system
 chmod +x /usr/lib/ModemManager/connection.d/10-report-down
 echo "Setup WAN and LAN Interface"
 uci set network.lan.ipaddr="192.168.1.1"
+uci del network.lan.ip6assign
 uci set network.modemmanager=interface
 uci set network.modemmanager.proto='modemmanager'
 uci set network.modemmanager.device='/sys/devices/pci0000:00/0000:00:15.0/usb2/2-1/2-1.1'
@@ -48,6 +49,7 @@ uci set network.wan=interface
 uci set network.wan.proto='dhcp'
 uci set network.wan.device='eth1'
 uci set network.wan.metric='1'
+uci del network.wan6
 uci set network.wan2=interface
 uci set network.wan2.proto='dhcp'
 uci set network.wan2.device='eth2'
@@ -60,6 +62,8 @@ uci commit firewall
 uci -q delete dhcp.lan.dhcpv6
 uci -q delete dhcp.lan.ra
 uci -q delete dhcp.lan.ndp
+uci -q delete dhcp.lan.ra_slaac
+uci -q delete dhcp.lan.ra_flags
 uci commit dhcp
 
 # configure WLAN
