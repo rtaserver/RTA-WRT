@@ -98,7 +98,7 @@ GITHUB_URL="https://github.com/rtaserver/RTA-WRT/raw/main/files/usr/bin/rtawrt"
 LOCAL_SCRIPT="/usr/bin/rtawrt"
 LOCAL_HASH=$(sha256sum "$LOCAL_SCRIPT" | awk '{ print $1 }')
 TEMP_FILE="/tmp/rtawrt"
-wget -qO "$TEMP_FILE" "$GITHUB_URL" &>/dev/null
+aria2c --out=${TEMP_FILE} "${GITHUB_URL}" &>/dev/null
 REMOTE_HASH=$(sha256sum "$TEMP_FILE" | awk '{ print $1 }')
 clear
 if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
@@ -113,7 +113,6 @@ else
   sleep 2
 fi
 rm -f "$TEMP_FILE"
-rtawrt
 fi
 ######################################################################
 
