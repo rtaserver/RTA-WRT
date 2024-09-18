@@ -33,8 +33,7 @@ Peringatan untuk Instalasi Pertama:
 Detail firmware
 ---
 Termasuk Tunneling
-* OpenWrt Terbaru : Openclash Dan Passwall
-* Openwrt Snapshots : OpenClash
+* Openwrt Terbaru - 23.05.4 : Openclash Dan Passwall
 ---
 
 Informasi
@@ -63,5 +62,10 @@ Pratinjau
 
 * Tampilan Utama
 <p align="center">
-    <img src="/pictures/Status.png">
+    <img src="/pictures/Dashboard.png">
+</p>
+
+* Tampilan Terminal
+<p align="center">
+    <img src="/pictures/Terminal.png">
 </p>

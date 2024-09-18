@@ -28,7 +28,6 @@ Firmware details
 ---
 Tunneling Include
 * OpenWrt Latest : Openclash And Passwall
-* Openwrt Snapshots : OpenClash
 ---
 
 Information
@@ -58,4 +57,9 @@ Preview
 * Main View
 <p align="center">
     <img src="/pictures/Status.png">
+</p>
+
+* Terminal View
+<p align="center">
+    <img src="/pictures/Terminal.png">
 </p>
