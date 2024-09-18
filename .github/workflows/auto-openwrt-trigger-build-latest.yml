@@ -38,7 +38,7 @@ jobs:
           workflow_file_name: generate-rtawrt-amlogic.yml
           ref: main
           wait_interval: 10
-          client_payload: '{"target": "all", "release_branch": "23.05.4", "tunnel": "openclash-passwall", "upload-prerelease": "false"}'
+          client_payload: '{"target": "all", "openwrt_kernel": "6.1.y_6.6.y_5.15.y_5.10.y", "release_branch": "23.05.4", "tunnel": "openclash-passwall", "upload-prerelease": "false"}'
           propagate_failure: false
           trigger_workflow: true
           wait_workflow: false
