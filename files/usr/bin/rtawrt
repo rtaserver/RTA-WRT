@@ -104,7 +104,7 @@ while true; do
       txt "${2} is successful."
     fi
     sleep 3
-    clear1
+    clear
     break
   else
     if [ $elapsed_time -gt $MAX_TIME ]; then
@@ -115,10 +115,9 @@ while true; do
     txt "Error logs:"
     txt "$output"
     sleep 2
-    clear1
+    clear
   fi
   sleep 5
-  clear1
   clear
 done
 }
