@@ -112,7 +112,7 @@ jobs:
             echo "TARGET_SYSTEM=bcm27xx/bcm2710" >> $GITHUB_ENV
             echo "TARGET_NAME=bcm27xx-bcm2710" >> $GITHUB_ENV
             TARGET_NAME="bcm27xx-bcm2710"
-            echo "ARCH_1=armv7" >> $GITHUB_ENV
+            echo "ARCH_1=arm64" >> $GITHUB_ENV
             echo "ARCH_2=aarch64" >> $GITHUB_ENV
             echo "ARCH_3=aarch64_cortex-a53" >> $GITHUB_ENV
           elif [ "$TARGET" == "Raspberry Pi 4B" ]; then
