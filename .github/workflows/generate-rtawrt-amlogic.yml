@@ -36,7 +36,7 @@ on:
       openwrt_kernel:
         description: "Select kernel version"
         required: false
-        default: "6.1.y_6.6.y"
+        default: "6.1.y_6.6.y_5.15.y_5.10.y"
         type: choice
         options:
           - 5.4.y
@@ -72,7 +72,7 @@ on:
       tunnel:
         description: "Select VPN Client app (!passwall only support for newer branch with fw4 firewall!):"
         required: true
-        default: "openclash"
+        default: "openclash-passwall"
         type: choice
         options:
           - all
@@ -88,7 +88,7 @@ on:
       upload-prerelease:
         description: "Upload as pre-release"
         required: false
-        default: "true"
+        default: "false"
         type: boolean
 
 env:
