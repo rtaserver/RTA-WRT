@@ -103,7 +103,6 @@ done
     input_packages=(
     #"luci-app-passwall"
     #"luci-app-openclash"
-    "lolcat"
     "luci-app-mmconfig"
     "pdnsd-alt"
     "brook"
