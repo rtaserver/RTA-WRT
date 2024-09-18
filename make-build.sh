@@ -17,6 +17,8 @@ kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-n
 kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem \
 kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3"
 
+PACKAGES+=" lolcat"
+
 # Modem Tools
 PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband luci-app-mmconfig sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"
 
@@ -62,7 +64,7 @@ misc+=" luci-app-temp-status luci-app-cpu-status-mini"
 if [ "$1" == "rpi-4" ]; then
     misc+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio luci-app-oled"
 elif [ "$ARCH_2" == "x86_64" ]; then
-    misc+=" kmod-iwlwifi iw-full pciutils coreutils-stty lolcat"
+    misc+=" kmod-iwlwifi iw-full pciutils coreutils-stty"
 fi
 
 if [ "$TYPE" == "AMLOGIC" ]; then
