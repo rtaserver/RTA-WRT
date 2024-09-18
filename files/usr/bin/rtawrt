@@ -100,7 +100,7 @@ while true; do
       txt "${2} is successful."
     fi
     sleep 3
-    clear
+    clear1
     break
   else
     if [ $elapsed_time -gt $MAX_TIME ]; then
@@ -111,7 +111,7 @@ while true; do
     txt "Error logs:"
     txt "$output"
     sleep 2
-    clear
+    clear1
   fi
   sleep 5
 done
@@ -124,7 +124,7 @@ function update_script(){
   TEMP_FILE="/tmp/rtawrt"
   cmd "aria2c --out=${TEMP_FILE} ${GITHUB_URL}" "Update Script"
   REMOTE_HASH=$(sha256sum "$TEMP_FILE" | awk '{ print $1 }')
-  clear
+  clear1
   if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
     txt "Update local scripts with the latest scripts."
     cp "$LOCAL_SCRIPT" "${LOCAL_SCRIPT}.bak"
@@ -137,8 +137,19 @@ function update_script(){
   rm -rf "$TEMP_FILE"
 }
 
+function sub_menu(){
+  clear1
+  logo
+  txt "Usage: rtawrt [option]"
+  txt "Available options:"
+  txt "update - Check and update the script"
+  txt "openclash - Tools For OpenClash"
+  txt "ceksmsmm - Cek SMS Modem Manager"
+  garis
+}
+
 function openclash(){
-  clear
+  clear1
   logo
   txt "OpenClash Tools"
   txt "Usage: rtawrt openclash [option]"
@@ -155,7 +166,7 @@ function openclash(){
 }
 
 function ceksmsmm(){
-  clear
+  clear1
   logo
   # Created by Frizkyiman
   # Github https://github.com/frizkyiman/
@@ -171,21 +182,21 @@ function ceksmsmm(){
   max_file_size=524288 #0.5MB
 
   if [ "$(mmcli -L)" == "No modems were found" ]; then
-      echo "Error: Modem not found."
+      txt "Error: Modem not found."
       exit 1
   elif [ "$sms_list" = "No sms messages were found" ]; then
-      echo "No SMS messages were found from modem [$modem_info]"
+      txt "No SMS messages were found from modem [$modem_info]"
       exit 0
   else
-      echo "SMS received from modem [$modem_info]"
-      echo "SMS Message list:"
-      echo "$sms_list"
+      txt "SMS received from modem [$modem_info]"
+      txt "SMS Message list:"
+      txt "$sms_list"
 
       echo "$sms_list" | while IFS= read -r sms_info; do
           sms_id=$(echo "$sms_info" | awk -F'/SMS/' 'NF>1{print $2}' | awk '{print $1}')
           message=$(mmcli -m "$modem_id" --sms "$sms_id")
           if [ -n "$message" ]; then
-              echo "$message" | tee temp_message.log
+              txt "$message" | tee temp_message.log
               cat "$log_file" >> temp_message.log && mv temp_message.log "$log_file"
           fi
       done
@@ -201,14 +212,13 @@ function ceksmsmm(){
 ## MENU
 
 main_menu(){
+  clear1
   logo
   print_info
   garis
-  txt "Usage: rtawrt [option]"
-  txt "Available options:"
-  txt "update - Check and update the script"
-  txt "openclash - Tools For OpenClash"
-  txt "ceksmsmm - Cek SMS Modem Manager"
+  txt "Usage: clear1 - Clear Terminal"
+  txt "Usage: clear - Clean Terminal But Still There is Logo"
+  txt "Usage: rtawrt menu - To Show More Menu"
   garis
 }
 
@@ -220,6 +230,9 @@ if [ -z "$1" ]; then
 else
   # If $1 has a value, check what command it is and execute
   case "$1" in
+    menu)
+      update_script
+      ;;
     update)
       update_script
       ;;
