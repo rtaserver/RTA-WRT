@@ -191,7 +191,7 @@ jobs:
           if [ "$RELEASE_BRANCH" == "snapshots" ]; then
             latest_tag=snapshots
           else
-            latest_tag=$(echo "$page" | grep -oP '(?<="tag_name": "v)[0-9.]+')
+            latest_tag=$(echo "$openwrt_page" | grep -oP '(?<="tag_name": "v)[0-9.]+')
           fi
           echo "BRANCH=${latest_tag}" >> $GITHUB_ENV
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
