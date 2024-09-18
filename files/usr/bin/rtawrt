@@ -164,10 +164,23 @@ function openclash(){
   txt "install-core - Install Latest Core + Mihomo Core"
   txt "full-install - Full Install OpenClash + Patch"
   txt "patch-only - Patch Dashboard + Add Config Editor"
+  if [ -f "/etc/init.d/openclash.bak" ]; then
+    txt "fixoc1" - Fix OC Bengong
+  fi
   txt "uninstall - Uninstall OpenClash"
   garis
-    if [ ! -z "$1" ]; then
-    ./usr/bin/openclash.sh "$@"
+  if [ ! -z "$1" ]; then
+    case "$1" in
+      fixoc1)
+      /etc/init.d/openclash stop
+      rm -rf /etc/init.d/openclash
+      mv /etc/init.d/openclash.bak /etc/init.d/openclash
+      /etc/init.d/openclash restart
+      ;;
+      *)
+      ./usr/bin/openclash.sh "$@"
+      ;;
+    esac
   fi
 }
 
