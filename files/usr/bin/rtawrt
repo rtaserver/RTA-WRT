@@ -130,7 +130,6 @@ function update_script(){
   TEMP_FILE="/tmp/rtawrt"
   cmd "aria2c --out=${TEMP_FILE} ${GITHUB_URL}" "Update Script"
   REMOTE_HASH=$(sha256sum "$TEMP_FILE" | awk '{ print $1 }')
-  clear1
   if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
     txt "Update local scripts with the latest scripts."
     cp "$LOCAL_SCRIPT" "${LOCAL_SCRIPT}.bak"
@@ -141,7 +140,6 @@ function update_script(){
     txt "The script is up to date, no update needed."
   fi
   rm -rf "$TEMP_FILE"
-  clear1
   clear
 }
 
