@@ -1,3 +1,4 @@
+
 config dns_servers
 	option enabled '1'
 	option group 'nameserver'
@@ -25,6 +26,7 @@ config dns_servers
 	option interface 'Disable'
 	option http3 '1'
 	option specific_group 'DNS-SETTING'
+	option ecs_override '0'
 
 config dns_servers
 	option group 'nameserver'
@@ -132,11 +134,12 @@ config openclash 'config'
 	option enable_meta_sniffer_pure_ip '1'
 	option enable_meta_sniffer_custom '0'
 	option core_type 'Meta'
-	option config_reload '1'
+	option config_reload '0'
 	option dnsmasq_resolvfile '/tmp/resolv.conf.d/resolv.conf.auto'
 	option dnsmasq_noresolv '0'
 	option proxy_dns_group 'DNS-SETTING'
 	option restart '1'
+	option enable_respect_rules '1'
 	option dnsmasq_cachesize '1000'
 
 config dns_servers
@@ -162,7 +165,7 @@ config dns_servers
 	option type 'tcp'
 	option interface 'Disable'
 	option node_resolve '0'
-	option specific_group 'Disable'
+	option specific_group 'DNS-SETTING'
 
 config dns_servers
 	option enabled '1'
@@ -170,7 +173,7 @@ config dns_servers
 	option type 'udp'
 	option interface 'Disable'
 	option node_resolve '0'
-	option specific_group 'Disable'
+	option specific_group 'DNS-SETTING'
 	option ip '1.1.1.1'
 
 config dns_servers
@@ -180,8 +183,9 @@ config dns_servers
 	option ip 'dns.cloudflare.com/dns-query'
 	option interface 'Disable'
 	option node_resolve '0'
-	option specific_group 'Disable'
+	option specific_group 'DNS-SETTING'
 	option http3 '1'
+	option ecs_override '0'
 
 config dns_servers
 	option enabled '1'
@@ -190,4 +194,5 @@ config dns_servers
 	option ip 'one.one.one.one'
 	option interface 'Disable'
 	option node_resolve '0'
-	option specific_group 'Disable'
+	option specific_group 'DNS-SETTING'
+

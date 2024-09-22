@@ -47,28 +47,6 @@ on:
           - 6.1.y_6.6.y
           - 5.15.y_5.10.y
           - 6.1.y_6.6.y_5.15.y_5.10.y
-      auto_kernel:
-        description: "Auto use the latest kernel"
-        required: false
-        default: true
-        type: boolean
-      kernel_repo:
-        description: "Set the kernel repository"
-        required: false
-        default: "ophub/kernel"
-        type: choice
-        options:
-          - ophub/kernel
-      kernel_usage:
-        description: "Set the tags of the stable kernel."
-        required: false
-        default: "stable"
-        type: choice
-        options:
-          - stable
-          - flippy
-          - dev
-          - beta
       tunnel:
         description: "Select VPN Client app (!passwall only support for newer branch with fw4 firewall!):"
         required: true
@@ -80,13 +58,13 @@ on:
           - passwall
           - openclash-passwall
           - no-tunnel
-      clean:
-        description: "Do 'make clean' for each run"
-        required: false
-        default: "true"
-        type: boolean
       upload-prerelease:
         description: "Upload as pre-release"
+        required: false
+        default: "false"
+        type: boolean
+      upload-artifacts:
+        description: "Upload as artifacts only"
         required: false
         default: "false"
         type: boolean
@@ -96,7 +74,7 @@ env:
   TARGET: ${{ inputs.target }}
   RELEASE_BRANCH: ${{ inputs.release_branch }}
   TUNNEL: ${{ inputs.tunnel }}
-  CLEAN: ${{ inputs.clean }}
+  CLEAN: true
   TZ: Asia/Jakarta
   PRE_RELEASE: ${{ inputs.upload-prerelease }}
 
@@ -280,9 +258,9 @@ jobs:
           openwrt_path: $WORKING_DIR/compiled_images/*rootfs.tar.gz
           openwrt_board: ${{ env.openwrt_board }}
           openwrt_kernel: ${{ inputs.openwrt_kernel }}
-          auto_kernel: ${{ inputs.auto_kernel }}
-          kernel_repo: ${{ inputs.kernel_repo }}
-          kernel_usage: ${{ inputs.kernel_usage }}
+          auto_kernel: true
+          kernel_repo: ophub/kernel
+          kernel_usage: stable
           builder_name: RTA-WRT
 
       - name: Prepare file before upload
@@ -299,7 +277,28 @@ jobs:
           echo "RELEASE_TAG=OpenWrt-Amlogic-${{ env.DATE }}-${{ env.TARGET_NAME }}" >> $GITHUB_ENV
           echo "status=success" >> $GITHUB_OUTPUT
 
+      - name: Upload All Firmware to Artifacts
+        if: github.event.inputs.upload-artifacts == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: ${{ env.PACKAGED_OUTPUTPATH }}/*
+
+
+      - name: Add changelog info to new release description
+        if: github.event.inputs.upload-artifacts == 'false'
+        id: changelog
+        shell: bash
+        run: |
+          cd $WORKING_DIR
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' CHANGELOG.md)
+          r="${r//'%'/'%25'}"
+          r="${r//$'\n'/'%0A'}"
+          r="${r//$'\r'/'%0D'}"  
+          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
+
       - name: Upload Firmware to Release
+        if: github.event.inputs.upload-artifacts == 'false'
         uses: svenstaro/upload-release-action@v2
         if: ${{ steps.prep_upload.outputs.status }} == 'success' && !cancelled()
         with:
@@ -317,6 +316,8 @@ jobs:
             ### RTA-WRT OpenWrt Amlogic ${{ env.BRANCH }} Image information
             Build date: ${{ env.DATETIME }}
             
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
             - Default IP: 192.168.1.1
             - Default username: root
             - Default password: rtawrt
@@ -325,39 +326,8 @@ jobs:
             ### Install to EMMC
             - Login to OpenWrt → System → Amlogic Service → Install OpenWrt
 
-  update-readme:
-    needs: Generate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Update README.md
-        run: |
-          DATE="$(date +'%Y%m%d')"
-          openwrt_page=$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/openwrt/openwrt/releases/latest)
-          latest_tag=$(echo "$openwrt_page" | grep -oP 'v[0-9.]+' | sed 's/^v//')
-          if [ "$RELEASE_BRANCH" != "snapshots" ]; then
-            sed -i -E "s|Amlogic_Latest-[0-9]{8}-blue|Amlogic_Latest-$DATE-blue|g" README.md
-            sed -i -E "s|[0-9.]{7}-amlogic-[0-9]{8}|$latest_tag-amlogic-$DATE|g" README.md
-            sed -i -E "s|Openwrt Terbaru - [0-9.]{7}|Openwrt Terbaru - $latest_tag|g" README.md
-          fi
-
-      - name: Commit changes
-        run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git merge origin/main
-          git add README.md
-          git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit, marking as successful"
-          git pull --rebase origin main
-          git push || echo "No changes to push, marking as successful"
-
-
   stale:
-    needs: update-readme
+    needs: Generate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/stale@v7.0.0

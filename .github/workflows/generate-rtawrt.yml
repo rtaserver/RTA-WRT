@@ -58,6 +58,11 @@ on:
         required: false
         default: "false"
         type: boolean
+      upload-artifacts:
+        description: "Upload as artifacts only"
+        required: false
+        default: "false"
+        type: boolean
 
 env:
   ROOTFS_SQUASHFS: ${{ inputs.squashfs }}
@@ -262,12 +267,26 @@ jobs:
           echo -e "Server space usage after compilation: \n$(df -hT ${PWD}) \n"
 
       - name: Upload All Firmware to Artifacts
+        if: github.event.inputs.upload-artifacts == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
           path: ${{ env.WORKING_DIR }}/compiled_images//*
 
+      - name: Add changelog info to new release description
+        if: github.event.inputs.upload-artifacts == 'false'
+        id: changelog
+        shell: bash
+        run: |
+          cd $WORKING_DIR
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' CHANGELOG.md)
+          r="${r//'%'/'%25'}"
+          r="${r//$'\n'/'%0A'}"
+          r="${r//$'\r'/'%0D'}"  
+          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
+
       - name: Upload Firmware to Release
+        if: github.event.inputs.upload-artifacts == 'false'
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -283,44 +302,16 @@ jobs:
 
             ### RTA-WRT OpenWrt ${{ env.BRANCH }} Image information
             Build date: ${{ env.DATETIME }}
+
+            ${{ steps.changelog.outputs.CHANGELOG }}
             
             - Default IP: 192.168.1.1
             - Default username: root
             - Default password: rtawrt
             - Default WIFI name: RTA-WRT_2g | RTA-WRT_5g (if device supported)
 
-  update-readme:
-    needs: Generate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Update README.md
-        run: |
-          DATE="$(date +'%Y%m%d')"
-          openwrt_page=$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/openwrt/openwrt/releases/latest)
-          latest_tag=$(echo "$openwrt_page" | grep -oP 'v[0-9.]+' | sed 's/^v//')
-          if [ "$RELEASE_BRANCH" != "snapshots" ]; then
-            sed -i -E "s|Build_Latest-[0-9]{8}-blue|Build_Latest-$DATE-blue|g" README.md
-            sed -i -E "s|[0-9.]{7}-[0-9]{8}|$latest_tag-$DATE|g" README.md      
-            sed -i -E "s|Openwrt Terbaru - [0-9.]{7}|Openwrt Terbaru - $latest_tag|g" README.md
-          fi
-      
-      - name: Commit changes
-        run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git merge origin/main
-          git add README.md
-          git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit, marking as successful"
-          git pull --rebase origin main
-          git push || echo "No changes to push, marking as successful"
-
   stale:
-    needs: update-readme
+    needs: Generate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/stale@v7.0.0

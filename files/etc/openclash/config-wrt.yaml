@@ -41,6 +41,7 @@ dns:
   - tls://one.one.one.one#DNS-SETTING
   - 112.215.198.248
   - 112.215.198.254
+  respect-rules: true
 sniffer:
   enable: true
   force-dns-mapping: true
@@ -49,10 +50,14 @@ tun:
   enable: true
   stack: system
   device: utun
-  auto-route: false
-  auto-detect-interface: false
   dns-hijack:
   - tcp://any:53
+  gso: true
+  gso-max-size: 65536
+  auto-route: false
+  auto-detect-interface: false
+  auto-redirect: false
+  strict-route: false
 profile:
   store-selected: true
 proxy-groups:
