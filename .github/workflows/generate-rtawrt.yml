@@ -305,6 +305,7 @@ jobs:
 
             ${{ steps.changelog.outputs.CHANGELOG }}
             
+            Detail Firmware:
             - Default IP: 192.168.1.1
             - Default username: root
             - Default password: rtawrt
