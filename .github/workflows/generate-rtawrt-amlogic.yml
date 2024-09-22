@@ -349,6 +349,7 @@ jobs:
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
+          git merge origin/main
           git add README.md
           git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit, marking as successful"
           git pull --rebase origin main
