@@ -10,8 +10,10 @@
 <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.4-amlogic-20240923"><img src="https://img.shields.io/badge/Amlogic_Latest-20240923-blue?style=for-the-badge&logo=openwrt"></a>
 <br>
 <a href="https://github.com/rtaserver/RTA-WRT/actions/workflows/auto-openwrt-trigger-build-latest.yml"><img src="https://github.com/rtaserver/RTA-WRT/actions/workflows/auto-openwrt-trigger-build-latest.yml/badge.svg"></a>
+<br>
+<a href="https://github.com/rtaserver/RTA-WRT/actions/workflows/generate-rtawrt.yml"><img src="https://github.com/rtaserver/RTA-WRT/actions/workflows/generate-rtawrt.yml/badge.svg)"></a>
+<a href="https://github.com/rtaserver/RTA-WRT/actions/workflows/generate-rtawrt-amlogic.yml"><img src="https://github.com/rtaserver/RTA-WRT/actions/workflows/generate-rtawrt-amlogic.yml/badge.svg"></a>
 </p>
-  
 
 <p align="center">
 Builder With ImageBuilder
@@ -34,6 +36,9 @@ Peringatan untuk Instalasi Pertama:
 
 Detail firmware
 ---
+ - ```Firmware Akan Auto Update Mingguan```
+ - ```Lihat CHANGELOG.md Untuk Melihat Perubahan Selain Update Firmware Mingguan```
+
 Termasuk Tunneling
 * Openwrt Terbaru - 23.05.4 : Openclash Dan Passwall
 ---
