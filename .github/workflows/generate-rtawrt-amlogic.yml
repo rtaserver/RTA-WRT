@@ -300,7 +300,6 @@ jobs:
       - name: Upload Firmware to Release
         if: github.event.inputs.upload-artifacts == 'false'
         uses: svenstaro/upload-release-action@v2
-        if: ${{ steps.prep_upload.outputs.status }} == 'success' && !cancelled()
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true

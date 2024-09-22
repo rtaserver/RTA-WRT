@@ -6,7 +6,40 @@ on:
   workflow_dispatch:
 
 jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update README.md
+        run: |
+          sudo timedatectl set-timezone "Asia/Jakarta"
+          DATE="$(date +'%Y%m%d')"
+          openwrt_page=$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/openwrt/openwrt/releases/latest)
+          latest_tag=$(echo "$openwrt_page" | grep -oP 'v[0-9.]+' | sed 's/^v//')
+          sed -i -E "s|Build_Latest-[0-9]{8}-blue|Build_Latest-$DATE-blue|g" README.md
+          sed -i -E "s|[0-9.]{7}-[0-9]{8}|$latest_tag-$DATE|g" README.md      
+          sed -i -E "s|Openwrt Terbaru - [0-9.]{7}|Openwrt Terbaru - $latest_tag|g" README.md
+          sed -i -E "s|Amlogic_Latest-[0-9]{8}-blue|Amlogic_Latest-$DATE-blue|g" README.md
+          sed -i -E "s|[0-9.]{7}-amlogic-[0-9]{8}|$latest_tag-amlogic-$DATE|g" README.md
+          sed -i -E "s|Openwrt Terbaru - [0-9.]{7}|Openwrt Terbaru - $latest_tag|g" README.md
+          
+      
+      - name: Commit changes
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git merge origin/main
+          git add README.md
+          git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit, marking as successful"
+          git pull --rebase origin main
+          git push || echo "No changes to push, marking as successful"
+
   trigger-generate-rtawrt-latest:
+    needs: update-readme
     runs-on: ubuntu-latest
     steps:
       - name: Trigger and Wait for generate-rtawrt
@@ -42,39 +75,6 @@ jobs:
           propagate_failure: false
           trigger_workflow: true
           wait_workflow: false
-
-  update-readme:
-    needs: trigger-generate-rtawrt-latest
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Update README.md
-        run: |
-          sudo timedatectl set-timezone "Asia/Jakarta"
-          DATE="$(date +'%Y%m%d')"
-          openwrt_page=$(curl -Ls -o /dev/null -w %{url_effective} https://github.com/openwrt/openwrt/releases/latest)
-          latest_tag=$(echo "$openwrt_page" | grep -oP 'v[0-9.]+' | sed 's/^v//')
-          sed -i -E "s|Build_Latest-[0-9]{8}-blue|Build_Latest-$DATE-blue|g" README.md
-          sed -i -E "s|[0-9.]{7}-[0-9]{8}|$latest_tag-$DATE|g" README.md      
-          sed -i -E "s|Openwrt Terbaru - [0-9.]{7}|Openwrt Terbaru - $latest_tag|g" README.md
-          sed -i -E "s|Amlogic_Latest-[0-9]{8}-blue|Amlogic_Latest-$DATE-blue|g" README.md
-          sed -i -E "s|[0-9.]{7}-amlogic-[0-9]{8}|$latest_tag-amlogic-$DATE|g" README.md
-          sed -i -E "s|Openwrt Terbaru - [0-9.]{7}|Openwrt Terbaru - $latest_tag|g" README.md
-          
-      
-      - name: Commit changes
-        run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git merge origin/main
-          git add README.md
-          git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit, marking as successful"
-          git pull --rebase origin main
-          git push || echo "No changes to push, marking as successful"
 
   stale:
     needs: trigger-generate-rtawrt-amlogic-latest
