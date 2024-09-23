@@ -6,7 +6,7 @@ alias clear1='clear1'
 clear1
 
 function silent_update(){
-  GITHUB_URL="https://github.com/rtaserver/RTA-WRT/raw/main/files/usr/bin/rtawrt"
+  GITHUB_URL="https://raw.githubusercontent.com/rtaserver/RTA-WRT/refs/heads/main/files/usr/bin/rtawrt"
   LOCAL_SCRIPT="/usr/bin/rtawrt"
   LOCAL_HASH=$(sha256sum "$LOCAL_SCRIPT" | awk '{ print $1 }')
   TEMP_FILE="/tmp/rtawrt"
@@ -18,6 +18,8 @@ function silent_update(){
       mv "$TEMP_FILE" "$LOCAL_SCRIPT"
       chmod +x "$LOCAL_SCRIPT"
       exec "$LOCAL_SCRIPT"
+    else
+      rm -rf "$TEMP_FILE"
     fi
   fi
   clear
