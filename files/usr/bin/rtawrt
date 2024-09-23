@@ -5,14 +5,26 @@ clear1() {
 alias clear1='clear1'
 clear1
 
-function silent_update(){
-  GITHUB_URL="https://raw.githubusercontent.com/rtaserver/RTA-WRT/refs/heads/main/files/usr/bin/rtawrt"
-  LOCAL_SCRIPT="/usr/bin/rtawrt"
-  LOCAL_HASH=$(sha256sum "$LOCAL_SCRIPT" | awk '{ print $1 }')
-  TEMP_FILE="/tmp/rtawrt"
-  curl -s -o "$TEMP_FILE" --connect-timeout 3 --max-time 3 "$GITHUB_URL"
-  REMOTE_HASH=$(sha256sum "$TEMP_FILE" | awk '{ print $1 }')
-  if [ -f "$TEMP_FILE" ]; then
+silent_update() {
+  local GITHUB_URL="https://raw.githubusercontent.com/rtaserver/RTA-WRT/refs/heads/main/files/usr/bin/rtawrt"
+  local LOCAL_SCRIPT="/usr/bin/rtawrt"
+  local TEMP_FILE=$(mktemp)
+
+  download_remote_script() {
+    curl -s -o "$TEMP_FILE" --connect-timeout 3 --max-time 3 "$GITHUB_URL"
+    if [ $? -ne 0 ]; then
+      return 1
+    fi
+  }
+
+  calculate_hash() {
+    local file=$1
+    sha256sum "$file" | awk '{ print $1 }'
+  }
+
+  update_local_script() {
+    local LOCAL_HASH=$(calculate_hash "$LOCAL_SCRIPT")
+    local REMOTE_HASH=$(calculate_hash "$TEMP_FILE")
     if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
       cp "$LOCAL_SCRIPT" "${LOCAL_SCRIPT}.bak"
       mv "$TEMP_FILE" "$LOCAL_SCRIPT"
@@ -21,7 +33,9 @@ function silent_update(){
     else
       rm -rf "$TEMP_FILE"
     fi
-  fi
+  }
+
+  download_remote_script && update_local_script
   clear
 }
 
