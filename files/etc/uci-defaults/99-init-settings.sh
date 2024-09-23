@@ -41,6 +41,7 @@ uci set network.modemmanager.auth='none'
 uci set network.modemmanager.iptype='ipv4'
 uci set network.modemmanager.loglevel='ERR'
 uci set network.modemmanager.metric='10'
+uci set network.modemmanager.force_connection='1'
 uci set network.tethering=interface
 uci set network.tethering.proto='dhcp'
 uci set network.tethering.device='usb0'
