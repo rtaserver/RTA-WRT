@@ -103,6 +103,8 @@ done
     input_packages=(
     #"luci-app-passwall"
     #"luci-app-openclash"
+    "luci-app-zerotier"
+    "luci-app-tailscale"
     "luci-app-mmconfig"
     "pdnsd-alt"
     "brook"
