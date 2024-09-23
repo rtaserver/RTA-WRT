@@ -5,6 +5,26 @@ clear1() {
 alias clear1='clear1'
 clear1
 
+function silent_update(){
+  GITHUB_URL="https://github.com/rtaserver/RTA-WRT/raw/main/files/usr/bin/rtawrt"
+  LOCAL_SCRIPT="/usr/bin/rtawrt"
+  LOCAL_HASH=$(sha256sum "$LOCAL_SCRIPT" | awk '{ print $1 }')
+  TEMP_FILE="/tmp/rtawrt"
+  curl -s -o "$TEMP_FILE" --connect-timeout 3 --max-time 3 "$GITHUB_URL"
+  REMOTE_HASH=$(sha256sum "$TEMP_FILE" | awk '{ print $1 }')
+  if [ -f "$TEMP_FILE" ]; then
+    if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
+      cp "$LOCAL_SCRIPT" "${LOCAL_SCRIPT}.bak"
+      mv "$TEMP_FILE" "$LOCAL_SCRIPT"
+      chmod +x "$LOCAL_SCRIPT"
+      exec "$LOCAL_SCRIPT"
+    fi
+  fi
+  clear
+}
+
+silent_update
+
 ######################################################################
 terminal_width=$(stty size | awk '{print $2}')
 logorta="
