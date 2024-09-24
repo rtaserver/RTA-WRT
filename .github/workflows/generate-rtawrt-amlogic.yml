@@ -89,6 +89,29 @@ jobs:
         run: |
           echo "Selected tunnel option: [$TUNNEL]"
           echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Authenticate GitHub CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh auth login --with-token <<< "${GITHUB_TOKEN}"
+
+      - name: Delete Existing Release
+        if: github.event.inputs.upload-artifacts == 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ env.BRANCH }}-${{ env.DATE }}
+        run: |
+          existing_release=$(gh release view $TAG_NAME --repo ${{ github.repository }} --json id -q '.id' || echo "none")
+          if [ "$existing_release" != "none" ]; then
+            echo "Deleting existing release: $TAG_NAME"
+            gh release delete $TAG_NAME --repo ${{ github.repository }} -y
+          fi
           
       - name: Initialization environment (normal)
         if: github.event.inputs.target != 'all' && steps.tunnelopt.outputs.status == 'success' && !cancelled()
@@ -296,18 +319,6 @@ jobs:
           r="${r//$'\n'/'%0A'}"
           r="${r//$'\r'/'%0D'}"  
           echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
-
-      - name: Delete Existing Release
-        if: github.event.inputs.upload-artifacts == 'false'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ env.BRANCH }}-amlogic-${{ env.DATE }}
-        run: |
-          existing_release=$(gh release view $TAG_NAME --json id -q '.id' || echo "none")
-          if [ "$existing_release" != "none" ]; then
-            echo "Deleting existing release: $TAG_NAME"
-            gh release delete $TAG_NAME -y
-          fi
 
       - name: Upload Firmware to Release
         if: github.event.inputs.upload-artifacts == 'false'
