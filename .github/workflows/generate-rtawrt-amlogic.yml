@@ -297,6 +297,18 @@ jobs:
           r="${r//$'\r'/'%0D'}"  
           echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
 
+      - name: Delete Existing Release
+        if: github.event.inputs.upload-artifacts == 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ env.BRANCH }}-amlogic-${{ env.DATE }}
+        run: |
+          existing_release=$(gh release view $TAG_NAME --json id -q '.id' || echo "none")
+          if [ "$existing_release" != "none" ]; then
+            echo "Deleting existing release: $TAG_NAME"
+            gh release delete $TAG_NAME -y
+          fi
+
       - name: Upload Firmware to Release
         if: github.event.inputs.upload-artifacts == 'false'
         uses: svenstaro/upload-release-action@v2
