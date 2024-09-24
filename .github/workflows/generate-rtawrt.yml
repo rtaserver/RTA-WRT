@@ -101,7 +101,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh auth login --with-token <<< "${GITHUB_TOKEN}"
+          echo "${GITHUB_TOKEN}" | gh auth login --with-token
 
       - name: Delete Existing Release
         if: github.event.inputs.upload-artifacts == 'false'
