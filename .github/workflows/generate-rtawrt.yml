@@ -191,15 +191,6 @@ jobs:
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
           echo "DATETIME=$(date +'%Y.%m.%d-%H:%M:%S')" >> $GITHUB_ENV
           echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
-
-      - name: Execute Delete Release/Tag action
-        uses: ShivamHS/delete-tag@v1
-        with:
-          token: ${{ github.token }}
-          repo:  RTA-WRT
-          owner: rtaserver
-          keyword: ${{ env.BRANCH }}-${{ env.DATE }}
-          deletetype: "tr"
       
       - name: Checkout
         uses: actions/checkout@v4
