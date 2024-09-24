@@ -92,28 +92,6 @@ jobs:
         run: |
           echo "Selected tunnel option: [ $TUNNEL ]"
         
-      - name: Install GitHub CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gh
-
-      - name: Authenticate GitHub CLI
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "${GITHUB_TOKEN}" | gh auth login --with-token
-
-      - name: Delete Existing Release
-        if: github.event.inputs.upload-artifacts == 'false'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ env.BRANCH }}-${{ env.DATE }}
-        run: |
-          existing_release=$(gh release view $TAG_NAME --repo ${{ github.repository }} --json id -q '.id' || echo "none")
-          if [ "$existing_release" != "none" ]; then
-            echo "Deleting existing release: $TAG_NAME"
-            gh release delete $TAG_NAME --repo ${{ github.repository }} -y
-          fi
 
   Generate:
     needs: prebuild
@@ -213,6 +191,15 @@ jobs:
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
           echo "DATETIME=$(date +'%Y.%m.%d-%H:%M:%S')" >> $GITHUB_ENV
           echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
+
+      - name: Execute Delete Release/Tag action
+        uses: ShivamHS/delete-tag@v1
+        with:
+          token: ${{ github.token }}
+          repo:  RTA-WRT
+          owner: rtaserver
+          keyword: ${{ env.BRANCH }}-${{ env.DATE }}
+          deletetype: "tr"
       
       - name: Checkout
         uses: actions/checkout@v4
