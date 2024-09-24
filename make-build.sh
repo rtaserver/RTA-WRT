@@ -18,7 +18,7 @@ kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-uti
 kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3"
 
 PACKAGES+=" lolcat coreutils-stty"
-PACKAGES+=" luci-app-zerotier luci-app-tailscale luci-app-cloudflared"
+PACKAGES+=" luci-app-zerotier luci-app-cloudflared"
 
 # Modem Tools
 PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband luci-app-mmconfig sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"

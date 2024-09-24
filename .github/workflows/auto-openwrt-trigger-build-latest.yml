@@ -1,3 +1,5 @@
+
+
 name: Auto Trigger Build Openwrt Latest
 
 on:
@@ -41,40 +43,32 @@ jobs:
   trigger-generate-rtawrt-latest:
     needs: update-readme
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     steps:
-      - name: Trigger and Wait for generate-rtawrt
-        uses: convictional/trigger-workflow-and-wait@v1.6.5
+      - name: Trigger OpenWRT
+        uses: yakubique/trigger-github-workflow@v1
         with:
-          owner: rtaserver
-          repo: RTA-WRT
-          github_token: ${{ github.token }}
-          github_user: rtaserver
-          workflow_file_name: generate-rtawrt.yml
           ref: main
-          wait_interval: 10
-          client_payload: '{"release_branch": "latest", "tunnel": "openclash-passwall", "upload-prerelease": "false"}'
-          propagate_failure: false
-          trigger_workflow: true
-          wait_workflow: false
+          repository: rtaserver/RTA-WRT
+          token: ${{ github.token }}
+          workflow: generate-rtawrt.yml
+          params: '{"release_branch": "latest", "tunnel": "openclash-passwall", "upload-prerelease": "false"}'
 
   trigger-generate-rtawrt-amlogic-latest:
     needs: trigger-generate-rtawrt-latest
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     steps:
-      - name: Trigger and Wait for generate-rtawrt-amlogic
-        uses: convictional/trigger-workflow-and-wait@v1.6.5
+      - name: Trigger OpenWRT Amlogic
+        uses: yakubique/trigger-github-workflow@v1
         with:
-          owner: rtaserver
-          repo: RTA-WRT
-          github_token: ${{ github.token }}
-          github_user: rtaserver
-          workflow_file_name: generate-rtawrt-amlogic.yml
           ref: main
-          wait_interval: 10
-          client_payload: '{"target": "all", "openwrt_kernel": "5.15.y_5.10.y", "release_branch": "latest", "tunnel": "openclash-passwall", "upload-prerelease": "false"}'
-          propagate_failure: false
-          trigger_workflow: true
-          wait_workflow: false
+          repository: rtaserver/RTA-WRT
+          token: ${{ github.token }}
+          workflow: generate-rtawrt-amlogic.yml
+          params: '{"target": "all", "openwrt_kernel": "5.15.y_5.10.y", "release_branch": "latest", "tunnel": "openclash-passwall", "upload-prerelease": "false"}'
 
   stale:
     needs: trigger-generate-rtawrt-amlogic-latest
