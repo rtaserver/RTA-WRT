@@ -1,10 +1,10 @@
 # CONTOH FORMAT
 # https://blog.vpngame.com/openwrt/kumpulan-daftar-format-akun-untuk-openclash/
 proxies:
-- name: SGGS
+- name: Vmess WS
   # interface-name: eth1
   type: vmess
-  server: HOST
+  server: SERVER.COM
   port: 443
   uuid: UUID
   alterId: 0
@@ -12,9 +12,24 @@ proxies:
   udp: true
   tls: true
   skip-cert-verify: true
-  servername: HOST
+  servername: SERVER.COM
   network: ws
   ws-opts:
     path: /PATH
     headers:
-      Host: HOST
+      Host: SERVER.COM
+
+- name: Trojan WS
+  # interface-name: eth1
+  server: SERVER.COM
+  port: 443
+  type: trojan
+  password: PASSWORD
+  skip-cert-verify: true
+  sni: SERVER.COM
+  network: ws
+  ws-opts:
+    path: /PATH
+    headers:
+      Host: SERVER.COM
+  udp: true
