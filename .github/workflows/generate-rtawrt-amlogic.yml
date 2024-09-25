@@ -284,8 +284,7 @@ jobs:
           name: ${{ matrix.target }}
           path: ${{ env.PACKAGED_OUTPUTPATH }}/*
 
-
-      - name: Add changelog info to new release description
+      - name: Add changelog info
         if: github.event.inputs.upload-artifacts == 'false'
         id: changelog
         shell: bash
