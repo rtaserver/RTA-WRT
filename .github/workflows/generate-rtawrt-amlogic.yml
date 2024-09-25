@@ -248,7 +248,7 @@ jobs:
         if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
         run: |
           cd $WORKING_DIR
-          rm -rf $(ls . | grep -vE "^compiled_images$" | xargs) 2>/dev/null
+          rm -rf $(ls . | grep -vE "^compiled_images$|^CHANGELOG.md$" | xargs) 2>/dev/null
           df -hT ${PWD}
 
       - name: Packaging ${{ inputs.release_branch }}
