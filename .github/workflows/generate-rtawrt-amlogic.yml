@@ -26,7 +26,7 @@ on:
       target:
         description: "Select device board"
         required: false
-        default: "s905x_s905x-b860h"
+        default: "all"
         type: choice
         options:
           - all
@@ -36,7 +36,7 @@ on:
       openwrt_kernel:
         description: "Select kernel version"
         required: false
-        default: "6.1.y_6.6.y_5.15.y_5.10.y"
+        default: "5.15.y_5.10.y"
         type: choice
         options:
           - 5.4.y
