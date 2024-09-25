@@ -53,7 +53,7 @@ jobs:
           repository: rtaserver/RTA-WRT
           token: ${{ github.token }}
           workflow: generate-rtawrt.yml
-          params: '{"release_branch": "latest", "tunnel": "openclash-passwall", "upload-prerelease": "false"}'
+          # params: '{"release_branch": "latest", "tunnel": "openclash-passwall", "upload-prerelease": "false"}'
 
   trigger-generate-rtawrt-amlogic-latest:
     needs: trigger-generate-rtawrt-latest
@@ -68,7 +68,7 @@ jobs:
           repository: rtaserver/RTA-WRT
           token: ${{ github.token }}
           workflow: generate-rtawrt-amlogic.yml
-          params: '{"target": "all", "openwrt_kernel": "5.15.y_5.10.y", "release_branch": "latest", "tunnel": "openclash-passwall", "upload-prerelease": "false"}'
+          # params: '{"target": "all", "openwrt_kernel": "5.15.y_5.10.y", "release_branch": "latest", "tunnel": "openclash-passwall", "upload-prerelease": "false"}'
 
   stale:
     needs: trigger-generate-rtawrt-amlogic-latest
