@@ -6,8 +6,8 @@
 
 <h3 align="center">Openwrt Terbaru - 23.05.4</h3>
 <p align="center">
-<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.4-20240925"><img src="https://img.shields.io/badge/Build_Latest-20240925-blue?style=for-the-badge&logo=openwrt"></a>
-<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.4-amlogic-20240925"><img src="https://img.shields.io/badge/Amlogic_Latest-20240925-blue?style=for-the-badge&logo=openwrt"></a>
+<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.4-20240929"><img src="https://img.shields.io/badge/Build_Latest-20240929-blue?style=for-the-badge&logo=openwrt"></a>
+<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.4-amlogic-20240929"><img src="https://img.shields.io/badge/Amlogic_Latest-20240929-blue?style=for-the-badge&logo=openwrt"></a>
 </p>
 
 <p align="center">
