@@ -26,13 +26,14 @@ on:
       target:
         description: "Select device board"
         required: false
-        default: "all"
+        default: "s905x_s905x-b860h_s905x2"
         type: choice
         options:
           - all
           - s905x
+          - s905x2
           - s905x-b860h
-          - s905x_s905x-b860h
+          - s905x_s905x-b860h_s905x2
       openwrt_kernel:
         description: "Select kernel version"
         required: false
@@ -276,6 +277,14 @@ jobs:
           ls -l
           echo "RELEASE_TAG=OpenWrt-Amlogic-${{ env.DATE }}-${{ env.TARGET_NAME }}" >> $GITHUB_ENV
           echo "status=success" >> $GITHUB_OUTPUT
+          for file in *.img.gz; do
+            case "$file" in
+              *s905x *) new_name=${file//s905x/HG680P};;
+              *s905x-b860h*) new_name=${file//s905x-b860h/B860HV1-V2};;
+              *s905x2*) new_name=${file//s905x2/B860HV5};;
+            esac
+            rename -v "$file" "$new_name"
+          done
 
       - name: Upload All Firmware to Artifacts
         if: github.event.inputs.upload-artifacts == 'true'
