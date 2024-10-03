@@ -271,14 +271,7 @@ jobs:
           cd $WORKING_DIR
           for file in compiled_images/*rootfs.tar.gz; do mv "$file" ${{ env.PACKAGED_OUTPUTPATH }}; done
           cd ${{ env.PACKAGED_OUTPUTPATH }}
-          for file in *.img.gz; do
-            case "${file}" in
-              *amlogic_s905x*) mv "$file" RTA-WRT_Amlogic_${file/_amlogic_s905x/_openwrt_amlogic_s905x}_$(basename "$file" .img.gz)$( echo "_$TUNNEL" ).img.gz;;
-              *amlogic_s905x-b860h*) mv "$file" RTA-WRT_Amlogic_B860HV1-V2_${file/_amlogic_s905x-b860h/_openwrt_amlogic_s905x-b860h}_$(basename "$file" .img.gz)$( echo "_$TUNNEL" ).img.gz;;
-              *amlogic_s905x2*) mv "$file" RTA-WRT_Amlogic_B860HV5_${file/_amlogic_s905x2/_openwrt_amlogic_s905x2}_$(basename "$file" .img.gz)$( echo "_$TUNNEL" ).img.gz;;
-              *) mv "$file" RTA-WRT_${file/_amlogic_/}_$(basename "$file" .img.gz)$( echo "_$TUNNEL" ).img.gz;;
-            esac
-          done
+          for file in *.img.gz; do mv "$file" RTA-WRT_$(basename "$file" .img.gz)$( echo "_$TUNNEL" ).img.gz; done
           for file in *rootfs.tar.gz; do mv "$file" RTA-WRT_$(basename "$file" .tar.gz)$( echo "_$TUNNEL" ).tar.gz; done
           rm -r *.sha && sha256sum *.gz > sha256sums
           ls -l
