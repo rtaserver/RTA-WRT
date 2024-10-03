@@ -103,7 +103,10 @@ done
     input_packages=(
     #"luci-app-passwall"
     #"luci-app-openclash"
+    "mihomo"
+    "luci-app-mihomo"
     "luci-app-zerotier"
+    "tailscale"
     "luci-app-tailscale"
     "luci-app-mmconfig"
     "pdnsd-alt"
