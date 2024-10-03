@@ -74,29 +74,29 @@ logo(){
 ######################################################################
 
 function print_info() {
-  local os=$(grep 'DISTRIB_DESCRIPTION' /etc/openwrt_release | cut -d "'" -f 2 2>/dev/null)
+  local os=$(grep 'DISTRIB_DESCRIPTION' /etc/openwrt_release | cut -d "'" -f 2 2>/dev/null || echo "null")
   [ -z "$os" ] && os="null"
-  local host=$(cat /proc/device-tree/model 2>/dev/null || echo "$(cat /sys/devices/virtual/dmi/id/board_vendor 2>/dev/null) $(cat /sys/devices/virtual/dmi/id/board_name 2>/dev/null)")
+  local host=$(cat /proc/device-tree/model 2>/dev/null || echo "$(cat /sys/devices/virtual/dmi/id/board_vendor 2>/dev/null) $(cat /sys/devices/virtual/dmi/id/board_name 2>/dev/null)" || echo "null")
   [ -z "$host" ] && host="null"
-  local kernel=$(uname -r 2>/dev/null)
+  local kernel=$(uname -r 2>/dev/null || echo "null")
   [ -z "$kernel" ] && kernel="null"
-  local uptime=$(awk '{print int($1/86400)" days, "int($1%86400/3600)" hours, "int(($1%3600)/60)" minutes"}' /proc/uptime 2>/dev/null)
+  local uptime=$(awk '{print int($1/86400)" days, "int($1%86400/3600)" hours, "int(($1%3600)/60)" minutes"}' /proc/uptime 2>/dev/null || echo "null")
   [ -z "$uptime" ] && uptime="null"
-  local packages=$(opkg list-installed | wc -l 2>/dev/null)
+  local packages=$(opkg list-installed | wc -l 2>/dev/null || echo "null")
   [ -z "$packages" ] && packages="null"
-  local cpu_model=$(awk -F ': ' '/model name/ { print $2; exit }' /proc/cpuinfo 2>/dev/null)
+  local cpu_model=$(awk -F ': ' '/model name/ { print $2; exit }' /proc/cpuinfo 2>/dev/null || echo "null")
   [ -z "$cpu_model" ] && cpu_model="null"
-  local cpu_temp=$(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | awk '{print $1/1000"°C"; exit}')
+  local cpu_temp=$(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | awk '{print $1/1000"°C"; exit}' || echo "null")
   [ -z "$cpu_temp" ] && cpu_temp="null"
-  local cpu_cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null)
+  local cpu_cores=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || echo "null")
   [ -z "$cpu_cores" ] && cpu_cores="null"
-  local mem_usage=$(free -m | awk '/Mem:/ {print $3}' 2>/dev/null)
+  local mem_usage=$(free -m | awk '/Mem:/ {print $3}' 2>/dev/null || echo "null")
   [ -z "$mem_usage" ] && mem_usage="null"
-  local mem_total=$(free -m | awk '/Mem:/ {print $2}' 2>/dev/null)
+  local mem_total=$(free -m | awk '/Mem:/ {print $2}' 2>/dev/null || echo "null")
   [ -z "$mem_total" ] && mem_total="null"
-  local disk_usage=$(df -h / | awk 'NR==2 {print $3" / "$2" ("$5")"}' 2>/dev/null)
+  local disk_usage=$(df -h / | awk 'NR==2 {print $3" / "$2" ("$5")"}' 2>/dev/null || echo "null")
   [ -z "$disk_usage" ] && disk_usage="null"
-  local local_ip=$(uci get network.lan.ipaddr 2>/dev/null)
+  local local_ip=$(uci get network.lan.ipaddr 2>/dev/null || echo "null")
   [ -z "$local_ip" ] && local_ip="null"
 
   local public_ip_info=$(curl -s --max-time 3 https://api.myip.com/ || echo "no_internet")
