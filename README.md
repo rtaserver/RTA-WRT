@@ -4,10 +4,10 @@
 
 </h1>
 
-<h3 align="center">Openwrt Terbaru - 23.05.4</h3>
+<h3 align="center">Openwrt Terbaru - 23.05.5</h3>
 <p align="center">
-<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.4-20240929"><img src="https://img.shields.io/badge/Build_Latest-20240929-blue?style=for-the-badge&logo=openwrt"></a>
-<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.4-amlogic-20240929"><img src="https://img.shields.io/badge/Amlogic_Latest-20240929-blue?style=for-the-badge&logo=openwrt"></a>
+<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.5-20241003"><img src="https://img.shields.io/badge/Build_Latest-20241003-blue?style=for-the-badge&logo=openwrt"></a>
+<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.5-amlogic-20241003"><img src="https://img.shields.io/badge/Amlogic_Latest-20241003-blue?style=for-the-badge&logo=openwrt"></a>
 </p>
 
 <p align="center">
@@ -39,7 +39,7 @@ Detail firmware
  - ```Lihat CHANGELOG.md Untuk Melihat Perubahan Selain Update Firmware Mingguan```
 
 Termasuk Tunneling
-* Openwrt Terbaru - 23.05.4 : Openclash Dan Passwall
+* Openwrt Terbaru - 23.05.5 : Openclash Dan Passwall
 ---
 
 Informasi
