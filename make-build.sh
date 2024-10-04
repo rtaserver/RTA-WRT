@@ -36,7 +36,7 @@ elif [ "$2" == "openclash-passwall" ]; then
 fi
 
 # Rakitan Manager
-PACKAGES+= " luci-app-rakitanmanager"
+PACKAGES+=" luci-app-rakitanmanager"
 
 # NAS and Hard disk tools
 PACKAGES+=" luci-app-diskman luci-app-hd-idle luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
