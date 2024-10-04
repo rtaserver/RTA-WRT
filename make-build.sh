@@ -35,9 +35,13 @@ elif [ "$2" == "openclash-passwall" ]; then
     PACKAGES+=" $([ "$(echo "$BRANCH" | cut -d'.' -f1)" == "21" ] && echo "$OPENCLASH_FW3" || echo "$OPENCLASH") $PASSWALL"
 fi
 
+# Rakitan Manager
+PACKAGES+= " curl git git-http python3-pip bc screen adb httping jq \
+pip3 install --upgrade pip pip3 install requests pip3 install huawei-lte-api pip3 install datetime pip3 install logging"
+
 # NAS and Hard disk tools
 PACKAGES+=" luci-app-diskman luci-app-hd-idle luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
-PACKAGES+=" luci-app-tinyfilemanager"
+# PACKAGES+=" luci-app-tinyfilemanager"
 
 PACKAGES+=" luci-app-mmconfig pdnsd-alt brook"
 

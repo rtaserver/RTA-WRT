@@ -120,7 +120,7 @@ done
     "luci-app-log"
     "luci-app-temp-status"
     "luci-app-ramfree"
-    "luci-app-tinyfilemanager"
+    # "luci-app-tinyfilemanager"
     "modeminfo"
     "atinout"
     "luci-app-poweroff"
