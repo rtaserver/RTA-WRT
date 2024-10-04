@@ -62,6 +62,7 @@ fi
 files2+=(
     "luci-app-netmonitor|https://api.github.com/repos/rtaserver/rta-packages/releases"
     "luci-app-base64|https://api.github.com/repos/rtaserver/rta-packages/releases"
+    "luci-app-rakitanmanager|https://api.github.com/repos/rtaserver/RakitanManager/releases"
 )
 
 echo "#########################################"

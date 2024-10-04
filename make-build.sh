@@ -36,8 +36,7 @@ elif [ "$2" == "openclash-passwall" ]; then
 fi
 
 # Rakitan Manager
-PACKAGES+= " curl git git-http python3-pip bc screen adb httping jq \
-pip3 install --upgrade pip pip3 install requests pip3 install huawei-lte-api pip3 install datetime pip3 install logging"
+PACKAGES+= " luci-app-rakitanmanager"
 
 # NAS and Hard disk tools
 PACKAGES+=" luci-app-diskman luci-app-hd-idle luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
