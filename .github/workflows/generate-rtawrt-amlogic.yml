@@ -48,6 +48,11 @@ on:
           - 6.1.y_6.6.y
           - 5.15.y_5.10.y
           - 6.1.y_6.6.y_5.15.y_5.10.y
+      clean:
+        description: "Do 'make clean' for each run"
+        required: false
+        default: "true"
+        type: boolean
       upload-prerelease:
         description: "Upload as pre-release"
         required: false
@@ -63,7 +68,7 @@ env:
   TYPE: AMLOGIC
   TARGET: ${{ inputs.target }}
   RELEASE_BRANCH: ${{ inputs.release_branch }}
-  CLEAN: true
+  CLEAN: ${{ inputs.clean }}
   TZ: Asia/Jakarta
   PRE_RELEASE: ${{ inputs.upload-prerelease }}
 
