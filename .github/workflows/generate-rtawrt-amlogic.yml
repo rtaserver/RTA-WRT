@@ -274,8 +274,36 @@ jobs:
           for file in *.img.gz; do mv "$file" RTA-WRT_$(basename "$file" .img.gz)$( echo "_$TUNNEL" ).img.gz; done
           for file in *rootfs.tar.gz; do mv "$file" RTA-WRT_$(basename "$file" .tar.gz)$( echo "_$TUNNEL" ).tar.gz; done
           rm -r *.sha && sha256sum *.gz > sha256sums
+          search_patterns=(
+              "_amlogic_s905x_"
+              "_amlogic_s905x-b860h_"
+              "_amlogic_s905x2_"
+          )
+          replace_patterns=(
+              "Amlogic_HG680P"
+              "Amlogic_B860HV1-V2"
+              "Amlogic_B860HV5"
+          )
+          if [ ${#search_patterns[@]} -ne ${#replace_patterns[@]} ]; then
+              echo "Jumlah search dan replace tidak cocok!"
+              exit 1
+          fi
+          for ((i=0; i<${#search_patterns[@]}; i++)); do
+              search="${search_patterns[$i]}"
+              replace="${replace_patterns[$i]}"
+          
+              for file in *${search}*.img.gz; do
+                  if [[ -f "$file" ]]; then
+                      kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
+                      date=$(echo "$file" | grep -oP '[0-9]{4}\.[0-9]{2}\.[0-9]{2}')
+                      suffix="openclash-passwall.img.gz"
+                      new_name="RTA-WRT_${replace}_${kernel}_${date}_${suffix}"
+                      echo "Renaming: $file -> $new_name"
+                      mv "$file" "$new_name"
+                  fi
+              done
+          done
           ls -l
-          echo "RELEASE_TAG=OpenWrt-Amlogic-${{ env.DATE }}-${{ env.TARGET_NAME }}" >> $GITHUB_ENV
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Upload All Firmware to Artifacts
