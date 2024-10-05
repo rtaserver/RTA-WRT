@@ -1,5 +1,29 @@
 #!/bin/sh
 
+TYPEOPENWRT="nullwrt"
+
+if [ "$TYPEOPENWRT" == "amlogic" ]; then
+chmod +x /bin/getcpu
+chmod +x /etc/custom_service/start_service.sh
+chmod +x /etc/profile.d/30-sysinfo.sh
+chmod +x /sbin/firstboot
+chmod +x /sbin/kmod
+chmod +x /usr/bin/7z
+chmod +x /usr/bin/cpustat
+chmod +x /usr/sbin/openwrt-install-allwinner
+chmod +x /usr/sbin/openwrt-openvfd
+chmod +x /usr/sbin/openwrt-swap
+chmod +x /usr/sbin/openwrt-tf
+else
+sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
+sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/rtawrt/' /etc/profile
+echo "clear1() {
+  clear
+}
+alias clear1='clear1'" >> /etc/profile
+echo "alias clear='/usr/bin/rtawrt'" >> /etc/profile
+fi
+
 exec > /root/setup.log 2>&1
 
 # dont remove!
@@ -146,13 +170,7 @@ sed -i 's/services/modem/g' /usr/share/luci/menu.d/luci-app-lite-watchdog.json
 sed -i -E "s|status|services|g" /usr/lib/lua/luci/controller/base64.lua
 
 # setup misc settings
-sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
-sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/rtawrt/' /etc/profile
-echo "clear1() {
-  clear
-}
-alias clear1='clear1'" >> /etc/profile
-echo "alias clear='/usr/bin/rtawrt'" >> /etc/profile
+
 chmod +x /root/fix-tinyfm.sh && bash /root/fix-tinyfm.sh
 chmod +x /root/install2.sh && bash /root/install2.sh
 chmod +x /sbin/sync_time.sh

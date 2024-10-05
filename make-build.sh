@@ -35,9 +35,6 @@ elif [ "$2" == "openclash-passwall" ]; then
     PACKAGES+=" $([ "$(echo "$BRANCH" | cut -d'.' -f1)" == "21" ] && echo "$OPENCLASH_FW3" || echo "$OPENCLASH") $PASSWALL"
 fi
 
-# Rakitan Manager
-PACKAGES+=" luci-app-rakitanmanager"
-
 # NAS and Hard disk tools
 PACKAGES+=" luci-app-diskman luci-app-hd-idle luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
 # PACKAGES+=" luci-app-tinyfilemanager"
@@ -75,6 +72,19 @@ fi
 if [ "$TYPE" == "AMLOGIC" ]; then
     PACKAGES+=" luci-app-amlogic ath9k-htc-firmware btrfs-progs hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-cfg80211 kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs kmod-mac80211 wireless-tools wpa-cli wpa-supplicant"
     EXCLUDED+=" -procd-ujail"
+else
+    rm -rf $WORKING_DIR/files/etc/config/amlogic
+    rm -rf $WORKING_DIR/files/etc/config/fstab
+    rm -rf $WORKING_DIR/files/etc/custom_service
+    rm -rf $WORKING_DIR/files/etc/profile.d
+    rm -rf $WORKING_DIR/files/etc/banner
+    rm -rf $WORKING_DIR/files/etc/fstab
+    rm -rf $WORKING_DIR/files/etc/model_database.conf
+    rm -rf $WORKING_DIR/files/lib/firmware
+    rm -rf $WORKING_DIR/files/sbin/firstboot
+    rm -rf $WORKING_DIR/files/sbin/kmod
+    rm -rf $WORKING_DIR/files/usr/bin/7z
+    rm -rf $WORKING_DIR/files/usr/sbin
 fi
 
 PACKAGES+=" $misc zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-poweroff luci-app-log luci-app-ramfree htop bash curl wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"

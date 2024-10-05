@@ -206,6 +206,7 @@ jobs:
         if: steps.packages.outputs.status == 'success' && !cancelled()
         run: |
           cd $WORKING_DIR
+          sed -i -E "s|nullwrt|amlogic|g" /files/etc/uci-defaults/99-init-settings.sh
           bash scripts/builder-patch.sh
           bash scripts/misc.sh
           if [[ "$TUNNEL" == "all" ]]; then 
@@ -311,7 +312,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.target }}
-          path: ${{ env.PACKAGED_OUTPUTPATH }}/*
+          path: ${{ env.PACKAGED_OUTPUTPATH }}/*.img.gz
 
       - name: Add changelog info
         if: github.event.inputs.upload-artifacts == 'false'
