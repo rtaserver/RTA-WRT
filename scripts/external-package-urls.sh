@@ -104,6 +104,7 @@ done
     input_packages=(
     #"luci-app-passwall"
     #"luci-app-openclash"
+    "naiveproxy"
     "mihomo"
     "luci-app-mihomo"
     "luci-app-zerotier"
