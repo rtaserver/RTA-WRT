@@ -225,7 +225,7 @@ jobs:
         if: steps.packages.outputs.status == 'success' && !cancelled()
         run: |
           cd $WORKING_DIR
-          sed -i -E "s|nullwrt|$TARGET|g" /files/etc/uci-defaults/99-init-settings.sh
+          sed -i -E "s|nullwrt|$TARGET|g" files/etc/uci-defaults/99-init-settings.sh
           bash scripts/builder-patch.sh
           bash scripts/misc.sh
           if [[ "$TUNNEL" == "all" ]]; then 
