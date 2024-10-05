@@ -27,13 +27,8 @@ PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband lu
 # Tunnel option
 OPENCLASH="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
 PASSWALL="ipset ipt2socks iptables iptables-legacy iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat coreutils coreutils-base64 coreutils-nohup curl dns2socks ip-full libuci-lua lua luci-compat luci-lib-jsonc microsocks resolveip tcping unzip dns2tcp brook hysteria trojan-go xray-core xray-plugin sing-box chinadns-ng haproxy ip6tables-mod-nat kcptun-client naiveproxy pdnsd-alt shadowsocks-libev-ss-local shadowsocks-libev-ss-redir shadowsocks-libev-ss-server shadowsocks-rust-sslocal shadowsocksr-libev-ssr-local shadowsocksr-libev-ssr-redir shadowsocksr-libev-ssr-server simple-obfs trojan-plus v2ray-core v2ray-plugin luci-app-passwall"
-if [ "$2" == "openclash" ]; then
-    PACKAGES+=" $OPENCLASH"
-elif [ "$2" == "passwall" ]; then
-    PACKAGES+=" $PASSWALL"
-elif [ "$2" == "openclash-passwall" ]; then
-    PACKAGES+=" $([ "$(echo "$BRANCH" | cut -d'.' -f1)" == "21" ] && echo "$OPENCLASH_FW3" || echo "$OPENCLASH") $PASSWALL"
-fi
+
+PACKAGES+=" $OPENCLASH $PASSWALL"
 
 # NAS and Hard disk tools
 PACKAGES+=" luci-app-diskman luci-app-hd-idle luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
@@ -72,19 +67,6 @@ fi
 if [ "$TYPE" == "AMLOGIC" ]; then
     PACKAGES+=" luci-app-amlogic ath9k-htc-firmware btrfs-progs hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-cfg80211 kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs kmod-mac80211 wireless-tools wpa-cli wpa-supplicant"
     EXCLUDED+=" -procd-ujail"
-else
-    rm -rf $WORKING_DIR/files/etc/config/amlogic
-    rm -rf $WORKING_DIR/files/etc/config/fstab
-    rm -rf $WORKING_DIR/files/etc/custom_service
-    rm -rf $WORKING_DIR/files/etc/profile.d
-    rm -rf $WORKING_DIR/files/etc/banner
-    rm -rf $WORKING_DIR/files/etc/fstab
-    rm -rf $WORKING_DIR/files/etc/model_database.conf
-    rm -rf $WORKING_DIR/files/lib/firmware
-    rm -rf $WORKING_DIR/files/sbin/firstboot
-    rm -rf $WORKING_DIR/files/sbin/kmod
-    rm -rf $WORKING_DIR/files/usr/bin/7z
-    rm -rf $WORKING_DIR/files/usr/sbin
 fi
 
 PACKAGES+=" $misc zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-poweroff luci-app-log luci-app-ramfree htop bash curl wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"

@@ -48,17 +48,6 @@ on:
           - 6.1.y_6.6.y
           - 5.15.y_5.10.y
           - 6.1.y_6.6.y_5.15.y_5.10.y
-      tunnel:
-        description: "Select VPN Client app (!passwall only support for newer branch with fw4 firewall!):"
-        required: true
-        default: "openclash-passwall"
-        type: choice
-        options:
-          - all
-          - openclash
-          - passwall
-          - openclash-passwall
-          - no-tunnel
       upload-prerelease:
         description: "Upload as pre-release"
         required: false
@@ -74,25 +63,19 @@ env:
   TYPE: AMLOGIC
   TARGET: ${{ inputs.target }}
   RELEASE_BRANCH: ${{ inputs.release_branch }}
-  TUNNEL: ${{ inputs.tunnel }}
   CLEAN: true
   TZ: Asia/Jakarta
   PRE_RELEASE: ${{ inputs.upload-prerelease }}
 
 jobs:
   Generate:
-    name: amlogic-${{ inputs.target }}-${{ inputs.release_branch }}-${{ inputs.tunnel }}
+    name: amlogic-${{ inputs.target }}-${{ inputs.release_branch }}
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checking Tunnel Option
-        id: tunnelopt
-        run: |
-          echo "Selected tunnel option: [$TUNNEL]"
-          echo "status=success" >> $GITHUB_OUTPUT
           
       - name: Initialization environment (normal)
-        if: github.event.inputs.target != 'all' && steps.tunnelopt.outputs.status == 'success' && !cancelled()
+        if: github.event.inputs.target != 'all' && !cancelled()
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -102,7 +85,7 @@ jobs:
           
       - name: Initialization environment (deep)
         id: init
-        if: github.event.inputs.target == 'all' && steps.tunnelopt.outputs.status == 'success' && !cancelled()
+        if: github.event.inputs.target == 'all' && !cancelled()
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -206,19 +189,10 @@ jobs:
         if: steps.packages.outputs.status == 'success' && !cancelled()
         run: |
           cd $WORKING_DIR
-          sed -i -E "s|nullwrt|amlogic|g" files/etc/uci-defaults/99-init-settings.sh
           bash scripts/builder-patch.sh
           bash scripts/misc.sh
-          if [[ "$TUNNEL" == "all" ]]; then 
-              echo "VPN Client: $TUNNEL"
-              bash scripts/tunnel_app.sh openclash-passwall
-          elif [[ "$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "openclash" ]]; then
-              echo "VPN Client: $TUNNEL"
-              bash scripts/tunnel_app.sh "$TUNNEL"
-          else
-              echo "No VPN Client selected"
-          fi
-          if [ "$TUNNEL" = "openclash-passwall" ] || [ "$TUNNEL" == "openclash" ] || [ "$TUNNEL" = "all" ]; then bash scripts/clash-core.sh; fi
+          bash scripts/tunnel_app.sh
+          bash scripts/clash-core.sh
           echo "Total custom packages: $(find packages -type f -name "*.ipk" | wc -l)"
           ls packages
           echo "status=success" >> $GITHUB_OUTPUT
@@ -230,18 +204,9 @@ jobs:
         run: |
           cd $WORKING_DIR
           mkdir -p compiled_images
-          if [[ "$TUNNEL" == "all" ]]; then
-            for t in openclash-passwall openclash passwall no-tunnel; do
-              echo "Compiling with VPN Client: $t"
-              if [ "$CLEAN" == "true" ]; echo "Start 'make clean' before building images."; then make clean; fi
-              time bash make-build.sh $PROFILE $t
-              for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do mv "$file" compiled_images; done
-            done
-          elif [[ "$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "openclash" || "$TUNNEL" == "no-tunnel" ]]; then
-            echo "Compiling with VPN Client: $TUNNEL"
-            bash make-build.sh $PROFILE $TUNNEL
-            for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do mv "$file" compiled_images; done
-          fi
+          if [ "$CLEAN" == "true" ]; echo "Start 'make clean' before building images."; then make clean; fi
+          time bash make-build.sh $PROFILE
+          for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do mv "$file" compiled_images; done
           ls -l compiled_images
           echo "status=success" >> $GITHUB_OUTPUT
           echo -e "Server space usage after compilation: \n$(df -hT ${PWD}) \n"
@@ -272,8 +237,8 @@ jobs:
           cd $WORKING_DIR
           for file in compiled_images/*rootfs.tar.gz; do mv "$file" ${{ env.PACKAGED_OUTPUTPATH }}; done
           cd ${{ env.PACKAGED_OUTPUTPATH }}
-          for file in *.img.gz; do mv "$file" RTA-WRT_$(basename "$file" .img.gz)$( echo "_$TUNNEL" ).img.gz; done
-          for file in *rootfs.tar.gz; do mv "$file" RTA-WRT_$(basename "$file" .tar.gz)$( echo "_$TUNNEL" ).tar.gz; done
+          for file in *.img.gz; do mv "$file" RTA-WRT_$(basename "$file" .img.gz).img.gz; done
+          for file in *rootfs.tar.gz; do mv "$file" RTA-WRT_$(basename "$file" .tar.gz).tar.gz; done
           rm -r *.sha && sha256sum *.gz > sha256sums
           search_patterns=(
               "_amlogic_s905x_"
@@ -297,8 +262,7 @@ jobs:
                   if [[ -f "$file" ]]; then
                       kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
                       date=$(echo "$file" | grep -oP '[0-9]{4}\.[0-9]{2}\.[0-9]{2}')
-                      suffix="openclash-passwall.img.gz"
-                      new_name="RTA-WRT_${replace}_${kernel}_${date}_${suffix}"
+                      new_name="RTA-WRT_${replace}_${kernel}_${date}.img.gz"
                       echo "Renaming: $file -> $new_name"
                       mv "$file" "$new_name"
                   fi

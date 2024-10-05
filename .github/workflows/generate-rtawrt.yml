@@ -32,17 +32,6 @@ on:
         options:
           - snapshots
           - latest
-      tunnel:
-        description: "Select VPN Client app (!passwall only support for newer branch with fw4 firewall!):"
-        required: true
-        default: "openclash-passwall"
-        type: choice
-        options:
-          - all
-          - openclash
-          - passwall
-          - openclash-passwall
-          - no-tunnel
       clean:
         description: "Do 'make clean' for each run"
         required: false
@@ -67,7 +56,6 @@ on:
 env:
   ROOTFS_SQUASHFS: ${{ inputs.squashfs }}
   RELEASE_BRANCH: ${{ inputs.release_branch }}
-  TUNNEL: ${{ inputs.tunnel }}
   CLEAN: ${{ inputs.clean }}
   TZ: Asia/Jakarta
   PRE_RELEASE: ${{ inputs.upload-prerelease }}
@@ -87,16 +75,12 @@ jobs:
           else
              echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
           fi
-          
-      - name: Checking Tunnel Option
-        run: |
-          echo "Selected tunnel option: [ $TUNNEL ]"
         
 
   Generate:
     needs: prebuild
     runs-on: ubuntu-latest
-    name: "${{ matrix.target }}; ${{ inputs.tunnel }}"
+    name: "${{ matrix.target }}"
     
     strategy:
       fail-fast: false
@@ -225,19 +209,10 @@ jobs:
         if: steps.packages.outputs.status == 'success' && !cancelled()
         run: |
           cd $WORKING_DIR
-          sed -i -E "s|nullwrt|$TARGET|g" files/etc/uci-defaults/99-init-settings.sh
           bash scripts/builder-patch.sh
           bash scripts/misc.sh
-          if [[ "$TUNNEL" == "all" ]]; then 
-              echo "VPN Client: $TUNNEL"
-              bash scripts/tunnel_app.sh openclash-passwall
-          elif [[ "$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "openclash" ]]; then
-              echo "VPN Client: $TUNNEL"
-              bash scripts/tunnel_app.sh "$TUNNEL"
-          else
-              echo "No VPN Client selected"
-          fi
-          if [ "$TUNNEL" = "openclash-passwall" ] || [ "$TUNNEL" == "openclash" ] || [ "$TUNNEL" = "all" ]; then bash scripts/clash-core.sh; fi
+          bash scripts/tunnel_app.sh
+          bash scripts/clash-core.sh
           echo "Total custom packages: $(find packages -type f -name "*.ipk" | wc -l)"
           ls packages
           echo "status=success" >> $GITHUB_OUTPUT
@@ -249,20 +224,10 @@ jobs:
         run: |
           cd $WORKING_DIR
           mkdir -p compiled_images
-          if [[ "$TUNNEL" == "all" ]]; then
-            for t in openclash-passwall openclash passwall no-tunnel; do
-              echo "Compiling with VPN Client: $t"
-              if [ "$CLEAN" == "true" ]; echo "Start 'make clean' before building images."; then make clean; fi
-              time bash make-build.sh $PROFILE $t
-              rm -rf bin/targets/"$TARGET_SYSTEM"/*.{json,manifest,bin,*-rootfs*,*factory*,sha256sums}
-              for file in bin/targets/"$TARGET_SYSTEM"/*-"$TARGET_NAME"-*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz)$( echo "_$t" ).img.gz; done
-            done
-          elif [[ "$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "openclash" || "$TUNNEL" == "no-tunnel" ]]; then
-            echo "Compiling with VPN Client: $TUNNEL"
-            bash make-build.sh $PROFILE $TUNNEL
-            rm -rf bin/targets/"$TARGET_SYSTEM"/*.{json,manifest,bin,*-rootfs*,*factory*,sha256sums}
-            for file in bin/targets/"$TARGET_SYSTEM"/*-"$TARGET_NAME"-*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz)$( echo "_$TUNNEL" ).img.gz; done
-          fi
+          if [ "$CLEAN" == "true" ]; echo "Start 'make clean' before building images."; then make clean; fi
+          time bash make-build.sh $PROFILE
+          rm -rf bin/targets/"$TARGET_SYSTEM"/*.{json,manifest,bin,*-rootfs*,*factory*,sha256sums}
+          for file in bin/targets/"$TARGET_SYSTEM"/*-"$TARGET_NAME"-*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
           ls -l compiled_images
           echo "RELEASE_TAG=$PROFILE-$BASE-$BRANCH-$DATEMONTH" >> $GITHUB_ENV
           echo "status=success" >> $GITHUB_OUTPUT

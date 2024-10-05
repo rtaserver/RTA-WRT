@@ -17,6 +17,7 @@ else
 fi
 
 if [ "$TYPE" == "AMLOGIC" ]; then
+    sed -i -E "s|nullwrt|amlogic|g" files/etc/uci-defaults/99-init-settings.sh
     sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/dhcp-get-server.sh' files/etc/uci-defaults/99-init-settings.sh
     sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/dhcp.script' files/etc/uci-defaults/99-init-settings.sh
     sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/dhcpv6.script' files/etc/uci-defaults/99-init-settings.sh
@@ -29,7 +30,20 @@ if [ "$TYPE" == "AMLOGIC" ]; then
     sed -i '/# setup misc settings/ a\chmod +x /lib/nefitd/proto/dhcpv6.sh' files/etc/uci-defaults/99-init-settings.sh
     sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/proto/ppp.sh' files/etc/uci-defaults/99-init-settings.sh
 else
+    sed -i -E "s|nullwrt|$TYPE|g" files/etc/uci-defaults/99-init-settings.sh
     rm -rf files/lib
+    rm -rf files/etc/config/amlogic
+    rm -rf files/etc/config/fstab
+    rm -rf files/etc/custom_service
+    rm -rf files/etc/profile.d
+    rm -rf files/etc/banner
+    rm -rf files/etc/fstab
+    rm -rf files/etc/model_database.conf
+    rm -rf files/lib/firmware
+    rm -rf files/sbin/firstboot
+    rm -rf files/sbin/kmod
+    rm -rf files/usr/bin/7z
+    rm -rf files/usr/sbin
 fi
 
 # custom script files urls
