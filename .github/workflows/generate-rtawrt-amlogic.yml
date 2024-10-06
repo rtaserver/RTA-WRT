@@ -303,8 +303,7 @@ jobs:
               for file in *${search}*.img.gz; do
                   if [[ -f "$file" ]]; then
                       kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
-                      date=$(echo "$file" | grep -oP '[0-9]{4}\.[0-9]{2}\.[0-9]{2}')
-                      new_name="RTA-WRT_${replace}_${kernel}_${date}.img.gz"
+                      new_name="RTA-WRT_OpenWrt-${{ env.BRANCH }}_${replace}_${kernel}.img.gz"
                       echo "Renaming: $file -> $new_name"
                       mv "$file" "$new_name"
                   fi
