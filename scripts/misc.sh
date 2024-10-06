@@ -58,4 +58,7 @@ wget --no-check-certificate -nv -P files/usr/bin "$clock"
 wget --no-check-certificate -nv -P files/root "$repair_ro"
 wget --no-check-certificate -nv -P files/usr/bin "$mount_hdd"
 
+
+echo 'src/gz custom_arch https://dl.openwrt.ai/latest/packages/x86_64/kiddin9' >> /repositories.conf
+
 echo "All custom configuration setup completed!"
