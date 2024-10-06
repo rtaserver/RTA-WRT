@@ -39,7 +39,12 @@ PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband lu
 
 # Tunnel option
 OPENCLASH="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
-PASSWALL="ipset ipt2socks iptables iptables-legacy iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat coreutils coreutils-base64 coreutils-nohup curl dns2socks ip-full libuci-lua lua luci-compat luci-lib-jsonc microsocks resolveip tcping unzip dns2tcp brook hysteria trojan-go xray-core xray-plugin sing-box chinadns-ng haproxy ip6tables-mod-nat kcptun-client naiveproxy pdnsd-alt shadowsocks-libev-ss-local shadowsocks-libev-ss-redir shadowsocks-libev-ss-server shadowsocks-rust-sslocal shadowsocksr-libev-ssr-local shadowsocksr-libev-ssr-redir shadowsocksr-libev-ssr-server simple-obfs trojan-plus v2ray-core v2ray-plugin luci-app-passwall"
+PASSWALL="coreutils coreutils-base64 coreutils-nohup curl \
+chinadns-ng dns2socks dns2tcp dnsmasq-full ip-full \
+libuci-lua lua luci-compat luci-lib-jsonc \
+microsocks resolveip tcping \
+hysteria ipt2socks naiveproxy shadowsocks-rust-sslocal shadowsocks-rust-ssserver shadowsocksr-libev-ssr-local \
+shadowsocksr-libev-ssr-redir shadowsocksr-libev-ssr-server simple-obfs sing-box trojan-plus tuic-client v2ray-geoip v2ray-geosite v2ray-plugin xray-core xray-plugin"
 MIHOMO+="mihomo luci-app-mihomo"
 
 PACKAGES+=" $OPENCLASH $PASSWALL $MIHOMO"
