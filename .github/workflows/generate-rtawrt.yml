@@ -254,14 +254,12 @@ jobs:
 
       - name: Upload Firmware to Release
         if: github.event.inputs.upload-artifacts == 'false'
-        uses: svenstaro/upload-release-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file_glob: true
-          file: ${{ env.WORKING_DIR }}/compiled_images//*
-          tag: ${{ env.BRANCH }}-${{ env.DATE }}
-          release_name: "RTA-WRT OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
-          overwrite: true
+          files: ${{ env.WORKING_DIR }}/compiled_images//*
+          tag_name: ${{ env.BRANCH }}-${{ env.DATE }}
+          name: "RTA-WRT OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
           prerelease: ${{ env.PRE_RELEASE }}
           make_latest: true
           body: |

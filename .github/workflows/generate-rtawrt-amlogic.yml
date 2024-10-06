@@ -304,14 +304,13 @@ jobs:
 
       - name: Upload Firmware to Release
         if: github.event.inputs.upload-artifacts == 'false'
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@v2.0.8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file_glob: true
-          file: ${{ env.PACKAGED_OUTPUTPATH }}/*
-          tag: ${{ env.BRANCH }}-amlogic-${{ env.DATE }}
-          release_name: "RTA-WRT Amlogic OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
-          overwrite: true
+          files: ${{ env.PACKAGED_OUTPUTPATH }}/*
+          tag_name: ${{ env.BRANCH }}-amlogic-${{ env.DATE }}
+          name: "RTA-WRT Amlogic OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
           prerelease: ${{ env.PRE_RELEASE }}
           make_latest: true
           body: |
