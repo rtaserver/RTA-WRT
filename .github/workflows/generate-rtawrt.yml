@@ -220,7 +220,7 @@ jobs:
           target_commitish: ${{ github.ref_name }}
           prerelease: true
           body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/OpenWrt_Prerelease/total?style=for-the-badge&logo=Openwrt)
 
             ### RTA-WRT OpenWrt ${{ env.BRANCH }} Image information
             Build date: ${{ env.DATE }}
@@ -368,7 +368,7 @@ jobs:
           tag_name: OpenWrt_Prerelease
           name: "🔔 RTA-WRT OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }} - Pre Release"
           body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/OpenWrt_Prerelease/total?style=for-the-badge&logo=Openwrt)
 
             ### RTA-WRT OpenWrt ${{ env.BRANCH }} Image information
             Build date: ${{ env.DATE }}

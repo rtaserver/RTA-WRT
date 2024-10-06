@@ -214,7 +214,7 @@ jobs:
           target_commitish: ${{ github.ref_name }}
           prerelease: true
           body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-amlogic-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/Amlogic_Prerelease/total?style=for-the-badge&logo=Openwrt)
 
             ### RTA-WRT OpenWrt Amlogic ${{ env.BRANCH }} Image information
             Build date: ${{ env.DATE }}
@@ -393,7 +393,7 @@ jobs:
           tag_name: Amlogic_Prerelease
           name: "🔔 RTA-WRT Amlogic OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }} - Pre Release"
           body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-amlogic-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/Amlogic_Prerelease/total?style=for-the-badge&logo=Openwrt)
 
             ### RTA-WRT OpenWrt Amlogic ${{ env.BRANCH }} Image information
             Build date: ${{ env.DATE }}
