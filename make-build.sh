@@ -21,7 +21,7 @@ cgi-io chattr comgt comgt-ncm containerd coremark coreutils coreutils-base64 cor
 coreutils-truncate curl docker docker-compose dockerd dosfstools dumpe2fs e2freefrag e2fsprogs \
 exfat-mkfs f2fs-tools f2fsck fdisk gawk getopt git gzip hostapd-common iconv iw iwinfo jq \
 jshn kmod-brcmfmac kmod-brcmutil kmod-cfg80211 kmod-mac80211 libjson-script liblucihttp \
-liblucihttp-lua losetup lsattr lsblk lscpu mkf2fs mount-utils openssl-util parted \
+liblucihttp-lua losetup lsattr lsblk lscpu mkf2fs openssl-util parted \
 perl-http-date perlbase-file perlbase-getopt perlbase-time perlbase-unicode perlbase-utf8 \
 pigz ppp ppp-mod-pppoe proto-bonding pv rename resize2fs runc tar tini ttyd tune2fs \
 uclient-fetch uhttpd uhttpd-mod-ubus unzip uqmi usb-modeswitch uuidgen wget-ssl whereis \
@@ -79,7 +79,7 @@ elif [ "$ARCH_2" == "x86_64" ]; then
 fi
 
 if [ "$TYPE" == "AMLOGIC" ]; then
-    PACKAGES+=" luci-app-amlogic ath9k-htc-firmware hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs wireless-tools wpa-cli wpa-supplicant"
+    PACKAGES+=" luci-app-amlogic ath9k-htc-firmware btrfs-progs hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-cfg80211 kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs kmod-mac80211 wireless-tools wpa-cli wpa-supplicant"
     EXCLUDED+=" -procd-ujail"
 fi
 
