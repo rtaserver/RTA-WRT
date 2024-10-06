@@ -26,14 +26,14 @@ on:
       target:
         description: "Select device board"
         required: false
-        default: "s905x_s905x-b860h_s905x2"
+        default: "All on the list"
         type: choice
         options:
-          - all
-          - s905x
-          - s905x2
-          - s905x-b860h
-          - s905x_s905x-b860h_s905x2
+          - All OPHUB
+          - All on the list
+          - Amlogic HG680P
+          - Amlogic B860H-V5
+          - Amlogic B860H-V1-V2
       openwrt_kernel:
         description: "Select kernel version"
         required: false
@@ -80,7 +80,7 @@ jobs:
     steps:
           
       - name: Initialization environment (normal)
-        if: github.event.inputs.target != 'all' && !cancelled()
+        if: github.event.inputs.target != 'All OPHUB' && !cancelled()
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -90,7 +90,7 @@ jobs:
           
       - name: Initialization environment (deep)
         id: init
-        if: github.event.inputs.target == 'all' && !cancelled()
+        if: github.event.inputs.target == 'All OPHUB' && !cancelled()
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -112,7 +112,7 @@ jobs:
           echo "status=success" >> ${GITHUB_OUTPUT}
 
       - name: Create simulated physical disk
-        if: github.event.inputs.target == 'all'
+        if: github.event.inputs.target == 'All OPHUB'
         run: |
           mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
           root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
@@ -138,10 +138,17 @@ jobs:
 
       - name: Setup Environment Variables
         run: |
-          if [ "$TARGET" == "all" ]; then
+          if [ "$TARGET" == "All OPHUB" ]; then
             echo "openwrt_board=all" >> $GITHUB_ENV
-          else
-            echo "openwrt_board=$TARGET" >> $GITHUB_ENV
+          elif [ "$TARGET" == "All on the list" ]; then
+            OPLIST="s905x_s905x-b860h_s905x2"
+            echo "openwrt_board=$OPLIST" >> $GITHUB_ENV
+          elif [ "$TARGET" == "Amlogic HG680P" ]; then
+            echo "openwrt_board=s905x" >> $GITHUB_ENV
+          elif [ "$TARGET" == "Amlogic B860H-V5" ]; then
+            echo "openwrt_board=s905x-b860h" >> $GITHUB_ENV
+          elif [ "$TARGET" == "Amlogic B860H-V1-V2" ]; then
+            echo "openwrt_board=s905x2" >> $GITHUB_ENV
           fi
           
           echo "PROFILE=generic" >> $GITHUB_ENV

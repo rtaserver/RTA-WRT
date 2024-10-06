@@ -53,16 +53,18 @@
 </head>
 <body class="lang_{{ dispatcher.lang }} {{ ctx.authsession ? 'logged-in' : '' }} {{ length(ctx.path) ? `node-${join('-', ctx.path)}` : 'node-main-login' }}" data-page="{{ entityencode(join('-', ctx.path), true) }}">
 <header>
-	<div class="fill">
-	    <div class="container">
+    <div class="fill">
+		<div class="container">
 			<span class="showSide"></span>
-			 <a id="logo" href="http://192.168.1.1"><img src="/luci-static/material/WRT.png" alt="OpenWrt"></a>
-			 <a href="/cgi-bin/luci/admin/services/openclash"><img src="/luci-static/material/navbar/clash.png" width="35" height="35"></a>
-			 <a href="/cgi-bin/luci/admin/services/passwall"><img src="/luci-static/material/navbar/passwall.png" width="35" height="35"></a>
-			 <a href="/cgi-bin/luci/admin/nas/tinyfm"><img src="/luci-static/material/navbar/tinyfm.png" width="35" height="35"></a>
-			 <a href="/cgi-bin/luci/admin/status/netmon"><img src="/luci-static/material/navbar/netmon.png" width="35" height="35"></a>
-             <a href="/cgi-bin/luci/admin/network/network"><img src="/luci-static/material/navbar/interface.png" width="35" height="35"></a>
-            
+			<a id="logo" href="{{ ctx.authsession ? dispatcher.build_url('admin/status/overview') : '#' }}"><img src="{{ media }}/WRT.png" alt="OpenWrt"></a>
+			<tr>		
+             <td><a href='/cgi-bin/luci/admin/services/openclash'><img src="{{ media }}/navbar/clash.png" width="35" height="35"></a></td>
+			 <td><a href='/cgi-bin/luci/admin/services/passwall'><img src="{{ media }}/navbar/passwall.png" width="35" height="35"></a></td>
+			 <td><a href='/cgi-bin/luci/admin/services/mihomo'><img src="{{ media }}/navbar/mihomo.png" width="35" height="35"></a></td>
+			 <td><a href='/cgi-bin/luci/admin/system/tinyfm'><img src="{{ media }}/navbar/tinyfm.png" width="35" height="35"></a></td>
+			 <td><a href='/cgi-bin/luci/admin/status/netmon'><img src="{{ media }}/navbar/netmon.png" width="35" height="35"></a></td>
+             <td><a href='/cgi-bin/luci/admin/network/network'><img src="{{ media }}/navbar/interface.png" width="35" height="35"></a></td>
+            </tr>
 			<span class="status" id="indicators"></span>
 		</div>
 	</div>
@@ -196,17 +198,17 @@
         }
     }
     </style>
-	<script>
+    <script>
         function updatemenu(){1==document.getElementById("responsive-menu").checked?(document.getElementById("menu").style.borderBottomRightRadius="0",document.getElementById("menu").style.borderBottomLeftRadius="0"):document.getElementById("menu").style.borderRadius="0px"}
     </script>
-    <nav id="menu">
-    <input type="checkbox" id="responsive-menu" onclick="updatemenu()"><label></label>
+    <nav id='menu'>
+    <input type='checkbox' id='responsive-menu' onclick='updatemenu()'><label></label>
     <ul>
-	    <li><a href="https://github.com/rtaserver/RTA-WRT" target="_blank">About</a></li>
-        <li><a href="http://192.168.8.1/" target="_blank">Modem</a></li>    
-        <li><a href="/cgi-bin/luci/admin/services/ttyd">Terminal</a></li>
-	    <li><a id="yacd" target="_blank" href="http://192.168.1.1:9090/ui/yacd/?hostname=192.168.1.1&amp;port=9090&amp;secret=rizkikotet"><p>Yacd</p></a></li>
-	    <script type="text/javascript">document.getElementById("yacd").setAttribute("href", "http://" + window.location.hostname + ":9090/ui/yacd/?hostname=" + window.location.hostname + "&port=9090&secret=Mutiara",);</script>
+        <li><a href='http://192.168.8.1/' target='_blank'>Modem</a></li>    
+        <li><a href='/cgi-bin/luci/admin/services/ttyd'>Terminal</a></li>
+        <li><a id="yacd" target='_blank'><p>Yacd</p></a></li>
+        <li><a href='https://github.com/rtaserver/RTA-WRT' target='_blank'>About</a></li>
+        <script type="text/javascript">document.getElementById("yacd").setAttribute("href", "http://" + window.location.hostname + ":9090/ui/yacd/",);</script>
     </ul>
     </nav>
 </header>
