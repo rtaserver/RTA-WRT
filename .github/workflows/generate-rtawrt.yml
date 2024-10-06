@@ -184,13 +184,13 @@ jobs:
 
       - name: Create Release
         if: github.event.inputs.upload-artifacts == 'false'
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file_glob: true
-          tag: ${{ env.BRANCH }}-${{ env.DATE }}
-          release_name: "RTA-WRT OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
-          overwrite: true
+          tag_name: ${{ env.BRANCH }}-${{ env.DATE }}
+          name: "RTA-WRT OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
+          target_commitish: ${{ github.ref_name }}
           prerelease: ${{ env.PRE_RELEASE }}
           make_latest: true
           body: |
@@ -201,7 +201,7 @@ jobs:
 
             **STATUS : ON BUILD ⌛️**
 
-            ${{ steps.changelog.outputs.CHANGELOG }}
+            [CHANGELOG](https://github.com/rtaserver/RTA-WRT/blob/main/CHANGELOG.md)
             
             Detail Firmware:
             - Default IP: 192.168.1.1
@@ -282,16 +282,13 @@ jobs:
 
       - name: Upload Firmware to Release
         if: github.event.inputs.upload-artifacts == 'false'
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file_glob: true
-          file: ${{ env.WORKING_DIR }}/compiled_images//*
-          tag: ${{ env.BRANCH }}-${{ env.DATE }}
-          release_name: "RTA-WRT OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
-          overwrite: true
-          prerelease: ${{ env.PRE_RELEASE }}
-          make_latest: true
+          files: ${{ env.WORKING_DIR }}/compiled_images//*
+          tag_name: ${{ env.BRANCH }}-${{ env.DATE }}
+          name: "RTA-WRT OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
           body: |
             ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
 
@@ -300,7 +297,7 @@ jobs:
 
             **STATUS : DONE ☑️**
 
-            ${{ steps.changelog.outputs.CHANGELOG }}
+            [CHANGELOG](https://github.com/rtaserver/RTA-WRT/blob/main/CHANGELOG.md)
             
             Detail Firmware:
             - Default IP: 192.168.1.1
