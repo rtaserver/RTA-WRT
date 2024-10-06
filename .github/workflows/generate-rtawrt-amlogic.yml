@@ -318,7 +318,7 @@ jobs:
             ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-amlogic-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
 
             ### RTA-WRT OpenWrt Amlogic ${{ env.BRANCH }} Image information
-            Build date: ${{ env.DATETIME }}
+            Build date: ${{ env.DATE }}
             
             ${{ steps.changelog.outputs.CHANGELOG }}
 
