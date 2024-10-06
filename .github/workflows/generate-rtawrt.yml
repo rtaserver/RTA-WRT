@@ -183,7 +183,7 @@ jobs:
           path: origin
 
       - name: Create Release
-        if: github.event.inputs.upload-artifacts == 'false'
+        if: github.event.inputs.upload-artifacts == 'false' && github.event.inputs.upload-prerelease == 'false'
         uses: softprops/action-gh-release@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -193,6 +193,32 @@ jobs:
           target_commitish: ${{ github.ref_name }}
           prerelease: ${{ env.PRE_RELEASE }}
           make_latest: true
+          body: |
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+
+            ### RTA-WRT OpenWrt ${{ env.BRANCH }} Image information
+            Build date: ${{ env.DATE }}
+
+            **STATUS : ON BUILD ⌛️**
+
+            [CHANGELOG](https://github.com/rtaserver/RTA-WRT/blob/main/CHANGELOG.md)
+            
+            Detail Firmware:
+            - Default IP: 192.168.1.1
+            - Default username: root
+            - Default password: rtawrt
+            - Default WIFI name: RTA-WRT_2g | RTA-WRT_5g (if device supported)
+
+      - name: Create Pre-Release
+        if: github.event.inputs.upload-prerelease == 'true'
+        uses: softprops/action-gh-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: OpenWrt_Prerelease
+          name: "🔔 RTA-WRT OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }} - Pre Release"
+          target_commitish: ${{ github.ref_name }}
+          prerelease: true
           body: |
             ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
 
@@ -308,7 +334,7 @@ jobs:
           echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
 
       - name: Upload Firmware to Release
-        if: github.event.inputs.upload-artifacts == 'false'
+        if: github.event.inputs.upload-artifacts == 'false' && github.event.inputs.upload-prerelease == 'false'
         uses: softprops/action-gh-release@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -316,6 +342,31 @@ jobs:
           files: ${{ env.WORKING_DIR }}/compiled_images//*
           tag_name: ${{ env.BRANCH }}-${{ env.DATE }}
           name: "RTA-WRT OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
+          body: |
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+
+            ### RTA-WRT OpenWrt ${{ env.BRANCH }} Image information
+            Build date: ${{ env.DATE }}
+
+            **STATUS : DONE ☑️**
+
+            [CHANGELOG](https://github.com/rtaserver/RTA-WRT/blob/main/CHANGELOG.md)
+            
+            Detail Firmware:
+            - Default IP: 192.168.1.1
+            - Default username: root
+            - Default password: rtawrt
+            - Default WIFI name: RTA-WRT_2g | RTA-WRT_5g (if device supported)
+
+      - name: Upload Firmware to Pre-Release
+        if: github.event.inputs.upload-prerelease == 'true'
+        uses: softprops/action-gh-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: ${{ env.WORKING_DIR }}/compiled_images//*
+          tag_name: OpenWrt_Prerelease
+          name: "🔔 RTA-WRT OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }} - Pre Release"
           body: |
             ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
 
