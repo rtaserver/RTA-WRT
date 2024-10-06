@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-          
+
       - name: Initialization environment (normal)
         if: github.event.inputs.target != 'All OPHUB' && !cancelled()
         env:
@@ -172,6 +172,36 @@ jobs:
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
           echo "DATETIME=$(date +'%Y.%m.%d-%H:%M:%S')" >> $GITHUB_ENV
           echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
+
+      - name: Create Release
+        if: github.event.inputs.upload-artifacts == 'false'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          tag: ${{ env.BRANCH }}-amlogic-${{ env.DATE }}
+          release_name: "RTA-WRT Amlogic OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
+          overwrite: true
+          prerelease: ${{ env.PRE_RELEASE }}
+          make_latest: true
+          body: |
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-amlogic-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+
+            ### RTA-WRT OpenWrt Amlogic ${{ env.BRANCH }} Image information
+            Build date: ${{ env.DATE }}
+
+            **STATUS : ON BUILD ⌛️**
+            
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+            Detail Firmware:
+            - Default IP: 192.168.1.1
+            - Default username: root
+            - Default password: rtawrt
+            - Default WIFI name: RTA-WRT_2g | RTA-WRT_5g (if device supported)
+            
+            ### Install to EMMC
+            - Login to OpenWrt → System → Amlogic Service → Install OpenWrt
 
       - name: Download Image Builder
         id: download
@@ -319,6 +349,8 @@ jobs:
 
             ### RTA-WRT OpenWrt Amlogic ${{ env.BRANCH }} Image information
             Build date: ${{ env.DATE }}
+
+            **STATUS : DONE ☑️**
             
             ${{ steps.changelog.outputs.CHANGELOG }}
 

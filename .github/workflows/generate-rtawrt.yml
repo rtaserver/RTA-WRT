@@ -182,6 +182,33 @@ jobs:
           fetch-depth: 0
           path: origin
 
+      - name: Create Release
+        if: github.event.inputs.upload-artifacts == 'false'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          tag: ${{ env.BRANCH }}-${{ env.DATE }}
+          release_name: "RTA-WRT OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
+          overwrite: true
+          prerelease: ${{ env.PRE_RELEASE }}
+          make_latest: true
+          body: |
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+
+            ### RTA-WRT OpenWrt ${{ env.BRANCH }} Image information
+            Build date: ${{ env.DATE }}
+
+            **STATUS : ON BUILD ⌛️**
+
+            ${{ steps.changelog.outputs.CHANGELOG }}
+            
+            Detail Firmware:
+            - Default IP: 192.168.1.1
+            - Default username: root
+            - Default password: rtawrt
+            - Default WIFI name: RTA-WRT_2g | RTA-WRT_5g (if device supported)
+
       - name: Download Image Builder
         id: download
         run: |
@@ -270,6 +297,8 @@ jobs:
 
             ### RTA-WRT OpenWrt ${{ env.BRANCH }} Image information
             Build date: ${{ env.DATE }}
+
+            **STATUS : DONE ☑️**
 
             ${{ steps.changelog.outputs.CHANGELOG }}
             
