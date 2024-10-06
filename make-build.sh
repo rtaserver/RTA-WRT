@@ -16,12 +16,22 @@ modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi usbutils l
 kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial-sierrawireless \
 kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem \
 kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3"
+PACKAGES+=" acpid attr base-files bash bc blkid block-mount blockd bsdtar btrfs-progs busybox bzip2 \
+cgi-io chattr comgt comgt-ncm containerd coremark coreutils coreutils-base64 coreutils-nohup \
+coreutils-truncate curl docker docker-compose dockerd dosfstools dumpe2fs e2freefrag e2fsprogs \
+exfat-mkfs f2fs-tools f2fsck fdisk gawk getopt git gzip hostapd-common iconv iw iwinfo jq \
+jshn kmod-brcmfmac kmod-brcmutil kmod-cfg80211 kmod-mac80211 libjson-script liblucihttp \
+liblucihttp-lua losetup lsattr lsblk lscpu mkf2fs mount-utils openssl-util parted \
+perl-http-date perlbase-file perlbase-getopt perlbase-time perlbase-unicode perlbase-utf8 \
+pigz ppp ppp-mod-pppoe proto-bonding pv rename resize2fs runc tar tini ttyd tune2fs \
+uclient-fetch uhttpd uhttpd-mod-ubus unzip uqmi usb-modeswitch uuidgen wget-ssl whereis \
+which wpad-basic wwan xfs-fsck xfs-mkfs xz xz-utils ziptool zoneinfo-asia zoneinfo-core zstd \
+luci luci-base luci-compat luci-lib-base luci-lib-docker \
+luci-lib-ip luci-lib-ipkg luci-lib-jsonc luci-lib-nixio luci-mod-admin-full luci-mod-network \
+luci-mod-status luci-mod-system luci-proto-3g luci-proto-bonding luci-proto-ipip luci-proto-ipv6 \
+luci-proto-ppp luci-proto-relay lolcat coreutils-stty"
 
-# PERL
-PACKAGES+=" perlbase-time"
 
-PACKAGES+=" lolcat coreutils-stty"
-PACKAGES+=" naiveproxy mihomo luci-app-mihomo"
 PACKAGES+=" luci-app-zerotier luci-app-cloudflared tailscale luci-app-tailscale"
 
 # Modem Tools
@@ -30,8 +40,9 @@ PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband lu
 # Tunnel option
 OPENCLASH="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
 PASSWALL="ipset ipt2socks iptables iptables-legacy iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat coreutils coreutils-base64 coreutils-nohup curl dns2socks ip-full libuci-lua lua luci-compat luci-lib-jsonc microsocks resolveip tcping unzip dns2tcp brook hysteria trojan-go xray-core xray-plugin sing-box chinadns-ng haproxy ip6tables-mod-nat kcptun-client naiveproxy pdnsd-alt shadowsocks-libev-ss-local shadowsocks-libev-ss-redir shadowsocks-libev-ss-server shadowsocks-rust-sslocal shadowsocksr-libev-ssr-local shadowsocksr-libev-ssr-redir shadowsocksr-libev-ssr-server simple-obfs trojan-plus v2ray-core v2ray-plugin luci-app-passwall"
+MIHOMO+="mihomo luci-app-mihomo"
 
-PACKAGES+=" $OPENCLASH $PASSWALL"
+PACKAGES+=" $OPENCLASH $PASSWALL $MIHOMO"
 
 # NAS and Hard disk tools
 PACKAGES+=" luci-app-diskman luci-app-hd-idle luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
@@ -68,7 +79,7 @@ elif [ "$ARCH_2" == "x86_64" ]; then
 fi
 
 if [ "$TYPE" == "AMLOGIC" ]; then
-    PACKAGES+=" luci-app-amlogic ath9k-htc-firmware btrfs-progs hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-cfg80211 kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs kmod-mac80211 wireless-tools wpa-cli wpa-supplicant"
+    PACKAGES+=" luci-app-amlogic ath9k-htc-firmware hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs wireless-tools wpa-cli wpa-supplicant"
     EXCLUDED+=" -procd-ujail"
 fi
 
