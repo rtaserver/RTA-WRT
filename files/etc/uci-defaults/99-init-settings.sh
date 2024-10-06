@@ -221,5 +221,8 @@ uci commit uhttpd
 
 ln -s /usr/bin/php-cli /usr/bin/php
 
+# Setting Tinyfm
+ln -s / /www/tinyfm/rootfs
+
 echo "All first boot setup complete!"
 exit 0
