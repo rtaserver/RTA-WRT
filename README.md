@@ -39,7 +39,7 @@ Detail firmware
  - ```Lihat CHANGELOG.md Untuk Melihat Perubahan Selain Update Firmware Mingguan```
 
 Termasuk Tunneling
-* Openwrt Terbaru - 23.05.5 : Openclash Dan Passwall
+* Openwrt Terbaru - 23.05.5 : Openclash, Passwall Dan Mihomo
 ---
 
 Informasi

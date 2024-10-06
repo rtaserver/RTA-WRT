@@ -27,7 +27,7 @@ Warning for First Installation:
 Firmware details
 ---
 Tunneling Include
-* OpenWrt Latest : Openclash And Passwall
+* OpenWrt Latest : Openclash, Passwall And Mihomo
 ---
 
 Information
