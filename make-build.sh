@@ -17,6 +17,9 @@ kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-n
 kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem \
 kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3"
 
+# PERL
+PACKAGES+=" perlbase-time"
+
 PACKAGES+=" lolcat coreutils-stty"
 PACKAGES+=" naiveproxy mihomo luci-app-mihomo"
 PACKAGES+=" luci-app-zerotier luci-app-cloudflared tailscale luci-app-tailscale"
