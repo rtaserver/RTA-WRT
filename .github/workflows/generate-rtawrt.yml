@@ -256,36 +256,25 @@ jobs:
           time bash make-build.sh $PROFILE
           rm -rf bin/targets/"$TARGET_SYSTEM"/*.{json,manifest,bin,*-rootfs*,*factory*,sha256sums}
           for file in bin/targets/"$TARGET_SYSTEM"/*-"$TARGET_NAME"-*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
-          search_patterns=(
-              "bcm27xx-bcm2710-rpi-3"
-              "bcm27xx-bcm2711-rpi-4"
-              "rockchip-armv8-friendlyarm_nanopi-r2c"
-              "rockchip-armv8-friendlyarm_nanopi-r2s"
-              "rockchip-armv8-friendlyarm_nanopi-r4s"
-              "rockchip-armv8-xunlong_orangepi-r1-plus"
-              "rockchip-armv8-xunlong_orangepi-r1-plus-lts"
-              "x86-64-generic-ext4-combined-efi"
-              "x86-64-generic-ext4-combined"
+          # Check File
+          ls -l
+          # Replace Name
+          search_replace_patterns=(
+              "bcm27xx-bcm2710-rpi-3|Raspberry-Pi-3_ext4-sysupgrade"
+              "bcm27xx-bcm2711-rpi-4|Raspberry-Pi-4_ext4-sysupgrade"
+              "rockchip-armv8-friendlyarm_nanopi-r2c|NanoPi_R2C_ext4-sysupgrade"
+              "rockchip-armv8-friendlyarm_nanopi-r2s|NanoPi_R2S_ext4-sysupgrade"
+              "rockchip-armv8-friendlyarm_nanopi-r4s|NanoPi_R4S_ext4-sysupgrade"
+              "rockchip-armv8-xunlong_orangepi-r1-plus|Orange-Pi-R1_ext4-sysupgrade"
+              "rockchip-armv8-xunlong_orangepi-r1-plus-lts|Orange-Pi-R1-Plus-LTS_ext4-sysupgrade"
+              "x86-64-generic-ext4-combined-efi|x86-64-Generic_ext4-combined-efi"
+              "x86-64-generic-ext4-combined|x86-64-Generic_ext4-combined"
           )
-          replace_patterns=(
-              "Raspberry-Pi-3_ext4-sysupgrade"
-              "Raspberry-Pi-4_ext4-sysupgrade"
-              "NanoPi_R2C_ext4-sysupgrade"
-              "NanoPi_R2S_ext4-sysupgrade"
-              "NanoPi_R4S_ext4-sysupgrade"
-              "Orange-Pi-R1_ext4-sysupgrade"
-              "Orange-Pi-R1-Plus-LTS_ext4-sysupgrade"
-              "x86-64-Generic_ext4-combined-efi"
-              "x86-64-Generic_ext4-combined"
-          )
-          if [ ${#search_patterns[@]} -ne ${#replace_patterns[@]} ]; then
-              echo "Jumlah search dan replace tidak cocok!"
-              exit 1
-          fi
-          for ((i=0; i<${#search_patterns[@]}; i++)); do
-              search="${search_patterns[$i]}"
-              replace="${replace_patterns[$i]}"
-          
+
+          for pattern in "${search_replace_patterns[@]}"; do
+              search="${pattern%%|*}"
+              replace="${pattern##*|}"
+
               for file in *${search}*.img.gz; do
                   if [[ -f "$file" ]]; then
                       new_name="RTA-WRT_OpenWrt-${{ env.BRANCH }}_${replace}.img.gz"

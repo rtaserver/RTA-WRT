@@ -282,23 +282,18 @@ jobs:
           for file in *.img.gz; do mv "$file" RTA-WRT_$(basename "$file" .img.gz).img.gz; done
           for file in *rootfs.tar.gz; do mv "$file" RTA-WRT_$(basename "$file" .tar.gz).tar.gz; done
           rm -r *.sha && sha256sum *.gz > sha256sums
-          search_patterns=(
-              "_amlogic_s905x_"
-              "_amlogic_s905x-b860h_"
-              "_amlogic_s905x2_"
+          # Check File
+          ls -l
+          # Replace Name
+          search_replace_patterns=(
+              "_amlogic_s905x_|Amlogic_HG680P"
+              "_amlogic_s905x-b860h_|Amlogic_B860HV1-V2"
+              "_amlogic_s905x2_|Amlogic_B860HV5"
           )
-          replace_patterns=(
-              "Amlogic_HG680P"
-              "Amlogic_B860HV1-V2"
-              "Amlogic_B860HV5"
-          )
-          if [ ${#search_patterns[@]} -ne ${#replace_patterns[@]} ]; then
-              echo "Jumlah search dan replace tidak cocok!"
-              exit 1
-          fi
-          for ((i=0; i<${#search_patterns[@]}; i++)); do
-              search="${search_patterns[$i]}"
-              replace="${replace_patterns[$i]}"
+
+          for pattern in "${search_replace_patterns[@]}"; do
+              search="${pattern%%|*}"
+              replace="${pattern##*|}"
           
               for file in *${search}*.img.gz; do
                   if [[ -f "$file" ]]; then
