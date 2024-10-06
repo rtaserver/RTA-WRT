@@ -9,11 +9,11 @@ openclash_file_down="$(curl -s ${openclash_api} | grep "browser_download_url" | 
 passwall_api="https://api.github.com/repos/xiaorouji/openwrt-passwall/releases"
 passwall_file="luci-23.05_luci-app-passwall"
 passwall_file_down="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*${passwall_file}.*.ipk" | head -n 1)"
-passwall_ipk_packages="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*passwall_packages_ipk_${ARCH}_3.zip" | head -n 1)"
+passwall_ipk_packages="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*passwall_packages_ipk_${ARCH_3}.zip" | head -n 1)"
 
 # Mihomo
 mihomo_api="https://api.github.com/repos/morytyann/OpenWrt-mihomo/releases"
-mihomo_file="mihomo_${ARCH}_3"
+mihomo_file="mihomo_${ARCH_3}"
 mihomo_file_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file}.*.tar.gz" | head -n 1)"
                        
 # Output download information
@@ -40,21 +40,21 @@ if [ "$?" -ne 0 ]; then
 fi
 
 # Unzip Passwall packages
-unzip -qq packages/"passwall_packages_ipk_${ARCH}_3.zip" -d packages && rm packages/"passwall_packages_ipk_${ARCH}_3.zip"
+unzip -qq packages/"passwall_packages_ipk_${ARCH_3}.zip" -d packages && rm packages/"passwall_packages_ipk_${ARCH_3}.zip"
 if [ "$?" -ne 0 ]; then
     echo "Error: Failed to unzip Passwall IPK packages."
     exit 1
 fi
 
 echo "Downloading Mihomo package"
-wget ${mihomo_file_down} -nv -P packages
+wget "${mihomo_file_down}" -nv -P packages
 if [ "$?" -ne 0 ]; then
     echo "Error: Failed to download Mihomo package."
     exit 1
 fi
 
 # Extract Mihomo package
-tar -xzvf packages/"mihomo_${ARCH}_3.tar.gz" -C packages && rm packages/"mihomo_${ARCH}_3.tar.gz"
+tar -xzvf packages/"mihomo_${ARCH_3}.tar.gz" -C packages && rm packages/"mihomo_${ARCH_3}.tar.gz"
 if [ "$?" -ne 0 ]; then
     echo "Error: Failed to extract Mihomo package."
     exit 1
