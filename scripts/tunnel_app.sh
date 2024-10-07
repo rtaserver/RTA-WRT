@@ -12,7 +12,7 @@ passwall_file_down="$(curl -s ${passwall_api} | grep "browser_download_url" | gr
 passwall_ipk_packages="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*passwall_packages_ipk_${ARCH_3}.zip" | head -n 1)"
 
 # Mihomo
-mihomo_api="https://api.github.com/repos/morytyann/OpenWrt-mihomo/releases"
+mihomo_api="https://api.github.com/repos/rtaserver/OpenWrt-mihomo-Mod/releases"
 mihomo_file="mihomo_${ARCH_3}"
 mihomo_file_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file}.*.tar.gz" | head -n 1)"
                        

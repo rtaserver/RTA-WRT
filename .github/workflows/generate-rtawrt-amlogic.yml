@@ -180,7 +180,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.BRANCH }}-amlogic-${{ env.DATE }}
-          name: "RTA-WRT Amlogic OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
+          name: "⌛ RTA-WRT Amlogic OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
           target_commitish: ${{ github.ref_name }}
           prerelease: ${{ env.PRE_RELEASE }}
           make_latest: true
@@ -363,7 +363,7 @@ jobs:
         with:
           files: ${{ env.PACKAGED_OUTPUTPATH }}/*
           tag_name: ${{ env.BRANCH }}-amlogic-${{ env.DATE }}
-          name: "RTA-WRT Amlogic OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
+          name: "✅ RTA-WRT Amlogic OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
           body: |
             ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.BRANCH }}-amlogic-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
 
