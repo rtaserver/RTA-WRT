@@ -208,6 +208,7 @@ jobs:
             - Default username: root
             - Default password: rtawrt
             - Default WIFI name: RTA-WRT_2g | RTA-WRT_5g (if device supported)
+          generate_release_notes: true
 
       - name: Create Pre-Release
         if: github.event.inputs.upload-prerelease == 'true'

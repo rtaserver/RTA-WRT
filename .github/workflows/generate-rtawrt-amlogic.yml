@@ -202,6 +202,7 @@ jobs:
             
             ### Install to EMMC
             - Login to OpenWrt → System → Amlogic Service → Install OpenWrt
+          generate_release_notes: true
 
       - name: Create For Pre-Release
         if: github.event.inputs.upload-prerelease == 'true'
