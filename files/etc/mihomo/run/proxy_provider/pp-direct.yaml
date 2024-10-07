@@ -1,0 +1,24 @@
+proxies:
+- name: MODEM 1
+  type: direct
+  udp: true
+  ip-version: ipv4
+  interface-name: eth1
+
+- name: MODEM 2
+  type: direct
+  udp: true
+  ip-version: ipv4
+  interface-name: eth2
+
+- name: MODEM 3
+  type: direct
+  udp: true
+  ip-version: ipv4
+  interface-name: usb0
+
+- name: MODEM 4
+  type: direct
+  udp: true
+  ip-version: ipv4
+  interface-name: wwan0
