@@ -1,5 +1,11 @@
 # What's New!
 
+**Changelog** (7-10-2024):
+- Add Config Mihomo
+- Update UI Mihomo
+- Add Editor Mihomo To Tinyfilemanager
+- Change Style Login Page
+
 **Changelog** (6-10-2024):
 - Fixed Tinyfilemanager Search Engine
 - Fixed Terminal Openwrt
