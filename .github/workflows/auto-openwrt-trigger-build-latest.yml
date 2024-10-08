@@ -6,7 +6,11 @@ on:
   #schedule:
   #  - cron: '0 0 * * 0'  # Latest build every Sunday at 00:00 UTC
   workflow_dispatch:
-
+      upload-prerelease:
+        description: "Upload as pre-release"
+        required: false
+        default: "false"
+        type: boolean
 jobs:
   update-readme:
     runs-on: ubuntu-latest
@@ -17,6 +21,7 @@ jobs:
           fetch-depth: 0
 
       - name: Update README.md
+        if: github.event.inputs.upload-prerelease == 'false'
         run: |
           sudo timedatectl set-timezone "Asia/Jakarta"
           DATE="$(date +'%Y%m%d')"
@@ -31,6 +36,7 @@ jobs:
           
       
       - name: Commit changes
+        if: github.event.inputs.upload-prerelease == 'false'
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
@@ -53,7 +59,7 @@ jobs:
           repository: rtaserver/RTA-WRT
           token: ${{ github.token }}
           workflow: generate-rtawrt.yml
-          # params: '{"release_branch": "latest", "tunnel": "openclash-passwall", "upload-prerelease": "false"}'
+          params: '{"upload-prerelease": "${{ inputs.upload-prerelease }}"}'
 
   trigger-generate-rtawrt-amlogic-latest:
     needs: trigger-generate-rtawrt-latest
@@ -68,7 +74,7 @@ jobs:
           repository: rtaserver/RTA-WRT
           token: ${{ github.token }}
           workflow: generate-rtawrt-amlogic.yml
-          # params: '{"target": "all", "openwrt_kernel": "5.15.y_5.10.y", "release_branch": "latest", "tunnel": "openclash-passwall", "upload-prerelease": "false"}'
+          params: '{"upload-prerelease": "${{ inputs.upload-prerelease }}"}'
 
   stale:
     needs: trigger-generate-rtawrt-amlogic-latest
