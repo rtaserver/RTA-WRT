@@ -1,5 +1,5 @@
 #!/bin/sh
-
+if [ ! -e /etc/hotspotsetup ]; then
 chmod +x /usr/bin/pear
 chmod +x /usr/bin/peardev
 sed -i -E "s|memory_limit = [0-9]+M|memory_limit = 100M|g" /etc/php.ini
@@ -112,9 +112,9 @@ if ! grep -q '/etc/init.d/chilli restart' /etc/rc.local; then
 fi
 echo "src/gz mutiara_wrt https://raw.githubusercontent.com/maizil41/mutiara-wrt-opkg/main/generic" >> /etc/opkg/customfeeds.conf
 echo "All first boot setup complete!"
-if [ ! -e /etc/hotspotsetup ] \
 rm -rf /root/hotspot
 touch /etc/hotspotsetup
+rm -rf /etc/uci-defaults/90-hotspot-setup.sh
 reboot
 fi
 exit 1
