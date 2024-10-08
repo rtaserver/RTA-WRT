@@ -287,15 +287,15 @@ jobs:
           ls -l
           # Replace Name
           search_replace_patterns=(
-              "bcm27xx-bcm2710-rpi-3|Raspberry-Pi-3_ext4-sysupgrade"
-              "bcm27xx-bcm2711-rpi-4|Raspberry-Pi-4_ext4-sysupgrade"
-              "rockchip-armv8-friendlyarm_nanopi-r2c|NanoPi_R2C_ext4-sysupgrade"
-              "rockchip-armv8-friendlyarm_nanopi-r2s|NanoPi_R2S_ext4-sysupgrade"
-              "rockchip-armv8-friendlyarm_nanopi-r4s|NanoPi_R4S_ext4-sysupgrade"
-              "rockchip-armv8-xunlong_orangepi-r1-plus|Orange-Pi-R1_ext4-sysupgrade"
-              "rockchip-armv8-xunlong_orangepi-r1-plus-lts|Orange-Pi-R1-Plus-LTS_ext4-sysupgrade"
-              "x86-64-generic-ext4-combined-efi|x86-64-Generic_ext4-combined-efi"
-              "x86-64-generic-ext4-combined|x86-64-Generic_ext4-combined"
+              "-bcm27xx-bcm2710-rpi-3-ext4-sysupgrade|Raspberry-Pi-3_ext4-sysupgrade"
+              "-bcm27xx-bcm2711-rpi-4-sysupgrade|Raspberry-Pi-4_ext4-sysupgrade"
+              "-rockchip-armv8-friendlyarm_nanopi-r2c-sysupgrade|NanoPi_R2C_ext4-sysupgrade"
+              "-rockchip-armv8-friendlyarm_nanopi-r2s-sysupgrade|NanoPi_R2S_ext4-sysupgrade"
+              "-rockchip-armv8-friendlyarm_nanopi-r4s-sysupgrade|NanoPi_R4S_ext4-sysupgrade"
+              "-rockchip-armv8-xunlong_orangepi-r1-plus-sysupgrade|Orange-Pi-R1_ext4-sysupgrade"
+              "-rockchip-armv8-xunlong_orangepi-r1-plus-lts-sysupgrade|Orange-Pi-R1-Plus-LTS_ext4-sysupgrade"
+              "-x86-64-generic-ext4-combined-efi|x86-64-Generic_ext4-combined-efi"
+              "-x86-64-generic-ext4-combined|x86-64-Generic_ext4-combined"
           )
 
           for pattern in "${search_replace_patterns[@]}"; do
