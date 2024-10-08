@@ -266,7 +266,6 @@ jobs:
           cd $WORKING_DIR
           bash scripts/builder-patch.sh
           bash scripts/misc.sh
-          bash scripts/setup-hotspot.sh
           bash scripts/tunnel_app.sh
           bash scripts/clash-core.sh
           echo "Total custom packages: $(find packages -type f -name "*.ipk" | wc -l)"

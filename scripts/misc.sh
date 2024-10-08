@@ -61,4 +61,13 @@ wget --no-check-certificate -nv -P files/usr/bin "$mount_hdd"
 
 # echo "src/gz custom_arch https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9" >> repositories.conf
 
+# setup hotspot
+echo "Downloading files for hotspot" 
+git clone -b "main" "https://github.com/Maizil41/RadiusMonitor.git" "files/www/RadiusMonitor"
+git clone -b "main" "https://github.com/Maizil41/radiusbilling.gitt" "files/www/raddash"
+wget https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.zip
+unzip phpMyAdmin-5.2.1-all-languages.zip
+rm -rf phpMyAdmin-5.2.1-all-languages.zip
+mv phpMyAdmin-5.2.1-all-languages files/www/phpmyadmin
+
 echo "All custom configuration setup completed!"
