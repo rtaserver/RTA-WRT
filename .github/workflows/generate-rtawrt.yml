@@ -302,11 +302,11 @@ jobs:
               search="${pattern%%|*}"
               replace="${pattern##*|}"
 
-              for file in *${search}*.img.gz; do
+              for file in compiled_images/*${search}*.img.gz; do
                   if [[ -f "$file" ]]; then
                       new_name="RTA-WRT_OpenWrt-${{ env.BRANCH }}_${replace}.img.gz"
                       echo "Renaming: $file -> $new_name"
-                      mv "$file" "$new_name"
+                      mv "$file" "compiled_images/$new_name"
                   fi
               done
           done
