@@ -2,15 +2,12 @@
 
 chmod +x /usr/bin/pear
 chmod +x /usr/bin/peardev
-
 sed -i -E "s|memory_limit = [0-9]+M|memory_limit = 100M|g" /etc/php.ini
 sed -i -E "s|display_errors = On|display_errors = Off|g" /etc/php.ini
 uci set uhttpd.main.index_page='index.php'
 uci set uhttpd.main.interpreter='.php=/usr/bin/php-cgi'
 uci commit uhttpd
 /etc/init.d/uhttpd restart
-
-#
 sed -i -E "s|option enabled '0'|option enabled '1'|g" /etc/config/mysqld
 sed -i -E "s|# datadir		= /srv/mysql|datadir	= /usr/share/mysql|g" /etc/mysql/conf.d/50-server.cnf
 sed -i -E "s|127.0.0.1|0.0.0.0|g" /etc/mysql/conf.d/50-server.cnf
@@ -26,8 +23,6 @@ FLUSH PRIVILEGES;
 EOF
 mysql -u root -p"radius" -e "CREATE DATABASE radius CHARACTER SET utf8";
 mysql -u root -p"radius" -e "GRANT ALL ON radius.* TO 'radius'@'localhost' IDENTIFIED BY 'radius' WITH GRANT OPTION";
-
-#
 mysql -u root -p"radius" radius -e "SET FOREIGN_KEY_CHECKS = 0; $(mysql -u root -p"radius" radius -e 'SHOW TABLES' | awk '{print "DROP TABLE IF EXISTS `" $1 "`;"}' | grep -v '^Tables' | tr '\n' ' ') SET FOREIGN_KEY_CHECKS = 1;"
 mysql -u root -p"radius" radius < /root/radius_monitor.sql
 rm -rf /root/radius_monitor.sql
@@ -50,8 +45,6 @@ document.getElementById("rad_mon").src = window.location.protocol + "//" + windo
 <%+footer%>
 EOF
 chmod +x /usr/lib/lua/luci/view/radmon.htm
-
-#
 mv /www/phpmyadmin/config.sample.inc.php /www/phpmyadmin/config.inc.php
 sed -i -E "s|localhost|127.0.0.1|g" /www/phpmyadmin/config.inc.php
 sed -i "/\$cfg\['Servers'\]\[.*\]\['AllowNoPassword'\] = false;/a \$cfg\['AllowThirdPartyFraming'\] = true;" /www/phpmyadmin/config.inc.php
@@ -73,17 +66,13 @@ document.getElementById("phpmyadmin").src = window.location.protocol + "//" + wi
 EOF
 chmod +x /usr/lib/lua/luci/view/phpmyadmin.htm
 
-#
 /etc/init.d/radiusd stop
-
 rm -rf /etc/freeradius3
 cd /root/hotspot/etc
 mv freeradius3 /etc/freeradius3
-
 rm -rf /usr/share/freeradius3
 cd /root/hotspot/usr/share
 mv freeradius3 /usr/share/freeradius3
-
 cd /etc/freeradius3/mods-enabled
 ln -s ../mods-available/always
 ln -s ../mods-available/attr_filter
@@ -104,30 +93,22 @@ ln -s ../mods-available/realm
 ln -s ../mods-available/sql
 ln -s ../mods-available/sradutmp
 ln -s ../mods-available/unix
-
 cd /etc/freeradius3/sites-enabled
 ln -s ../sites-available/default
 ln -s ../sites-available/inner-tunnel
-    
 if ! grep -q '/etc/init.d/radiusd restart' /etc/rc.local; then
     sed -i '/exit 0/i /etc/init.d/radiusd restart' /etc/rc.local
 fi
-
 /etc/init.d/chilli stop
 rm -rf /etc/config/chilli
 rm -rf /etc/init.d/chilli
-
 mv /root/hotspot/etc/config/chilli /etc/config/chilli
 mv /root/hotspot/etc/init.d/chilli /etc/init.d/chilli
 mv /root/hotspot/usr/share/hotspotlogin /usr/share/hotspotlogin
 ln -s /usr/share/hotspotlogin /www/hotspotlogin
-
 chmod +x /etc/init.d/chilli
-
 echo "src/gz mutiara_wrt https://raw.githubusercontent.com/maizil41/mutiara-wrt-opkg/main/generic" >> /etc/opkg/customfeeds.conf
-
 echo "All first boot setup complete!"
-
 if [ ! -e /etc/hotspotsetup ] \
 rm -rf /root/hotspot
 touch /etc/hotspotsetup
