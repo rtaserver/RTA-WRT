@@ -187,7 +187,7 @@ function sub_menu(){
   txt "update - Check and update the script"
   txt "openclash - Tools For OpenClash"
   txt "ceksmsmm - Cek SMS Modem Manager"
-  txt "restart_hotspot - Restart Chilli Radius"
+  txt "radmon - Tools For Radius Monitor"
   garis
 }
 
@@ -264,6 +264,34 @@ function ceksmsmm(){
   fi
 
 }
+
+fuction radmon(){
+  clear1
+  logo
+  txt "Radmon Tools"
+  txt "Usage: rtawrt radmon [option]"
+  txt "Available options:"
+  txt "restart - Restart Radmon / Radius Chilli"
+  txt "up-radmon - Update RadiusMonitor"
+  txt "up-raddash - Update RadiusDashboard"
+  garis
+  if [ ! -z "$1" ]; then
+    case "$1" in
+      restart)
+      /etc/init.d/radiusd restart
+      /etc/init.d/chilli restart
+      ;;
+      up-radmon)
+      git clone https://github.com/Maizil41/RadiusMonitor /www/RadiusMonitor
+      mysql -u root -p"radius" radius < /www/RadiusMonitor/radmon.sql
+      ;;
+      up-raddash)
+      git clone https://github.com/Maizil41/radiusbilling /www/raddash
+      mysql -u root -p"radius" radius < /www/raddash/raddash.sql
+      ;;
+    esac
+  fi
+}
 ######################################################################
 ## MENU
 
@@ -298,9 +326,8 @@ else
     ceksmsmm)
       ceksmsmm
       ;;
-    restart_hotspot)
-      /etc/init.d/radiusd restart
-      /etc/init.d/chilli restart
+    radmon)
+      radmon
       ;;
     *)
       echo "Invalid option: $1" | lolcat
