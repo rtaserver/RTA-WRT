@@ -52,9 +52,10 @@ uci add_list system.ntp.server="id.pool.ntp.org"
 uci add_list system.ntp.server="time.google.com"
 uci commit system
 
-# configure wan interface
 chmod +x /usr/lib/ModemManager/connection.d/10-report-down
+
 echo "Setup WAN and LAN Interface"
+# Configure Network
 uci set network.lan.ipaddr="192.168.1.1"
 uci del network.lan.ip6assign
 uci set network.modemmanager=interface
@@ -93,6 +94,8 @@ uci set network.chilli=interface
 uci set network.chilli.proto='none'
 uci set network.chilli.device='tun0'
 uci commit network
+
+# configure Firewall
 uci set firewall.tun=zone
 uci set firewall.tun.name='tun'
 uci set firewall.tun.input='ACCEPT'
@@ -106,13 +109,22 @@ uci set firewall.@zone[0].network='lan voucher'
 uci set firewall.@zone[1].network='wan wan2 modemmanager tethering'
 uci commit firewall
 
-# configure ipv6
+# configure DHCP
+uci del dhcp.@dnsmasq[0].nonwildcard
+uci del dhcp.@dnsmasq[0].noresolv
+uci del dhcp.@dnsmasq[0].boguspriv
+uci del dhcp.@dnsmasq[0].filterwin2k
+uci del dhcp.@dnsmasq[0].filter_aaaa
+uci del dhcp.@dnsmasq[0].filter_a
+uci del dhcp.@dnsmasq[0].nonegcache
+uci add_list dhcp.@dnsmasq[0].server='1.1.1.1'
 uci -q delete dhcp.lan.dhcpv6
 uci -q delete dhcp.lan.ra
 uci -q delete dhcp.lan.ndp
 uci -q delete dhcp.lan.ra_slaac
 uci -q delete dhcp.lan.ra_flags
 uci commit dhcp
+/etc/init.d/dnsmasq restart
 
 # configure WLAN
 echo "Setup Wireless if available"
