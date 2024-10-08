@@ -29,8 +29,8 @@ mysql -u root -p"radius" -e "GRANT ALL ON radius.* TO 'radius'@'localhost' IDENT
 
 #
 mysql -u root -p"radius" radius -e "SET FOREIGN_KEY_CHECKS = 0; $(mysql -u root -p"radius" radius -e 'SHOW TABLES' | awk '{print "DROP TABLE IF EXISTS `" $1 "`;"}' | grep -v '^Tables' | tr '\n' ' ') SET FOREIGN_KEY_CHECKS = 1;"
-mysql -u root -p"radius" radius < /tmp/radius_monitor.sql
-rm -rf /tmp/radius_monitor.sql
+mysql -u root -p"radius" radius < /root/radius_monitor.sql
+rm -rf /root/radius_monitor.sql
 mysql -u root -p"radius" radius < /www/RadiusMonitor/radmon.sql
 mysql -u root -p"radius" radius < /www/raddash/raddash.sql
 cat <<'EOF' >/usr/lib/lua/luci/controller/radmon.lua
@@ -129,6 +129,7 @@ echo "src/gz mutiara_wrt https://raw.githubusercontent.com/maizil41/mutiara-wrt-
 echo "All first boot setup complete!"
 
 if [ ! -e /etc/hotspotsetup ] \
+rm -rf /root/hotspot
 touch /etc/hotspotsetup
 reboot
 fi
