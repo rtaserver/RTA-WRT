@@ -127,5 +127,9 @@ chmod +x /etc/init.d/chilli
 echo "src/gz mutiara_wrt https://raw.githubusercontent.com/maizil41/mutiara-wrt-opkg/main/generic" >> /etc/opkg/customfeeds.conf
 
 echo "All first boot setup complete!"
+
+if [ ! -e /etc/hotspotsetup ] \
+touch /etc/hotspotsetup
 reboot
+fi
 exit 1
