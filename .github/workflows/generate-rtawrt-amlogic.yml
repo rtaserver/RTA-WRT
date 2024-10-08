@@ -411,3 +411,66 @@ jobs:
             
             ### Install to EMMC
             - Login to OpenWrt → System → Amlogic Service → Install OpenWrt
+
+  notify:
+    needs: Generate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get current time
+        id: current_time
+        run: echo "CURRENT_TIME=$(TZ=Asia/Jakarta date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+
+      - name: Notify Telegram Release
+        if: github.event.inputs.upload-artifacts == 'false' && github.event.inputs.upload-prerelease == 'false'
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          RELEASE_TAG: ${{ env.BRANCH }}-amlogic-${{ env.DATE }}
+          RELEASE_NAME: "✅ RTA-WRT Amlogic OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }}"
+          CURRENT_TIME: ${{ env.CURRENT_TIME }}
+        run: |
+          MESSAGE=$(cat <<-EOF
+          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                           NEW UPDATE
+          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+          NAME    : \`${RELEASE_NAME}\`
+          TAG       : \`${RELEASE_TAG}\`
+          DATE    : \`${CURRENT_TIME}\`
+          REPO    : \`rtaserver/RTA-WRT\`
+          URL       : [Click Here](https://github.com/rtaserver/RTA-WRT/releases/tag/${RELEASE_TAG})
+          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+          EOF
+          )
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+          -d chat_id=$CHAT_ID \
+          -d parse_mode=Markdown \
+          -d text="$MESSAGE"
+
+      - name: Notify Telegram Pre-Release
+        if: github.event.inputs.upload-prerelease == 'true'
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          RELEASE_TAG: "Amlogic_Prerelease"
+          RELEASE_NAME: "🔔 RTA-WRT Amlogic OpenWrt ${{ env.BRANCH }} : ${{ env.DATE }} - Pre Release"
+          CURRENT_TIME: ${{ env.CURRENT_TIME }}
+        run: |
+          MESSAGE=$(cat <<-EOF
+          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                           NEW UPDATE
+          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+          NAME    : \`${RELEASE_NAME}\`
+          TAG       : \`${RELEASE_TAG}\`
+          DATE    : \`${CURRENT_TIME}\`
+          REPO    : \`rtaserver/RTA-WRT\`
+          URL       : [Click Here](https://github.com/rtaserver/RTA-WRT/releases/tag/${RELEASE_TAG})
+          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+          EOF
+          )
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+          -d chat_id=$CHAT_ID \
+          -d parse_mode=Markdown \
+          -d text="$MESSAGE"
