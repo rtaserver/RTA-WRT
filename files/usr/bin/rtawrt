@@ -265,7 +265,7 @@ function ceksmsmm(){
 
 }
 
-fuction radmon(){
+function radmon(){
   clear1
   logo
   txt "Radmon Tools"
