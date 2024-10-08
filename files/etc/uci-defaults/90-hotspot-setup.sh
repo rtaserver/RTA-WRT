@@ -121,36 +121,8 @@ mv /root/hotspot/etc/config/chilli /etc/config/chilli
 mv /root/hotspot/etc/init.d/chilli /etc/init.d/chilli
 mv /root/hotspot/usr/share/hotspotlogin /usr/share/hotspotlogin
 ln -s /usr/share/hotspotlogin /www/hotspotlogin
-    
+
 chmod +x /etc/init.d/chilli
-
-
-uci set network.hotspot=device
-uci set network.hotspot.name='br-hotspot'
-uci set network.hotspot.type='bridge'
-uci set network.hotspot.ipv6='0'
-uci set network.voucher=interface
-uci set network.voucher.name='voucher'
-uci set network.voucher.proto='static'
-uci set network.voucher.device='br-hotspot'
-uci set network.voucher.ipaddr='10.10.30.1'
-uci set network.voucher.netmask='255.255.255.0'
-uci set network.chilli=interface
-uci set network.chilli.proto='none'
-uci set network.chilli.device='tun0'
-uci commit network
-uci set firewall.tun=zone
-uci set firewall.tun.name='tun'
-uci set firewall.tun.input='ACCEPT'
-uci set firewall.tun.output='ACCEPT'
-uci set firewall.tun.forward='REJECT'
-uci add_list firewall.tun.network='chilli'
-uci add firewall forwarding
-uci set firewall.@forwarding[-1].src='tun'
-uci set firewall.@forwarding[-1].dest='wan'
-uci add_list firewall.@zone[0].network='voucher'
-uci commit firewall
-echo "Firewall configuration check and update complete."
 
 echo "src/gz mutiara_wrt https://raw.githubusercontent.com/maizil41/mutiara-wrt-opkg/main/generic" >> /etc/opkg/customfeeds.conf
 

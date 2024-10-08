@@ -4,9 +4,9 @@ echo "Start Downloading Misc files and setup configuration!"
 echo "Current Path: $PWD"
 
 #setup custom setting for openwrt and immortalwrt
-sed -i "s/Ouc3kNF6/$DATE/g" files/etc/uci-defaults/98-init-settings.sh
+sed -i "s/Ouc3kNF6/$DATE/g" files/etc/uci-defaults/99-init-settings.sh
 echo "$BASE"
-sed -i '/# setup misc settings/ a\mv \/www\/luci-static\/resources\/view\/status\/include\/29_temp.js \/www\/luci-static\/resources\/view\/status\/include\/17_temp.js' files/etc/uci-defaults/98-init-settings.sh
+sed -i '/# setup misc settings/ a\mv \/www\/luci-static\/resources\/view\/status\/include\/29_temp.js \/www\/luci-static\/resources\/view\/status\/include\/17_temp.js' files/etc/uci-defaults/99-init-settings.sh
 
 if [ "$TARGET" == "Raspberry Pi 4B" ]; then
     echo "$TARGET"
@@ -17,20 +17,20 @@ else
 fi
 
 if [ "$TYPE" == "AMLOGIC" ]; then
-    sed -i -E "s|nullwrt|amlogic|g" files/etc/uci-defaults/98-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/dhcp-get-server.sh' files/etc/uci-defaults/98-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/dhcp.script' files/etc/uci-defaults/98-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/dhcpv6.script' files/etc/uci-defaults/98-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/ppp6-up' files/etc/uci-defaults/98-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/ppp-down' files/etc/uci-defaults/98-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/ppp6-down' files/etc/uci-defaults/98-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/ppp-up' files/etc/uci-defaults/98-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/wireless/mac80211.sh' files/etc/uci-defaults/98-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/proto/dhcp.sh' files/etc/uci-defaults/98-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/nefitd/proto/dhcpv6.sh' files/etc/uci-defaults/98-init-settings.sh
-    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/proto/ppp.sh' files/etc/uci-defaults/98-init-settings.sh
+    sed -i -E "s|nullwrt|amlogic|g" files/etc/uci-defaults/99-init-settings.sh
+    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/dhcp-get-server.sh' files/etc/uci-defaults/99-init-settings.sh
+    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/dhcp.script' files/etc/uci-defaults/99-init-settings.sh
+    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/dhcpv6.script' files/etc/uci-defaults/99-init-settings.sh
+    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/ppp6-up' files/etc/uci-defaults/99-init-settings.sh
+    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/ppp-down' files/etc/uci-defaults/99-init-settings.sh
+    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/ppp6-down' files/etc/uci-defaults/99-init-settings.sh
+    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/ppp-up' files/etc/uci-defaults/99-init-settings.sh
+    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/wireless/mac80211.sh' files/etc/uci-defaults/99-init-settings.sh
+    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/proto/dhcp.sh' files/etc/uci-defaults/99-init-settings.sh
+    sed -i '/# setup misc settings/ a\chmod +x /lib/nefitd/proto/dhcpv6.sh' files/etc/uci-defaults/99-init-settings.sh
+    sed -i '/# setup misc settings/ a\chmod +x /lib/netifd/proto/ppp.sh' files/etc/uci-defaults/99-init-settings.sh
 else
-    sed -i -E "s|nullwrt|$TYPE|g" files/etc/uci-defaults/98-init-settings.sh
+    sed -i -E "s|nullwrt|$TYPE|g" files/etc/uci-defaults/99-init-settings.sh
     rm -rf files/lib
     rm -rf files/etc/config/amlogic
     rm -rf files/etc/config/fstab

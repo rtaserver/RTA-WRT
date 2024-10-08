@@ -79,7 +79,30 @@ uci set network.wan2=interface
 uci set network.wan2.proto='dhcp'
 uci set network.wan2.device='eth2'
 uci set network.wan2.metric='2'
+uci set network.hotspot=device
+uci set network.hotspot.name='br-hotspot'
+uci set network.hotspot.type='bridge'
+uci set network.hotspot.ipv6='0'
+uci set network.voucher=interface
+uci set network.voucher.name='voucher'
+uci set network.voucher.proto='static'
+uci set network.voucher.device='br-hotspot'
+uci set network.voucher.ipaddr='10.10.30.1'
+uci set network.voucher.netmask='255.255.255.0'
+uci set network.chilli=interface
+uci set network.chilli.proto='none'
+uci set network.chilli.device='tun0'
 uci commit network
+uci set firewall.tun=zone
+uci set firewall.tun.name='tun'
+uci set firewall.tun.input='ACCEPT'
+uci set firewall.tun.output='ACCEPT'
+uci set firewall.tun.forward='REJECT'
+uci add_list firewall.tun.network='chilli'
+uci add firewall forwarding
+uci set firewall.@forwarding[-1].src='tun'
+uci set firewall.@forwarding[-1].dest='wan'
+uci set firewall.@zone[0].network='lan voucher'
 uci set firewall.@zone[1].network='wan wan2 modemmanager tethering'
 uci commit firewall
 
