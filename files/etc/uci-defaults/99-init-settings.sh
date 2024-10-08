@@ -2,10 +2,18 @@
 
 TYPEOPENWRT="nullwrt"
 
+sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
+sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/rtawrt/' /etc/profile
+echo "clear1() {
+  clear
+}
+alias clear1='clear1'" >> /etc/profile
+echo "alias clear='/usr/bin/rtawrt'" >> /etc/profile
+
 if [ "$TYPEOPENWRT" == "amlogic" ]; then
 chmod +x /bin/getcpu
 chmod +x /etc/custom_service/start_service.sh
-chmod +x /etc/profile.d/30-sysinfo.sh
+rm -rf /etc/profile.d/30-sysinfo.sh
 chmod +x /sbin/firstboot
 chmod +x /sbin/kmod
 chmod +x /usr/bin/7z
@@ -14,14 +22,6 @@ chmod +x /usr/sbin/openwrt-install-allwinner
 chmod +x /usr/sbin/openwrt-openvfd
 chmod +x /usr/sbin/openwrt-swap
 chmod +x /usr/sbin/openwrt-tf
-else
-sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
-sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/rtawrt/' /etc/profile
-echo "clear1() {
-  clear
-}
-alias clear1='clear1'" >> /etc/profile
-echo "alias clear='/usr/bin/rtawrt'" >> /etc/profile
 fi
 
 exec > /root/setup.log 2>&1
