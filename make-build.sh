@@ -29,7 +29,7 @@ which wwan xfs-fsck xfs-mkfs xz xz-utils ziptool zoneinfo-asia zoneinfo-core zst
 luci luci-base luci-compat luci-lib-base \
 luci-lib-ip luci-lib-ipkg luci-lib-jsonc luci-lib-nixio luci-mod-admin-full luci-mod-network \
 luci-mod-status luci-mod-system luci-proto-bonding \
-luci-proto-ppp lolcat coreutils-stty"
+luci-proto-ppp lolcat coreutils-stty git git-http"
 
 
 PACKAGES+=" luci-app-zerotier luci-app-cloudflared tailscale luci-app-tailscale"
