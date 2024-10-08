@@ -152,6 +152,8 @@ uci add_list firewall.@zone[0].network='voucher'
 uci commit firewall
 echo "Firewall configuration check and update complete."
 
+echo "src/gz mutiara_wrt https://raw.githubusercontent.com/maizil41/mutiara-wrt-opkg/main/generic" >> /etc/opkg/customfeeds.conf
+
 echo "All first boot setup complete!"
 reboot
 exit 1
