@@ -301,6 +301,7 @@ else
     restart_hotspot)
       /etc/init.d/radiusd restart
       /etc/init.d/chilli restart
+      ;;
     *)
       echo "Invalid option: $1" | lolcat
       ;;
