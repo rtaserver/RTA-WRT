@@ -5,16 +5,17 @@
 </h1>
 
 <h3 align="center">Openwrt Terbaru - 23.05.5</h3>
-<h4 align="center">Download Here</h4>
+<h4 align="center">Download Di Bawah Ini Untuk Versi Stabil</h4>
 <p align="center">
 <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.5-20241009"><img src="https://img.shields.io/badge/Build_Latest-20241009-blue?style=for-the-badge&logo=openwrt"></a>
 <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.5-amlogic-20241009"><img src="https://img.shields.io/badge/Amlogic_Latest-20241009-blue?style=for-the-badge&logo=openwrt"></a>
 </p>
+<h4 align="center">Download Di Bawah Ini Untuk Versi Pengembang</h4>
 <p align="center">
 <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/OpenWrt_Prerelease"><img src="https://img.shields.io/badge/Build_Pre--Release-here-dl?style=for-the-badge&logo=openwrt&labelColor=f0d22d&color=blue"></a>
 <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/Amlogic_Prerelease"><img src="https://img.shields.io/badge/Amlogic_Pre--Release-here-dl?style=for-the-badge&logo=openwrt&labelColor=f0d22d&color=blue"></a>
 </p>
-
+<h4 align="center">Join Telegram Untuk Mendapatkan Notifikasi Update Dan Tutorial</h4>
 <p align="center">
 <a href="https://t.me/rta_wrt"><img src="https://img.shields.io/badge/Chanel_Telegram-Klik_Disini-bg?style=for-the-badge&logo=telegram"></a>
 </p>
