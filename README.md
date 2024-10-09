@@ -16,12 +16,17 @@
 </p>
 
 <p align="center">
+<a href="https://t.me/rta_wrt"><img src="https://img.shields.io/badge/Chanel_Telegram-Klik_Disini-bg?style=for-the-badge&logo=telegram"></a>
+</p>
+
+<p align="center">
 Builder With ImageBuilder
 </p>
 <p align="center">
 Custom Script By FriWrt
 </p>
 <br>
+
 
 [![Auto Trigger Build Openwrt Latest](https://github.com/rtaserver/RTA-WRT/actions/workflows/auto-openwrt-trigger-build-latest.yml/badge.svg)](https://github.com/rtaserver/RTA-WRT/actions/workflows/auto-openwrt-trigger-build-latest.yml)
 [![Generate RTA-WRT Amlogic Firmware](https://github.com/rtaserver/RTA-WRT/actions/workflows/generate-rtawrt-amlogic.yml/badge.svg)](https://github.com/rtaserver/RTA-WRT/actions/workflows/generate-rtawrt-amlogic.yml)
@@ -49,6 +54,10 @@ Termasuk Tunneling
 
 Informasi
 * 192.168.1.1 | pengguna: root | kata sandi: rtawrt
+* MySQL | pengguna: root | kata sandi: radius
+* Radius Monitor | pengguna: root | kata sandi: mutiara
+---
+* **TUTORIAL PENGAKTIFAN HOTSPOT VOUCHER ADA DI CHANEL TELEGRAM**
 
 ---
 * SSID: RTA-WRT_2g / RTA-WRT_5g
