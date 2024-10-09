@@ -1,5 +1,8 @@
 #!/bin/sh
 if [ ! -e /etc/hotspotsetup ]; then
+chmod +x /usr/bin/acct_log.sh
+chmod +x /usr/bin/check_kuota.sh
+chmod +x /usr/bin/client_check.sh
 chmod +x /usr/bin/pear
 chmod +x /usr/bin/peardev
 sed -i -E "s|memory_limit = [0-9]+M|memory_limit = 100M|g" /etc/php.ini
