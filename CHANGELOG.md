@@ -1,5 +1,11 @@
 # What's New!
 
+**Changelog** (9-10-2024):
+- Add Radius Monitor - Voucher
+- Update All Depends
+- Fixed Boot
+- Marge From Pre-Release
+
 **Changelog** (7-10-2024):
 - Add Config Mihomo
 - Update UI Mihomo
