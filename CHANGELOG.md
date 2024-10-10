@@ -1,5 +1,8 @@
 # What's New!
 
+**Changelog** (10-10-2024):
+- Fixed Radius Monitor
+
 **Changelog** (9-10-2024):
 - Add Radius Monitor - Voucher
 - Update All Depends
