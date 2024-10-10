@@ -7,8 +7,8 @@
 <h3 align="center">Openwrt Terbaru - 23.05.5</h3>
 <h4 align="center">Download Di Bawah Ini Untuk Versi Stabil</h4>
 <p align="center">
-<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.5-20241009"><img src="https://img.shields.io/badge/Build_Latest-20241009-blue?style=for-the-badge&logo=openwrt"></a>
-<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.5-amlogic-20241009"><img src="https://img.shields.io/badge/Amlogic_Latest-20241009-blue?style=for-the-badge&logo=openwrt"></a>
+<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.5-20241010"><img src="https://img.shields.io/badge/Build_Latest-20241010-blue?style=for-the-badge&logo=openwrt"></a>
+<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/23.05.5-amlogic-20241010"><img src="https://img.shields.io/badge/Amlogic_Latest-20241010-blue?style=for-the-badge&logo=openwrt"></a>
 </p>
 <h4 align="center">Download Di Bawah Ini Untuk Versi Pengembang</h4>
 <p align="center">
