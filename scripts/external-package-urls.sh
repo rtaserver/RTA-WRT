@@ -63,6 +63,8 @@ files2+=(
     "luci-app-netmonitor|https://api.github.com/repos/rtaserver/rta-packages/releases"
     "luci-app-base64|https://api.github.com/repos/rtaserver/rta-packages/releases"
     "luci-app-rakitanmanager|https://api.github.com/repos/rtaserver/RakitanManager/releases"
+    "luci-app-whatsapp-bot|https://api.github.com/repos/Maizil41/whatsapp-bot/releases"
+    "luci-app-radmon-php8|https://api.github.com/repos/Maizil41/RadiusMonitor/releases"
 )
 
 echo "#########################################"

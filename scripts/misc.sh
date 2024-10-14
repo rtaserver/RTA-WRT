@@ -64,6 +64,11 @@ wget --no-check-certificate -nv -P files/usr/bin "$mount_hdd"
 # setup hotspot
 echo "Downloading files for hotspot" 
 git clone -b "main" "https://github.com/Maizil41/RadiusMonitor.git" "files/usr/share/RadiusMonitor"
+git clone -b "main" "https://github.com/Maizil41/hotspotlogin.git" "files/usr/share/hotspotlogin"
+git clone -b "main" "https://github.com/Maizil41/whatsapp-bot.git" "files/root/whatsapp"
+mv files/root/whatsapp/luci-app-whatsapp-bot/root/root/whatsapp-bot files/root/whatsapp-bot
+rm -rf files/root/whatsapp
+
 wget https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.zip
 unzip phpMyAdmin-5.2.1-all-languages.zip
 rm -rf phpMyAdmin-5.2.1-all-languages.zip

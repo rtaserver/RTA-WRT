@@ -94,7 +94,7 @@ rm -rf /etc/config/chilli
 rm -rf /etc/init.d/chilli
 mv /root/hotspot/etc/config/chilli /etc/config/chilli
 mv /root/hotspot/etc/init.d/chilli /etc/init.d/chilli
-mv /root/hotspot/usr/share/hotspotlogin /usr/share/hotspotlogin
+
 ln -s /usr/share/hotspotlogin /www/hotspotlogin
 chmod +x /etc/init.d/chilli
 if ! grep -q '/etc/init.d/chilli restart' /etc/rc.local; then

@@ -102,6 +102,10 @@ freeradius3-mod-mschap freeradius3-mod-pap freeradius3-mod-preprocess freeradius
 freeradius3-mod-realm freeradius3-mod-sql freeradius3-mod-sql-mysql freeradius3-mod-sqlcounter \
 freeradius3-mod-unix freeradius3-utils libfreetype wget-ssl curl unzip tar zoneinfo-asia coova-chilli"
 
+PACKAGES+=" node node-npm"
+
+PACKAGES+=" luci-app-radmon-php8 luci-app-whatsapp-bot"
+
 # Exclude package (must use - before packages name)
 EXCLUDED+=" -dnsmasq -libgd"
 
