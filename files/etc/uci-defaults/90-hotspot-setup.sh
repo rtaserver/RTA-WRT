@@ -32,7 +32,6 @@ mysql -u root -p"radius" radius -e "SET FOREIGN_KEY_CHECKS = 0; $(mysql -u root 
 mysql -u root -p"radius" radius < /root/hotspot/radius_monitor.sql
 rm -rf /root/hotspot/radius_monitor.sql
 mysql -u root -p"radius" radius < /www/RadiusMonitor/radmon.sql
-mysql -u root -p"radius" radius < /www/raddash/raddash.sql
 
 mv /www/phpmyadmin/config.sample.inc.php /www/phpmyadmin/config.inc.php
 sed -i -E "s|localhost|127.0.0.1|g" /www/phpmyadmin/config.inc.php

@@ -43,7 +43,7 @@ PASSWALL="coreutils coreutils-base64 coreutils-nohup curl \
 chinadns-ng dns2socks dns2tcp dnsmasq-full ip-full \
 libuci-lua lua luci-compat luci-lib-jsonc \
 microsocks resolveip tcping \
-hysteria ipt2socks naiveproxy shadowsocks-rust-sslocal shadowsocks-rust-ssserver shadowsocksr-libev-ssr-local \
+hysteria ipt2socks shadowsocks-rust-sslocal shadowsocks-rust-ssserver shadowsocksr-libev-ssr-local \
 shadowsocksr-libev-ssr-redir shadowsocksr-libev-ssr-server simple-obfs sing-box trojan-plus tuic-client v2ray-geoip v2ray-geosite v2ray-plugin xray-core xray-plugin luci-app-passwall"
 MIHOMO+="mihomo luci-app-mihomo"
 
