@@ -51,17 +51,17 @@ on:
       clean:
         description: "Do 'make clean' for each run"
         required: false
-        default: "true"
+        default: true
         type: boolean
       upload-prerelease:
         description: "Upload as pre-release"
         required: false
-        default: "false"
+        default: false
         type: boolean
       upload-artifacts:
         description: "Upload as artifacts only"
         required: false
-        default: "false"
+        default: false
         type: boolean
 
 env:

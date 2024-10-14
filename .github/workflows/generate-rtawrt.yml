@@ -35,22 +35,22 @@ on:
       clean:
         description: "Do 'make clean' for each run"
         required: false
-        default: "true"
+        default: true
         type: boolean
       squashfs:
         description: "Generate squashfs image"
         required: false
-        default: "false"
+        default: false
         type: boolean
       upload-prerelease:
         description: "Upload as pre-release"
         required: false
-        default: "false"
+        default: false
         type: boolean
       upload-artifacts:
         description: "Upload as artifacts only"
         required: false
-        default: "false"
+        default: false
         type: boolean
 
 env:
@@ -87,7 +87,14 @@ jobs:
       matrix:
         target: ${{fromJSON(needs.prebuild.outputs.target)}}
 
-    steps:      
+    steps:
+      - name: Add swap space
+        run: |
+          fallocate -l 2G /swapfile
+          chmod 600 /swapfile
+          mkswap /swapfile
+          swapon /swapfile
+
       - name: Initialization System Environment
         run: |
           sudo apt-get -qq update
