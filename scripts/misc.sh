@@ -63,8 +63,7 @@ wget --no-check-certificate -nv -P files/usr/bin "$mount_hdd"
 
 # setup hotspot
 echo "Downloading files for hotspot" 
-git clone -b "main" "https://github.com/Maizil41/RadiusMonitor.git" "files/www/RadiusMonitor"
-git clone -b "main" "https://github.com/Maizil41/radiusbilling.git" "files/www/raddash"
+git clone -b "main" "https://github.com/Maizil41/RadiusMonitor.git" "files/usr/share/RadiusMonitor"
 wget https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.zip
 unzip phpMyAdmin-5.2.1-all-languages.zip
 rm -rf phpMyAdmin-5.2.1-all-languages.zip
