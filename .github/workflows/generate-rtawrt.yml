@@ -88,12 +88,6 @@ jobs:
         target: ${{fromJSON(needs.prebuild.outputs.target)}}
 
     steps:
-      - name: Add swap space
-        run: |
-          fallocate -l 2G /swapfile
-          chmod 600 /swapfile
-          mkswap /swapfile
-          swapon /swapfile
 
       - name: Initialization System Environment
         run: |

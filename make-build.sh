@@ -47,7 +47,7 @@ hysteria ipt2socks shadowsocks-rust-sslocal shadowsocks-rust-ssserver shadowsock
 shadowsocksr-libev-ssr-redir shadowsocksr-libev-ssr-server simple-obfs sing-box trojan-plus tuic-client v2ray-geoip v2ray-geosite v2ray-plugin xray-core xray-plugin luci-app-passwall"
 MIHOMO+="mihomo luci-app-mihomo"
 
-PACKAGES+=" $OPENCLASH $PASSWALL $MIHOMO"
+PACKAGES+=" $OPENCLASH $MIHOMO"
 
 # NAS and Hard disk tools
 PACKAGES+=" luci-app-diskman luci-app-hd-idle luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
