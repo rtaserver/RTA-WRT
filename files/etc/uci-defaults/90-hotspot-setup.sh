@@ -5,12 +5,14 @@ chmod +x /usr/bin/check_kuota.sh
 chmod +x /usr/bin/client_check.sh
 chmod +x /usr/bin/pear
 chmod +x /usr/bin/peardev
+
 sed -i -E "s|memory_limit = [0-9]+M|memory_limit = 100M|g" /etc/php.ini
 sed -i -E "s|display_errors = On|display_errors = Off|g" /etc/php.ini
 uci set uhttpd.main.index_page='index.php'
 uci set uhttpd.main.interpreter='.php=/usr/bin/php-cgi'
 uci commit uhttpd
 /etc/init.d/uhttpd restart
+
 sed -i -E "s|option enabled '0'|option enabled '1'|g" /etc/config/mysqld
 sed -i -E "s|# datadir		= /srv/mysql|datadir	= /usr/share/mysql|g" /etc/mysql/conf.d/50-server.cnf
 sed -i -E "s|127.0.0.1|0.0.0.0|g" /etc/mysql/conf.d/50-server.cnf
@@ -31,23 +33,7 @@ mysql -u root -p"radius" radius < /root/hotspot/radius_monitor.sql
 rm -rf /root/hotspot/radius_monitor.sql
 mysql -u root -p"radius" radius < /www/RadiusMonitor/radmon.sql
 mysql -u root -p"radius" radius < /www/raddash/raddash.sql
-cat <<'EOF' >/usr/lib/lua/luci/controller/radmon.lua
-module("luci.controller.radmon", package.seeall)
-function index()
-entry({"admin","services","radmon"}, template("radmon"), _("Radius Monitor"), 3).leaf=true
-end
-EOF
-cat <<'EOF' >/usr/lib/lua/luci/view/radmon.htm
-<%+header%>
-<div class="cbi-map"><br/>
-<iframe id="rad_mon" style="width: 100%; min-height: 100vh; border: none; border-radius: 2px;"></iframe>
-</div>
-<script type="text/javascript">
-document.getElementById("rad_mon").src = window.location.protocol + "//" + window.location.host + "/RadiusMonitor";
-</script>
-<%+footer%>
-EOF
-chmod +x /usr/lib/lua/luci/view/radmon.htm
+
 mv /www/phpmyadmin/config.sample.inc.php /www/phpmyadmin/config.inc.php
 sed -i -E "s|localhost|127.0.0.1|g" /www/phpmyadmin/config.inc.php
 sed -i "/\$cfg\['Servers'\]\[.*\]\['AllowNoPassword'\] = false;/a \$cfg\['AllowThirdPartyFraming'\] = true;" /www/phpmyadmin/config.inc.php
@@ -102,6 +88,7 @@ ln -s ../sites-available/inner-tunnel
 if ! grep -q '/etc/init.d/radiusd restart' /etc/rc.local; then
     sed -i '/exit 0/i /etc/init.d/radiusd restart' /etc/rc.local
 fi
+
 /etc/init.d/chilli stop
 rm -rf /etc/config/chilli
 rm -rf /etc/init.d/chilli
@@ -113,7 +100,9 @@ chmod +x /etc/init.d/chilli
 if ! grep -q '/etc/init.d/chilli restart' /etc/rc.local; then
     sed -i '/exit 0/i /etc/init.d/chilli restart' /etc/rc.local
 fi
+
 echo "src/gz mutiara_wrt https://raw.githubusercontent.com/maizil41/mutiara-wrt-opkg/main/generic" >> /etc/opkg/customfeeds.conf
+
 echo "All first boot setup complete!"
 rm -rf /root/hotspot
 touch /etc/hotspotsetup
