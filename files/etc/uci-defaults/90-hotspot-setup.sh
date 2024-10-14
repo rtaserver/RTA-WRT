@@ -1,5 +1,5 @@
 #!/bin/sh
-if [ ! -e /etc/hotspotsetup ]; then
+
 chmod +x /usr/bin/acct_log.sh
 chmod +x /usr/bin/check_kuota.sh
 chmod +x /usr/bin/client_check.sh
@@ -119,5 +119,4 @@ rm -rf /root/hotspot
 touch /etc/hotspotsetup
 rm -rf /etc/uci-defaults/90-hotspot-setup.sh
 reboot
-fi
-exit 1
+exit 0
