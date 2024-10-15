@@ -355,6 +355,8 @@ mv /root/hotspot/etc/config/chilli /etc/config/chilli
 mv /root/hotspot/etc/init.d/chilli /etc/init.d/chilli
 
 ln -s /usr/share/hotspotlogin /www/hotspotlogin
+mv /usr/share/RadiusMonitorx /usr/share/RadiusMonitor
+ln -s /usr/share/RadiusMonitor /www/RadiusMonitor
 
 chmod +x /etc/init.d/chilli
 if ! grep -q '/etc/init.d/chilli restart' /etc/rc.local; then
