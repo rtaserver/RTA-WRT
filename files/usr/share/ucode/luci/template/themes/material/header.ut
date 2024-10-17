@@ -59,7 +59,7 @@
 			<a id="logo" href="{{ ctx.authsession ? dispatcher.build_url('admin/status/overview') : '#' }}"><img src="{{ media }}/WRT.png" alt="OpenWrt"></a>
 			<tr>		
              <td><a href='/cgi-bin/luci/admin/services/openclash'><img src="{{ media }}/navbar/clash.png" width="35" height="35"></a></td>
-			 <td><a href='/cgi-bin/luci/admin/services/passwall'><img src="{{ media }}/navbar/passwall.png" width="35" height="35"></a></td>
+			 <!-- <td><a href='/cgi-bin/luci/admin/services/passwall'><img src="{{ media }}/navbar/passwall.png" width="35" height="35"></a></td> --!>
 			 <td><a href='/cgi-bin/luci/admin/services/mihomo'><img src="{{ media }}/navbar/mihomo.png" width="35" height="35"></a></td>
 			 <td><a href='/cgi-bin/luci/admin/system/tinyfm'><img src="{{ media }}/navbar/tinyfm.png" width="35" height="35"></a></td>
 			 <td><a href='/cgi-bin/luci/admin/status/netmon'><img src="{{ media }}/navbar/netmon.png" width="35" height="35"></a></td>
