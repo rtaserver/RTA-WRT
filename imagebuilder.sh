@@ -45,7 +45,7 @@ download_packages() {
                 if [ -n "$file_url" ]; then
                     echo -e "${INFO} Downloading $(basename "$file_url")"
                     echo -e "${INFO} from $file_url"
-                    curl -Lo "$(basename "$file_url")" "$file_url"
+                    curl -fsSOL "$(basename "$file_url")" "$file_url"
                     echo -e "${SUCCESS} Packages [$filename] downloaded successfully!"
                     break
                 else
@@ -67,7 +67,7 @@ download_packages() {
             if [ -n "$file_urls" ]; then
                 full_url="$base_url/$file_urls"
                 echo -e "${INFO} Downloading $filename from $full_url"
-                curl -Lo "${filename}.ipk" "$full_url"
+                curl -fsSOL "${filename}.ipk" "$full_url"
                 if [ $? -eq 0 ]; then
                     echo -e "${SUCCESS} Package [$filename] downloaded successfully."
                 else
@@ -344,24 +344,21 @@ custom_packages() {
     echo -e "${STEPS} Installing OpenClash, Mihomo"
 
     echo -e "${INFO} Downloading OpenClash package"
-    wget ${openclash_file_down} -nv
+    curl -fsSOL ${openclash_file_down}
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download OpenClash package."
-        exit 1
     fi
 
     echo -e "${INFO} Downloading Mihomo package"
-    wget "${mihomo_file_down}" -nv
+    curl -fsSOL ${mihomo_file_down}
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download Mihomo package."
-        exit 1
     fi
 
     echo -e "${INFO} Extract Mihomo package"
     tar -xzvf "mihomo_${ARCH_3}.tar.gz" && rm "mihomo_${ARCH_3}.tar.gz"
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to extract Mihomo package."
-        exit 1
     fi
 
     echo -e "${SUCCESS} Download and extraction complete."
@@ -381,10 +378,10 @@ custom_config() {
     repair_ro="https://raw.githubusercontent.com/frizkyiman/fix-read-only/main/install2.sh"
     mount_hdd="https://raw.githubusercontent.com/frizkyiman/auto-mount-hdd/main/mount_hdd"
 
-    wget --no-check-certificate -nv -P ${custom_files_path}/sbin "$sync_time"
-    wget --no-check-certificate -nv -P ${custom_files_path}/usr/bin "$clock"
-    wget --no-check-certificate -nv -P ${custom_files_path}/root "$repair_ro"
-    wget --no-check-certificate -nv -P ${custom_files_path}/usr/bin "$mount_hdd"
+    curl -fsSL -o "${custom_files_path}/sbin/sync_time.sh" "${sync_time}"
+    curl -fsSL -o "${custom_files_path}/usr/bin/clock" "${clock}"
+    curl -fsSL -o "${custom_files_path}/root/install2.sh" "${repair_ro}"
+    curl -fsSL -o "${custom_files_path}/usr/bin/mount_hdd" "${mount_hdd}"
 
     echo -e "${STEPS} Downloading files for hotspot" 
     dl_zip_gh "Maizil41/RadiusMonitor:main" "${custom_files_path}/usr/share/RadiusMonitor"
