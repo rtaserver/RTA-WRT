@@ -287,5 +287,3 @@ echo "All first boot setup complete!"
 touch /etc/hotspotsetup
 echo "All first boot setup complete!"
 rm -rf /etc/uci-defaults/99-init-settings.sh
-reboot
-exit 0
