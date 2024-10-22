@@ -80,6 +80,70 @@ download_packages() {
     fi
 }
 
+# USAGE:
+# dl_zip_gh "githubuser/repo:branch" "path to extract"
+dl_zip_gh() {
+    # Cek format input
+    if [[ "${1}" =~ ^([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+):([a-zA-Z0-9_-]+)$ ]]; then
+        github_user="${BASH_REMATCH[1]}"
+        repo="${BASH_REMATCH[2]}"
+        branch="${BASH_REMATCH[3]}"
+        extract_path="${2}"
+
+        # Tentukan direktori target
+        if [[ "${extract_path}" == */ ]]; then
+            target_dir="${extract_path%/}"
+        else
+            target_dir="${extract_path}"
+        fi
+
+        [[ -d "${2}" ]] || rm -rf ${2}
+        mkdir -p "${target_dir}"
+
+        # Tentukan nama ZIP dan URL
+        zip_file="${target_dir}/${repo}-${branch}.zip"
+        zip_url="https://github.com/${github_user}/${repo}/archive/refs/heads/${branch}.zip"
+
+        # Unduh ZIP dari GitHub
+        echo -e "${INFO} Downloading ZIP from: ${zip_url}"
+        curl -fsSL -o "${zip_file}" "${zip_url}"
+
+        # Periksa apakah ZIP berhasil diunduh
+        if [[ -f "${zip_file}" ]]; then
+            echo -e "${INFO} ZIP file downloaded to: ${zip_file}"
+
+            # Hapus direktori target jika sudah ada
+            if [[ -d "${target_dir}/${repo}-${branch}" ]]; then
+                echo -e "${INFO} Removing existing directory: ${target_dir}/${repo}-${branch}"
+                rm -rf "${target_dir}/${repo}-${branch}"
+            fi
+
+            # Ekstrak ZIP
+            echo -e "${INFO} Extracting ${zip_file} to ${target_dir}..."
+            unzip -q "${zip_file}" -d "${target_dir}"
+
+            # Pindahkan direktori hasil ekstraksi
+            extracted_dir="${target_dir}/${repo}-${branch}"
+            if [[ -d "${extracted_dir}" ]]; then
+                echo -e "${INFO} Moving extracted directory to ${target_dir}..."
+                mv "${extracted_dir}"/* "${target_dir}/"
+            else
+                error_msg "Extracted directory not found. Expected: ${extracted_dir}"
+            fi
+
+            # Hapus file ZIP
+            echo -e "${INFO} Removing ZIP file: ${zip_file}"
+            rm -f "${zip_file}"
+            rm -rf "${2}/${repo}-${branch}"
+
+            echo -e "${SUCCESS} Download and extraction complete. Directory created at: ${target_dir}"
+        else
+            error_msg "ZIP file not downloaded successfully."
+        fi
+    else
+        error_msg "Invalid format. Usage: dl_zip_gh \"githubuser/repo:branch\" \"path to extract\""
+    fi
+}
 
 # Downloading OpenWrt ImageBuilder
 download_imagebuilder() {
@@ -323,12 +387,13 @@ custom_config() {
     wget --no-check-certificate -nv -P ${custom_files_path}/usr/bin "$mount_hdd"
 
     echo -e "${STEPS} Downloading files for hotspot" 
-    git clone -b "main" "https://github.com/Maizil41/RadiusMonitor.git" "${custom_files_path}/usr/share/RadiusMonitor"
-    git clone -b "main" "https://github.com/Maizil41/hotspotlogin.git" "${custom_files_path}/usr/share/hotspotlogin"
-    git clone -b "main" "https://github.com/Maizil41/whatsapp-bot.git" "${custom_files_path}/root/whatsapp"
-    git clone -b "master" "https://github.com/phpmyadmin/phpmyadmin.git" "${custom_files_path}/www/phpmyadmin"
+    dl_zip_gh "Maizil41/RadiusMonitor:main" "${custom_files_path}/usr/share/RadiusMonitor"
+    dl_zip_gh "Maizil41/hotspotlogin:main" "${custom_files_path}/usr/share/hotspotlogin"
+    dl_zip_gh "Maizil41/whatsapp-bot:main" "${custom_files_path}/root/whatsapp"
     mv ${custom_files_path}/root/whatsapp/luci-app-whatsapp-bot/root/root/whatsapp-bot ${custom_files_path}/root/whatsapp-bot
     rm -rf ${custom_files_path}/root/whatsapp
+
+    dl_zip_gh "phpmyadmin/phpmyadmin:STABLE" "${custom_files_path}/root/www/phpmyadmin"
 
     echo -e "${INFO} All custom configuration setup completed!"
 }
