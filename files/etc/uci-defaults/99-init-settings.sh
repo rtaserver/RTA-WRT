@@ -1,5 +1,6 @@
 #!/bin/sh
 
+exec > /root/setup.log 2>&1
 TYPEOPENWRT="nullwrt"
 
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
@@ -9,22 +10,6 @@ echo "clear1() {
 }
 alias clear1='clear1'" >> /etc/profile
 echo "alias clear='/usr/bin/rtawrt'" >> /etc/profile
-
-if [ "$TYPEOPENWRT" == "amlogic" ]; then
-chmod +x /bin/getcpu
-chmod +x /etc/custom_service/start_service.sh
-rm -rf /etc/profile.d/30-sysinfo.sh
-chmod +x /sbin/firstboot
-chmod +x /sbin/kmod
-chmod +x /usr/bin/7z
-chmod +x /usr/bin/cpustat
-chmod +x /usr/sbin/openwrt-install-allwinner
-chmod +x /usr/sbin/openwrt-openvfd
-chmod +x /usr/sbin/openwrt-swap
-chmod +x /usr/sbin/openwrt-tf
-fi
-
-exec > /root/setup.log 2>&1
 
 # dont remove!
 echo "Installed Time: $(date '+%A, %d %B %Y %T')"
@@ -132,40 +117,18 @@ uci set wireless.@wifi-device[0].disabled='0'
 uci set wireless.@wifi-iface[0].disabled='0'
 uci set wireless.@wifi-iface[0].encryption='none'
 uci set wireless.@wifi-device[0].country='ID'
-if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
-  uci set wireless.@wifi-iface[0].ssid='RTA-WRT_5g'
-  uci set wireless.@wifi-device[0].channel='149'
-  uci set wireless.radio0.htmode='HT40'
-  uci set wireless.radio0.band='5g'
-else
-  uci set wireless.@wifi-iface[0].ssid='RTA-WRT_2g'
-  uci set wireless.@wifi-device[0].channel='1'
-  uci set wireless.@wifi-device[0].band='2g'
-fi
+uci set wireless.@wifi-iface[0].ssid='RTA-WRT_2g'
+uci set wireless.@wifi-device[0].channel='1'
+uci set wireless.@wifi-device[0].band='2g'
 uci commit wireless
 wifi reload && wifi up
-if iw dev | grep -q Interface; then
-  if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
-    if ! grep -q "wifi up" /etc/rc.local; then
-      sed -i '/exit 0/i # remove if you dont use wireless' /etc/rc.local
-      sed -i '/exit 0/i sleep 10 && wifi up' /etc/rc.local
-    fi
-    if ! grep -q "wifi up" /etc/crontabs/root; then
-      echo "# remove if you dont use wireless" >> /etc/crontabs/root
-      echo "0 */12 * * * wifi down && sleep 5 && wifi up" >> /etc/crontabs/root
-      service cron restart
-    fi
-  fi
-else
-  echo "No wireless device detected."
-fi
 
 # custom repo and Disable opkg signature check
 echo "Setup custom Repo By kiddin9"
 sed -i 's/option check_signature/# option check_signature/g' /etc/opkg.conf
 echo "src/gz custom_arch https://dl.openwrt.ai/latest/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
 
-# set argon as default theme
+# set Material as default theme
 echo "Setup Default Theme"
 uci set luci.main.mediaurlbase='/luci-static/material' && uci commit
 
@@ -198,61 +161,39 @@ chmod +x /etc/init.d/vnstat_backup
 bash /etc/init.d/vnstat_backup enable
 
 # adjusting app catagory
-sed -i 's/services/nas/g' /usr/lib/lua/luci/controller/aria2.lua 2>/dev/null || sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-aria2.json
-sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-samba4.json
-sed -i 's/services/nas/g' /usr/share/luci/menu.d/luci-app-hd-idle.json
-sed -i 's/services/modem/g' /usr/share/luci/menu.d/luci-app-lite-watchdog.json
 sed -i -E "s|status|services|g" /usr/lib/lua/luci/controller/base64.lua
 
 # setup misc settings
-
-chmod +x /root/fix-tinyfm.sh && bash /root/fix-tinyfm.sh
-chmod +x /root/install2.sh && bash /root/install2.sh
-chmod +x /sbin/sync_time.sh
-chmod +x /sbin/free.sh
-chmod +x /usr/bin/rtawrt
-chmod +x /usr/bin/clock
-chmod +x /usr/bin/mount_hdd
-chmod +x /usr/bin/openclash.sh
+chmod +x /usr/bin/acct_log.sh
 chmod +x /usr/bin/cek_sms.sh
+chmod +x /usr/bin/check_kuota.sh
+chmod +x /usr/bin/client_check.sh
+chmod +x /usr/bin/openclash.sh
+chmod +x /usr/bin/patchoc.sh
+chmod +x /usr/bin/pear
+chmod +x /usr/bin/peardev
+chmod +x /usr/bin/rtawrt
+chmod +x /sbin/free.sh
+
 
 # configurating openclash
-if opkg list-installed | grep luci-app-openclash > /dev/null; then
-  echo "Openclash Detected!"
-  echo "Configuring Core..."
-  chmod +x /etc/openclash/core/clash
-  chmod +x /etc/openclash/core/clash_tun
-  chmod +x /etc/openclash/core/clash_meta
-  chmod +x /usr/bin/patchoc.sh
-  echo "Patching Openclash Overview"
-  bash /usr/bin/patchoc.sh
-  sed -i '/exit 0/i #/usr/bin/patchoc.sh' /etc/rc.local
-  ln -s /etc/openclash/history/config-wrt.db /etc/openclash/cache.db
-  ln -s /etc/openclash/core/clash_meta  /etc/openclash/clash
-  echo "YACD and Core setup complete!"
-else
-  echo "No Openclash Detected."
-  uci delete internet-detector.Openclash
-  uci commit internet-detector
-  service internet-detector restart
-fi
-
-if opkg list-installed | grep luci-app-passwall > /dev/null; then
-  echo "Passwall Detected!"
-else
-  sed -i '/<a href="\/cgi-bin\/luci\/admin\/services\/passwall">/d' /usr/share/ucode/luci/template/themes/material/header.ut
-fi
+echo "Openclash Detected!"
+echo "Configuring Core..."
+chmod +x /etc/openclash/core/clash
+chmod +x /etc/openclash/core/clash_tun
+chmod +x /etc/openclash/core/clash_meta
+echo "Patching Openclash Overview"
+bash /usr/bin/patchoc.sh
+sed -i '/exit 0/i #/usr/bin/patchoc.sh' /etc/rc.local
+ln -s /etc/openclash/history/config-wrt.db /etc/openclash/cache.db
+ln -s /etc/openclash/core/clash_meta  /etc/openclash/clash
+echo "YACD and Core setup complete!"
 
 # adding new line for enable i2c oled display
 if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
   echo -e "\ndtparam=i2c1=on\ndtparam=spi=on\ndtparam=i2s=on" >> /boot/config.txt
 fi
 
-# Setting php8
-sed -i -E "s|memory_limit = [0-9]+M|memory_limit = 100M|g" /etc/php.ini
-uci set uhttpd.main.index_page='index.php'
-uci set uhttpd.main.interpreter='.php=/usr/bin/php-cgi'
-uci commit uhttpd
 
 ln -s /usr/bin/php-cli /usr/bin/php
 
@@ -260,19 +201,6 @@ ln -s /usr/bin/php-cli /usr/bin/php
 ln -s / /www/tinyfm/rootfs
 
 # Setting Hotspot
-chmod +x /usr/bin/acct_log.sh
-chmod +x /usr/bin/check_kuota.sh
-chmod +x /usr/bin/client_check.sh
-chmod +x /usr/bin/pear
-chmod +x /usr/bin/peardev
-
-sed -i -E "s|memory_limit = [0-9]+M|memory_limit = 100M|g" /etc/php.ini
-sed -i -E "s|display_errors = On|display_errors = Off|g" /etc/php.ini
-uci set uhttpd.main.index_page='index.php'
-uci set uhttpd.main.interpreter='.php=/usr/bin/php-cgi'
-uci commit uhttpd
-/etc/init.d/uhttpd restart
-
 sed -i -E "s|option enabled '0'|option enabled '1'|g" /etc/config/mysqld
 sed -i -E "s|# datadir		= /srv/mysql|datadir	= /usr/share/mysql|g" /etc/mysql/conf.d/50-server.cnf
 sed -i -E "s|127.0.0.1|0.0.0.0|g" /etc/mysql/conf.d/50-server.cnf
@@ -289,8 +217,8 @@ EOF
 mysql -u root -p"radius" -e "CREATE DATABASE radius CHARACTER SET utf8";
 mysql -u root -p"radius" -e "GRANT ALL ON radius.* TO 'radius'@'localhost' IDENTIFIED BY 'radius' WITH GRANT OPTION";
 mysql -u root -p"radius" radius -e "SET FOREIGN_KEY_CHECKS = 0; $(mysql -u root -p"radius" radius -e 'SHOW TABLES' | awk '{print "DROP TABLE IF EXISTS `" $1 "`;"}' | grep -v '^Tables' | tr '\n' ' ') SET FOREIGN_KEY_CHECKS = 1;"
-mysql -u root -p"radius" radius < /root/hotspot/radius_monitor.sql
-rm -rf /root/hotspot/radius_monitor.sql
+mysql -u root -p"radius" radius < /usr/share/radius_monitor.sql
+rm -rf /usr/share/radius_monitor.sql
 mysql -u root -p"radius" radius < /www/RadiusMonitor/radmon.sql
 
 mv /www/phpmyadmin/config.sample.inc.php /www/phpmyadmin/config.inc.php
@@ -314,13 +242,6 @@ document.getElementById("phpmyadmin").src = window.location.protocol + "//" + wi
 EOF
 chmod +x /usr/lib/lua/luci/view/phpmyadmin.htm
 
-/etc/init.d/radiusd stop
-rm -rf /etc/freeradius3
-cd /root/hotspot/etc
-mv freeradius3 /etc/freeradius3
-rm -rf /usr/share/freeradius3
-cd /root/hotspot/usr/share
-mv freeradius3 /usr/share/freeradius3
 cd /etc/freeradius3/mods-enabled
 ln -s ../mods-available/always
 ln -s ../mods-available/attr_filter
@@ -348,11 +269,6 @@ if ! grep -q '/etc/init.d/radiusd restart' /etc/rc.local; then
     sed -i '/exit 0/i /etc/init.d/radiusd restart' /etc/rc.local
 fi
 
-/etc/init.d/chilli stop
-rm -rf /etc/config/chilli
-rm -rf /etc/init.d/chilli
-mv /root/hotspot/etc/config/chilli /etc/config/chilli
-mv /root/hotspot/etc/init.d/chilli /etc/init.d/chilli
 
 ln -s /usr/share/hotspotlogin /www/hotspotlogin
 mv /usr/share/RadiusMonitorx /usr/share/RadiusMonitor
@@ -363,10 +279,7 @@ if ! grep -q '/etc/init.d/chilli restart' /etc/rc.local; then
     sed -i '/exit 0/i /etc/init.d/chilli restart' /etc/rc.local
 fi
 
-echo "src/gz mutiara_wrt https://raw.githubusercontent.com/maizil41/mutiara-wrt-opkg/main/generic" >> /etc/opkg/customfeeds.conf
-
 echo "All first boot setup complete!"
-rm -rf /root/hotspot
 touch /etc/hotspotsetup
 echo "All first boot setup complete!"
 rm -rf /etc/uci-defaults/99-init-settings.sh
