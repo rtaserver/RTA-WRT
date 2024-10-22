@@ -44,10 +44,13 @@ download_packages() {
             for file_url in $file_urls; do
                 if [ -n "$file_url" ]; then
                     echo -e "${INFO} Downloading $(basename "$file_url")"
-                    echo -e "${INFO} from $file_url"
-                    curl -fsSOL "$(basename "$file_url")" "$file_url"
-                    echo -e "${SUCCESS} Packages [$filename] downloaded successfully!"
-                    break
+                    echo -e "${INFO} From $file_url"
+                    curl -fsSL -o "$(basename "$file_url")" "$file_url"
+                    if [ $? -eq 0 ]; then
+                        echo -e "${SUCCESS} Package [$filename] downloaded successfully."
+                    else
+                        error_msg "Failed to download package [$filename]."
+                    fi
                 else
                     error_msg "Failed to retrieve packages [$filename]. Retrying before exit..."
                 fi
@@ -62,12 +65,11 @@ download_packages() {
                 echo -e "${WARNING} No matching stable file found. Trying general search..."
                 file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[0-9a-zA-Z\._~-]*\.ipk" | sort -V | tail -n 1)
             fi
-            echo -e "${INFO} Matching files found:"
-            echo -e "${INFO} $file_urls"
             if [ -n "$file_urls" ]; then
                 full_url="$base_url/$file_urls"
-                echo -e "${INFO} Downloading $filename from $full_url"
-                curl -fsSOL "${filename}.ipk" "$full_url"
+                echo -e "${INFO} Downloading $file_urls"
+                echo -e "${INFO} From $full_url"
+                curl -fsSL -o "${filename}.ipk" "$full_url"
                 if [ $? -eq 0 ]; then
                     echo -e "${SUCCESS} Package [$filename] downloaded successfully."
                 else
