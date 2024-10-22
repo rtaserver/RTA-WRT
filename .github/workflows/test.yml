@@ -82,6 +82,7 @@ jobs:
           sudo apt-get -qq update
           sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs
           sudo timedatectl set-timezone "$TZ"
+          echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
 
       - name: Initialization environment (deep)
         if: github.event.inputs.target == 'all' && !cancelled()
