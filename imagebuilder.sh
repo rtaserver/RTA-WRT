@@ -470,8 +470,10 @@ rebuild_firmware() {
 # Show welcome message
 echo -e "${STEPS} Welcome to Rebuild OpenWrt Using the Image Builder."
 [[ -x "${0}" ]] || error_msg "Please give the script permission to run: [ chmod +x ${0} ]"
-[[ -z "${1}" ]] && error_msg "Please specify the OpenWrt Branch, such as [ ${0} openwrt:22.03.3 ]"
-[[ "${1}" =~ ^[a-z]{3,}:[0-9]+\ +[a-zA-Z0-9_-]+$ || "${1}" =~ ^[a-z]{3,}:[0-9]+$ ]] || error_msg "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 amlogic"
+[[ -z "${1}" ]] && error_msg "Please specify the OpenWrt Branch, such as [ ${0} openwrt:22.03.3 x86-64 ]"
+[[ -z "${2}" ]] && error_msg "Please specify the OpenWrt Target, such as [ ${0} openwrt:22.03.3 x86-64 ]"
+[[ "${1}" =~ ^[a-z]{3,}:[0-9]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 amlogic"
+[[ "${2}" =~ ^[a-zA-Z0-9_-]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 amlogic"
 op_sourse="${1%:*}"
 op_branch="${1#*:}"
 op_target="${2}"
