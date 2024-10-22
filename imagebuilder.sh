@@ -89,72 +89,69 @@ download_imagebuilder() {
     cd ${make_path}
     echo -e "${STEPS} Start downloading OpenWrt files..."
 
-    # Determine the target system (Imagebuilder files naming has changed since 23.05.0)
-    if [[ "${op_branch:0:2}" -ge "23" && "${op_branch:3:2}" -ge "05" ]]; then
-        if [[ "${op_target}" == "amlogic" ]]; then
-            target_system="armsr/armv8"
-            target_name="armsr-armv8"
-            target_profile=""
-            ARCH_1="armv8"
-            ARCH_2="aarch64"
-            ARCH_3="aarch64_generic"
-        elif [ "${op_target}" == "rpi-3" ]; then
-            target_profile="rpi-3"
-            target_system="bcm27xx/bcm2710"
-            target_name="bcm27xx-bcm2710"
-            ARCH_1="arm64"
-            ARCH_2="aarch64"
-            ARCH_3="aarch64_cortex-a53"
-        elif [ "${op_target}" == "rpi-4" ]; then
-            target_profile="rpi-4"
-            target_system="bcm27xx/bcm2711"
-            target_name="bcm27xx-bcm2711"
-            ARCH_1="arm64"
-            ARCH_2="aarch64"
-            ARCH_3="aarch64_cortex-a72"
-        elif [ "${op_target}" == "friendlyarm_nanopi-r2c" ]; then
-            target_profile="friendlyarm_nanopi-r2c"
-            target_system="rockchip/armv8"
-            target_name="rockchip-armv8"
-            ARCH_1="armv8"
-            ARCH_2="aarch64"
-            ARCH_3="aarch64_generic"
-        elif [ "${op_target}" == "friendlyarm_nanopi-r2s" ]; then
-            target_profile="friendlyarm_nanopi-r2s"
-            target_system="rockchip/armv8"
-            target_name="rockchip-armv8"
-            ARCH_1="armv8"
-            ARCH_2="aarch64"
-            ARCH_3="aarch64_generic"
-        elif [ "${op_target}" == "friendlyarm_nanopi-r4s" ]; then
-            target_profile="friendlyarm_nanopi-r4s"
-            target_system="rockchip/armv8"
-            target_name="rockchip-armv8"
-            ARCH_1="armv8"
-            ARCH_2="aarch64"
-            ARCH_3="aarch64_generic"
-        elif [ "${op_target}" == "xunlong_orangepi-r1-plus" ]; then
-            target_profile="xunlong_orangepi-r1-plus"
-            target_system="rockchip/armv8"
-            target_name="rockchip-armv8"
-            ARCH_1="armv8"
-            ARCH_2="aarch64"
-            ARCH_3="aarch64_generic"
-        elif [ "${op_target}" == "xunlong_orangepi-r1-plus-lts" ]; then
-            target_profile="xunlong_orangepi-r1-plus-lts"
-            target_system="rockchip/armv8"
-            target_name="rockchip-armv8"
-            ARCH_1="armv8"
-            ARCH_2="aarch64"
-            ARCH_3="aarch64_generic"
-        elif [ "${op_target}" == "x86-64" ]; then
-            target_profile="generic"
-            target_system="x86/64"
-            target_name="x86-64"
-            ARCH_1="amd64"
-            ARCH_2="x86_64"
-            ARCH_3="x86_64"
-        fi
+    if [[ "${op_target}" == "amlogic" ]]; then
+        target_system="armsr/armv8"
+        target_name="armsr-armv8"
+        target_profile=""
+        ARCH_1="armv8"
+        ARCH_2="aarch64"
+        ARCH_3="aarch64_generic"
+    elif [[ "${op_target}" == "rpi-3" ]]; then
+        target_profile="rpi-3"
+        target_system="bcm27xx/bcm2710"
+        target_name="bcm27xx-bcm2710"
+        ARCH_1="arm64"
+        ARCH_2="aarch64"
+        ARCH_3="aarch64_cortex-a53"
+    elif [[ "${op_target}" == "rpi-4" ]]; then
+        target_profile="rpi-4"
+        target_system="bcm27xx/bcm2711"
+        target_name="bcm27xx-bcm2711"
+        ARCH_1="arm64"
+        ARCH_2="aarch64"
+        ARCH_3="aarch64_cortex-a72"
+    elif [[ "${op_target}" == "friendlyarm_nanopi-r2c" ]]; then
+        target_profile="friendlyarm_nanopi-r2c"
+        target_system="rockchip/armv8"
+        target_name="rockchip-armv8"
+        ARCH_1="armv8"
+        ARCH_2="aarch64"
+        ARCH_3="aarch64_generic"
+    elif [[ "${op_target}" == "friendlyarm_nanopi-r2s" ]]; then
+        target_profile="friendlyarm_nanopi-r2s"
+        target_system="rockchip/armv8"
+        target_name="rockchip-armv8"
+        ARCH_1="armv8"
+        ARCH_2="aarch64"
+        ARCH_3="aarch64_generic"
+    elif [[ "${op_target}" == "friendlyarm_nanopi-r4s" ]]; then
+        target_profile="friendlyarm_nanopi-r4s"
+        target_system="rockchip/armv8"
+        target_name="rockchip-armv8"
+        ARCH_1="armv8"
+        ARCH_2="aarch64"
+        ARCH_3="aarch64_generic"
+    elif [[ "${op_target}" == "xunlong_orangepi-r1-plus" ]]; then
+        target_profile="xunlong_orangepi-r1-plus"
+        target_system="rockchip/armv8"
+        target_name="rockchip-armv8"
+        ARCH_1="armv8"
+        ARCH_2="aarch64"
+        ARCH_3="aarch64_generic"
+    elif [[ "${op_target}" == "xunlong_orangepi-r1-plus-lts" ]]; then
+        target_profile="xunlong_orangepi-r1-plus-lts"
+        target_system="rockchip/armv8"
+        target_name="rockchip-armv8"
+        ARCH_1="armv8"
+        ARCH_2="aarch64"
+        ARCH_3="aarch64_generic"
+    elif [[ "${op_target}" == "x86-64" ]]; then
+        target_profile="generic"
+        target_system="x86/64"
+        target_name="x86-64"
+        ARCH_1="amd64"
+        ARCH_2="x86_64"
+        ARCH_3="x86_64"
     fi
 
     # Downloading imagebuilder files
