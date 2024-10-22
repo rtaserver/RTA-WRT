@@ -46,11 +46,10 @@ download_packages() {
                     echo -e "${INFO} Downloading $(basename "$file_url")"
                     echo -e "${INFO} from $file_url"
                     curl -Lo "$(basename "$file_url")" "$file_url"
-                    echo -e "${INFO} Packages [$filename] downloaded successfully!"
+                    echo -e "${SUCCESS} Packages [$filename] downloaded successfully!"
                     break
                 else
                     error_msg "Failed to retrieve packages [$filename]. Retrying before exit..."
-                    exit 1
                 fi
             done
         done
@@ -70,14 +69,12 @@ download_packages() {
                 echo -e "${INFO} Downloading $filename from $full_url"
                 curl -Lo "${filename}.ipk" "$full_url"
                 if [ $? -eq 0 ]; then
-                    echo -e "${INFO} Package [$filename] downloaded successfully."
+                    echo -e "${SUCCESS} Package [$filename] downloaded successfully."
                 else
                     error_msg "Failed to download package [$filename]."
-                    exit 1
                 fi
             else
                 error_msg "No matching file found for [$filename] at $base_url."
-                exit 1
             fi
         done
     fi
@@ -158,6 +155,7 @@ download_imagebuilder() {
     download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.tar.xz"
     curl -fsSOL ${download_file}
     [[ "${?}" -eq "0" ]] || error_msg "Download failed: [ ${download_file} ]"
+    echo -e "${SUCCESS} Download Base ${op_branch} ${target_name} successfully!"
 
     # Unzip and change the directory name
     tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz
@@ -198,7 +196,6 @@ adjust_settings() {
     else
         echo -e "${INFO} [ ${imagebuilder_path} ] directory status: $(ls -al 2>/dev/null)"
         error_msg "There is no .config file in the [ ${download_file} ]"
-        exit 1
     fi
 
     bash 
@@ -280,30 +277,30 @@ custom_packages() {
     mihomo_file_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file}.*.tar.gz" | head -n 1)"
                         
     # Output download information
-    echo -e "${INFO} Installing OpenClash, Mihomo"
+    echo -e "${STEPS} Installing OpenClash, Mihomo"
 
-    echo -e "${STEPS} Downloading OpenClash package"
+    echo -e "${INFO} Downloading OpenClash package"
     wget ${openclash_file_down} -nv
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download OpenClash package."
         exit 1
     fi
 
-    echo -e "${STEPS} Downloading Mihomo package"
+    echo -e "${INFO} Downloading Mihomo package"
     wget "${mihomo_file_down}" -nv
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download Mihomo package."
         exit 1
     fi
 
-    echo -e "${STEPS} Extract Mihomo package"
+    echo -e "${INFO} Extract Mihomo package"
     tar -xzvf "mihomo_${ARCH_3}.tar.gz" && rm "mihomo_${ARCH_3}.tar.gz"
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to extract Mihomo package."
         exit 1
     fi
 
-    echo -e "${INFO} Download and extraction complete."
+    echo -e "${SUCCESS} Download and extraction complete."
 
     sync && sleep 3
     echo -e "${INFO} [ packages ] directory status: $(ls -al 2>/dev/null)"
@@ -314,7 +311,7 @@ custom_config() {
     cd ${imagebuilder_path}
     echo -e "${STEPS} Start adding custom config..."
 
-    echo -e "${STEPS} Downloading custom script" 
+    echo -e "${INFO} Downloading custom script" 
     sync_time="https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/sbin/sync_time.sh"
     clock="https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/usr/bin/clock"
     repair_ro="https://raw.githubusercontent.com/frizkyiman/fix-read-only/main/install2.sh"
