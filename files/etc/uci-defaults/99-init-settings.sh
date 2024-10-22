@@ -173,6 +173,10 @@ chmod +x /usr/bin/patchoc.sh
 chmod +x /usr/bin/pear
 chmod +x /usr/bin/peardev
 chmod +x /usr/bin/rtawrt
+chmod +x /sbin/sync_time.sh
+chmod +x /usr/bin/clock
+chmod +x /root/install2.sh
+chmod +x /usr/bin/mount_hdd
 chmod +x /sbin/free.sh
 
 
