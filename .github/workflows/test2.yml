@@ -6,7 +6,7 @@
 #                https://downloads.immortalwrt.org/releases
 #=====================================================================================
 
-name: Build OpenWrt with ImageBuilder
+name: Build Amlogic OpenWrt with ImageBuilder
 
 on:
   repository_dispatch:
@@ -29,14 +29,9 @@ on:
         type: choice
         options:
           - all
-          - Raspberry Pi 3B
-          - Raspberry Pi 4B
-          - NanoPi R2C
-          - NanoPi R2S
-          - NanoPi R4S
-          - Orange Pi R1 Plus
-          - Orange Pi R1 Plus LTS
-          - x86-64
+          - Amlogic HG680P
+          - Amlogic B860H-V5
+          - Amlogic B860H-V1-V2
 
 env:
   TZ: Asia/Jakarta
@@ -53,7 +48,7 @@ jobs:
         id: set-matrix
         run: |
           if [ "${{ inputs.target }}" == "all" ]; then
-            echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','NanoPi R2C','NanoPi R2S','NanoPi R4S','Orange Pi R1 Plus','Orange Pi R1 Plus LTS','x86-64','Amlogic HG680P','Amlogic B860H-V5','Amlogic B860H-V1-V2']" >> $GITHUB_OUTPUT
+            echo "target=['Amlogic HG680P','Amlogic B860H-V5','Amlogic B860H-V1-V2']" >> $GITHUB_OUTPUT
           else
             echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
           fi
@@ -125,23 +120,7 @@ jobs:
       - name: Setup Environment Variables
         id: init
         run: |
-          if [ "$TARGET" == "Raspberry Pi 3B" ]; then
-            echo "TARGET_NAME=rpi-3" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Raspberry Pi 4B" ]; then
-            echo "TARGET_NAME=rpi-4" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi R2C" ]; then
-            echo "TARGET_NAME=friendlyarm_nanopi-r2c" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi R2S" ]; then
-            echo "TARGET_NAME=friendlyarm_nanopi-r2s" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi R4S" ]; then
-            echo "TARGET_NAME=friendlyarm_nanopi-r4s" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Orange Pi R1 Plus" ]; then
-            echo "TARGET_NAME=xunlong_orangepi-r1-plus" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Orange Pi R1 Plus LTS" ]; then
-            echo "TARGET_NAME=xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
-          elif [ "$TARGET" == "x86-64" ]; then
-            echo "TARGET_NAME=generic" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Amlogic HG680P" ]; then
+          if [ "$TARGET" == "Amlogic HG680P" ]; then
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board=s905x" >> $GITHUB_ENV
           elif [ "$TARGET" == "Amlogic B860H-V5" ]; then
@@ -164,36 +143,7 @@ jobs:
           echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> ${GITHUB_ENV}
           echo "status=success" >> ${GITHUB_OUTPUT}
           mkdir -p compiled_images
-          rm -rf bin/targets/"$TARGET_SYSTEM"/*.{json,manifest,bin,*-rootfs*,*factory*,sha256sums}
-          for file in bin/targets/"$TARGET_SYSTEM"/*-"$TARGET_NAME"-*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
-          # Check File
-          ls -l
-          # Replace Name
-          search_replace_patterns=(
-              "bcm27xx-bcm2710-rpi-3|Raspberry-Pi-3_ext4-sysupgrade"
-              "bcm27xx-bcm2711-rpi-4|Raspberry-Pi-4_ext4-sysupgrade"
-              "rockchip-armv8-friendlyarm_nanopi-r2c|NanoPi_R2C_ext4-sysupgrade"
-              "rockchip-armv8-friendlyarm_nanopi-r2s|NanoPi_R2S_ext4-sysupgrade"
-              "rockchip-armv8-friendlyarm_nanopi-r4s|NanoPi_R4S_ext4-sysupgrade"
-              "rockchip-armv8-xunlong_orangepi-r1-plus|Orange-Pi-R1_ext4-sysupgrade"
-              "rockchip-armv8-xunlong_orangepi-r1-plus-lts|Orange-Pi-R1-Plus-LTS_ext4-sysupgrade"
-              "x86-64-generic-ext4-combined-efi|x86-64-Generic_ext4-combined-efi"
-              "x86-64-generic-ext4-combined|x86-64-Generic_ext4-combined"
-          )
-
-          for pattern in "${search_replace_patterns[@]}"; do
-              search="${pattern%%|*}"
-              replace="${pattern##*|}"
-
-              for file in compiled_images/*${search}*.img.gz; do
-                  if [[ -f "$file" ]]; then
-                      new_name="RTA-WRT_OpenWrt-${{ env.RELEASES_TAG }}_${replace}.img.gz"
-                      echo "Renaming: $file -> $new_name"
-                      mv "$file" "compiled_images/$new_name"
-                  fi
-              done
-          done
-          ls -l compiled_images
+          for file in bin/targets/*/*/*rootfs.tar.gz; do mv "$file" compiled_images; done
 
       - name: Clear server space
         if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
@@ -201,6 +151,54 @@ jobs:
           cd imagebuilder
           rm -rf $(ls . | grep -vE "^compiled_images$" | xargs) 2>/dev/null
           df -hT ${PWD}
+
+
+      - name: Packaging OpenWrt Amlogic
+        if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
+        uses: ophub/amlogic-s9xxx-openwrt@main
+        with:
+          openwrt_path: compiled_images/*.tar.gz
+          openwrt_board: ${{ env.openwrt_board }}
+          openwrt_kernel: 5.15.y_5.10.y
+          auto_kernel: true
+          kernel_repo: ophub/kernel
+          kernel_usage: stable
+          builder_name: RTA-WRT
+
+      - name: Checking OpenWrt Amlogic
+        if: ${{ env.PACKAGED_STATUS }} == 'success' && !cancelled()
+        id: checking_amlogic
+        run: |
+          cd imagebuilder
+          for file in compiled_images/*rootfs.tar.gz; do mv "$file" ${{ env.PACKAGED_OUTPUTPATH }}; done
+          cd ${{ env.PACKAGED_OUTPUTPATH }}
+          for file in *.img.gz; do mv "$file" RTA-WRT_$(basename "$file" .img.gz).img.gz; done
+          for file in *rootfs.tar.gz; do mv "$file" RTA-WRT_$(basename "$file" .tar.gz).tar.gz; done
+          rm -r *.sha && sha256sum *.gz > sha256sums
+          # Check File
+          ls -l
+          # Replace Name
+          search_replace_patterns=(
+              "_amlogic_s905x_|Amlogic_HG680P"
+              "_amlogic_s905x-b860h_|Amlogic_B860HV1-V2"
+              "_amlogic_s905x2_|Amlogic_B860HV5"
+          )
+
+          for pattern in "${search_replace_patterns[@]}"; do
+              search="${pattern%%|*}"
+              replace="${pattern##*|}"
+          
+              for file in *${search}*.img.gz; do
+                  if [[ -f "$file" ]]; then
+                      kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
+                      new_name="RTA-WRT_OpenWrt-${{ env.RELEASES_TAG }}_${replace}_${kernel}.img.gz"
+                      echo "Renaming: $file -> $new_name"
+                      mv "$file" "$new_name"
+                  fi
+              done
+          done
+          ls -l
+          echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Upload the packaged OpenWrt
         uses: ncipollo/release-action@main
