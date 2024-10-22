@@ -89,14 +89,14 @@ download_imagebuilder() {
     cd ${make_path}
     echo -e "${STEPS} Start downloading OpenWrt files..."
 
-    if [[ "${op_target}" == "amlogic" ]]; then
+    if [[ "${op_target}" == "amlogic" || "${op_target}" == "armsr-armv8" ]]; then
+        target_profile=""
         target_system="armsr/armv8"
         target_name="armsr-armv8"
-        target_profile=""
         ARCH_1="armv8"
         ARCH_2="aarch64"
         ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "rpi-3" ]]; then
+    elif [[ "${op_target}" == "rpi-3" || "${op_target}" == "bcm27xx-bcm2710" ]]; then
         target_profile="rpi-3"
         target_system="bcm27xx/bcm2710"
         target_name="bcm27xx-bcm2710"
@@ -145,7 +145,7 @@ download_imagebuilder() {
         ARCH_1="armv8"
         ARCH_2="aarch64"
         ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "x86-64" ]]; then
+    elif [[ "${op_target}" == "generic" || "${op_target}" == "x86-64" || "${op_target}" == "x86_64" ]]; then
         target_profile="generic"
         target_system="x86/64"
         target_name="x86-64"
@@ -475,7 +475,7 @@ op_sourse="${1%:*}"
 op_branch="${1#*:}"
 op_target="${2}"
 echo -e "${INFO} Rebuild path: [ ${PWD} ]"
-echo -e "${INFO} Rebuild Source: [ ${op_sourse} ], Branch: [ ${op_branch} ]"
+echo -e "${INFO} Rebuild Source: [ ${op_sourse} ], Branch: [ ${op_branch} ], Target: ${op_target}"
 echo -e "${INFO} Server space usage before starting to compile: \n$(df -hT ${make_path}) \n"
 #
 # Perform related operations
