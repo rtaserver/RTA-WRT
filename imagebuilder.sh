@@ -245,7 +245,7 @@ custom_packages() {
         "luci-app-zerotier|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
         "tailscale|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
         "luci-app-tailscale|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
-        "luci-app-mmconfig|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
+        "luci-app-mmconfig|https://dllkids.xyz/packages/$ARCH_3"
         "pdnsd-alt|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
         "brook|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
         "luci-app-internet-detector|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
