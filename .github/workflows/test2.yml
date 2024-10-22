@@ -15,7 +15,7 @@ on:
       releases_branch:
         description: "Select the releases branch"
         required: false
-        default: "openwrt:23.05.3"
+        default: "openwrt:23.05.5"
         type: choice
         options:
           - openwrt:23.05.5
@@ -38,29 +38,9 @@ env:
   IMAGEBUILDER_SH: imagebuilder.sh
 
 jobs:
-  prebuild:
-    runs-on: ubuntu-latest
-    name: ${{ inputs.releases_branch }}
-    outputs:
-      target: ${{ steps.set-matrix.outputs.target }}
-    steps:
-      - name: Set Matrix Run
-        id: set-matrix
-        run: |
-          if [ "${{ inputs.target }}" == "all" ]; then
-            echo "target=['Amlogic HG680P','Amlogic B860H-V5','Amlogic B860H-V1-V2']" >> $GITHUB_OUTPUT
-          else
-            echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
-          fi
   build:
-    needs: prebuild
     runs-on: ubuntu-22.04
     if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
-    name: "${{ matrix.target }}"
-    strategy:
-      fail-fast: false
-      matrix:
-        target: ${{fromJSON(needs.prebuild.outputs.target)}}
 
     steps:
       - name: Checkout
@@ -74,7 +54,7 @@ jobs:
           sudo apt-get -qq update
           sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs
           sudo timedatectl set-timezone "$TZ"
-          echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
+          echo "TARGET=amlogic >> $GITHUB_ENV
 
       - name: Initialization environment (deep)
         if: github.event.inputs.target == 'all' && !cancelled()
@@ -96,7 +76,7 @@ jobs:
           sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
           sudo rm -rf ~/{.cargo,.dotnet,.rustup}
           sudo timedatectl set-timezone "${TZ}"
-          echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
+          echo "TARGET=amlogic >> $GITHUB_ENV
 
       - name: Create simulated physical disk
         if: github.event.inputs.target == 'all' && !cancelled()
@@ -121,25 +101,24 @@ jobs:
         id: init
         run: |
           if [ "$TARGET" == "Amlogic HG680P" ]; then
-            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board=s905x" >> $GITHUB_ENV
           elif [ "$TARGET" == "Amlogic B860H-V5" ]; then
-            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board=s905x-b860h" >> $GITHUB_ENV
           elif [ "$TARGET" == "Amlogic B860H-V1-V2" ]; then
-            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board=s905x2" >> $GITHUB_ENV
+          elif [ "$TARGET" == "all" ]; then
+            echo "openwrt_board=s905x_s905x-b860h_s905x2" >> $GITHUB_ENV
           fi
           echo "status=success" >> ${GITHUB_OUTPUT}
 
-      - name: Build OpenWrt [ ${{ matrix.target }} ]
+      - name: Build OpenWrt [ Amlogic ${{ inputs.releases_branch }} ]
         id: imagebuilder
         if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
         run: |
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
-          TARGET_NAME="${{ env.TARGET_NAME }}"
+          TARGET_NAME="amlogic"
           chmod +x ${IMAGEBUILDER_SH}
-          bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} ${{ env.TARGET_NAME }}
+          bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} amlogic
           echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> ${GITHUB_ENV}
           echo "status=success" >> ${GITHUB_OUTPUT}
           mkdir -p compiled_images
