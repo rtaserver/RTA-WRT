@@ -217,7 +217,7 @@ jobs:
             done
           done
 
-      - name: Packaging OpenWrt ${{ env.openwrt_board }}
+      - name: Packaging OpenWrt Amlogic
         if: ${{ steps.checking.outputs.status }} == 'amlogic' && !cancelled()
         uses: ophub/amlogic-s9xxx-openwrt@main
         with:
