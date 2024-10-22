@@ -74,8 +74,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Initialization environment
-        id: init
+      - name: Initialization environment (normal)
+        if: github.event.inputs.target != 'all' && !cancelled()
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs
+          sudo timedatectl set-timezone "$TZ"
+
+      - name: Initialization environment (deep)
+        if: github.event.inputs.target == 'all' && !cancelled()
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
@@ -94,11 +103,10 @@ jobs:
           sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
           sudo rm -rf ~/{.cargo,.dotnet,.rustup}
           sudo timedatectl set-timezone "${TZ}"
-          echo "status=success" >> ${GITHUB_OUTPUT}
           echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
 
       - name: Create simulated physical disk
-        if: ${{ inputs.target == 'all' }}
+        if: github.event.inputs.target == 'all' && !cancelled()
         run: |
           mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
           root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
@@ -117,6 +125,7 @@ jobs:
           df -Th
 
       - name: Setup Environment Variables
+        id: init
         run: |
           if [ "$TARGET" == "Raspberry Pi 3B" ]; then
             echo "TARGET_NAME=rpi-3" >> $GITHUB_ENV
@@ -144,6 +153,7 @@ jobs:
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board=s905x2" >> $GITHUB_ENV
           fi
+          echo "status=success" >> ${GITHUB_OUTPUT}
 
       - name: Build OpenWrt [ ${{ matrix.target }} ${{ inputs.releases_branch }} ]
         id: imagebuilder
