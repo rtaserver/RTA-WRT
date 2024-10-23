@@ -185,7 +185,7 @@ jobs:
           else
             for file in bin/targets/*/*/*rootfs.tar.gz; do mv "$file" compiled_images; done
           fi
-          ls -l compiled_images
+          echo -e "INFO files list: \n$(ls -l compiled_images 2>/dev/null)"
 
       - name: Packaging OpenWrt For Amlogic
         if: ${{ env.TARGET_NAME }} == 'amlogic' && !cancelled()
@@ -205,7 +205,8 @@ jobs:
           cd imagebuilder
           if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
             cp -f ${{ env.PACKAGED_OUTPUTPATH }}/* compiled_images/
-            for file in compiled_images/*__amlogic_*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
+            echo -e "INFO files list: \n$(ls -l compiled_images 2>/dev/null)"
+            # for file in compiled_images/*__amlogic_*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
           fi
           search_replace_patterns=(
               "bcm27xx-bcm2710-rpi-3|Raspberry-Pi-3_ext4-sysupgrade"
