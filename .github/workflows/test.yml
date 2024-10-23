@@ -197,8 +197,8 @@ jobs:
             mv compiled_images/*rootfs.tar.gz amlogic-s9xxx-openwrt/openwrt-armvirt/
             cd amlogic-s9xxx-openwrt
             sudo ./remake -b ${{ env.openwrt_board }} -k 5.15.y_5.10.y -s 1024
-            # sudo ./amlogic-s9xxx-openwrt/remake -b ${{ env.openwrt_board }} -r ophub/kernel -u stable -k 5.15.y_5.10.y -a true -s 1024 -n RTA-WRT
-            mv ${{ env.PACKAGED_OUTPUTPATH }}/*.img.gz compiled_images/
+            AMLOGIC_IMG_PATH=$(find -name "openwrt*.img.gz")
+            mv ${AMLOGIC_IMG_PATH}/*.img.gz compiled_images/
           fi
 
       - name: Prepare Before Uploads
