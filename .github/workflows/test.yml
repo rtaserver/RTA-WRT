@@ -195,7 +195,9 @@ jobs:
             git clone --depth 1 https://github.com/ophub/amlogic-s9xxx-openwrt.git
             mkdir -p amlogic-s9xxx-openwrt/openwrt-armvirt
             mv compiled_images/*rootfs.tar.gz amlogic-s9xxx-openwrt/openwrt-armvirt/
-            sudo ./amlogic-s9xxx-openwrt/remake -b ${{ env.openwrt_board }} -r ophub/kernel -u stable -k 5.15.y_5.10.y -a true -s 1024 -n RTA-WRT
+            cd amlogic-s9xxx-openwrt
+            sudo ./remake -b ${{ env.openwrt_board }} -k 5.15.y_5.10.y -s 1024
+            # sudo ./amlogic-s9xxx-openwrt/remake -b ${{ env.openwrt_board }} -r ophub/kernel -u stable -k 5.15.y_5.10.y -a true -s 1024 -n RTA-WRT
             mv ${{ env.PACKAGED_OUTPUTPATH }}/*.img.gz compiled_images/
           fi
 
@@ -225,9 +227,9 @@ jobs:
                   if [[ -f "$file" ]]; then
                       if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
                         kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
-                        new_name="RTA-WRT_OpenWrt-${{ env.RELEASES_TAG }}_${replace}_${kernel}.img.gz"
+                        new_name="RTA-WRT_${{ env.RELEASES_TAG }}_${replace}_${kernel}.img.gz"
                       else
-                        new_name="RTA-WRT_OpenWrt-${{ env.RELEASES_TAG }}_${replace}.img.gz"
+                        new_name="RTA-WRT_${{ env.RELEASES_TAG }}_${replace}.img.gz"
                       fi
                       echo "Renaming: $file -> $new_name"
                       mv "$file" "compiled_images/$new_name"
