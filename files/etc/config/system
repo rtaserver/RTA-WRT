@@ -1,0 +1,16 @@
+config system
+	option hostname 'RTA-WRT'
+	option timezone 'WIB-7'
+	option ttylogin '0'
+	option log_size '64'
+	option urandom_seed '0'
+	option zonename 'Asia/Jakarta'
+	option log_proto 'udp'
+	option conloglevel '8'
+	option cronloglevel '5'
+	option zram_comp_algo 'lzo'
+
+config timeserver 'ntp'
+	list server 'pool.ntp.org'
+	list server 'id.pool.ntp.org'
+	list server 'time.google.com'

@@ -26,90 +26,90 @@ echo "###############################################"
 # Set login root password
 (echo "rtawrt"; sleep 1; echo "rtawrt") | passwd > /dev/null
 
-# Set hostname and Timezone to Asia/Jakarta
-echo "Setup NTP Server and Time Zone to Asia/Jakarta"
-uci set system.@system[0].hostname='RTA-WRT'
-uci set system.@system[0].timezone='WIB-7'
-uci set system.@system[0].zonename='Asia/Jakarta'
-uci -q delete system.ntp.server
-uci add_list system.ntp.server="pool.ntp.org"
-uci add_list system.ntp.server="id.pool.ntp.org"
-uci add_list system.ntp.server="time.google.com"
-uci commit system
+# # Set hostname and Timezone to Asia/Jakarta
+# echo "Setup NTP Server and Time Zone to Asia/Jakarta"
+# uci set system.@system[0].hostname='RTA-WRT'
+# uci set system.@system[0].timezone='WIB-7'
+# uci set system.@system[0].zonename='Asia/Jakarta'
+# uci -q delete system.ntp.server
+# uci add_list system.ntp.server="pool.ntp.org"
+# uci add_list system.ntp.server="id.pool.ntp.org"
+# uci add_list system.ntp.server="time.google.com"
+# uci commit system
 
-chmod +x /usr/lib/ModemManager/connection.d/10-report-down
+# chmod +x /usr/lib/ModemManager/connection.d/10-report-down
 
-echo "Setup WAN and LAN Interface"
-# Configure Network
-uci set network.lan.ipaddr="192.168.1.1"
-uci del network.lan.ip6assign
-uci set network.modemmanager=interface
-uci set network.modemmanager.proto='modemmanager'
-uci set network.modemmanager.device='/sys/devices/pci0000:00/0000:00:15.0/usb2/2-1/2-1.1'
-uci set network.modemmanager.apn='internet'
-uci set network.modemmanager.auth='none'
-uci set network.modemmanager.iptype='ipv4'
-uci set network.modemmanager.loglevel='ERR'
-uci set network.modemmanager.metric='10'
-uci set network.modemmanager.force_connection='1'
-uci set network.tethering=interface
-uci set network.tethering.proto='dhcp'
-uci set network.tethering.device='usb0'
-uci set network.tethering.metric='20'
-uci set network.wan=interface
-uci set network.wan.proto='dhcp'
-uci set network.wan.device='eth1'
-uci set network.wan.metric='1'
-uci del network.wan6
-uci set network.wan2=interface
-uci set network.wan2.proto='dhcp'
-uci set network.wan2.device='eth2'
-uci set network.wan2.metric='2'
-uci set network.hotspot=device
-uci set network.hotspot.name='br-hotspot'
-uci set network.hotspot.type='bridge'
-uci set network.hotspot.ipv6='0'
-uci set network.voucher=interface
-uci set network.voucher.name='voucher'
-uci set network.voucher.proto='static'
-uci set network.voucher.device='br-hotspot'
-uci set network.voucher.ipaddr='10.10.30.1'
-uci set network.voucher.netmask='255.255.255.0'
-uci set network.chilli=interface
-uci set network.chilli.proto='none'
-uci set network.chilli.device='tun0'
-uci commit network
+# echo "Setup WAN and LAN Interface"
+# # Configure Network
+# uci set network.lan.ipaddr="192.168.1.1"
+# uci del network.lan.ip6assign
+# uci set network.modemmanager=interface
+# uci set network.modemmanager.proto='modemmanager'
+# uci set network.modemmanager.device='/sys/devices/pci0000:00/0000:00:15.0/usb2/2-1/2-1.1'
+# uci set network.modemmanager.apn='internet'
+# uci set network.modemmanager.auth='none'
+# uci set network.modemmanager.iptype='ipv4'
+# uci set network.modemmanager.loglevel='ERR'
+# uci set network.modemmanager.metric='10'
+# uci set network.modemmanager.force_connection='1'
+# uci set network.tethering=interface
+# uci set network.tethering.proto='dhcp'
+# uci set network.tethering.device='usb0'
+# uci set network.tethering.metric='20'
+# uci set network.wan=interface
+# uci set network.wan.proto='dhcp'
+# uci set network.wan.device='eth1'
+# uci set network.wan.metric='1'
+# uci del network.wan6
+# uci set network.wan2=interface
+# uci set network.wan2.proto='dhcp'
+# uci set network.wan2.device='eth2'
+# uci set network.wan2.metric='2'
+# uci set network.hotspot=device
+# uci set network.hotspot.name='br-hotspot'
+# uci set network.hotspot.type='bridge'
+# uci set network.hotspot.ipv6='0'
+# uci set network.voucher=interface
+# uci set network.voucher.name='voucher'
+# uci set network.voucher.proto='static'
+# uci set network.voucher.device='br-hotspot'
+# uci set network.voucher.ipaddr='10.10.30.1'
+# uci set network.voucher.netmask='255.255.255.0'
+# uci set network.chilli=interface
+# uci set network.chilli.proto='none'
+# uci set network.chilli.device='tun0'
+# uci commit network
 
-# configure Firewall
-uci set firewall.tun=zone
-uci set firewall.tun.name='tun'
-uci set firewall.tun.input='ACCEPT'
-uci set firewall.tun.output='ACCEPT'
-uci set firewall.tun.forward='REJECT'
-uci add_list firewall.tun.network='chilli'
-uci add firewall forwarding
-uci set firewall.@forwarding[-1].src='tun'
-uci set firewall.@forwarding[-1].dest='wan'
-uci set firewall.@zone[0].network='lan voucher'
-uci set firewall.@zone[1].network='wan wan2 modemmanager tethering'
-uci commit firewall
+# # configure Firewall
+# uci set firewall.tun=zone
+# uci set firewall.tun.name='tun'
+# uci set firewall.tun.input='ACCEPT'
+# uci set firewall.tun.output='ACCEPT'
+# uci set firewall.tun.forward='REJECT'
+# uci add_list firewall.tun.network='chilli'
+# uci add firewall forwarding
+# uci set firewall.@forwarding[-1].src='tun'
+# uci set firewall.@forwarding[-1].dest='wan'
+# uci set firewall.@zone[0].network='lan voucher'
+# uci set firewall.@zone[1].network='wan wan2 modemmanager tethering'
+# uci commit firewall
 
-# configure DHCP
-uci del dhcp.@dnsmasq[0].nonwildcard
-uci del dhcp.@dnsmasq[0].noresolv
-uci del dhcp.@dnsmasq[0].boguspriv
-uci del dhcp.@dnsmasq[0].filterwin2k
-uci del dhcp.@dnsmasq[0].filter_aaaa
-uci del dhcp.@dnsmasq[0].filter_a
-uci del dhcp.@dnsmasq[0].nonegcache
-uci add_list dhcp.@dnsmasq[0].server='1.1.1.1'
-uci -q delete dhcp.lan.dhcpv6
-uci -q delete dhcp.lan.ra
-uci -q delete dhcp.lan.ndp
-uci -q delete dhcp.lan.ra_slaac
-uci -q delete dhcp.lan.ra_flags
-uci commit dhcp
-/etc/init.d/dnsmasq restart
+# # configure DHCP
+# uci del dhcp.@dnsmasq[0].nonwildcard
+# uci del dhcp.@dnsmasq[0].noresolv
+# uci del dhcp.@dnsmasq[0].boguspriv
+# uci del dhcp.@dnsmasq[0].filterwin2k
+# uci del dhcp.@dnsmasq[0].filter_aaaa
+# uci del dhcp.@dnsmasq[0].filter_a
+# uci del dhcp.@dnsmasq[0].nonegcache
+# uci add_list dhcp.@dnsmasq[0].server='1.1.1.1'
+# uci -q delete dhcp.lan.dhcpv6
+# uci -q delete dhcp.lan.ra
+# uci -q delete dhcp.lan.ndp
+# uci -q delete dhcp.lan.ra_slaac
+# uci -q delete dhcp.lan.ra_flags
+# uci commit dhcp
+# /etc/init.d/dnsmasq restart
 
 # configure WLAN
 echo "Setup Wireless if available"
@@ -123,10 +123,10 @@ uci set wireless.@wifi-device[0].band='2g'
 uci commit wireless
 wifi reload && wifi up
 
-# custom repo and Disable opkg signature check
-echo "Setup custom Repo By kiddin9"
-sed -i 's/option check_signature/# option check_signature/g' /etc/opkg.conf
-echo "src/gz custom_arch https://dl.openwrt.ai/latest/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
+# # custom repo and Disable opkg signature check
+# echo "Setup custom Repo By kiddin9"
+# sed -i 's/option check_signature/# option check_signature/g' /etc/opkg.conf
+# echo "src/gz custom_arch https://dl.openwrt.ai/latest/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
 
 # set Material as default theme
 echo "Setup Default Theme"
@@ -222,29 +222,10 @@ mysql -u root -p"radius" -e "CREATE DATABASE radius CHARACTER SET utf8";
 mysql -u root -p"radius" -e "GRANT ALL ON radius.* TO 'radius'@'localhost' IDENTIFIED BY 'radius' WITH GRANT OPTION";
 mysql -u root -p"radius" radius -e "SET FOREIGN_KEY_CHECKS = 0; $(mysql -u root -p"radius" radius -e 'SHOW TABLES' | awk '{print "DROP TABLE IF EXISTS `" $1 "`;"}' | grep -v '^Tables' | tr '\n' ' ') SET FOREIGN_KEY_CHECKS = 1;"
 mysql -u root -p"radius" radius < /usr/share/radius_monitor.sql
-rm -rf /usr/share/radius_monitor.sql
-mysql -u root -p"radius" radius < /www/RadiusMonitor/radmon.sql
 
 mv /www/phpmyadmin/config.sample.inc.php /www/phpmyadmin/config.inc.php
 sed -i -E "s|localhost|127.0.0.1|g" /www/phpmyadmin/config.inc.php
 sed -i "/\$cfg\['Servers'\]\[.*\]\['AllowNoPassword'\] = false;/a \$cfg\['AllowThirdPartyFraming'\] = true;" /www/phpmyadmin/config.inc.php
-cat <<'EOF' >/usr/lib/lua/luci/controller/phpmyadmin.lua
-module("luci.controller.phpmyadmin", package.seeall)
-function index()
-entry({"admin","services","phpmyadmin"}, template("phpmyadmin"), _("PhpMyAdmin"), 3).leaf=true
-end
-EOF
-cat <<'EOF' >/usr/lib/lua/luci/view/phpmyadmin.htm
-<%+header%>
-<div class="cbi-map"><br/>
-<iframe id="phpmyadmin" style="width: 100%; min-height: 100vh; border: none; border-radius: 2px;"></iframe>
-</div>
-<script type="text/javascript">
-document.getElementById("phpmyadmin").src = window.location.protocol + "//" + window.location.host + "/phpmyadmin";
-</script>
-<%+footer%>
-EOF
-chmod +x /usr/lib/lua/luci/view/phpmyadmin.htm
 
 cd /etc/freeradius3/mods-enabled
 ln -s ../mods-available/always
@@ -273,10 +254,7 @@ if ! grep -q '/etc/init.d/radiusd restart' /etc/rc.local; then
     sed -i '/exit 0/i /etc/init.d/radiusd restart' /etc/rc.local
 fi
 
-
 ln -s /usr/share/hotspotlogin /www/hotspotlogin
-mv /usr/share/RadiusMonitorx /usr/share/RadiusMonitor
-ln -s /usr/share/RadiusMonitor /www/RadiusMonitor
 
 chmod +x /etc/init.d/chilli
 if ! grep -q '/etc/init.d/chilli restart' /etc/rc.local; then
@@ -285,6 +263,6 @@ fi
 
 echo "All first boot setup complete!"
 touch /etc/hotspotsetup
-echo "All first boot setup complete!"
-reboot
 rm -rf /etc/uci-defaults/99-init-settings.sh
+reboot
+exit 0
