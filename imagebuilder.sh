@@ -153,14 +153,16 @@ download_imagebuilder() {
     cd ${make_path}
     echo -e "${STEPS} Start downloading OpenWrt files..."
 
-    if [[ "${op_target}" == "amlogic" || "${op_target}" == "armsr-armv8" ]]; then
+    if [[ "${op_target}" == "amlogic" || "${op_target}" == "AMLOGIC" ]]; then
+        op_target="amlogic"
         target_profile=""
         target_system="armsr/armv8"
         target_name="armsr-armv8"
         ARCH_1="armv8"
         ARCH_2="aarch64"
         ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "rpi-3" || "${op_target}" == "bcm27xx-bcm2710" ]]; then
+    elif [[ "${op_target}" == "rpi-3" ]]; then
+        op_target="rpi-3"
         target_profile="rpi-3"
         target_system="bcm27xx/bcm2710"
         target_name="bcm27xx-bcm2710"
@@ -168,6 +170,7 @@ download_imagebuilder() {
         ARCH_2="aarch64"
         ARCH_3="aarch64_cortex-a53"
     elif [[ "${op_target}" == "rpi-4" ]]; then
+        op_target="rpi-4"
         target_profile="rpi-4"
         target_system="bcm27xx/bcm2711"
         target_name="bcm27xx-bcm2711"
@@ -175,6 +178,7 @@ download_imagebuilder() {
         ARCH_2="aarch64"
         ARCH_3="aarch64_cortex-a72"
     elif [[ "${op_target}" == "friendlyarm_nanopi-r2c" ]]; then
+        op_target="nanopi-r2c"
         target_profile="friendlyarm_nanopi-r2c"
         target_system="rockchip/armv8"
         target_name="rockchip-armv8"
@@ -182,6 +186,7 @@ download_imagebuilder() {
         ARCH_2="aarch64"
         ARCH_3="aarch64_generic"
     elif [[ "${op_target}" == "friendlyarm_nanopi-r2s" ]]; then
+        op_target="nanopi-r2s"
         target_profile="friendlyarm_nanopi-r2s"
         target_system="rockchip/armv8"
         target_name="rockchip-armv8"
@@ -189,6 +194,7 @@ download_imagebuilder() {
         ARCH_2="aarch64"
         ARCH_3="aarch64_generic"
     elif [[ "${op_target}" == "friendlyarm_nanopi-r4s" ]]; then
+        op_target="nanopi-r4s"
         target_profile="friendlyarm_nanopi-r4s"
         target_system="rockchip/armv8"
         target_name="rockchip-armv8"
@@ -196,6 +202,7 @@ download_imagebuilder() {
         ARCH_2="aarch64"
         ARCH_3="aarch64_generic"
     elif [[ "${op_target}" == "xunlong_orangepi-r1-plus" ]]; then
+        op_target="orangepi-r1-plus"
         target_profile="xunlong_orangepi-r1-plus"
         target_system="rockchip/armv8"
         target_name="rockchip-armv8"
@@ -203,6 +210,7 @@ download_imagebuilder() {
         ARCH_2="aarch64"
         ARCH_3="aarch64_generic"
     elif [[ "${op_target}" == "xunlong_orangepi-r1-plus-lts" ]]; then
+        op_target="orangepi-r1-plus-lts"
         target_profile="xunlong_orangepi-r1-plus-lts"
         target_system="rockchip/armv8"
         target_name="rockchip-armv8"
@@ -210,6 +218,7 @@ download_imagebuilder() {
         ARCH_2="aarch64"
         ARCH_3="aarch64_generic"
     elif [[ "${op_target}" == "generic" || "${op_target}" == "x86-64" || "${op_target}" == "x86_64" ]]; then
+        op_target="x86-64"
         target_profile="generic"
         target_system="x86/64"
         target_name="x86-64"
@@ -532,10 +541,13 @@ rebuild_firmware() {
     # Rebuild firmware
     make clean
     make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files"
-
-    sync && sleep 3
-    echo -e "${INFO} [ ${openwrt_dir}/bin/targets/*/* ] directory status: $(ls bin/targets/*/* -al 2>/dev/null)"
-    echo -e "${SUCCESS} The rebuild is successful, the current path: [ ${PWD} ]"
+    if [ $? -ne 0 ]; then
+        error_msg "OpenWrt build failed. Check logs for details."
+    else
+        sync && sleep 3
+        echo -e "${INFO} [ ${openwrt_dir}/bin/targets/*/* ] directory status: $(ls bin/targets/*/* -al 2>/dev/null)"
+        echo -e "${SUCCESS} The rebuild is successful, the current path: [ ${PWD} ]"
+    fi
 }
 
 # Show welcome message

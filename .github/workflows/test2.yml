@@ -36,6 +36,8 @@ on:
 env:
   TZ: Asia/Jakarta
   IMAGEBUILDER_SH: imagebuilder.sh
+  TYPE: AMLOGIC
+  TARGET: ${{ inputs.target }}
 
 jobs:
   build:
@@ -54,7 +56,6 @@ jobs:
           sudo apt-get -qq update
           sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs
           sudo timedatectl set-timezone "$TZ"
-          echo "TARGET=amlogic" >> $GITHUB_ENV
 
       - name: Initialization environment (deep)
         if: github.event.inputs.target == 'all' && !cancelled()
@@ -76,7 +77,6 @@ jobs:
           sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
           sudo rm -rf ~/{.cargo,.dotnet,.rustup}
           sudo timedatectl set-timezone "${TZ}"
-          echo "TARGET=amlogic" >> $GITHUB_ENV
 
       - name: Create simulated physical disk
         if: github.event.inputs.target == 'all' && !cancelled()
@@ -116,10 +116,9 @@ jobs:
         id: imagebuilder
         if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
         run: |
-          TARGET_NAME="amlogic"
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
           chmod +x ${IMAGEBUILDER_SH}
-          bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "amlogic"
+          bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "${{ env.TARGET }}"
           echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> ${GITHUB_ENV}
           echo "status=success" >> ${GITHUB_OUTPUT}
 

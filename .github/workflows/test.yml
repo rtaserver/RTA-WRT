@@ -15,7 +15,7 @@ on:
       releases_branch:
         description: "Select the releases branch"
         required: false
-        default: "openwrt:23.05.3"
+        default: "openwrt:23.05.5"
         type: choice
         options:
           - openwrt:23.05.5
@@ -37,6 +37,9 @@ on:
           - Orange Pi R1 Plus
           - Orange Pi R1 Plus LTS
           - x86-64
+          - Amlogic HG680P
+          - Amlogic B860H-V5
+          - Amlogic B860H-V1-V2
 
 env:
   TZ: Asia/Jakarta
@@ -171,14 +174,92 @@ jobs:
           cd imagebuilder
           rm -rf $(ls . | grep -v "^bin$" | xargs) 2>/dev/null
           df -hT ${PWD}
-  
+
+      - name: Prepare file First
+        id: prepare1
+        run: |
+          cd imagebuilder
+          mkdir -p compiled_images
+          if [[ "${{ env.TARGET_NAME }}" != "amlogic" ]]; then
+            for file in bin/targets/*/*/*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
+          else
+            for file in bin/targets/*/*/*rootfs.tar.gz; do mv "$file" compiled_images; done
+            echo "status=AMLOGIC" >> ${GITHUB_OUTPUT}
+          fi
+          ls -l compiled_images
+
+      - name: Packaging OpenWrt For Amlogic
+        if: ${{ steps.prepare1.outputs.status }} == 'AMLOGIC' && !cancelled()
+        uses: ophub/amlogic-s9xxx-openwrt@main
+        with:
+          openwrt_path: imagebuilder/compiled_images/*rootfs.tar.gz
+          openwrt_board: ${{ env.openwrt_board }}
+          openwrt_kernel: 5.15.y_5.10.y
+          auto_kernel: true
+          kernel_repo: ophub/kernel
+          kernel_usage: stable
+          builder_name: RTA-WRT
+
+
+      - name: Prepare Before Uploads
+        id: prepare2
+        run: |
+          cd imagebuilder
+          search_replace_patterns=(
+              "bcm27xx-bcm2710-rpi-3|Raspberry-Pi-3_ext4-sysupgrade"
+              "bcm27xx-bcm2711-rpi-4|Raspberry-Pi-4_ext4-sysupgrade"
+              "rockchip-armv8-friendlyarm_nanopi-r2c|NanoPi_R2C_ext4-sysupgrade"
+              "rockchip-armv8-friendlyarm_nanopi-r2s|NanoPi_R2S_ext4-sysupgrade"
+              "rockchip-armv8-friendlyarm_nanopi-r4s|NanoPi_R4S_ext4-sysupgrade"
+              "rockchip-armv8-xunlong_orangepi-r1-plus|Orange-Pi-R1_ext4-sysupgrade"
+              "rockchip-armv8-xunlong_orangepi-r1-plus-lts|Orange-Pi-R1-Plus-LTS_ext4-sysupgrade"
+              "x86-64-generic-ext4-combined-efi|x86-64-Generic_ext4-combined-efi"
+              "x86-64-generic-ext4-combined|x86-64-Generic_ext4-combined"
+          )
+          for pattern in "${search_replace_patterns[@]}"; do
+              search="${pattern%%|*}"
+              replace="${pattern##*|}"
+
+              for file in imagebuilder/compiled_images/*${search}*.img.gz; do
+                  if [[ -f "$file" ]]; then
+                      new_name="RTA-WRT_OpenWrt-${{ env.RELEASES_TAG }}_${replace}.img.gz"
+                      echo "Renaming: $file -> $new_name"
+                      mv "$file" "imagebuilder/compiled_images/$new_name"
+                  fi
+              done
+          done
+
+          if [[ "${{ env.TARGET_NAME }}" != "amlogic" ]]; then
+
+            for file in "${{ env.PACKAGED_OUTPUTPATH }}/*.img.gz"; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
+            search_replace_patterns=(
+                "_amlogic_s905x_|Amlogic_HG680P"
+                "_amlogic_s905x-b860h_|Amlogic_B860HV1-V2"
+                "_amlogic_s905x2_|Amlogic_B860HV5"
+            )
+            for pattern in "${search_replace_patterns[@]}"; do
+                search="${pattern%%|*}"
+                replace="${pattern##*|}"
+            
+                for file in imagebuilder/compiled_images/*${search}*.img.gz; do
+                    if [[ -f "$file" ]]; then
+                        kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
+                        new_name="RTA-WRT_OpenWrt-${{ env.RELEASES_TAG }}_${replace}_${kernel}.img.gz"
+                        echo "Renaming: $file -> $new_name"
+                        mv "$file" "imagebuilder/compiled_images/$new_name"
+                    fi
+                done
+            done
+          fi
+          echo "status=success" >> ${GITHUB_OUTPUT}
+          ls -l compiled_images
   
       - name: Upload the packaged OpenWrt
         uses: ncipollo/release-action@main
-        if: !cancelled()
+        if: ${{ steps.prepare2.outputs.status }} == 'success' && !cancelled()
         with:
           tag: OpenWrt_imagebuilder_${{ env.RELEASES_TAG }}
-          artifacts: imagebuilder/bin/targets/*/*/*.img.gz
+          artifacts: imagebuilder/compiled_images*.img.gz
           allowUpdates: true
           removeArtifacts: false
           replacesArtifacts: true
