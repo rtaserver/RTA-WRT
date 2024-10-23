@@ -119,7 +119,7 @@ jobs:
           TARGET_NAME="amlogic"
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
           chmod +x ${IMAGEBUILDER_SH}
-          ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "amlogic"
+          bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "amlogic"
           echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> ${GITHUB_ENV}
           echo "status=success" >> ${GITHUB_OUTPUT}
 
