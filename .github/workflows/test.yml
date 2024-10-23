@@ -205,6 +205,9 @@ jobs:
         id: prepare2
         run: |
           cd imagebuilder
+          if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
+            for file in "${{ env.PACKAGED_OUTPUTPATH }}/*.img.gz"; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
+          fi
           search_replace_patterns=(
               "bcm27xx-bcm2710-rpi-3|Raspberry-Pi-3_ext4-sysupgrade"
               "bcm27xx-bcm2711-rpi-4|Raspberry-Pi-4_ext4-sysupgrade"
@@ -215,6 +218,9 @@ jobs:
               "rockchip-armv8-xunlong_orangepi-r1-plus-lts|Orange-Pi-R1-Plus-LTS_ext4-sysupgrade"
               "x86-64-generic-ext4-combined-efi|x86-64-Generic_ext4-combined-efi"
               "x86-64-generic-ext4-combined|x86-64-Generic_ext4-combined"
+              "_amlogic_s905x_|Amlogic_HG680P"
+              "_amlogic_s905x-b860h_|Amlogic_B860HV1-V2"
+              "_amlogic_s905x2_|Amlogic_B860HV5"
           )
           for pattern in "${search_replace_patterns[@]}"; do
               search="${pattern%%|*}"
@@ -222,35 +228,17 @@ jobs:
 
               for file in imagebuilder/compiled_images/*${search}*.img.gz; do
                   if [[ -f "$file" ]]; then
-                      new_name="RTA-WRT_OpenWrt-${{ env.RELEASES_TAG }}_${replace}.img.gz"
+                      if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
+                        kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
+                        new_name="RTA-WRT_OpenWrt-${{ env.RELEASES_TAG }}_${replace}_${kernel}.img.gz"
+                      else
+                        new_name="RTA-WRT_OpenWrt-${{ env.RELEASES_TAG }}_${replace}.img.gz"
+                      fi
                       echo "Renaming: $file -> $new_name"
                       mv "$file" "imagebuilder/compiled_images/$new_name"
                   fi
               done
           done
-
-          if [[ "${{ env.TARGET_NAME }}" != "amlogic" ]]; then
-
-            for file in "${{ env.PACKAGED_OUTPUTPATH }}/*.img.gz"; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
-            search_replace_patterns=(
-                "_amlogic_s905x_|Amlogic_HG680P"
-                "_amlogic_s905x-b860h_|Amlogic_B860HV1-V2"
-                "_amlogic_s905x2_|Amlogic_B860HV5"
-            )
-            for pattern in "${search_replace_patterns[@]}"; do
-                search="${pattern%%|*}"
-                replace="${pattern##*|}"
-            
-                for file in imagebuilder/compiled_images/*${search}*.img.gz; do
-                    if [[ -f "$file" ]]; then
-                        kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
-                        new_name="RTA-WRT_OpenWrt-${{ env.RELEASES_TAG }}_${replace}_${kernel}.img.gz"
-                        echo "Renaming: $file -> $new_name"
-                        mv "$file" "imagebuilder/compiled_images/$new_name"
-                    fi
-                done
-            done
-          fi
           echo "status=success" >> ${GITHUB_OUTPUT}
           ls -l compiled_images
   
