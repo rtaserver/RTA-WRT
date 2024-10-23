@@ -182,15 +182,13 @@ jobs:
           mkdir -p compiled_images
           if [[ "${{ env.TARGET_NAME }}" != "amlogic" ]]; then
             for file in bin/targets/*/*/*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
-            echo "status=NONAMLOGIC" >> ${GITHUB_OUTPUT}
           else
             for file in bin/targets/*/*/*rootfs.tar.gz; do mv "$file" compiled_images; done
-            echo "status=AMLOGIC" >> ${GITHUB_OUTPUT}
           fi
           ls -l compiled_images
 
       - name: Packaging OpenWrt For Amlogic
-        if: ${{ steps.prepare1.outputs.status }} == 'AMLOGIC' && !cancelled()
+        if: ${{ env.TARGET_NAME }} == 'amlogic' && !cancelled()
         uses: ophub/amlogic-s9xxx-openwrt@main
         with:
           openwrt_path: imagebuilder/compiled_images/*rootfs.tar.gz
@@ -201,27 +199,13 @@ jobs:
           kernel_usage: stable
           builder_name: RTA-WRT
 
-      - name: Upload Firmware Amlogic
-        if: ${{ steps.prepare1.outputs.status }} == 'AMLOGIC' && !cancelled()
-        uses: actions/upload-artifact@v3
-        with:
-          name: amlogic-firmware
-          path: |
-            ${{ env.PACKAGED_OUTPUTPATH }}
-  
-      - name: Download Firmware
-        if: ${{ steps.prepare1.outputs.status }} == 'AMLOGIC' && !cancelled()
-        uses: actions/download-artifact@v3
-        with:
-          name: amlogic-firmware
-          path: imagebuilder/compiled_images/
-  
       - name: Prepare Before Uploads
         id: prepare2
         run: |
           cd imagebuilder
           if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
-            for file in imagebuilder/compiled_images/*.img.gz; do mv "$file" imagebuilder/compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
+            cp -f ${{ env.PACKAGED_OUTPUTPATH }}/* compiled_images/
+            for file in compiled_images/*__amlogic_*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
           fi
           search_replace_patterns=(
               "bcm27xx-bcm2710-rpi-3|Raspberry-Pi-3_ext4-sysupgrade"
