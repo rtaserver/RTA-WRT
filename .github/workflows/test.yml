@@ -206,7 +206,7 @@ jobs:
         run: |
           cd imagebuilder
           if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
-            for file in "${{ env.PACKAGED_OUTPUTPATH }}/*.img.gz"; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
+            for file in "${{ env.PACKAGED_OUTPUTPATH }}/*.img.gz"; do mv "$file" imagebuilder/compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
           fi
           search_replace_patterns=(
               "bcm27xx-bcm2710-rpi-3|Raspberry-Pi-3_ext4-sysupgrade"
