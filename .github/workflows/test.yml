@@ -180,11 +180,9 @@ jobs:
           cd imagebuilder
           mkdir -p compiled_images
           if [[ "${{ env.TARGET_NAME }}" != "amlogic" ]]; then
-            # for file in bin/targets/*/*/*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
-            mv bin/targets/*/*/*.img.gz compiled_images/
+            for file in bin/targets/*/*/*.img.gz; do mv "$file" compiled_images; done
           else
-            # for file in bin/targets/*/*/*rootfs.tar.gz; do mv "$file" compiled_images; done
-            mv bin/targets/*/*/*rootfs.tar.gz compiled_images/
+            for file in bin/targets/*/*/*rootfs.tar.gz; do mv "$file" compiled_images; done
           fi
           echo -e "INFO files list: \n$(ls -l compiled_images 2>/dev/null)"
 
@@ -196,9 +194,8 @@ jobs:
             mkdir -p amlogic-s9xxx-openwrt/openwrt-armvirt
             mv compiled_images/*rootfs.tar.gz amlogic-s9xxx-openwrt/openwrt-armvirt/
             cd amlogic-s9xxx-openwrt
-            sudo ./remake -b ${{ env.openwrt_board }} -k 5.15.y_5.10.y -s 1024
-            AMLOGIC_IMG_PATH=$(find -name "openwrt*.img.gz")
-            mv ${AMLOGIC_IMG_PATH}/*.img.gz compiled_images/
+            sudo ./remake -b ${{ env.openwrt_board }} -s 1024
+            for file in openwrt/out/*.img.gz; do mv "$file" ../compiled_images; done
           fi
 
       - name: Prepare Before Uploads
