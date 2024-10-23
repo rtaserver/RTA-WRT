@@ -237,24 +237,29 @@ adjust_settings() {
     cd ${imagebuilder_path}
     echo -e "${STEPS} Start adjusting .config file settings..."
 
-    sed -i '\|option check_signature| s|^|#|' repositories.conf
-    sed -i "s/install \$(BUILD_PACKAGES)/install \$(BUILD_PACKAGES) --force-overwrite --force-downgrade/" Makefile
+    if [[ -s "repositories.conf" ]]; then
+        sed -i '\|option check_signature| s|^|#|' repositories.conf
+    fi
+
+    if [[ -s "Makefile" ]]; then
+        sed -i "s/install \$(BUILD_PACKAGES)/install \$(BUILD_PACKAGES) --force-overwrite --force-downgrade/" Makefile
+    fi
 
     # For .config file
     if [[ -s ".config" ]]; then
 
         # Resize Boot and Rootfs partition size
-        option_squashfs=$( [ "$ROOTFS_SQUASHFS" == "true" ] && echo "CONFIG_TARGET_ROOTFS_SQUASHFS=y" || echo "# CONFIG_TARGET_ROOTFS_SQUASHFS is not set" )
         sed -i "s/CONFIG_TARGET_KERNEL_PARTSIZE=.*/CONFIG_TARGET_KERNEL_PARTSIZE=128/" .config
         sed -i "s/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=1024/" .config
-        sed -i "s/CONFIG_TARGET_ROOTFS_SQUASHFS=y/$option_squashfs/" .config
-        # Root filesystem archives
-        sed -i "s|CONFIG_TARGET_ROOTFS_CPIOGZ=.*|# CONFIG_TARGET_ROOTFS_CPIOGZ is not set|g" .config
-        # Root filesystem images
-        sed -i "s|CONFIG_TARGET_ROOTFS_EXT4FS=.*|# CONFIG_TARGET_ROOTFS_EXT4FS is not set|g" .config
-        sed -i "s|CONFIG_TARGET_IMAGES_GZIP=.*|# CONFIG_TARGET_IMAGES_GZIP is not set|g" .config
 
-        if [[ "$op_target" == "x86_64" ]]; then
+        if [ "$op_target" == "amlogic" ]; then
+            sed -i "s|CONFIG_TARGET_ROOTFS_CPIOGZ=.*|# CONFIG_TARGET_ROOTFS_CPIOGZ is not set|g" .config
+            sed -i "s|CONFIG_TARGET_ROOTFS_EXT4FS=.*|# CONFIG_TARGET_ROOTFS_EXT4FS is not set|g" .config
+            sed -i "s|CONFIG_TARGET_ROOTFS_SQUASHFS=.*|# CONFIG_TARGET_ROOTFS_SQUASHFS is not set|g" .config
+            sed -i "s|CONFIG_TARGET_IMAGES_GZIP=.*|# CONFIG_TARGET_IMAGES_GZIP is not set|g" .config
+        fi
+
+        if [ "$ARCH_2" == "x86_64" ]; then
             # Not generate ISO images for it is too big
             sed -i "s/CONFIG_ISO_IMAGES=y/# CONFIG_ISO_IMAGES is not set/" .config
             # Not generate VHDX images
@@ -264,8 +269,6 @@ adjust_settings() {
         echo -e "${INFO} [ ${imagebuilder_path} ] directory status: $(ls -al 2>/dev/null)"
         error_msg "There is no .config file in the [ ${download_file} ]"
     fi
-
-    bash 
 
     sync && sleep 3
     echo -e "${INFO} [ ${imagebuilder_path} ] directory status: $(ls -al 2>/dev/null)"
@@ -279,9 +282,15 @@ custom_packages() {
     echo -e "${STEPS} Start adding custom packages..."
 
     # Create a [ packages ] directory
-    [[ -d "packages" ]] || mkdir packages
-    [[ -d "${custom_packages_path}" ]] || cp -rf ${custom_packages_path}/* packages
-    
+    [[ -d "packages" ]] || mkdir -p packages
+    if [[ -d "${custom_packages_path}" ]]; then
+        # Copy custom packages
+        cp -rf ${custom_packages_path}/* packages
+        echo -e "${INFO} [ packages ] directory status: $(ls packages -al 2>/dev/null)"
+    else
+        echo -e "${WARNING} No customized Packages were added."
+    fi
+
     cd packages
 
     # Download IPK From Github
@@ -415,7 +424,7 @@ custom_files() {
         sync && sleep 3
         echo -e "${INFO} [ files ] directory status: $(ls files -al 2>/dev/null)"
     else
-        echo -e "${INFO} No customized files were added."
+        echo -e "${WARNING} No customized files were added."
     fi
 }
 
@@ -521,6 +530,7 @@ rebuild_firmware() {
     EXCLUDED+=" -dnsmasq -libgd"
 
     # Rebuild firmware
+    make clean
     make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files"
 
     sync && sleep 3
