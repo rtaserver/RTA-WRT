@@ -176,38 +176,33 @@ jobs:
           df -hT ${PWD}
 
       - name: Prepare file First
-        id: prepare1
         run: |
           cd imagebuilder
           mkdir -p compiled_images
           if [[ "${{ env.TARGET_NAME }}" != "amlogic" ]]; then
-            for file in bin/targets/*/*/*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
+            # for file in bin/targets/*/*/*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
+            mv bin/targets/*/*/*.img.gz compiled_images/
           else
-            for file in bin/targets/*/*/*rootfs.tar.gz; do mv "$file" compiled_images; done
+            # for file in bin/targets/*/*/*rootfs.tar.gz; do mv "$file" compiled_images; done
+            mv bin/targets/*/*/*rootfs.tar.gz compiled_images/
           fi
           echo -e "INFO files list: \n$(ls -l compiled_images 2>/dev/null)"
 
       - name: Packaging OpenWrt For Amlogic
-        if: ${{ env.TARGET_NAME }} == 'amlogic' && !cancelled()
-        uses: ophub/amlogic-s9xxx-openwrt@main
-        with:
-          openwrt_path: imagebuilder/compiled_images/*rootfs.tar.gz
-          openwrt_board: ${{ env.openwrt_board }}
-          openwrt_kernel: 5.15.y_5.10.y
-          auto_kernel: true
-          kernel_repo: ophub/kernel
-          kernel_usage: stable
-          builder_name: RTA-WRT
+        run: |
+          cd imagebuilder
+          if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
+            git clone --depth 1 https://github.com/ophub/amlogic-s9xxx-openwrt.git
+            mkdir -p amlogic-s9xxx-openwrt/openwrt-armvirt
+            mv compiled_images/*rootfs.tar.gz amlogic-s9xxx-openwrt/openwrt-armvirt/
+            sudo ./amlogic-s9xxx-openwrt/remake -b ${{ env.openwrt_board }} -r ophub/kernel -u stable -k 5.15.y_5.10.y -a true -s 1024 -n RTA-WRT
+            mv ${{ env.PACKAGED_OUTPUTPATH }}/*.img.gz compiled_images/
+          fi
 
       - name: Prepare Before Uploads
         id: prepare2
         run: |
           cd imagebuilder
-          if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
-            cp -f ${{ env.PACKAGED_OUTPUTPATH }}/* compiled_images/
-            echo -e "INFO files list: \n$(ls -l compiled_images 2>/dev/null)"
-            # for file in compiled_images/*__amlogic_*.img.gz; do mv "$file" compiled_images/RTA-WRT_$(basename "$file" .img.gz).img.gz; done
-          fi
           search_replace_patterns=(
               "bcm27xx-bcm2710-rpi-3|Raspberry-Pi-3_ext4-sysupgrade"
               "bcm27xx-bcm2711-rpi-4|Raspberry-Pi-4_ext4-sysupgrade"
@@ -226,7 +221,7 @@ jobs:
               search="${pattern%%|*}"
               replace="${pattern##*|}"
 
-              for file in imagebuilder/compiled_images/*${search}*.img.gz; do
+              for file in compiled_images/*${search}*.img.gz; do
                   if [[ -f "$file" ]]; then
                       if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
                         kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
@@ -235,19 +230,19 @@ jobs:
                         new_name="RTA-WRT_OpenWrt-${{ env.RELEASES_TAG }}_${replace}.img.gz"
                       fi
                       echo "Renaming: $file -> $new_name"
-                      mv "$file" "imagebuilder/compiled_images/$new_name"
+                      mv "$file" "compiled_images/$new_name"
                   fi
               done
           done
           echo "status=success" >> ${GITHUB_OUTPUT}
-          ls -l compiled_images
+          echo -e "INFO files list: \n$(ls -l compiled_images 2>/dev/null)"
   
       - name: Upload the packaged OpenWrt
         uses: ncipollo/release-action@main
         if: ${{ steps.prepare2.outputs.status }} == 'success' && !cancelled()
         with:
           tag: OpenWrt_imagebuilder_${{ env.RELEASES_TAG }}
-          artifacts: imagebuilder/compiled_images*.img.gz
+          artifacts: imagebuilder/compiled_images/*.img.gz
           allowUpdates: true
           removeArtifacts: false
           replacesArtifacts: true
