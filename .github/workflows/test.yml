@@ -189,12 +189,13 @@ jobs:
       - name: Packaging OpenWrt For Amlogic
         run: |
           cd imagebuilder
+          chmod -R 755 compiled_images
           if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
             git clone --depth 1 https://github.com/ophub/amlogic-s9xxx-openwrt.git
             mkdir -p amlogic-s9xxx-openwrt/openwrt-armvirt
             mv compiled_images/*rootfs.tar.gz amlogic-s9xxx-openwrt/openwrt-armvirt/
             cd amlogic-s9xxx-openwrt
-            sudo ./remake -b ${{ env.openwrt_board }} -s 1024
+            sudo ./remake -b ${{ env.openwrt_board }} -k 5.15.y_5.10.y -s 1024
             for file in openwrt/out/*.img.gz; do mv "$file" ../compiled_images; done
           fi
 
