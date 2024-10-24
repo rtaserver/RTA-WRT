@@ -3,7 +3,7 @@
 # ENV
 msg() {
     local DATE=$(date '+%d %B %Y %T')
-    echo "[ INFO | $DATE ] $2" >> /root/setup.log
+    echo "[ INFO | $DATE ] $1" >> /root/setup.log
 }
 
 
@@ -117,7 +117,7 @@ set firewall.@zone[2].name='tun'
 set firewall.@zone[2].input='ACCEPT'
 set firewall.@zone[2].output='ACCEPT'
 set firewall.@zone[2].forward='REJECT'
-set firewall.@zone[2].network='chilli'
+add_list firewall.@zone[2].network='chilli'
 
 # Forwarding from TUN to WAN
 set firewall.@forwarding[1]=forwarding

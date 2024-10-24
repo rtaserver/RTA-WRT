@@ -3,7 +3,7 @@
 # ENV
 msg() {
     local DATE=$(date '+%d %B %Y %T')
-    echo "[ INFO | $DATE ] $2" >> /root/setup.log
+    echo "[ INFO | $DATE ] $1" >> /root/setup.log
 }
 
 
