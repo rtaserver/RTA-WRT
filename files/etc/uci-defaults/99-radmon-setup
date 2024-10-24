@@ -55,10 +55,10 @@ if ! grep -q '/etc/init.d/chilli restart' /etc/rc.local; then
     sed -i '/exit 0/i /etc/init.d/chilli restart' /etc/rc.local
 fi
 
-/etc/init.d/radiusd restart
-/etc/init.d/radiusd reload
-/etc/init.d/chilli restart
-/etc/init.d/chilli reload
+bash /etc/init.d/radiusd restart
+bash /etc/init.d/radiusd reload
+bash /etc/init.d/chilli restart
+bash /etc/init.d/chilli reload
 
 
 # Log success

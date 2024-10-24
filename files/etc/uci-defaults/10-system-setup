@@ -36,7 +36,8 @@ uci commit luci
 # Usage check_permission [ target dir ] = check_permission /usr/bin
 check_permission() {
     local DIR=${1:-.}
-    find "$DIR" | while read file; do
+
+    find "$DIR" -type f | while read file; do
         if file "$file" | grep -q "executable"; then
             if [ ! -x "$file" ]; then
                 echo "File requiring chmod +x: $file" >> /tmp/uci-defaults.log
