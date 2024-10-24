@@ -533,7 +533,7 @@ rebuild_firmware() {
 
     PACKAGES+=" node node-npm"
 
-    PACKAGES+=" luci-app-radmon-php8 luci-app-whatsapp-bot"
+    # PACKAGES+=" luci-app-radmon-php8 luci-app-whatsapp-bot"
 
     # Exclude package (must use - before packages name)
     EXCLUDED+=" -dnsmasq -libgd"

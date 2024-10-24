@@ -204,24 +204,24 @@ ln -s /usr/bin/php-cli /usr/bin/php
 # Setting Tinyfm
 ln -s / /www/tinyfm/rootfs
 
-# Setting Hotspot
-sed -i -E "s|option enabled '0'|option enabled '1'|g" /etc/config/mysqld
-sed -i -E "s|# datadir		= /srv/mysql|datadir	= /usr/share/mysql|g" /etc/mysql/conf.d/50-server.cnf
-sed -i -E "s|127.0.0.1|0.0.0.0|g" /etc/mysql/conf.d/50-server.cnf
-/etc/init.d/mysqld restart
-/etc/init.d/mysqld reload
-mysql -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('radius');"
-mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'radius';"
-mysql -u root -p"radius" <<EOF
-DELETE FROM mysql.user WHERE User='';
-DROP DATABASE IF EXISTS test;
-DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
-FLUSH PRIVILEGES;
-EOF
-mysql -u root -p"radius" -e "CREATE DATABASE radius CHARACTER SET utf8";
-mysql -u root -p"radius" -e "GRANT ALL ON radius.* TO 'radius'@'localhost' IDENTIFIED BY 'radius' WITH GRANT OPTION";
-mysql -u root -p"radius" radius -e "SET FOREIGN_KEY_CHECKS = 0; $(mysql -u root -p"radius" radius -e 'SHOW TABLES' | awk '{print "DROP TABLE IF EXISTS `" $1 "`;"}' | grep -v '^Tables' | tr '\n' ' ') SET FOREIGN_KEY_CHECKS = 1;"
-mysql -u root -p"radius" radius < /usr/share/radius_monitor.sql
+# # Setting Hotspot
+# sed -i -E "s|option enabled '0'|option enabled '1'|g" /etc/config/mysqld
+# sed -i -E "s|# datadir		= /srv/mysql|datadir	= /usr/share/mysql|g" /etc/mysql/conf.d/50-server.cnf
+# sed -i -E "s|127.0.0.1|0.0.0.0|g" /etc/mysql/conf.d/50-server.cnf
+# /etc/init.d/mysqld restart
+# /etc/init.d/mysqld reload
+# mysql -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('radius');"
+# mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'radius';"
+# mysql -u root -p"radius" <<EOF
+# DELETE FROM mysql.user WHERE User='';
+# DROP DATABASE IF EXISTS test;
+# DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';
+# FLUSH PRIVILEGES;
+# EOF
+# mysql -u root -p"radius" -e "CREATE DATABASE radius CHARACTER SET utf8";
+# mysql -u root -p"radius" -e "GRANT ALL ON radius.* TO 'radius'@'localhost' IDENTIFIED BY 'radius' WITH GRANT OPTION";
+# mysql -u root -p"radius" radius -e "SET FOREIGN_KEY_CHECKS = 0; $(mysql -u root -p"radius" radius -e 'SHOW TABLES' | awk '{print "DROP TABLE IF EXISTS `" $1 "`;"}' | grep -v '^Tables' | tr '\n' ' ') SET FOREIGN_KEY_CHECKS = 1;"
+# mysql -u root -p"radius" radius < /usr/share/radius_monitor.sql
 
 mv /www/phpmyadmin/config.sample.inc.php /www/phpmyadmin/config.inc.php
 sed -i -E "s|localhost|127.0.0.1|g" /www/phpmyadmin/config.inc.php
