@@ -47,6 +47,7 @@ set network.wan=interface
 set network.wan.proto='dhcp'
 set network.wan.device='eth1'
 set network.wan.metric='1'
+del network.wan6
 
 # Tethering interface
 set network.tethering=interface
