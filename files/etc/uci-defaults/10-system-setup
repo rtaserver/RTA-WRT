@@ -1,5 +1,14 @@
 #!/bin/sh
 
+# ENV
+msg() {
+    local DATE=$(date '+%d %B %Y %T')
+    echo "[ INFO | $DATE ] $2" >> /root/setup.log
+}
+
+
+# Step 1: Configure profile Dashboard
+msg "Step 1: Configure profile Dashboard"
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
 sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/rtawrt/' /etc/profile
 echo "clear1() {
@@ -10,37 +19,31 @@ echo "alias clear='/usr/bin/rtawrt'" >> /etc/profile
 
 sed -i "s#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' / ':'')+(luciversion||''),#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' build by RTA-WRT [Ouc3kNF6]':''),#g" /www/luci-static/resources/view/status/include/10_system.js
 
-if grep -q "ImmortalWrt" /etc/openwrt_release; then
-  sed -i "s/\(DISTRIB_DESCRIPTION='ImmortalWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
-  echo Branch version: "$(grep 'DISTRIB_DESCRIPTION=' /etc/openwrt_release | awk -F"'" '{print $2}')"
-elif grep -q "OpenWrt" /etc/openwrt_release; then
-  sed -i "s/\(DISTRIB_DESCRIPTION='OpenWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
-  echo Branch version: "$(grep 'DISTRIB_DESCRIPTION=' /etc/openwrt_release | awk -F"'" '{print $2}')"
-fi
-
 mv /www/luci-static/resources/view/status/include/29_temp.js /www/luci-static/resources/view/status/include/17_temp.js
 
-# Set login root password
+# Step 2: Configure Password Login OpenWrt
+msg "Step 2: Configure Password Login OpenWrt"
 (echo "rtawrt"; sleep 1; echo "rtawrt") | passwd > /dev/null
 
-# custom repo and Disable opkg signature check
+# Step 3: Add Custom Repo and Disable opkg signature check
+msg "Step 3: Add Custom Repo and Disable opkg signature check"
 sed -i 's/option check_signature/# option check_signature/g' /etc/opkg.conf
 echo "src/gz custom_arch https://dl.openwrt.ai/latest/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
 
-# set Material as default theme
+# Step 4: Set Material as default theme
+msg "Step 4: Set Material as default theme"
 uci set luci.main.mediaurlbase='/luci-static/material'
 uci commit luci
 
-# set All permission files
-# a process that will take a little time
-# Usage check_permission [ target dir ] = check_permission /usr/bin
+# Step 5: Set All permission files
+msg "Step 5: Set All permission files"
 check_permission() {
     local DIR=${1:-.}
 
     find "$DIR" -type f | while read file; do
         if file "$file" | grep -q "executable"; then
             if [ ! -x "$file" ]; then
-                echo "File requiring chmod +x: $file" >> /tmp/uci-defaults.log
+                msg "File requiring chmod +x: $file"
                 chmod +x "$file"
             fi
         fi
@@ -56,7 +59,7 @@ check_permission "/sbin"
 check_permission "/usr/bin"
 
 # Log success
-echo "System Setup settings successfully applied..." >> /tmp/uci-defaults.log
+msg "System Setup settings successfully applied..."
 
 # Remove this script after successful execution
 rm -f /etc/uci-defaults/$(basename $0)

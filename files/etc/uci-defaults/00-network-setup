@@ -1,6 +1,14 @@
 #!/bin/sh
 
+# ENV
+msg() {
+    local DATE=$(date '+%d %B %Y %T')
+    echo "[ INFO | $DATE ] $2" >> /root/setup.log
+}
+
+
 # Step 1: Configure devices (br-lan, br-voucher)
+msg "Step 1: Configure devices (br-lan, br-voucher)"
 uci batch <<EOF
 set network.@device[0]=device
 set network.@device[0].name='br-lan'
@@ -13,6 +21,7 @@ set network.@device[1].type='bridge'
 EOF
 
 # Step 2: Configure interfaces (lan, modemmanager, wan, tethering, chilli, hotspot_voucher)
+msg "Step 2: Configure interfaces (lan, modemmanager, wan, tethering, chilli, hotspot_voucher)"
 uci batch <<EOF
 # LAN interface
 set network.lan=interface
@@ -20,6 +29,7 @@ set network.lan.device='br-lan'
 set network.lan.proto='static'
 set network.lan.ipaddr='192.168.1.1'
 set network.lan.netmask='255.255.255.0'
+del network.lan.ip6assign
 
 # ModemManager interface
 set network.modemmanager=interface
@@ -57,10 +67,25 @@ set network.hotspot_voucher.netmask='255.255.255.0'
 set network.hotspot_voucher.device='br-voucher'
 EOF
 
-# Step 3: Configure DNS Forwarding (to 1.1.1.1 via DHCP)
-uci set dhcp.@dnsmasq[0].server='1.1.1.1'
+# Step 3: Configure And Add DNS Forwarding (to 1.1.1.1 via DHCP)
+msg "Step 3: Configure And Add DNS Forwarding (to 1.1.1.1 via DHCP)"
+uci batch <<EOF
+del dhcp.lan.ra
+del dhcp.lan.ra_slaac
+del dhcp.lan.ra_flags
+del dhcp.lan.dhcpv6
+del dhcp.@dnsmasq[0].nonwildcard
+del dhcp.@dnsmasq[0].noresolv
+del dhcp.@dnsmasq[0].boguspriv
+del dhcp.@dnsmasq[0].filterwin2k
+del dhcp.@dnsmasq[0].filter_aaaa
+del dhcp.@dnsmasq[0].filter_a
+del dhcp.@dnsmasq[0].nonegcache
+set dhcp.@dnsmasq[0].server='1.1.1.1'
+EOF
 
 # Step 4: Configure Firewall Zones and Forwarding
+msg "Step 4: Configure Firewall Zones and Forwarding"
 uci batch <<EOF
 # LAN zone
 set firewall.@zone[0]=zone
@@ -85,21 +110,22 @@ set firewall.@forwarding[0]=forwarding
 set firewall.@forwarding[0].src='lan'
 set firewall.@forwarding[0].dest='wan'
 
-# Chilli zone
+# TUN zone
 set firewall.@zone[2]=zone
-set firewall.@zone[2].name='chilli'
+set firewall.@zone[2].name='tun'
 set firewall.@zone[2].input='ACCEPT'
 set firewall.@zone[2].output='ACCEPT'
 set firewall.@zone[2].forward='REJECT'
-list firewall.@zone[2].network='chilli'
+set firewall.@zone[2].network='chilli'
 
-# Forwarding from Chilli to WAN
+# Forwarding from TUN to WAN
 set firewall.@forwarding[1]=forwarding
-set firewall.@forwarding[1].src='chilli'
+set firewall.@forwarding[1].src='tun'
 set firewall.@forwarding[1].dest='wan'
 EOF
 
-# Step 5: Setup Wireless
+# Step 5: Configure Wireless
+msg "Step 5: Configure Wireless"
 uci batch <<EOF
 set wireless.@wifi-device[0].disabled='0'
 set wireless.@wifi-iface[0].disabled='0'
@@ -110,10 +136,11 @@ set wireless.@wifi-device[0].channel='1'
 set wireless.@wifi-device[0].band='2g'
 EOF
 if [ $? -ne 0 ]; then
-    echo "Wireless Not Found" >> /tmp/uci-defaults.log
+    msg "Wireless Not Found"
 fi
 
-# Commit changes and restart services
+# Step 6: Commit changes and restart services
+msg "Step 6: Commit changes and restart services"
 uci commit network
 uci commit dhcp
 uci commit firewall
@@ -124,7 +151,7 @@ uci commit wireless
 wifi reload && wifi up
 
 # Log success
-echo "Network Setup settings successfully applied..." >> /tmp/uci-defaults.log
+msg "Network Setup settings successfully applied..."
 
 # Remove this script after successful execution
 rm -f /etc/uci-defaults/$(basename $0)

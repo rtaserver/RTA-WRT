@@ -412,11 +412,11 @@ custom_config() {
     echo -e "${STEPS} Downloading files for hotspot" 
     dl_zip_gh "Maizil41/RadiusMonitor:main" "${custom_files_path}/usr/share/RadiusMonitor"
     dl_zip_gh "Maizil41/hotspotlogin:main" "${custom_files_path}/usr/share/hotspotlogin"
-    dl_zip_gh "Maizil41/whatsapp-bot:main" "${custom_files_path}/root/whatsapp"
-    mv ${custom_files_path}/root/whatsapp/luci-app-whatsapp-bot/root/root/whatsapp-bot ${custom_files_path}/root/whatsapp-bot
-    rm -rf ${custom_files_path}/root/whatsapp
+    #dl_zip_gh "Maizil41/whatsapp-bot:main" "${custom_files_path}/root/whatsapp"
+    #mv ${custom_files_path}/root/whatsapp/luci-app-whatsapp-bot/root/root/whatsapp-bot ${custom_files_path}/root/whatsapp-bot
+    #rm -rf ${custom_files_path}/root/whatsapp
 
-    dl_zip_gh "phpmyadmin/phpmyadmin:STABLE" "${custom_files_path}/root/www/phpmyadmin"
+    dl_zip_gh "phpmyadmin/phpmyadmin:STABLE" "${custom_files_path}/www/phpmyadmin"
 
     echo -e "${INFO} All custom configuration setup completed!"
 }
@@ -533,8 +533,6 @@ rebuild_firmware() {
     freeradius3-mod-unix freeradius3-utils libfreetype wget-ssl curl unzip tar zoneinfo-asia coova-chilli"
 
     PACKAGES+=" node node-npm"
-
-    # PACKAGES+=" luci-app-radmon-php8 luci-app-whatsapp-bot"
 
     # Exclude package (must use - before packages name)
     EXCLUDED+=" -dnsmasq -libgd"

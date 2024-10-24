@@ -1,5 +1,17 @@
 #!/bin/sh
 
+# ENV
+msg() {
+    local DATE=$(date '+%d %B %Y %T')
+    echo "[ INFO | $DATE ] $2" >> /root/setup.log
+}
+
+
+# remove sysinfo banner
+if opkg list-installed | grep -q "^luci-app-amlogic "; then
+    rm -rf /etc/profile.d/30-sysinfo.sh
+fi
+
 # remove login password required when accessing terminal
 uci set ttyd.@ttyd[0].command='/bin/bash --login'
 uci commit ttyd
@@ -53,7 +65,7 @@ sed -i -E "s|localhost|127.0.0.1|g" /www/phpmyadmin/config.inc.php
 sed -i "/\$cfg\['Servers'\]\[.*\]\['AllowNoPassword'\] = false;/a \$cfg\['AllowThirdPartyFraming'\] = true;" /www/phpmyadmin/config.inc.php
 
 # Log success
-echo "Misc Setup settings successfully applied..." >> /tmp/uci-defaults.log
+echo "Misc Setup settings successfully applied..." >> /root/setup.log
 
 # Remove this script after successful execution
 rm -f /etc/uci-defaults/$(basename $0)
