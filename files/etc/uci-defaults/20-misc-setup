@@ -1,11 +1,11 @@
 #!/bin/sh
 
 # ENV
-exec > /root/setup.log 2>&1
+exec > /root/misc-setup.log 2>&1
 
 msg() {
     local DATE=$(date '+%d %B %Y %T')
-    echo "[ INFO | $DATE ] $1" >> /root/setup.log
+    echo "[ INFO | $DATE ] $1" >> /root/misc-setup.log
 }
 
 

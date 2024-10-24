@@ -1,11 +1,11 @@
 #!/bin/sh
 
 # ENV
-exec > /root/setup.log 2>&1
+exec > /root/$(basename $0).log 2>&1
 
 msg() {
     local DATE=$(date '+%d %B %Y %T')
-    echo "[ INFO | $DATE ] $1" >> /root/setup.log
+    echo "[ INFO | $DATE ] $1" >> /root/$(basename $0).log
 }
 
 
@@ -107,17 +107,17 @@ uci set firewall.@forwarding[0].src='lan'
 uci set firewall.@forwarding[0].dest='wan'
 
 # TUN zone
-uci set firewall.@zone[2]=zone
-uci set firewall.@zone[2].name='tun'
-uci set firewall.@zone[2].input='ACCEPT'
-uci set firewall.@zone[2].output='ACCEPT'
-uci set firewall.@zone[2].forward='REJECT'
-uci add_list firewall.@zone[2].network='chilli'
+uci add firewall zone
+uci set firewall.@zone[-1].name='tun'
+uci set firewall.@zone[-1].input='ACCEPT'
+uci set firewall.@zone[-1].output='ACCEPT'
+uci set firewall.@zone[-1].forward='REJECT'
+uci add_list firewall.@zone[-1].network='chilli'
 
 # Forwarding from TUN to WAN
-uci set firewall.@forwarding[1]=forwarding
-uci set firewall.@forwarding[1].src='tun'
-uci set firewall.@forwarding[1].dest='wan'
+uci add firewall forwarding
+uci set firewall.@forwarding[-1].src='tun'
+uci set firewall.@forwarding[-1].dest='wan'
 
 # Step 5: Configure Wireless
 msg "Step 5: Configure Wireless"
@@ -129,16 +129,12 @@ uci set wireless.@wifi-iface[0].ssid='RTA-WRT_2g'
 uci set wireless.@wifi-device[0].channel='1'
 uci set wireless.@wifi-device[0].band='2g'
 
-# Step 6: Commit changes and restart services
-msg "Step 6: Commit changes and restart services"
+# Step 6: Commit changes
+msg "Step 6: Commit changes"
 uci commit network
 uci commit dhcp
 uci commit firewall
 uci commit wireless
-/etc/init.d/network restart
-/etc/init.d/dnsmasq restart
-/etc/init.d/firewall restart
-wifi reload && wifi up
 
 # Log success
 msg "Network Setup settings successfully applied..."
