@@ -1,6 +1,8 @@
 #!/bin/sh
 
 # ENV
+exec > /root/setup.log 2>&1
+
 msg() {
     local DATE=$(date '+%d %B %Y %T')
     echo "[ INFO | $DATE ] $1" >> /root/setup.log

@@ -1,6 +1,8 @@
 #!/bin/sh
 
 # ENV
+exec > /root/setup.log 2>&1
+
 msg() {
     local DATE=$(date '+%d %B %Y %T')
     echo "[ INFO | $DATE ] $1" >> /root/setup.log
@@ -65,7 +67,7 @@ sed -i -E "s|localhost|127.0.0.1|g" /www/phpmyadmin/config.inc.php
 sed -i "/\$cfg\['Servers'\]\[.*\]\['AllowNoPassword'\] = false;/a \$cfg\['AllowThirdPartyFraming'\] = true;" /www/phpmyadmin/config.inc.php
 
 # Log success
-echo "Misc Setup settings successfully applied..." >> /root/setup.log
+msg "Misc Setup settings successfully applied..."
 
 # Remove this script after successful execution
 rm -f /etc/uci-defaults/$(basename $0)

@@ -1,6 +1,8 @@
 #!/bin/sh
 
 # ENV
+exec > /root/setup.log 2>&1
+
 msg() {
     local DATE=$(date '+%d %B %Y %T')
     echo "[ INFO | $DATE ] $1" >> /root/setup.log
@@ -9,136 +11,123 @@ msg() {
 
 # Step 1: Configure devices (br-lan, br-voucher)
 msg "Step 1: Configure devices (br-lan, br-voucher)"
-uci batch <<EOF
-set network.@device[0]=device
-set network.@device[0].name='br-lan'
-set network.@device[0].type='bridge'
-add_list network.@device[0].ports='eth0'
+uci set network.@device[0]=device
+uci set network.@device[0].name='br-lan'
+uci set network.@device[0].type='bridge'
+uci add_list network.@device[0].ports='eth0'
 
-set network.@device[1]=device
-set network.@device[1].name='br-voucher'
-set network.@device[1].type='bridge'
-EOF
+uci set network.@device[1]=device
+uci set network.@device[1].name='br-voucher'
+uci set network.@device[1].type='bridge'
 
 # Step 2: Configure interfaces (lan, modemmanager, wan, tethering, chilli, hotspot_voucher)
 msg "Step 2: Configure interfaces (lan, modemmanager, wan, tethering, chilli, hotspot_voucher)"
-uci batch <<EOF
 # LAN interface
-set network.lan=interface
-set network.lan.device='br-lan'
-set network.lan.proto='static'
-set network.lan.ipaddr='192.168.1.1'
-set network.lan.netmask='255.255.255.0'
-del network.lan.ip6assign
+uci set network.lan=interface
+uci set network.lan.device='br-lan'
+uci set network.lan.proto='static'
+uci set network.lan.ipaddr='192.168.1.1'
+uci set network.lan.netmask='255.255.255.0'
+uci del network.lan.ip6assign
 
 # ModemManager interface
-set network.modemmanager=interface
-set network.modemmanager.proto='modemmanager'
-set network.modemmanager.device='/sys/devices/pci0000:00/0000:00:15.0/usb2/2-1/2-1.1'
-set network.modemmanager.apn='internet'
-set network.modemmanager.auth='none'
-set network.modemmanager.iptype='ipv4'
-set network.modemmanager.loglevel='ERR'
-set network.modemmanager.metric='10'
-set network.modemmanager.force_connection='1'
+uci set network.modemmanager=interface
+uci set network.modemmanager.proto='modemmanager'
+uci set network.modemmanager.device='/sys/devices/pci0000:00/0000:00:15.0/usb2/2-1/2-1.1'
+uci set network.modemmanager.apn='internet'
+uci set network.modemmanager.auth='none'
+uci set network.modemmanager.iptype='ipv4'
+uci set network.modemmanager.loglevel='ERR'
+uci set network.modemmanager.metric='10'
+uci set network.modemmanager.force_connection='1'
 
 # WAN interface
-set network.wan=interface
-set network.wan.proto='dhcp'
-set network.wan.device='eth1'
-set network.wan.metric='1'
-del network.wan6
+uci set network.wan=interface
+uci set network.wan.proto='dhcp'
+uci set network.wan.device='eth1'
+uci set network.wan.metric='1'
+uci del network.wan6
 
 # Tethering interface
-set network.tethering=interface
-set network.tethering.proto='dhcp'
-set network.tethering.device='usb0'
-set network.tethering.metric='2'
+uci set network.tethering=interface
+uci set network.tethering.proto='dhcp'
+uci set network.tethering.device='usb0'
+uci set network.tethering.metric='2'
 
 # Chilli interface
-set network.chilli=interface
-set network.chilli.proto='none'
-set network.chilli.device='tun0'
+uci set network.chilli=interface
+uci set network.chilli.proto='none'
+uci set network.chilli.device='tun0'
 
 # Hotspot Voucher interface
-set network.hotspot_voucher=interface
-set network.hotspot_voucher.proto='static'
-set network.hotspot_voucher.ipaddr='10.10.30.1'
-set network.hotspot_voucher.netmask='255.255.255.0'
-set network.hotspot_voucher.device='br-voucher'
-EOF
+uci set network.hotspot_voucher=interface
+uci set network.hotspot_voucher.proto='static'
+uci set network.hotspot_voucher.ipaddr='10.10.30.1'
+uci set network.hotspot_voucher.netmask='255.255.255.0'
+uci set network.hotspot_voucher.device='br-voucher'
 
 # Step 3: Configure And Add DNS Forwarding (to 1.1.1.1 via DHCP)
 msg "Step 3: Configure And Add DNS Forwarding (to 1.1.1.1 via DHCP)"
-uci batch <<EOF
-del dhcp.lan.ra
-del dhcp.lan.ra_slaac
-del dhcp.lan.ra_flags
-del dhcp.lan.dhcpv6
-del dhcp.@dnsmasq[0].nonwildcard
-del dhcp.@dnsmasq[0].noresolv
-del dhcp.@dnsmasq[0].boguspriv
-del dhcp.@dnsmasq[0].filterwin2k
-del dhcp.@dnsmasq[0].filter_aaaa
-del dhcp.@dnsmasq[0].filter_a
-del dhcp.@dnsmasq[0].nonegcache
-set dhcp.@dnsmasq[0].server='1.1.1.1'
-EOF
+uci del dhcp.lan.ra
+uci del dhcp.lan.ra_slaac
+uci del dhcp.lan.ra_flags
+uci del dhcp.lan.dhcpv6
+uci del dhcp.@dnsmasq[0].nonwildcard
+uci del dhcp.@dnsmasq[0].noresolv
+uci del dhcp.@dnsmasq[0].boguspriv
+uci del dhcp.@dnsmasq[0].filterwin2k
+uci del dhcp.@dnsmasq[0].filter_aaaa
+uci del dhcp.@dnsmasq[0].filter_a
+uci del dhcp.@dnsmasq[0].nonegcache
+uci add_list dhcp.@dnsmasq[0].server='1.1.1.1'
 
 # Step 4: Configure Firewall Zones and Forwarding
 msg "Step 4: Configure Firewall Zones and Forwarding"
-uci batch <<EOF
 # LAN zone
-set firewall.@zone[0]=zone
-set firewall.@zone[0].name='lan'
-set firewall.@zone[0].input='ACCEPT'
-set firewall.@zone[0].output='ACCEPT'
-set firewall.@zone[0].forward='ACCEPT'
-set firewall.@zone[0].network='lan hotspot_voucher'
+uci set firewall.@zone[0]=zone
+uci set firewall.@zone[0].name='lan'
+uci set firewall.@zone[0].input='ACCEPT'
+uci set firewall.@zone[0].output='ACCEPT'
+uci set firewall.@zone[0].forward='ACCEPT'
+uci set firewall.@zone[0].network='lan hotspot_voucher'
 
 # WAN zone
-set firewall.@zone[1]=zone
-set firewall.@zone[1].name='wan'
-set firewall.@zone[1].input='REJECT'
-set firewall.@zone[1].output='ACCEPT'
-set firewall.@zone[1].forward='REJECT'
-set firewall.@zone[1].masq='1'
-set firewall.@zone[1].mtu_fix='1'
-set firewall.@zone[1].network='wan modemmanager tethering'
+uci set firewall.@zone[1]=zone
+uci set firewall.@zone[1].name='wan'
+uci set firewall.@zone[1].input='REJECT'
+uci set firewall.@zone[1].output='ACCEPT'
+uci set firewall.@zone[1].forward='REJECT'
+uci set firewall.@zone[1].masq='1'
+uci set firewall.@zone[1].mtu_fix='1'
+uci set firewall.@zone[1].network='wan modemmanager tethering'
 
 # Forwarding from LAN to WAN
-set firewall.@forwarding[0]=forwarding
-set firewall.@forwarding[0].src='lan'
-set firewall.@forwarding[0].dest='wan'
+uci set firewall.@forwarding[0]=forwarding
+uci set firewall.@forwarding[0].src='lan'
+uci set firewall.@forwarding[0].dest='wan'
 
 # TUN zone
-set firewall.@zone[2]=zone
-set firewall.@zone[2].name='tun'
-set firewall.@zone[2].input='ACCEPT'
-set firewall.@zone[2].output='ACCEPT'
-set firewall.@zone[2].forward='REJECT'
-add_list firewall.@zone[2].network='chilli'
+uci set firewall.@zone[2]=zone
+uci set firewall.@zone[2].name='tun'
+uci set firewall.@zone[2].input='ACCEPT'
+uci set firewall.@zone[2].output='ACCEPT'
+uci set firewall.@zone[2].forward='REJECT'
+uci add_list firewall.@zone[2].network='chilli'
 
 # Forwarding from TUN to WAN
-set firewall.@forwarding[1]=forwarding
-set firewall.@forwarding[1].src='tun'
-set firewall.@forwarding[1].dest='wan'
-EOF
+uci set firewall.@forwarding[1]=forwarding
+uci set firewall.@forwarding[1].src='tun'
+uci set firewall.@forwarding[1].dest='wan'
 
 # Step 5: Configure Wireless
 msg "Step 5: Configure Wireless"
-uci batch <<EOF
-set wireless.@wifi-device[0].disabled='0'
-set wireless.@wifi-iface[0].disabled='0'
-set wireless.@wifi-iface[0].encryption='none'
-set wireless.@wifi-device[0].country='ID'
-set wireless.@wifi-iface[0].ssid='RTA-WRT_2g'
-set wireless.@wifi-device[0].channel='1'
-set wireless.@wifi-device[0].band='2g'
-EOF
-if [ $? -ne 0 ]; then
-    msg "Wireless Not Found"
-fi
+uci set wireless.@wifi-device[0].disabled='0'
+uci set wireless.@wifi-iface[0].disabled='0'
+uci set wireless.@wifi-iface[0].encryption='none'
+uci set wireless.@wifi-device[0].country='ID'
+uci set wireless.@wifi-iface[0].ssid='RTA-WRT_2g'
+uci set wireless.@wifi-device[0].channel='1'
+uci set wireless.@wifi-device[0].band='2g'
 
 # Step 6: Commit changes and restart services
 msg "Step 6: Commit changes and restart services"
