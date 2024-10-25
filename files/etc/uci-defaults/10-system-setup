@@ -5,7 +5,7 @@ exec > /root/system-setup.log 2>&1
 
 msg() {
     local DATE=$(date '+%d %B %Y %T')
-    echo "[ INFO | $DATE ] $1" >> /root/system-setup.log
+    echo "[ INFO SYSTEM ] $1"
 }
 
 
@@ -18,24 +18,26 @@ echo "clear1() {
 }
 alias clear1='clear1'" >> /etc/profile
 echo "alias clear='/usr/bin/rtawrt'" >> /etc/profile
-
 sed -i "s#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' / ':'')+(luciversion||''),#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' build by RTA-WRT [Ouc3kNF6]':''),#g" /www/luci-static/resources/view/status/include/10_system.js
-
 mv /www/luci-static/resources/view/status/include/29_temp.js /www/luci-static/resources/view/status/include/17_temp.js
+
 
 # Step 2: Configure Password Login OpenWrt
 msg "Step 2: Configure Password Login OpenWrt"
 (echo "rtawrt"; sleep 1; echo "rtawrt") | passwd > /dev/null
+
 
 # Step 3: Add Custom Repo and Disable opkg signature check
 msg "Step 3: Add Custom Repo and Disable opkg signature check"
 sed -i 's/option check_signature/# option check_signature/g' /etc/opkg.conf
 echo "src/gz custom_arch https://dl.openwrt.ai/latest/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
 
+
 # Step 4: Set Material as default theme
 msg "Step 4: Set Material as default theme"
 uci set luci.main.mediaurlbase='/luci-static/material'
 uci commit luci
+
 
 # Step 5: Set All permission files
 msg "Step 5: Set All permission files"
@@ -59,6 +61,7 @@ check_permission "/lib/netifd"
 check_permission "/lib/wifi"
 check_permission "/sbin"
 check_permission "/usr/bin"
+
 
 # Log success
 msg "System Setup settings successfully applied..."

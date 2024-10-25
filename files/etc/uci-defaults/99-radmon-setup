@@ -5,7 +5,7 @@ exec > /root/radmon-setup.log 2>&1
 
 msg() {
     local DATE=$(date '+%d %B %Y %T')
-    echo "[ INFO | $DATE ] $1" >> /root/radmon-setup.log
+    echo "[ INFO RADMON ] $1"
 }
 
 
@@ -13,6 +13,7 @@ msg() {
 msg "Step 1: Add link Hotspotlogin And RadiusMonitor"
 ln -s /usr/share/hotspotlogin /www/hotspotlogin
 ln -s /usr/share/RadiusMonitor /www/RadiusMonitor
+
 
 # Step 2: Configure MySQL / Maridb
 msg "Step 1: Configure MySQL / Maridb"
@@ -34,6 +35,7 @@ mysql -u root -p"radius" -e "GRANT ALL ON radius.* TO 'radius'@'localhost' IDENT
 mysql -u root -p"radius" radius -e "SET FOREIGN_KEY_CHECKS = 0; $(mysql -u root -p"radius" radius -e 'SHOW TABLES' | awk '{print "DROP TABLE IF EXISTS `" $1 "`;"}' | grep -v '^Tables' | tr '\n' ' ') SET FOREIGN_KEY_CHECKS = 1;"
 mysql -u root -p"radius" radius < /usr/share/radius_monitor.sql
 mysql -u root -p"radius" radius < /usr/share/RadiusMonitor/radmon.sql
+
 
 # Step 3: Configure Freeradius
 msg "Step 2: Configure Freeradius"
@@ -57,21 +59,21 @@ ln -s ../mods-available/realm
 ln -s ../mods-available/sql
 ln -s ../mods-available/sradutmp
 ln -s ../mods-available/unix
-
 cd /etc/freeradius3/sites-enabled
 ln -s ../sites-available/default
 ln -s ../sites-available/inner-tunnel
+
 
 # Step 4: Add Restart Freeradius And Chilli To RC Local
 msg "Step 3: Add Restart Freeradius And Chilli To RC Local"
 if ! grep -q '/etc/init.d/radiusd restart' /etc/rc.local; then
     sed -i '/exit 0/i /etc/init.d/radiusd restart' /etc/rc.local
 fi
-
 chmod +x /etc/init.d/chilli
 if ! grep -q '/etc/init.d/chilli restart' /etc/rc.local; then
     sed -i '/exit 0/i /etc/init.d/chilli restart' /etc/rc.local
 fi
+
 
 # Step 5: Configure MySQL / Maridb
 msg "Step 1: Configure MySQL / Maridb"
@@ -86,5 +88,3 @@ msg "Radmon Setup settings successfully applied..."
 
 # Remove this script after successful execution
 rm -f /etc/uci-defaults/$(basename $0)
-msg "Device Will Reboot"
-reboot

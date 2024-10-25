@@ -1,11 +1,11 @@
 #!/bin/sh
 
 # ENV
-exec > /root/$(basename $0).log 2>&1
+exec > /root/network-setup.log 2>&1
 
 msg() {
     local DATE=$(date '+%d %B %Y %T')
-    echo "[ INFO | $DATE ] $1" >> /root/$(basename $0).log
+    echo "[ INFO NETWORK ] $1"
 }
 
 
@@ -19,6 +19,7 @@ uci add_list network.@device[0].ports='eth0'
 uci set network.@device[1]=device
 uci set network.@device[1].name='br-voucher'
 uci set network.@device[1].type='bridge'
+
 
 # Step 2: Configure interfaces (lan, modemmanager, wan, tethering, chilli, hotspot_voucher)
 msg "Step 2: Configure interfaces (lan, modemmanager, wan, tethering, chilli, hotspot_voucher)"
@@ -66,23 +67,9 @@ uci set network.hotspot_voucher.ipaddr='10.10.30.1'
 uci set network.hotspot_voucher.netmask='255.255.255.0'
 uci set network.hotspot_voucher.device='br-voucher'
 
-# Step 3: Configure And Add DNS Forwarding (to 1.1.1.1 via DHCP)
-msg "Step 3: Configure And Add DNS Forwarding (to 1.1.1.1 via DHCP)"
-uci del dhcp.lan.ra
-uci del dhcp.lan.ra_slaac
-uci del dhcp.lan.ra_flags
-uci del dhcp.lan.dhcpv6
-uci del dhcp.@dnsmasq[0].nonwildcard
-uci del dhcp.@dnsmasq[0].noresolv
-uci del dhcp.@dnsmasq[0].boguspriv
-uci del dhcp.@dnsmasq[0].filterwin2k
-uci del dhcp.@dnsmasq[0].filter_aaaa
-uci del dhcp.@dnsmasq[0].filter_a
-uci del dhcp.@dnsmasq[0].nonegcache
-uci add_list dhcp.@dnsmasq[0].server='1.1.1.1'
 
-# Step 4: Configure Firewall Zones and Forwarding
-msg "Step 4: Configure Firewall Zones and Forwarding"
+# Step 3: Configure Firewall Zones and Forwarding
+msg "Step 3: Configure Firewall Zones and Forwarding"
 # LAN zone
 uci set firewall.@zone[0]=zone
 uci set firewall.@zone[0].name='lan'
@@ -119,8 +106,9 @@ uci add firewall forwarding
 uci set firewall.@forwarding[-1].src='tun'
 uci set firewall.@forwarding[-1].dest='wan'
 
-# Step 5: Configure Wireless
-msg "Step 5: Configure Wireless"
+
+# Step 4: Configure Wireless
+msg "Step 4: Configure Wireless"
 uci set wireless.@wifi-device[0].disabled='0'
 uci set wireless.@wifi-iface[0].disabled='0'
 uci set wireless.@wifi-iface[0].encryption='none'
@@ -129,12 +117,38 @@ uci set wireless.@wifi-iface[0].ssid='RTA-WRT_2g'
 uci set wireless.@wifi-device[0].channel='1'
 uci set wireless.@wifi-device[0].band='2g'
 
+
+# Step 5: Configure And Add DNS Forwarding (to 1.1.1.1 via DHCP)
+msg "Step 5: Configure And Add DNS Forwarding (to 1.1.1.1 via DHCP)"
+uci del dhcp.cfg01411c
+uci set dhcp.dhcp=dnsmasq
+uci add dhcp srvhost
+uci set dhcp.dhcp.domainneeded='1'
+uci set dhcp.dhcp.local='/lan/'
+uci set dhcp.dhcp.domain='lan'
+uci set dhcp.dhcp.expandhosts='1'
+uci add_list dhcp.dhcp.server='1.1.1.1'
+uci set dhcp.dhcp.rebind_protection='1'
+uci set dhcp.dhcp.rebind_localhost='1'
+uci set dhcp.dhcp.localservice='1'
+uci set dhcp.dhcp.readethers='1'
+uci set dhcp.dhcp.leasefile='/tmp/dhcp.leases'
+uci set dhcp.dhcp.resolvfile='/tmp/resolv.conf.d/resolv.conf.auto'
+uci set dhcp.dhcp.localise_queries='1'
+uci del dhcp.@srvhost[-1]
+uci del dhcp.lan.ra
+uci del dhcp.lan.ra_slaac
+uci del dhcp.lan.ra_flags
+uci del dhcp.lan.dhcpv6
+
+
 # Step 6: Commit changes
 msg "Step 6: Commit changes"
 uci commit network
-uci commit dhcp
 uci commit firewall
 uci commit wireless
+uci commit dhcp
+
 
 # Log success
 msg "Network Setup settings successfully applied..."

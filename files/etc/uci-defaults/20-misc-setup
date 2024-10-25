@@ -5,66 +5,89 @@ exec > /root/misc-setup.log 2>&1
 
 msg() {
     local DATE=$(date '+%d %B %Y %T')
-    echo "[ INFO | $DATE ] $1" >> /root/misc-setup.log
+    echo "[ INFO MISC ] $1"
 }
 
 
-# remove sysinfo banner
+# Step 1: Remove sysinfo banner if Devices Amlogic
+# Step 1: Remove sysinfo banner if Devices Amlogic
+msg "Step 1: Remove sysinfo banner if Devices Amlogic"
 if opkg list-installed | grep -q "^luci-app-amlogic "; then
     rm -rf /etc/profile.d/30-sysinfo.sh
 fi
 
-# remove login password required when accessing terminal
+
+# Step 2: Remove login password required when accessing terminal
+msg "Step 2: Remove login password required when accessing terminal"
 uci set ttyd.@ttyd[0].command='/bin/bash --login'
 uci commit ttyd
 
-# remove huawei me909s usb-modeswitch
+
+# Step 3: Remove huawei me909s usb-modeswitch
+msg "Step 3: Remove huawei me909s usb-modeswitch"
 sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
 
-# remove dw5821e usb-modeswitch
+
+# Step 4: Remove dw5821e usb-modeswitch
+msg "Step 4: Remove dw5821e usb-modeswitch"
 sed -i -e '/413c:81d7/,+5d' /etc/usb-mode.json
 
-# Disable /etc/config/xmm-modem
+
+# Step 5: Disable /etc/config/xmm-modem
+msg "Step 5: Disable /etc/config/xmm-modem"
 uci set xmm-modem.@xmm-modem[0].enable='0'
 uci commit xmm-modem
 
-# setup nlbwmon database dir
+
+# Step 6: Setup Nlbwmon Database Dir
+msg "Step 6: Setup Nlbwmon Database Dir"
 uci set nlbwmon.@nlbwmon[0].database_directory='/etc/nlbwmon'
 uci set nlbwmon.@nlbwmon[0].commit_interval='3h'
 uci set nlbwmon.@nlbwmon[0].refresh_interval='60s'
 uci commit nlbwmon
 bash /etc/init.d/nlbwmon restart
 
-# setup auto vnstat database backup
+
+# Step 7: Setup Auto Vnstat Database Backup
+msg "Step 7: Setup Auto Vnstat Database Backup"
 sed -i 's/;DatabaseDir "\/var\/lib\/vnstat"/DatabaseDir "\/etc\/vnstat"/' /etc/vnstat.conf
 mkdir -p /etc/vnstat
 chmod +x /etc/init.d/vnstat_backup
 bash /etc/init.d/vnstat_backup enable
 
-# adjusting app catagory
+
+# Step 8: Adjusting App Catagory
+msg "Step 8: Adjusting App Catagory"
 sed -i -E "s|status|services|g" /usr/lib/lua/luci/controller/base64.lua
 
-# configurating openclash
+
+# Step 9: Configurating OpenClash
+msg "Step 9: Configurating OpenClash"
 bash /usr/bin/patchoc.sh
 sed -i '/exit 0/i #/usr/bin/patchoc.sh' /etc/rc.local
 ln -s /etc/openclash/history/config-wrt.db /etc/openclash/cache.db
 ln -s /etc/openclash/core/clash_meta  /etc/openclash/clash
 
-# adding new line for enable i2c oled display
+
+# Step 10: Adding New Line For Enable i2c Oled Display if Devices Supported
+msg "Step 10: Adding New Line For Enable i2c Oled Display if Devices Supported"
 if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
     echo -e "\ndtparam=i2c1=on\ndtparam=spi=on\ndtparam=i2s=on" >> /boot/config.txt
 fi
 
-# Setup PHP
+
+# Step 11: Setup PHP And PhpMyAdmni
+msg "Step 11: Setup PHP And PhpMyAdmni"
 ln -s /usr/bin/php-cli /usr/bin/php
-
-# Setting Tinyfm
-ln -s / /www/tinyfm/rootfs
-
-# Setting PHPMyAdmin
 mv /www/phpmyadmin/config.sample.inc.php /www/phpmyadmin/config.inc.php
 sed -i -E "s|localhost|127.0.0.1|g" /www/phpmyadmin/config.inc.php
 sed -i "/\$cfg\['Servers'\]\[.*\]\['AllowNoPassword'\] = false;/a \$cfg\['AllowThirdPartyFraming'\] = true;" /www/phpmyadmin/config.inc.php
+
+
+# Step 12: Setting Tinyfm
+msg "Step 12: Setting Tinyfm"
+ln -s / /www/tinyfm/rootfs
+
 
 # Log success
 msg "Misc Setup settings successfully applied..."
