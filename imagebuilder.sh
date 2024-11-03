@@ -311,8 +311,6 @@ custom_packages() {
     github_packages+=(
         "luci-app-netmonitor|https://api.github.com/repos/rtaserver/rta-packages/releases"
         "luci-app-base64|https://api.github.com/repos/rtaserver/rta-packages/releases"
-        "luci-app-whatsapp-bot|https://api.github.com/repos/Maizil41/whatsapp-bot/releases"
-        "luci-app-radmon-php8|https://api.github.com/repos/Maizil41/RadiusMonitor/releases"
     )
     download_packages "github" github_packages[@]
 
@@ -358,18 +356,37 @@ custom_packages() {
     openclash_file="luci-app-openclash"
     openclash_file_down="$(curl -s ${openclash_api} | grep "browser_download_url" | grep -oE "https.*${openclash_file}.*.ipk" | head -n 1)"
 
+    echo -e "${STEPS} Start Clash Core Download !"
+    core_dir="${custom_files_path}/etc/openclash/core"
+    mkdir -p $core_dir
+    if [[ "$ARCH_3" == "x86_64" ]]; then
+        clash_meta="$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest"
+        meta_file="mihomo-linux-$ARCH_1-compatible" && curl -s ${meta_api} | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)"
+    else
+        clash_meta="$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest"
+        meta_file="mihomo-linux-$ARCH_1" && curl -s ${meta_api} | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)"
+    fi
+
     # Mihomo
     mihomo_api="https://api.github.com/repos/rtaserver/OpenWrt-mihomo-Mod/releases"
     mihomo_file="mihomo_${ARCH_3}"
     mihomo_file_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file}.*.tar.gz" | head -n 1)"
                         
     # Output download information
-    echo -e "${STEPS} Installing OpenClash, Mihomo"
+    echo -e "${STEPS} Installing OpenClash, core And Mihomo"
 
     echo -e "${INFO} Downloading OpenClash package"
     curl -fsSOL ${openclash_file_down}
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download OpenClash package."
+    fi
+
+    echo -e "${INFO} Downloading clash_meta.gz..."
+    if wget --no-check-certificate -nv -O $core_dir/clash_meta.gz $clash_meta; then
+    gzip -d $core_dir/clash_meta.gz
+    echo -e "${INFO} clash_meta.gz downloaded successfully."
+    else
+    echo -e "${INFO} Failed to download clash_meta.gz."
     fi
 
     echo -e "${INFO} Downloading Mihomo package"
@@ -408,15 +425,6 @@ custom_config() {
     curl -fsSL -o "${custom_files_path}/usr/bin/clock" "${clock}"
     curl -fsSL -o "${custom_files_path}/root/install2.sh" "${repair_ro}"
     curl -fsSL -o "${custom_files_path}/usr/bin/mount_hdd" "${mount_hdd}"
-
-    echo -e "${STEPS} Downloading files for hotspot" 
-    dl_zip_gh "Maizil41/RadiusMonitor:main" "${custom_files_path}/usr/share/RadiusMonitor"
-    dl_zip_gh "Maizil41/hotspotlogin:main" "${custom_files_path}/usr/share/hotspotlogin"
-    #dl_zip_gh "Maizil41/whatsapp-bot:main" "${custom_files_path}/root/whatsapp"
-    #mv ${custom_files_path}/root/whatsapp/luci-app-whatsapp-bot/root/root/whatsapp-bot ${custom_files_path}/root/whatsapp-bot
-    #rm -rf ${custom_files_path}/root/whatsapp
-
-    dl_zip_gh "phpmyadmin/phpmyadmin:STABLE" "${custom_files_path}/www/phpmyadmin"
 
     echo -e "${INFO} All custom configuration setup completed!"
 }
@@ -520,19 +528,6 @@ rebuild_firmware() {
 
     PACKAGES+=" $misc zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-poweroff luci-app-log luci-app-ramfree htop bash curl wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
 
-
-    # HOTSPOT-SETUP
-    PACKAGES+=" mariadb-server mariadb-server-extra mariadb-client mariadb-client-extra libmariadb nano"
-    PACKAGES+=" freeradius3 freeradius3-common freeradius3-default freeradius3-mod-always freeradius3-mod-attr-filter \
-    freeradius3-mod-chap freeradius3-mod-detail freeradius3-mod-digest freeradius3-mod-eap \
-    freeradius3-mod-eap-gtc freeradius3-mod-eap-md5 freeradius3-mod-eap-mschapv2 freeradius3-mod-eap-peap \
-    freeradius3-mod-eap-pwd freeradius3-mod-eap-tls freeradius3-mod-eap-ttls freeradius3-mod-exec \
-    freeradius3-mod-expiration freeradius3-mod-expr freeradius3-mod-files freeradius3-mod-logintime \
-    freeradius3-mod-mschap freeradius3-mod-pap freeradius3-mod-preprocess freeradius3-mod-radutmp \
-    freeradius3-mod-realm freeradius3-mod-sql freeradius3-mod-sql-mysql freeradius3-mod-sqlcounter \
-    freeradius3-mod-unix freeradius3-utils libfreetype wget-ssl curl unzip tar zoneinfo-asia coova-chilli"
-
-    PACKAGES+=" node node-npm"
 
     # Exclude package (must use - before packages name)
     EXCLUDED+=" -dnsmasq -libgd"

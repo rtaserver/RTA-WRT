@@ -9,20 +9,16 @@ msg() {
 }
 
 
-# Step 1: Configure devices (br-lan, br-voucher)
-msg "Step 1: Configure devices (br-lan, br-voucher)"
+# Step 1: Configure devices (br-lan)
+msg "Step 1: Configure devices (br-lan)"
 uci set network.@device[0]=device
 uci set network.@device[0].name='br-lan'
 uci set network.@device[0].type='bridge'
 uci add_list network.@device[0].ports='eth0'
 
-uci set network.@device[1]=device
-uci set network.@device[1].name='br-voucher'
-uci set network.@device[1].type='bridge'
 
-
-# Step 2: Configure interfaces (lan, modemmanager, wan, tethering, chilli, hotspot_voucher)
-msg "Step 2: Configure interfaces (lan, modemmanager, wan, tethering, chilli, hotspot_voucher)"
+# Step 2: Configure interfaces (lan, modemmanager, wan, tethering)
+msg "Step 2: Configure interfaces (lan, modemmanager, wan, tethering)"
 # LAN interface
 uci set network.lan=interface
 uci set network.lan.device='br-lan'
@@ -55,18 +51,6 @@ uci set network.tethering.proto='dhcp'
 uci set network.tethering.device='usb0'
 uci set network.tethering.metric='2'
 
-# Chilli interface
-uci set network.chilli=interface
-uci set network.chilli.proto='none'
-uci set network.chilli.device='tun0'
-
-# Hotspot Voucher interface
-uci set network.hotspot_voucher=interface
-uci set network.hotspot_voucher.proto='static'
-uci set network.hotspot_voucher.ipaddr='10.10.30.1'
-uci set network.hotspot_voucher.netmask='255.255.255.0'
-uci set network.hotspot_voucher.device='br-voucher'
-
 
 # Step 3: Configure Firewall Zones and Forwarding
 msg "Step 3: Configure Firewall Zones and Forwarding"
@@ -76,7 +60,7 @@ uci set firewall.@zone[0].name='lan'
 uci set firewall.@zone[0].input='ACCEPT'
 uci set firewall.@zone[0].output='ACCEPT'
 uci set firewall.@zone[0].forward='ACCEPT'
-uci set firewall.@zone[0].network='lan hotspot_voucher'
+uci set firewall.@zone[0].network='lan'
 
 # WAN zone
 uci set firewall.@zone[1]=zone
@@ -92,19 +76,6 @@ uci set firewall.@zone[1].network='wan modemmanager tethering'
 uci set firewall.@forwarding[0]=forwarding
 uci set firewall.@forwarding[0].src='lan'
 uci set firewall.@forwarding[0].dest='wan'
-
-# TUN zone
-uci add firewall zone
-uci set firewall.@zone[-1].name='tun'
-uci set firewall.@zone[-1].input='ACCEPT'
-uci set firewall.@zone[-1].output='ACCEPT'
-uci set firewall.@zone[-1].forward='REJECT'
-uci add_list firewall.@zone[-1].network='chilli'
-
-# Forwarding from TUN to WAN
-uci add firewall forwarding
-uci set firewall.@forwarding[-1].src='tun'
-uci set firewall.@forwarding[-1].dest='wan'
 
 
 # Step 4: Configure Wireless

@@ -1,5 +1,11 @@
 # What's New!
 
+**Changelog** (3-11-2024):
+- Remove Radius Monitor
+- Fixed OpenClash
+- Update Mihomo
+- Fixed Booting
+
 **Changelog** (10-10-2024):
 - Fixed Radius Monitor
 
