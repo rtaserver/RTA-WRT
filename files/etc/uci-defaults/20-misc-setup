@@ -75,12 +75,9 @@ if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
 fi
 
 
-# Step 11: Setup PHP And PhpMyAdmni
-msg "Step 11: Setup PHP And PhpMyAdmni"
+# Step 11: Setup PHP
+msg "Step 11: Setup PHP"
 ln -s /usr/bin/php-cli /usr/bin/php
-mv /www/phpmyadmin/config.sample.inc.php /www/phpmyadmin/config.inc.php
-sed -i -E "s|localhost|127.0.0.1|g" /www/phpmyadmin/config.inc.php
-sed -i "/\$cfg\['Servers'\]\[.*\]\['AllowNoPassword'\] = false;/a \$cfg\['AllowThirdPartyFraming'\] = true;" /www/phpmyadmin/config.inc.php
 
 
 # Step 12: Setting Tinyfm
@@ -150,9 +147,8 @@ then
 EOF
 fi
 
-if ! grep -q "Config Editor" $CONT && [ -f "/www/tinyfm/index.php" ]; then
-    sed -i '87 i\	entry({"admin", "services", "openclash", "editor"}, template("openclash/editor"),_("Config Editor"), 90).leaf = true' $CONT
-    cat << EOF > /usr/lib/lua/luci/view/openclash/editor.htm
+sed -i '87 i\	entry({"admin", "services", "openclash", "editor"}, template("openclash/editor"),_("Config Editor"), 90).leaf = true' $CONT
+cat << EOF > /usr/lib/lua/luci/view/openclash/editor.htm
 <%+header%>
 <div class="cbi-map">
 <iframe id="editor" style="width: 100%; min-height: 100vh; border: none; border-radius: 2px;"></iframe>
@@ -162,9 +158,6 @@ document.getElementById("editor").src = "http://" + window.location.hostname + "
 </script>
 <%+footer%>
 EOF
-elif grep -q "Config Editor" $CONT && [ ! -f "/www/tinyfm/index.php" ]; then
-	sed -i '/Config Editor/d' $CONT
-fi
 
 # Log success
 msg "Misc Setup settings successfully applied..."

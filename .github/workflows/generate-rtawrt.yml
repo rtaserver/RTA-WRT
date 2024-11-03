@@ -220,6 +220,8 @@ jobs:
               "rockchip-armv8-xunlong_orangepi-r1-plus-lts|Orange-Pi-R1-Plus-LTS_ext4-sysupgrade"
               "x86-64-generic-ext4-combined-efi|x86-64-Generic_ext4-combined-efi"
               "x86-64-generic-ext4-combined|x86-64-Generic_ext4-combined"
+              "x86-64-generic-squashfs-combined-efi|x86-64-Generic_squashfs-combined-efi"
+              "x86-64-generic-squashfs-combined|x86-64-Generic_squashfs-combined"
               "_amlogic_s905x_|Amlogic_HG680P"
               "_amlogic_s905x-b860h_|Amlogic_B860HV1-V2"
               "_amlogic_s905x2_|Amlogic_B860HV5"
