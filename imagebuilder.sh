@@ -383,9 +383,6 @@ custom_packages() {
     curl -fsSL -o "${core_dir}/clash_meta.gz" "${clash_meta}"
     gzip -d $core_dir/clash_meta.gz
     echo -e "${INFO} clash_meta.gz downloaded successfully."
-    else
-    echo -e "${INFO} Failed to download clash_meta.gz."
-    fi
 
     echo -e "${INFO} Downloading Mihomo package"
     curl -fsSOL ${mihomo_file_down}
