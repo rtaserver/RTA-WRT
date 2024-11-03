@@ -300,8 +300,6 @@ main_menu(){
   logo
   print_info
   garis
-  txt "Usage: clear1 - Clear Terminal"
-  txt "Usage: clear - Clean Terminal But Still There is Logo"
   txt "Usage: rtawrt menu - To Show More Menu"
   garis
 }

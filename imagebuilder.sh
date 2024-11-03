@@ -316,13 +316,13 @@ custom_packages() {
 
     # Download IPK From Custom
     other_packages=(
-        "lolcat|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
-        "modemmanager-rpcd|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
-        "luci-proto-modemmanager|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/luci"
-        "libqmi|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
-        "libmbim|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
-        "modemmanager|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
-        "sms-tool|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
+        "lolcat|https://downloads.openwrt.org/${op_branch}/packages/$ARCH_3/packages"
+        # "modemmanager-rpcd|https://downloads.openwrt.org/${op_branch}/packages/$ARCH_3/packages"
+        "luci-proto-modemmanager|https://downloads.openwrt.org/${op_branch}/packages/$ARCH_3/luci"
+        "libqmi|https://downloads.openwrt.org/${op_branch}/packages/$ARCH_3/packages"
+        "libmbim|https://downloads.openwrt.org/${op_branch}/packages/$ARCH_3/packages"
+        "modemmanager|https://downloads.openwrt.org/${op_branch}/packages/$ARCH_3/packages"
+        "sms-tool|https://downloads.openwrt.org/${op_branch}/packages/$ARCH_3/packages"
         "luci-app-netspeedtest|https://fantastic-packages.github.io/packages/releases/23.05/packages/x86_64/luci"
         "luci-app-zerotier|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
         "tailscale|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
@@ -360,11 +360,9 @@ custom_packages() {
     core_dir="${custom_files_path}/etc/openclash/core"
     mkdir -p $core_dir
     if [[ "$ARCH_3" == "x86_64" ]]; then
-        clash_meta="$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest"
-        meta_file="mihomo-linux-$ARCH_1-compatible" && curl -s ${meta_api} | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)"
+        clash_meta="$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-$ARCH_1-compatible" && curl -s ${meta_api} | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)"
     else
-        clash_meta="$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest"
-        meta_file="mihomo-linux-$ARCH_1" && curl -s ${meta_api} | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)"
+        clash_meta="$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-$ARCH_1" && curl -s ${meta_api} | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)"
     fi
 
     # Mihomo
@@ -382,7 +380,7 @@ custom_packages() {
     fi
 
     echo -e "${INFO} Downloading clash_meta.gz..."
-    if wget --no-check-certificate -nv -O $core_dir/clash_meta.gz $clash_meta; then
+    curl -fsSL -o "${core_dir}/clash_meta.gz" "${clash_meta}"
     gzip -d $core_dir/clash_meta.gz
     echo -e "${INFO} clash_meta.gz downloaded successfully."
     else
@@ -413,7 +411,7 @@ custom_config() {
     echo -e "${STEPS} Start adding custom config..."
     
     DTM=$(date '+%d-%M-%Y')
-    sed -i "s/Ouc3kNF6/$DTM/g" files/etc/uci-defaults/99-init-settings.sh
+    sed -i "s/Ouc3kNF6/$DTM/g" files/etc/uci-defaults/10-system-setup
 
     echo -e "${INFO} Downloading custom script" 
     sync_time="https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/sbin/sync_time.sh"
