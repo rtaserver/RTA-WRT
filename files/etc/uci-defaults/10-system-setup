@@ -13,7 +13,7 @@ msg() {
 msg "Step 1: Configure profile Dashboard"
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
 sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/rtawrt/' /etc/profile
-mv /www/luci-static/resources/view/status/include/29_temp.js /www/luci-static/resources/view/status/include/17_temp.js
+# mv /www/luci-static/resources/view/status/include/29_temp.js /www/luci-static/resources/view/status/include/17_temp.js
 
 
 # Step 2: Configure Password Login OpenWrt

@@ -246,6 +246,10 @@ adjust_settings() {
     cd ${imagebuilder_path}
     echo -e "${STEPS} Start adjusting .config file settings..."
 
+    DTM=$(date '+%d-%M-%Y')
+
+    sed -i "s/qwertyuiop/$DTM/g" "${custom_files_path}/www/luci-static/resources/view/status/include/10_system.js"
+
     if [[ -s "repositories.conf" ]]; then
         sed -i '\|option check_signature| s|^|#|' repositories.conf
     fi

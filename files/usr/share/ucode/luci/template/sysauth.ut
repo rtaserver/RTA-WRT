@@ -4,263 +4,58 @@
  Licensed to the public under the Apache License 2.0.
 -#}
 
-<style>
-    /* Mengatur latar belakang */
-    body {
-        background: url('/luci-static/material/bg1.jpg') no-repeat center center fixed;
-        background-size: cover; /* Membuat gambar memenuhi seluruh latar belakang */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-    }
+{% include('header') %}
 
-    /* Style untuk logo brand di bagian atas */
-    .login-logo {
-        display: block;
-        margin: 0 auto 25px;
-        width: 150px; /* Menetapkan ukuran logo menjadi lebih kecil */
-    }
-
-    /* Kontainer form login */
-    #loginForm {
-        background: white;
-        opacity: 90%; /* Ubah menjadi lebih jelas */
-        padding: 26px 24px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        width: 320px;
-        border-radius: 5px;
-        box-sizing: border-box;
-        display: none; /* Sembunyikan form login awalnya */
-    }
-
-    /* Gaya untuk judul */
-    .login-title {
-        text-align: center;
-        font-size: 24px;
-        margin-bottom: 20px;
-        font-weight: 600;
-        color: #444;
-    }
-
-    /* Input field styling */
-    .cbi-value-field input {
-        width: 100%;
-        padding: 10px;
-        margin-bottom: 10px;
-        font-size: 16px;
-        border: 1px solid #ddd;
-        border-radius: 3px;
-        box-sizing: border-box;
-    }
-
-    /* Style untuk tombol */
-    .btn {
-        width: 100%;
-        padding: 10px;
-        font-size: 16px;
-        background: #0073aa;
-        border: none;
-        color: white;
-        cursor: pointer;
-        border-radius: 20px;
-        margin-bottom: 10px;
-    }
-
-    .btn:hover {
-        background: #006799;
-    }
-
-    /* Overlay style */
-    #overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5); /* Warna hitam transparan */
-        opacity: 90%; /* Ubah menjadi lebih jelas */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000; /* Pastikan overlay di atas konten lainnya */
-    }
-
-    /* Gaya untuk shape */
-    #shape {
-        width: 300px; /* Lebar shape */
-        height: 300px; /* Tinggi shape */
-        background-color: white; /* Warna shape */
-        border-radius: 15px; /* Sudut melengkung */
-        position: relative;
-        z-index: 15; /* Pastikan shape di atas overlay */
-        padding: 20px; /* Tambahkan padding */
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); /* Tambahkan bayangan */
-        display: flex; /* Menggunakan flex untuk memusatkan konten */
-        flex-direction: column; /* Arahkan kolom */
-        justify-content: center; /* Pusatkan secara vertikal */
-        align-items: center; /* Pusatkan secara horizontal */
-	}
-
-    .close-button {
-        background: #e74c3c;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-
-    /* Gaya untuk teks gagal masuk */
-    .message-failed {
-        text-align: top;
-        padding: 2.5px;
-        font-size: 12px; /* Ukuran font lebih kecil */
-        color: white; /* Warna putih */
-        background: red; /* Warna merah*/
-        margin-bottom: 5px; /* Jarak bawah */
-        font-weight: bold; /* Huruf tebal */
-        border-radius: 5px;
-    }
-
-    /* Gaya untuk teks warning */
-    .warning-text {
-        text-align: top;
-        font-size: 16px; /* Ukuran font lebih kecil */
-        color: red; /* Warna merah */
-        margin-bottom: 10px; /* Jarak bawah */
-        font-weight: bold; /* Huruf tebal */
-    }
-
-    .title-text {
-        text-align: center;
-        font-size: 18px; /* Ukuran font */
-        margin-bottom: 10px; /* Jarak bawah */
-        color: black; /* Warna teks */
-        font-weight: bold; /* Huruf tebal */
-        text-transform: uppercase; /* Mengubah menjadi huruf kapital */
-    }
-    
-    /* Gaya untuk hitungan mundur */
-    .countdown-text {
-        font-size: 10px; /* Ukuran font hitungan mundur */
-        color: black; /* Warna teks */
-        margin-bottom: 20px; /* Jarak atas */
-    }
-    
-    /* Gaya untuk ikon warning */
-    .warning-icon {
-        width: 90px; /* Ukuran ikon */
-        height: 90px; /* Ukuran ikon */
-        margin-bottom: 10px; /* Jarak bawah */
-    }
-    
-    /* Gaya untuk tombol close */
-    .close-button {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        color: white; /* Ubah warna teks tombol menjadi putih */
-        background: none; /* Ubah warna latar belakang tombol menjadi none */
-        border: none;
-        padding: 10px;
-        cursor: pointer;
-        z-index: 16; /* Pastikan tombol di atas shape */
-    }
-
-    /* Style untuk tombol kembali */
-    .back-button {
-        width: 100%;
-        padding: 10px;
-        font-size: 16px;
-        background: #0073aa; /* Ubah warna latar belakang tombol menjadi merah */
-        border: none;
-        color: white;/* Ubah warna teks tombol menjadi putih */
-        cursor: pointer;
-        border-radius: 20px;
-        margin-top: 20px;
-    }
-</style>
-
-<!-- Overlay dengan shape -->
-<div id="overlay">
-    <div id="shape">
+<form method="post">
 	{% if (fuser): %}
-		<div class="message-failed">Username / password tidak valid! Silakan coba lagi.</div>
+		<div class="alert-message warning">
+			<p>{{ _('Invalid username and/or password! Please try again.') }}</p>
+		</div>
 	{% endif %}
-        <div class="warning-text">Warning : Login Area</div> <!-- Teks warning -->
-        <img src="/luci-static/material/logo.png" alt="Warning Icon" class="warning-icon"> <!-- Ganti dengan path ikon peringatan yang sesuai -->
-        <div class="title-text">ANDA AKAN DIALIHKAN OTOMATIS KE LOGINPAGE</div> <!-- Teks judul -->
-        <div id="countdown" class="countdown">5 Detik</div> <!-- Teks hitung mundur -->
-        <button type="button" class="back-button" onclick="closeOverlay()">Login</button>
-    </div>
-</div>
 
-<form id="loginForm" method="post">
-    <img src="/luci-static/material/logo.png" alt="Brand Logo" class="login-logo"> <!-- Logo brand di atas form -->
-    		
-    <div class="login-title">Welcome to RTA-WRT</div> <!-- Judul login -->
-<script type="text/javascript">window.setTimeout("waktu()",1000); function waktu(){var tanggal=new Date(); setTimeout("waktu()",1000); document.getElementById("jam").innerHTML=tanggal.getHours()+":"+tanggal.getMinutes()+":"+tanggal.getSeconds();}</script> <script language="JavaScript"> var tanggallengkap=new String(); var namahari=("Minggu Senin Selasa Rabu Kamis Jumat Sabtu"); namahari=namahari.split(" "); var namabulan=("Januari Februari Maret April Mei Juni Juli Agustus September Oktober November Desember"); namabulan=namabulan.split(" "); var tgl=new Date(); var hari=tgl.getDay(); var tanggal=tgl.getDate(); var bulan=tgl.getMonth(); var tahun=tgl.getFullYear(); tanggallengkap=namahari[hari] + ", " +tanggal + " " + namabulan[bulan] + " " + tahun; </script>       
-<center><script language='JavaScript'>document.write(tanggallengkap); </script> | <span id='jam' ></span></center><br> <!-- kalender / waktu -->
+	<div class="cbi-map">
+		<center><h2 name="content">{{ _('RTA-WRT') }}</h2></center>
+		<script type="text/javascript">window.setTimeout("waktu()",1000); function waktu(){var tanggal=new Date(); setTimeout("waktu()",1000); document.getElementById("jam").innerHTML=tanggal.getHours()+":"+tanggal.getMinutes()+":"+tanggal.getSeconds();}</script> <script language="JavaScript"> var tanggallengkap=new String(); var namahari=("Minggu Senin Selasa Rabu Kamis Jumat Sabtu"); namahari=namahari.split(" "); var namabulan=("Januari Februari Maret April Mei Juni Juli Agustus September Oktober November Desember"); namabulan=namabulan.split(" "); var tgl=new Date(); var hari=tgl.getDay(); var tanggal=tgl.getDate(); var bulan=tgl.getMonth(); var tahun=tgl.getFullYear(); tanggallengkap=namahari[hari] + ", " +tanggal + " " + namabulan[bulan] + " " + tahun; </script>       
+<center><script language='JavaScript'>document.write(tanggallengkap); </script> | <span id='jam' ></span></center>
+		<div class="cbi-section"><div class="cbi-section-node">
+			<div class="cbi-value">
+				<label class="cbi-value-title">{{ _('Username') }}</label>
+				<div class="cbi-value-field">
+					<input class="cbi-input-text" type="text" name="luci_username" value="{{ entityencode(duser, true) }}" />
+				</div>
+			</div>
+			<div class="cbi-value cbi-value-last">
+				<label class="cbi-value-title">{{ _('Password') }}</label>
+				<div class="cbi-value-field">
+					<input class="cbi-input-text" type="password" name="luci_password" />
+				</div>
+			</div>
+		</div></div>
+	</div>
 
-    <div class="cbi-map">
-        <div class="cbi-section">
-            <div class="cbi-section-node">
-                <div class="cbi-value">
-                    <label class="cbi-value-title">{{ _('Username') }}</label>
-                    <div class="cbi-value-field">
-                        <input class="cbi-input-text" type="text" name="luci_username" value="{{ entityencode(duser, true) }}" />
-                    </div>
-                </div>
-                <div class="cbi-value cbi-value-last">
-                    <label class="cbi-value-title">{{ _('Password') }}</label>
-                    <div class="cbi-value-field">
-                        <input class="cbi-input-text" type="password" name="luci_password" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="cbi-page-actions">
-        <input type="submit" value="{{ _('Log in') }}" class="btn cbi-button cbi-button-apply" />
-        <input type="reset" value="{{ _('Reset') }}" class="btn cbi-button cbi-button-reset" />
-    </div>
+	<div class="cbi-page-actions">
+		<input type="submit" value="{{ _('Log in') }}" class="btn cbi-button cbi-button-apply" />
+		<input type="reset" value="{{ _('Reset') }}" class="btn cbi-button cbi-button-reset" />
+	</div>
 </form>
 
 {%
-    let https_ports = uci.get('uhttpd', 'main', 'listen_https') ?? [];
+	let https_ports = uci.get('uhttpd', 'main', 'listen_https') ?? [];
 
-    https_ports = uniq(filter(
-        map(
-            (type(https_ports) == 'string') ? split(https_port, /\s+/) : https_ports,
-            e => +match(e, /\d+$/)?.[0]
-        ),
-        p => (p >= 0 && p <= 65535)
-    ));
+	https_ports = uniq(filter(
+		map(
+			(type(https_ports) == 'string') ? split(https_port, /\s+/) : https_ports,
+			e => +match(e, /\d+$/)?.[0]
+		),
+		p => (p >= 0 && p <= 65535)
+	));
 %}
 
-<script type="text/javascript">
-//<![CDATA[
-    // Array gambar latar belakang
-    var backgrounds = [
-        '/luci-static/material/bg1.jpg'
-    ];
+<script type="text/javascript">//<![CDATA[
+	var input = document.getElementsByName('luci_password')[0];
 
-    // Mengambil indeks acak
-    var randomIndex = Math.floor(Math.random() * backgrounds.length);
-    
-    // Mengatur latar belakang
-    document.body.style.backgroundImage = 'url(' + backgrounds[randomIndex] + ')';
-    document.body.style.backgroundSize = 'cover'; // Pastikan gambar memenuhi layar
-
-    var input = document.getElementsByName('luci_password')[0];
-    var countdownValue = 5; // Inisialisasi hitungan mundur
-    var countdownInterval; // Variabel untuk menyimpan interval
-
-    if (input)
-        input.focus();
+	if (input)
+		input.focus();
 
 	if (document.location.protocol != 'https:') {
 		{{ https_ports }}.forEach(function(port) {
@@ -273,27 +68,6 @@
 			setTimeout(function() { img.src = '' }, 5000);
 		});
 	}
-	
-	countdownInterval = setInterval(updateCountdown, 1000);
+//]]></script>
 
-    // Fungsi untuk mengupdate hitungan mundur
-    function updateCountdown() {
-        if (countdownValue > 0) {
-            document.getElementById('countdown').innerText = countdownValue + ' Detik';
-            countdownValue--;
-        } else {
-            document.getElementById('countdown').innerText = 'Good Bye';
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('loginForm').style.display = 'block';
-            clearInterval(countdownInterval); // Menghentikan hitungan mundur
-        }
-    }
-
-    // Fungsi untuk menutup overlay dan menampilkan form login
-    function closeOverlay() {
-        document.getElementById('overlay').style.display = 'none';
-        document.getElementById('loginForm').style.display = 'block';
-        clearInterval(countdownInterval); // Menghentikan hitungan mundur
-    }
-//]]>
-</script>
+{% include('footer') %}
