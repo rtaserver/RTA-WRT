@@ -22,16 +22,16 @@ Custom Script By FriWrt
 
 # Link Download
 
-* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_xunlong_xunlong_orangepi-r1-plus-lts"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_xunlong_xunlong_orangepi-r1-plus-lts/total?logo=openwrt&label=OpenWrt - Orange Pi R1 Plus LTS"></a>
-* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_xunlong_orangepi-r1-plus"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_xunlong_orangepi-r1-plus/total?logo=openwrt&label=OpenWrt - Orange Pi R1 Plus"></a>
-* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_rpi-4"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_rpi-4/total?logo=openwrt&label=OpenWrt - Raspberry Pi 4B"></a>
-* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_rpi-3"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_rpi-3/total?logo=openwrt&label=OpenWrt - Raspberry Pi 3B"></a>
-* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_generic"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_generic/total?logo=openwrt&label=OpenWrt - x86-64"></a>
-* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_friendlyarm_nanopi-r4s"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_friendlyarm_nanopi-r4s/total?logo=openwrt&label=OpenWrt - NanoPi R4S"></a>
-* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_friendlyarm_nanopi-r2s"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_friendlyarm_nanopi-r2s/total?logo=openwrt&label=OpenWrt - NanoPi R2S"></a>
-* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_friendlyarm_nanopi-r2c"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_friendlyarm_nanopi-r2c/total?logo=openwrt&label=OpenWrt - NanoPi R2C"></a>
-* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_amlogic_s905x-b860h"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_amlogic_s905x-b860h/total?logo=openwrt&label=OpenWrt - Amlogic B860H-V1-V2"></a>
-* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_amlogic_s905x2"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_amlogic_s905x2/total?logo=openwrt&label=OpenWrt - Amlogic B860H-V5"></a>
+* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_xunlong_xunlong_orangepi-r1-plus-lts"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_xunlong_xunlong_orangepi-r1-plus-lts/total?logo=openwrt&label=OpenWrt%20-%20Orange%20Pi%20R1%20Plus%20LTS"></a>
+* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_xunlong_orangepi-r1-plus"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_xunlong_orangepi-r1-plus/total?logo=openwrt&label=OpenWrt%20-%20Orange%20Pi%20R1%20Plus"></a>
+* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_rpi-4"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_rpi-4/total?logo=openwrt&label=OpenWrt%20-%20Raspberry%20Pi%204B"></a>
+* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_rpi-3"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_rpi-3/total?logo=openwrt&label=OpenWrt%20-%20Raspberry%20Pi%203B"></a>
+* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_generic"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_generic/total?logo=openwrt&label=OpenWrt%20-%20x86-64"></a>
+* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_friendlyarm_nanopi-r4s"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_friendlyarm_nanopi-r4s/total?logo=openwrt&label=OpenWrt%20-%20NanoPi%20R4S"></a>
+* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_friendlyarm_nanopi-r2s"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_friendlyarm_nanopi-r2s/total?logo=openwrt&label=OpenWrt%20-%20NanoPi%20R2S"></a>
+* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_friendlyarm_nanopi-r2c"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_friendlyarm_nanopi-r2c/total?logo=openwrt&label=OpenWrt%20-%20NanoPi%20R2C"></a>
+* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_amlogic_s905x-b860h"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_amlogic_s905x-b860h/total?logo=openwrt&label=OpenWrt%20-%20Amlogic%20B860H-V1-V2"></a>
+* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_amlogic_s905x2"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_amlogic_s905x2/total?logo=openwrt&label=OpenWrt%20- Amlogic%20B860H-V5"></a>
 * <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_amlogic_s905x"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_amlogic_s905x/total?logo=openwrt&label=OpenWrt%20-%20Amlogic%20HG680P"></a>
 
 ---
