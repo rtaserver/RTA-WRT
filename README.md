@@ -7,7 +7,7 @@
 <h3 align="center">Openwrt Terbaru - 23.05.5</h3>
 <h4 align="center">Download Di Bawah Ini Untuk Versi Stabil</h4>
 <p align="center">
-<a href="https://github.com/rtaserver/RTA-WRT/releases/latest"><img src="https://img.shields.io/badge/OpenWrt_Latest_File-Download-HERE?style=for-the-badge&logo=openwrt"></a>
+<a href="https://github.com/rtaserver/RTA-WRT/releases"><img src="https://img.shields.io/badge/OpenWrt_Latest_File-Download-HERE?style=for-the-badge&logo=openwrt"></a>
 </p>
 
 <h4 align="center">Join Telegram Untuk Mendapatkan Notifikasi Update Dan Tutorial</h4>
