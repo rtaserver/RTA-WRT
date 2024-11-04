@@ -410,9 +410,6 @@ custom_packages() {
 custom_config() {
     cd ${imagebuilder_path}
     echo -e "${STEPS} Start adding custom config..."
-    
-    DTM=$(date '+%d-%M-%Y')
-    sed -i "s/Ouc3kNF6/$DTM/g" files/etc/uci-defaults/10-system-setup
 
     echo -e "${INFO} Downloading custom script" 
     sync_time="https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/sbin/sync_time.sh"
