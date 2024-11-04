@@ -158,7 +158,7 @@ download_imagebuilder() {
         target_profile=""
         target_system="armsr/armv8"
         target_name="armsr-armv8"
-        ARCH_1="armv8"
+        ARCH_1="arm64"
         ARCH_2="aarch64"
         ARCH_3="aarch64_generic"
     elif [[ "${op_target}" == "rpi-3" ]]; then
@@ -182,7 +182,7 @@ download_imagebuilder() {
         target_profile="friendlyarm_nanopi-r2c"
         target_system="rockchip/armv8"
         target_name="rockchip-armv8"
-        ARCH_1="armv8"
+        ARCH_1="arm64"
         ARCH_2="aarch64"
         ARCH_3="aarch64_generic"
     elif [[ "${op_target}" == "friendlyarm_nanopi-r2s" ]]; then
@@ -190,7 +190,7 @@ download_imagebuilder() {
         target_profile="friendlyarm_nanopi-r2s"
         target_system="rockchip/armv8"
         target_name="rockchip-armv8"
-        ARCH_1="armv8"
+        ARCH_1="arm64"
         ARCH_2="aarch64"
         ARCH_3="aarch64_generic"
     elif [[ "${op_target}" == "friendlyarm_nanopi-r4s" ]]; then
@@ -198,7 +198,7 @@ download_imagebuilder() {
         target_profile="friendlyarm_nanopi-r4s"
         target_system="rockchip/armv8"
         target_name="rockchip-armv8"
-        ARCH_1="armv8"
+        ARCH_1="arm64"
         ARCH_2="aarch64"
         ARCH_3="aarch64_generic"
     elif [[ "${op_target}" == "xunlong_orangepi-r1-plus" ]]; then
@@ -206,7 +206,7 @@ download_imagebuilder() {
         target_profile="xunlong_orangepi-r1-plus"
         target_system="rockchip/armv8"
         target_name="rockchip-armv8"
-        ARCH_1="armv8"
+        ARCH_1="arm64"
         ARCH_2="aarch64"
         ARCH_3="aarch64_generic"
     elif [[ "${op_target}" == "xunlong_orangepi-r1-plus-lts" ]]; then
@@ -214,7 +214,7 @@ download_imagebuilder() {
         target_profile="xunlong_orangepi-r1-plus-lts"
         target_system="rockchip/armv8"
         target_name="rockchip-armv8"
-        ARCH_1="armv8"
+        ARCH_1="arm64"
         ARCH_2="aarch64"
         ARCH_3="aarch64_generic"
     elif [[ "${op_target}" == "generic" || "${op_target}" == "x86-64" || "${op_target}" == "x86_64" ]]; then
