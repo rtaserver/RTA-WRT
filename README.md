@@ -32,7 +32,7 @@ Custom Script By FriWrt
 * <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_friendlyarm_nanopi-r2c"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_friendlyarm_nanopi-r2c/total?logo=openwrt&label=OpenWrt - NanoPi R2C"></a>
 * <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_amlogic_s905x-b860h"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_amlogic_s905x-b860h/total?logo=openwrt&label=OpenWrt - Amlogic B860H-V1-V2"></a>
 * <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_amlogic_s905x2"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_amlogic_s905x2/total?logo=openwrt&label=OpenWrt - Amlogic B860H-V5"></a>
-* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_amlogic_s905x"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_amlogic_s905x/total?logo=openwrt&label=OpenWrt - Amlogic HG680P"></a>
+* <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_amlogic_s905x"><img src="https://img.shields.io/github/downloads/rtaserver/RTA-WRT/openwrt_amlogic_s905x/total?logo=openwrt&label=OpenWrt%20-%20Amlogic%20HG680P"></a>
 
 ---
 
