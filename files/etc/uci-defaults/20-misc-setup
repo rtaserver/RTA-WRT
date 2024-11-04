@@ -154,10 +154,17 @@ cat << EOF > /usr/lib/lua/luci/view/openclash/editor.htm
 <iframe id="editor" style="width: 100%; min-height: 100vh; border: none; border-radius: 2px;"></iframe>
 </div>
 <script type="text/javascript">
-document.getElementById("editor").src = "http://" + window.location.hostname + "/tinyfm/index.php?p=etc/openclash";
+document.getElementById("editor").src = "http://" + window.location.hostname + "/tinyfm/tinyfm.php?p=etc/openclash";
 </script>
 <%+footer%>
 EOF
+
+
+# Step 14: Patch ModemManager
+msg "Step 14: Patch ModemManager"
+rm -rf /usr/lib/ModemManager/connection.d/10-report-down
+mv /usr/lib/ModemManager/connection.d/10.autoreconnect /usr/lib/ModemManager/connection.d/10-report-down
+chmod +x /usr/lib/ModemManager/connection.d/10-report-down
 
 # Log success
 msg "Misc Setup settings successfully applied..."

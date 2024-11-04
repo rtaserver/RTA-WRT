@@ -86,75 +86,45 @@ jobs:
           echo -e "[\033[94m INFO \033[0m] TARGET: ${{ matrix.target }}"
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
 
-    #   - name: Initialization environment (deep)
-    #     if: github.event.inputs.target == 'all' && !cancelled()
-    #     env:
-    #       DEBIAN_FRONTEND: noninteractive
-    #     run: |
-    #       docker rmi $(docker images -q) 2>/dev/null
-    #       [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
-    #       sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
-    #       sudo swapoff -a
-    #       sudo rm -f /swapfile /mnt/swapfile
-    #       sudo -E apt-get -y update
-    #       sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
-    #       sudo -E apt-get -y install $(curl -fsSL https://is.gd/depend_ubuntu2204_openwrt)
-    #       sudo -E systemctl daemon-reload
-    #       #sudo -E apt-get -y full-upgrade
-    #       sudo -E apt-get -y autoremove --purge
-    #       sudo -E apt-get clean
-    #       sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
-    #       sudo rm -rf ~/{.cargo,.dotnet,.rustup}
-    #       sudo timedatectl set-timezone "${TZ}"
-    #       echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
-
-    #   - name: Create simulated physical disk
-    #     if: github.event.inputs.target == 'all' && !cancelled()
-    #     run: |
-    #       mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
-    #       root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
-    #       sudo truncate -s "${mnt_size}"G /mnt/mnt.img
-    #       sudo truncate -s "${root_size}"G /root.img
-    #       sudo losetup /dev/loop6 /mnt/mnt.img
-    #       sudo losetup /dev/loop7 /root.img
-    #       sudo pvcreate /dev/loop6
-    #       sudo pvcreate /dev/loop7
-    #       sudo vgcreate github /dev/loop6 /dev/loop7
-    #       sudo lvcreate -n runner -l 100%FREE github
-    #       sudo mkfs.xfs /dev/github/runner
-    #       sudo mkdir -p /builder
-    #       sudo mount /dev/github/runner /builder
-    #       sudo chown -R runner.runner /builder
-    #       df -Th
-
       - name: Setup Environment Variables
         id: init
         run: |
           if [ "$TARGET" == "Raspberry Pi 3B" ]; then
             echo "TARGET_NAME=rpi-3" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_rpi-3" >> $GITHUB_ENV
           elif [ "$TARGET" == "Raspberry Pi 4B" ]; then
             echo "TARGET_NAME=rpi-4" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_rpi-4" >> $GITHUB_ENV
           elif [ "$TARGET" == "NanoPi R2C" ]; then
             echo "TARGET_NAME=friendlyarm_nanopi-r2c" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_friendlyarm_nanopi-r2c" >> $GITHUB_ENV
           elif [ "$TARGET" == "NanoPi R2S" ]; then
             echo "TARGET_NAME=friendlyarm_nanopi-r2s" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_friendlyarm_nanopi-r2s" >> $GITHUB_ENV
           elif [ "$TARGET" == "NanoPi R4S" ]; then
             echo "TARGET_NAME=friendlyarm_nanopi-r4s" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_friendlyarm_nanopi-r4s" >> $GITHUB_ENV
           elif [ "$TARGET" == "Orange Pi R1 Plus" ]; then
             echo "TARGET_NAME=xunlong_orangepi-r1-plus" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_xunlong_orangepi-r1-plus" >> $GITHUB_ENV
           elif [ "$TARGET" == "Orange Pi R1 Plus LTS" ]; then
             echo "TARGET_NAME=xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_xunlong_xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
           elif [ "$TARGET" == "x86-64" ]; then
             echo "TARGET_NAME=generic" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_generic" >> $GITHUB_ENV
           elif [ "$TARGET" == "Amlogic HG680P" ]; then
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board=s905x" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic_s905x" >> $GITHUB_ENV
           elif [ "$TARGET" == "Amlogic B860H-V5" ]; then
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board=s905x-b860h" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic_s905x-b860h" >> $GITHUB_ENV
           elif [ "$TARGET" == "Amlogic B860H-V1-V2" ]; then
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board=s905x2" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic_s905x2" >> $GITHUB_ENV
           fi
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
@@ -247,14 +217,15 @@ jobs:
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
           echo -e "INFO files list: \n$(ls -l compiled_images 2>/dev/null)"
   
-      - name: Upload the packaged OpenWrt
+      - name: Upload the packaged OpenWrt | ${{ matrix.target }}
         uses: ncipollo/release-action@main
         if: ${{ steps.prepare2.outputs.status }} == 'success' && !cancelled()
         with:
-          tag: OpenWrt_${{ env.RELEASES_TAG }}_${{ env.DATE }}
+          tag: ${{ env.TAG_NAME }}
+          name: OpenWrt - ${{ env.TARGET }}
           artifacts: imagebuilder/compiled_images/*.img.gz
           allowUpdates: true
-          removeArtifacts: false
+          removeArtifacts: true
           replacesArtifacts: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
