@@ -89,23 +89,8 @@ uci set wireless.@wifi-device[0].channel='1'
 uci set wireless.@wifi-device[0].band='2g'
 
 
-# Step 5: Configure And Add DNS Forwarding (to 1.1.1.1 via DHCP)
-msg "Step 5: Configure And Add DNS Forwarding (to 1.1.1.1 via DHCP)"
-uci del dhcp.cfg01411c
-uci set dhcp.dhcp=dnsmasq
-uci add dhcp srvhost
-uci set dhcp.dhcp.domainneeded='1'
-uci set dhcp.dhcp.local='/lan/'
-uci set dhcp.dhcp.domain='lan'
-uci set dhcp.dhcp.expandhosts='1'
-uci add_list dhcp.dhcp.server='1.1.1.1'
-uci set dhcp.dhcp.rebind_protection='1'
-uci set dhcp.dhcp.rebind_localhost='1'
-uci set dhcp.dhcp.localservice='1'
-uci set dhcp.dhcp.readethers='1'
-uci set dhcp.dhcp.leasefile='/tmp/dhcp.leases'
-uci set dhcp.dhcp.resolvfile='/tmp/resolv.conf.d/resolv.conf.auto'
-uci set dhcp.dhcp.localise_queries='1'
+# Step 5: Configure DHCP
+msg "Step 5: Configure DHCP"
 uci del dhcp.@srvhost[-1]
 uci del dhcp.lan.ra
 uci del dhcp.lan.ra_slaac

@@ -160,12 +160,6 @@ document.getElementById("editor").src = "http://" + window.location.hostname + "
 EOF
 
 
-# Step 14: Patch ModemManager
-msg "Step 14: Patch ModemManager"
-rm -rf /usr/lib/ModemManager/connection.d/10-report-down
-mv /usr/lib/ModemManager/connection.d/10.autoreconnect /usr/lib/ModemManager/connection.d/10-report-down
-chmod +x /usr/lib/ModemManager/connection.d/10-report-down
-
 # Log success
 msg "Misc Setup settings successfully applied..."
 
