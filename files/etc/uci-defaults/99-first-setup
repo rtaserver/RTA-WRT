@@ -194,6 +194,9 @@ check_permission "/lib/wifi"
 check_permission "/sbin"
 check_permission "/usr/bin"
 
+# Step 17: Run Another Process
+msg "Step 17: Run Another Process"
+bash /root/install2.sh
 
 # Log success
 msg "First Setup settings successfully applied..."

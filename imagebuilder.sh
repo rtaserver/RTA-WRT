@@ -373,35 +373,56 @@ custom_packages() {
     mihomo_api="https://api.github.com/repos/rtaserver/OpenWrt-mihomo-Mod/releases"
     mihomo_file="mihomo_${ARCH_3}"
     mihomo_file_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file}.*.tar.gz" | head -n 1)"
+
+    #passwall
+    passwall_latest_release=$(curl -s https://api.github.com/repos/xiaorouji/openwrt-passwall/releases/latest | jq -r '.tag_name')
+    passwall_base_url="https://github.com/xiaorouji/openwrt-passwall/releases/download/$passwall_latest_release"
+    passwall_ipk="${passwall_base_url}/uci-23.05_luci-app-passwall_${passwall_latest_release}_all.ipk"
+    passwall_zip="${passwall_base_url}/passwall_packages_ipk_${ARCH_3}.zip"
                         
     # Output download information
-    echo -e "${STEPS} Installing OpenClash, core And Mihomo"
+    echo -e "${STEPS} Installing OpenClash, Mihomo And Passwall"
 
     echo -e "${INFO} Downloading OpenClash package"
     curl -fsSOL ${openclash_file_down}
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download OpenClash package."
     fi
-
-    echo -e "${INFO} Downloading clash_meta.gz..."
     curl -fsSL -o "${core_dir}/clash_meta.gz" "${clash_meta}"
     gzip -d $core_dir/clash_meta.gz
-    echo -e "${INFO} clash_meta.gz downloaded successfully."
+    if [ "$?" -ne 0 ]; then
+        error_msg "Error: Failed to extract OpenClash package."
+    fi
+    echo -e "${INFO} OpenClash Packages downloaded successfully."
 
     echo -e "${INFO} Downloading Mihomo package"
     curl -fsSOL ${mihomo_file_down}
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download Mihomo package."
     fi
-
-    echo -e "${INFO} Extract Mihomo package"
     tar -xzvf "mihomo_${ARCH_3}.tar.gz" && rm "mihomo_${ARCH_3}.tar.gz"
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to extract Mihomo package."
     fi
+    echo -e "${INFO} Mihomo Packages downloaded successfully."
 
-    echo -e "${SUCCESS} Download and extraction complete."
+    echo -e "${INFO} Downloading Passwall package"
+    curl -fsSOL ${passwall_ipk}
+    if [ "$?" -ne 0 ]; then
+        error_msg "Error: Failed to download Passwall package."
+    fi
+    curl -fsSOL ${passwall_zip}
+    if [ "$?" -ne 0 ]; then
+        error_msg "Error: Failed to download Passwall package."
+    fi
+    unzip -q "passwall_packages_ipk_${ARCH_3}.zip"
+    if [ "$?" -ne 0 ]; then
+        error_msg "Error: Failed to extract Passwall package."
+    fi
+    echo -e "${INFO} Passwall Packages downloaded successfully."
 
+
+    echo -e "${SUCCESS} Download and extraction All complete."
     sync && sleep 3
     echo -e "${INFO} [ packages ] directory status: $(ls -al 2>/dev/null)"
 }
@@ -482,8 +503,9 @@ rebuild_firmware() {
     # Tunnel option
     OPENCLASH="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
     MIHOMO+="mihomo luci-app-mihomo"
+    PASSWALL+="chinadns-ng resolveip dns2socks dns2tcp ipt2socks microsocks tcping xray-core xray-plugin luci-app-passwall"
 
-    PACKAGES+=" $OPENCLASH $MIHOMO"
+    PACKAGES+=" $OPENCLASH $MIHOMO $PASSWALL"
 
     # NAS and Hard disk tools
     PACKAGES+=" luci-app-diskman luci-app-hd-idle luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
