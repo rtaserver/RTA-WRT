@@ -379,7 +379,7 @@ custom_packages() {
     passwall_file_ipk="luci-23.05_luci-app-passwall"
     passwall_file_zip="passwall_packages_ipk_${ARCH_3}"
     passwall_file_ipk_down="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*${passwall_file_ipk}.*.ipk" | head -n 1)"
-    passwall_file_zip_down="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*${passwall_file_zip}.*.zip" | head -n 1)"
+    passwall_file_zip_down="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*passwall_packages_ipk_${ARCH_3}.zip" | head -n 1)"
 
 
     # Output download information
@@ -415,7 +415,7 @@ custom_packages() {
     fi
     curl -fsSOL ${passwall_file_zip_down}
     if [ "$?" -ne 0 ]; then
-        error_msg "Error: Failed to download Passwall package."
+        error_msg "Error: Failed to download Passwall Zip package."
     fi
     unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip"
     if [ "$?" -ne 0 ]; then
