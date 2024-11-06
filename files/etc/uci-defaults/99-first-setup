@@ -1,45 +1,55 @@
 #!/bin/sh
 
 # ENV
-exec > /root/misc-setup.log 2>&1
+exec > /root/firs-setup.log 2>&1
 
 msg() {
     local DATE=$(date '+%d %B %Y %T')
-    echo "[ INFO MISC ] $1"
+    echo "[ INFO FIRST SETUP ] $1"
 }
 
 
-# Step 1: Remove sysinfo banner if Devices Amlogic
-msg "Step 1: Remove sysinfo banner if Devices Amlogic"
+# Step 1: Configure Password Login OpenWrt
+msg "Step 1: Configure Password Login OpenWrt"
+(echo "rtawrt"; sleep 1; echo "rtawrt") | passwd > /dev/null
+
+
+# Step 2: Add Custom Repo and Disable opkg signature check
+msg "Step 2: Add Custom Repo and Disable opkg signature check"
+echo "src/gz custom_arch https://dl.openwrt.ai/latest/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
+
+
+# Step 3: Remove sysinfo banner if Devices Amlogic
+msg "Step 3: Remove sysinfo banner if Devices Amlogic"
 if opkg list-installed | grep -q "^luci-app-amlogic "; then
     rm -rf /etc/profile.d/30-sysinfo.sh
 fi
 
 
-# Step 2: Remove login password required when accessing terminal
-msg "Step 2: Remove login password required when accessing terminal"
+# Step 3: Remove login password required when accessing terminal
+msg "Step 3: Remove login password required when accessing terminal"
 uci set ttyd.@ttyd[0].command='/bin/bash --login'
 uci commit ttyd
 
 
-# Step 3: Remove huawei me909s usb-modeswitch
-msg "Step 3: Remove huawei me909s usb-modeswitch"
+# Step 4: Remove huawei me909s usb-modeswitch
+msg "Step 4: Remove huawei me909s usb-modeswitch"
 sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
 
 
-# Step 4: Remove dw5821e usb-modeswitch
-msg "Step 4: Remove dw5821e usb-modeswitch"
+# Step 5: Remove dw5821e usb-modeswitch
+msg "Step 5: Remove dw5821e usb-modeswitch"
 sed -i -e '/413c:81d7/,+5d' /etc/usb-mode.json
 
 
-# Step 5: Disable /etc/config/xmm-modem
-msg "Step 5: Disable /etc/config/xmm-modem"
+# Step 6: Disable /etc/config/xmm-modem
+msg "Step 6: Disable /etc/config/xmm-modem"
 uci set xmm-modem.@xmm-modem[0].enable='0'
 uci commit xmm-modem
 
 
-# Step 6: Setup Nlbwmon Database Dir
-msg "Step 6: Setup Nlbwmon Database Dir"
+# Step 7: Setup Nlbwmon Database Dir
+msg "Step 7: Setup Nlbwmon Database Dir"
 uci set nlbwmon.@nlbwmon[0].database_directory='/etc/nlbwmon'
 uci set nlbwmon.@nlbwmon[0].commit_interval='3h'
 uci set nlbwmon.@nlbwmon[0].refresh_interval='60s'
@@ -47,45 +57,45 @@ uci commit nlbwmon
 bash /etc/init.d/nlbwmon restart
 
 
-# Step 7: Setup Auto Vnstat Database Backup
-msg "Step 7: Setup Auto Vnstat Database Backup"
+# Step 8: Setup Auto Vnstat Database Backup
+msg "Step 8: Setup Auto Vnstat Database Backup"
 sed -i 's/;DatabaseDir "\/var\/lib\/vnstat"/DatabaseDir "\/etc\/vnstat"/' /etc/vnstat.conf
 mkdir -p /etc/vnstat
 chmod +x /etc/init.d/vnstat_backup
 bash /etc/init.d/vnstat_backup enable
 
 
-# Step 8: Adjusting App Catagory
-msg "Step 8: Adjusting App Catagory"
+# Step 9: Adjusting App Catagory
+msg "Step 9: Adjusting App Catagory"
 sed -i -E "s|status|services|g" /usr/lib/lua/luci/controller/base64.lua
 
 
-# Step 9: Configurating OpenClash
-msg "Step 9: Configurating OpenClash"
+# Step 10: Configurating OpenClash
+msg "Step 10: Configurating OpenClash"
 bash /usr/bin/patchoc.sh
 sed -i '/exit 0/i #/usr/bin/patchoc.sh' /etc/rc.local
 ln -s /etc/openclash/history/config-wrt.db /etc/openclash/cache.db
 ln -s /etc/openclash/core/clash_meta  /etc/openclash/clash
 
 
-# Step 10: Adding New Line For Enable i2c Oled Display if Devices Supported
-msg "Step 10: Adding New Line For Enable i2c Oled Display if Devices Supported"
+# Step 11: Adding New Line For Enable i2c Oled Display if Devices Supported
+msg "Step 11: Adding New Line For Enable i2c Oled Display if Devices Supported"
 if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
     echo -e "\ndtparam=i2c1=on\ndtparam=spi=on\ndtparam=i2s=on" >> /boot/config.txt
 fi
 
 
-# Step 11: Setup PHP
-msg "Step 11: Setup PHP"
+# Step 12: Setup PHP
+msg "Step 12: Setup PHP"
 ln -s /usr/bin/php-cli /usr/bin/php
 
 
-# Step 12: Setting Tinyfm
-msg "Step 12: Setting Tinyfm"
+# Step 13: Setting Tinyfm
+msg "Step 13: Setting Tinyfm"
 ln -s / /www/tinyfm/rootfs
 
-# Step 13: Patch OpenClash
-msg "Step 13: Patch OpenClash"
+# Step 14: Patch OpenClash
+msg "Step 14: Patch OpenClash"
 STATUS="/usr/lib/lua/luci/view/openclash/status.htm"
 DEV="/usr/lib/lua/luci/view/openclash/developer.htm"
 MYIP="/usr/lib/lua/luci/view/openclash/myip.htm"
@@ -160,8 +170,33 @@ document.getElementById("editor").src = "http://" + window.location.hostname + "
 EOF
 
 
+
+# Step 16: Set All permission files
+msg "Step 16: Set All permission files"
+check_permission() {
+    local DIR=${1:-.}
+
+    find "$DIR" -type f | while read file; do
+        if file "$file" | grep -q "executable"; then
+            if [ ! -x "$file" ]; then
+                msg "File requiring chmod +x: $file"
+                chmod +x "$file"
+            fi
+        fi
+    done
+}
+
+check_permission "/etc/init.d"
+check_permission "/etc/mihomo"
+check_permission "/etc/openclash"
+check_permission "/lib/netifd"
+check_permission "/lib/wifi"
+check_permission "/sbin"
+check_permission "/usr/bin"
+
+
 # Log success
-msg "Misc Setup settings successfully applied..."
+msg "First Setup settings successfully applied..."
 
 # Remove this script after successful execution
 rm -f /etc/uci-defaults/$(basename $0)
