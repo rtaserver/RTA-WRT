@@ -167,4 +167,4 @@ msg "Misc Setup settings successfully applied..."
 rm -f /etc/uci-defaults/$(basename $0)
 
 # Reboot After Steps Complited
-reboot || echo b > /proc/sysrq-trigger
+# reboot || echo b > /proc/sysrq-trigger
