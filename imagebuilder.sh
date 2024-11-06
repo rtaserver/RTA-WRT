@@ -376,7 +376,7 @@ custom_packages() {
 
     #passwall
     passwall_api="https://api.github.com/repos/xiaorouji/openwrt-passwall/releases"
-    passwall_file_ipk="luci-23.05_luci-app-passwall_4.78-4_all.ipk"
+    passwall_file_ipk="luci-23.05_luci-app-passwall"
     passwall_file_zip="passwall_packages_ipk_${ARCH_3}"
     passwall_file_ipk_down="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*${passwall_file_ipk}.*.ipk" | head -n 1)"
     passwall_file_zip_down="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*${passwall_file_zip}.*.zip" | head -n 1)"
