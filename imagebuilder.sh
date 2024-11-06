@@ -357,8 +357,8 @@ custom_packages() {
 
     # OpenClash
     openclash_api="https://api.github.com/repos/vernesong/OpenClash/releases"
-    openclash_file="luci-app-openclash"
-    openclash_file_down="$(curl -s ${openclash_api} | grep "browser_download_url" | grep -oE "https.*${openclash_file}.*.ipk" | head -n 1)"
+    openclash_file_ipk="luci-app-openclash"
+    openclash_file_ipk_down="$(curl -s ${openclash_api} | grep "browser_download_url" | grep -oE "https.*${openclash_file_ipk}.*.ipk" | head -n 1)"
 
     echo -e "${STEPS} Start Clash Core Download !"
     core_dir="${custom_files_path}/etc/openclash/core"
@@ -371,20 +371,22 @@ custom_packages() {
 
     # Mihomo
     mihomo_api="https://api.github.com/repos/rtaserver/OpenWrt-mihomo-Mod/releases"
-    mihomo_file="mihomo_${ARCH_3}-openwrt-23.05" #$op_branch | cut -d '.' -f 1-2
-    mihomo_file_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file}.*.tar.gz" | head -n 1)"
+    mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-23.05" #$op_branch | cut -d '.' -f 1-2
+    mihomo_file_ipk_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file_ipk}.*.tar.gz" | head -n 1)"
 
     #passwall
-    passwall_latest_release=$(curl -s https://api.github.com/repos/xiaorouji/openwrt-passwall/releases/latest | jq -r '.tag_name')
-    passwall_base_url="https://github.com/xiaorouji/openwrt-passwall/releases/download/$passwall_latest_release"
-    passwall_ipk="${passwall_base_url}/uci-23.05_luci-app-passwall_${passwall_latest_release}_all.ipk"
-    passwall_zip="${passwall_base_url}/passwall_packages_ipk_${ARCH_3}.zip"
-                        
+    passwall_api="https://api.github.com/repos/xiaorouji/openwrt-passwall/releases/"
+    passwall_file_ipk="luci-23.05_luci-app-passwall"
+    passwall_file_zip="passwall_packages_ipk_${ARCH_3}"
+    passwall_file_ipk_down="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*${passwall_file_ipk}.*.ipk" | head -n 1)"
+    passwall_file_zip_down="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*${passwall_file_zip}.*.zip" | head -n 1)"
+
+
     # Output download information
     echo -e "${STEPS} Installing OpenClash, Mihomo And Passwall"
 
     echo -e "${INFO} Downloading OpenClash package"
-    curl -fsSOL ${openclash_file_down}
+    curl -fsSOL ${openclash_file_ipk_down}
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download OpenClash package."
     fi
@@ -396,7 +398,7 @@ custom_packages() {
     echo -e "${INFO} OpenClash Packages downloaded successfully."
 
     echo -e "${INFO} Downloading Mihomo package"
-    curl -fsSOL ${mihomo_file_down}
+    curl -fsSOL ${mihomo_file_ipk_down}
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download Mihomo package."
     fi
@@ -407,15 +409,15 @@ custom_packages() {
     echo -e "${INFO} Mihomo Packages downloaded successfully."
 
     echo -e "${INFO} Downloading Passwall package"
-    curl -fsSOL ${passwall_ipk}
+    curl -fsSOL ${passwall_file_ipk_down}
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download Passwall package."
     fi
-    curl -fsSOL ${passwall_zip}
+    curl -fsSOL ${passwall_file_zip_down}
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download Passwall package."
     fi
-    unzip -q "passwall_packages_ipk_${ARCH_3}.zip"
+    unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip"
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to extract Passwall package."
     fi
