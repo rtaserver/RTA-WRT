@@ -400,7 +400,7 @@ custom_packages() {
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download Mihomo package."
     fi
-    tar -xzvf "mihomo_${ARCH_3}-openwrt-23.05" && rm "mihomo_${ARCH_3}-openwrt-23.05"
+    tar -xzvf "mihomo_*.tar.gz" && rm "mihomo_*.tar.gz"
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to extract Mihomo package."
     fi
