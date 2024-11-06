@@ -371,7 +371,7 @@ custom_packages() {
 
     # Mihomo
     mihomo_api="https://api.github.com/repos/rtaserver/OpenWrt-mihomo-Mod/releases"
-    mihomo_file="mihomo_${ARCH_3}"
+    mihomo_file="mihomo_${ARCH_3}-openwrt-23.05" #$op_branch | cut -d '.' -f 1-2
     mihomo_file_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file}.*.tar.gz" | head -n 1)"
 
     #passwall
@@ -400,7 +400,7 @@ custom_packages() {
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download Mihomo package."
     fi
-    tar -xzvf "mihomo_${ARCH_3}.tar.gz" && rm "mihomo_${ARCH_3}.tar.gz"
+    tar -xzvf "mihomo_${ARCH_3}-openwrt-23.05" && rm "mihomo_${ARCH_3}-openwrt-23.05"
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to extract Mihomo package."
     fi
