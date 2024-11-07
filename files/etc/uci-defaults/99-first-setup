@@ -6,6 +6,7 @@ exec > /root/firs-setup.log 2>&1
 msg() {
     local DATE=$(date '+%d %B %Y %T')
     echo "[ INFO FIRST SETUP ] $1"
+    logger -p "notice" "[ INFO FIRST SETUP ] $1"
 }
 
 
