@@ -17,6 +17,7 @@ msg "Step 1: Configure Password Login OpenWrt"
 
 # Step 2: Add Custom Repo and Disable opkg signature check
 msg "Step 2: Add Custom Repo and Disable opkg signature check"
+sed -i 's/option check_signature/# option check_signature/g' /etc/opkg.conf
 echo "src/gz custom_arch https://dl.openwrt.ai/latest/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
 
 
