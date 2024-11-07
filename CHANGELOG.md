@@ -1,4 +1,8 @@
 # What's New!
+**Changelog** (7-11-2024):
+- Update Mihomo
+- Add Passwall
+- Fixed Fast Booting
 
 **Changelog** (3-11-2024):
 - Remove Radius Monitor

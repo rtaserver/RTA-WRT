@@ -238,3 +238,11 @@ jobs:
             - Default WIFI password: none
             ### Install to EMMC For Amlogic
             - Login to OpenWrt → System → Amlogic Service → Install OpenWrt
+
+      - name: Upload file to Telegram
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: OpenWrt - ${{ env.TARGET }}
+          document: imagebuilder/compiled_images/*.img.gz

@@ -496,6 +496,7 @@ rebuild_firmware() {
     luci-mod-status luci-mod-system luci-proto-bonding \
     luci-proto-ppp lolcat coreutils-stty git git-http"
 
+    PACKAGES+=" iptables-nft" #NFT 
 
     PACKAGES+=" luci-app-zerotier luci-app-cloudflared tailscale luci-app-tailscale"
 
