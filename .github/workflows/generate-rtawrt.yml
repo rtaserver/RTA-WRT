@@ -232,8 +232,8 @@ jobs:
           file_glob: true
           file: imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz
           asset_name: ${{ github.event.repository.name }}-${{ github.sha }}
-          tag: ${{ env.RELEASE_TAG }}-${{ env.DATE }}
-          release_name: RTA-WRT - ${{ env.RELEASE_TAG }}-${{ env.DATE }}
+          tag: ${{ env.RELEASES_TAG }}-${{ env.DATE }}
+          release_name: RTA-WRT - ${{ env.RELEASES_TAG }}-${{ env.DATE }}
           overwrite: true
           prerelease: false
           body: |
