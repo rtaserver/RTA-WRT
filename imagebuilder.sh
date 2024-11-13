@@ -551,7 +551,15 @@ rebuild_firmware() {
 
 
     # Exclude package (must use - before packages name)
-    EXCLUDED+=" -dnsmasq -libgd"
+    EXCLUDED+=" -libgd"
+    if [ "${op_sourse}" == "openwrt" ]; then
+        EXCLUDED+=" -dnsmasq"
+    elif [ "${op_sourse}" == "immortalwrt" ]; then
+        EXCLUDED+=" -dnsmasq -automount -libustream-openssl -default-settings-chn -luci-i18n-base-zh-cn"
+        if [ "$ARCH_2" == "x86_64" ]; then
+        EXCLUDED+=" -kmod-usb-net-rtl8152-vendor"
+        fi
+    fi
 
     # Rebuild firmware
     make clean
