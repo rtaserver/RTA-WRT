@@ -327,17 +327,16 @@ custom_packages() {
         "libmbim|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
         "modemmanager|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
         "sms-tool|https://downloads.$op_sourse.org/releases/${op_branch}/packages/$ARCH_3/packages"
-        "luci-app-netspeedtest|https://fantastic-packages.github.io/packages/releases/23.05/packages/x86_64/luci"
-        "tailscale|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
+        "tailscale|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
+
         "luci-app-tailscale|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
         "luci-app-mmconfig|https://dllkids.xyz/packages/$ARCH_3"
-        "pdnsd-alt|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
-        "brook|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
         "luci-app-diskman|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
         "modeminfo|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
         "atinout|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
         "luci-app-poweroff|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
         "xmm-modem|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
+
         "luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/blob/master/current"
         "internet-detector|https://github.com/gSpotx2f/packages-openwrt/blob/master/current"
         "internet-detector-mod-modem-restart|https://github.com/gSpotx2f/packages-openwrt/blob/master/current"
@@ -345,6 +344,7 @@ custom_packages() {
         "luci-app-disks-info|https://github.com/gSpotx2f/packages-openwrt/blob/master/current"
         "luci-app-log-viewer|https://github.com/gSpotx2f/packages-openwrt/blob/master/current"
         "luci-app-temp-status|https://github.com/gSpotx2f/packages-openwrt/blob/master/current"
+        
         "luci-app-zerotier|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
         "luci-app-ramfree|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
         "luci-app-3ginfo-lite|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
@@ -352,6 +352,8 @@ custom_packages() {
         "modemband|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/packages"
         "luci-app-modemband|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
         "luci-app-sms-tool-js|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
+        
+        "luci-app-netspeedtest|https://fantastic-packages.github.io/packages/releases/$CURVER/packages/$ARCH_3/luci"
     )
     download_packages "custom" other_packages[@]
 
