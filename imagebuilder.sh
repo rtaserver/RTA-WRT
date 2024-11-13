@@ -319,7 +319,7 @@ custom_packages() {
     download_packages "github" github_packages[@]
 
     # Download IPK From Custom
-    CURVER=$op_branch | cut -d '.' -f 1-2
+    CURVER=$(echo $op_branch | awk -F. '{print $1"."$2}')
     other_packages=(
         "modemmanager-rpcd|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
         "luci-proto-modemmanager|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/luci"
