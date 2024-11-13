@@ -61,9 +61,12 @@ download_packages() {
         for entry in "${list[@]}"; do
             IFS="|" read -r filename base_url <<< "$entry"
             echo -e "${INFO} Processing file: $filename"
-            file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[0-9]+\.[0-9]+(\.[0-9]+)?(_[a-z0-9]+)?_[a-z0-9]+\.ipk" | head -n 1)
+            file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[0-9a-zA-Z\._~-]*\.ipk" | head -n 1)
             if [ -z "$file_urls" ]; then
-                file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_.*.ipk" | head -n 1)
+                file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[0-9]+\.[0-9]+(\.[0-9]+)?(_[a-z0-9]+)?_[a-z0-9]+\.ipk" | head -n 1)
+                if [ -z "$file_urls" ]; then
+                    file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_.*.ipk" | head -n 1)
+                fi
             fi
             if [ -n "$file_urls" ]; then
                 full_url="${base_url}/${file_urls%%\"*}"
@@ -327,6 +330,7 @@ custom_packages() {
         "modemmanager|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
         "sms-tool|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
         "tailscale|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
+        "python3-speedtest-cli|https://downloads.openwrt.org/releases/packages-$CURVER/$ARCH_3/packages"
 
         "luci-app-tailscale|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
         "luci-app-diskman|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
