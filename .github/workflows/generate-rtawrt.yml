@@ -72,6 +72,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Add changelog info to new release description
+        id: changelog
+        shell: bash
+        run: |
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
+          r="${r//'%'/'%25'}"
+          r="${r//$'\n'/'%0A'}"
+          r="${r//$'\r'/'%0D'}"  
+          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
+
       - name: Initialization environment (normal)
         # if: github.event.inputs.target != 'all' && !cancelled()
         env:
@@ -83,7 +93,6 @@ jobs:
           echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           echo -e "[\033[94m INFO \033[0m] TARGET: ${{ matrix.target }}"
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
-          WORKDIR="${PWD}"
 
       - name: Setup Environment Variables
         id: init
@@ -215,20 +224,9 @@ jobs:
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
           echo -e "INFO files list: \n$(ls -l compiled_images_${{ env.TAG_NAME }} 2>/dev/null)"
-  
-      - name: Add changelog info to new release description
-        id: changelog
-        shell: bash
-        run: |
-          cd imagebuilder
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' $WORKDIR/CHANGELOG.md)
-          r="${r//'%'/'%25'}"
-          r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"  
-          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
               
       - name: Upload Firmware to Release
-        uses: svenstaro/upload-release-action@2.9.0
+        uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
