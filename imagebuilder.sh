@@ -61,7 +61,7 @@ download_packages() {
         for entry in "${list[@]}"; do
             IFS="|" read -r filename base_url <<< "$entry"
             echo -e "${INFO} Processing file: $filename"
-            file_urls=$(curl -sL "$base_url" | grep -oE "${filename}.*\.ipk" | head -n 1)
+            file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_.*.ipk" | head -n 1)
             if [ -n "$file_urls" ]; then
                 full_url="${base_url}/${file_urls%%\"*}"
                 echo -e "${INFO} Downloading ${file_urls%%\"*}"
