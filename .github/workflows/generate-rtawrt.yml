@@ -226,7 +226,7 @@ jobs:
           name: OpenWrt - ${{ env.TARGET }}
           artifacts: imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz
           allowUpdates: true
-          removeArtifacts: true
+          removeArtifacts: false
           replacesArtifacts: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
