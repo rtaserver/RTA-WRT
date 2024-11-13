@@ -247,7 +247,7 @@ adjust_settings() {
 
     DTM=$(date '+%d-%M-%Y')
 
-    sed -i "s/qwertyuiop/$DTM/g" "${custom_files_path}/www/luci-static/resources/view/status/include/10_system.js"
+    sed -i "s/Ouc3kNF6/$DTM/g" "${custom_files_path}/etc/uci-defaults/99-first-setup"
 
     if [[ -s "repositories.conf" ]]; then
         sed -i '\|option check_signature| s|^|#|' repositories.conf
