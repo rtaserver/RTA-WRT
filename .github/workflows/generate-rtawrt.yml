@@ -144,7 +144,7 @@ jobs:
         run: |
           echo -e "[\033[95m STEPS \033[0m] Building Firmware And Rootfs"
           TARGET_NAME="${{ env.TARGET_NAME }}"
-          RELEASES_BRANCH="${{ inputs.releases_branch }}"
+          RELEASES_BRANCH="${{ inputs.releases_branch }}"${RELEASES_BRANCH%:*}
           chmod +x ${IMAGEBUILDER_SH}
           bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "${{ env.TARGET_NAME }}"
           echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> ${GITHUB_ENV}
@@ -247,3 +247,24 @@ jobs:
             - Default username: root
             - Default password: rtawrt
             - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
+
+      - name: Update Readme
+        run: |
+          RELEASES_BRANCH="${{ inputs.releases_branch }}"
+          WRT_SOURCE=${RELEASES_BRANCH%:*}
+          WRT_BRANCH=${RELEASES_BRANCH#*:}
+          if [[ "$WRT_SOURCE" == "openwrt" ]]; then
+            sed -i -E "s|openwrt_[0-9]+\.[0-9]+(\.[0-9]+)?-[0-9]+|${{ env.RELEASES_TAG }}-${{ env.DATE }}|g" ${PWD}/README.md
+            sed -i -E "s|OpenWrt--[0-9]+\.[0-9]+(\.[0-9]+)?-openwrt|OpenWrt--${WRT_BRANCH}-openwrt|g" ${PWD}/README.md
+          elif [[ "$WRT_SOURCE" == "immortalwrt" ]]; then
+            sed -i -E "s|immortalwrt_[0-9]+\.[0-9]+(\.[0-9]+)?-[0-9]+|${{ env.RELEASES_TAG }}-${{ env.DATE }}|g" ${PWD}/README.md
+            sed -i -E "s|ImmortalWrt--[0-9]+\.[0-9]+(\.[0-9]+)?-immortalwrt|ImmortalWrt--${WRT_BRANCH}-immortalwrt|g" ${PWD}/README.md
+          fi
+
+      - name: Commit changes
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add README.md
+          git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')"
+          git push
