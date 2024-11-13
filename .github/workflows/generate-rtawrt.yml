@@ -83,6 +83,7 @@ jobs:
           echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           echo -e "[\033[94m INFO \033[0m] TARGET: ${{ matrix.target }}"
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+          WORKDIR="${PWD}"
 
       - name: Setup Environment Variables
         id: init
@@ -220,14 +221,14 @@ jobs:
         shell: bash
         run: |
           cd imagebuilder
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' CHANGELOG.md)
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' $WORKDIR/CHANGELOG.md)
           r="${r//'%'/'%25'}"
           r="${r//$'\n'/'%0A'}"
           r="${r//$'\r'/'%0D'}"  
           echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
               
       - name: Upload Firmware to Release
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@2.9.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
