@@ -207,4 +207,4 @@ msg "First Setup settings successfully applied..."
 rm -f /etc/uci-defaults/$(basename $0)
 
 # Reboot After Steps Complited
-# reboot || echo b > /proc/sysrq-trigger
+echo b > /proc/sysrq-trigger

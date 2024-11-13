@@ -1,4 +1,14 @@
 # What's New!
+
+**Changelog** (13-11-2024):
+- Added support for Immortalwrt
+- Updated dependencies to the latest versions
+- Improved code quality and readability
+- Fixed minor bugs and issues
+- Enhanced documentation and examples
+- Added new features and functionality
+- Improved performance and efficiency
+
 **Changelog** (7-11-2024):
 - Update Mihomo
 - Add Passwall

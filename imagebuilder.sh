@@ -320,13 +320,12 @@ custom_packages() {
 
     # Download IPK From Custom
     other_packages=(
-        "lolcat|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
-        "modemmanager-rpcd|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
-        "luci-proto-modemmanager|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/luci"
-        "libqmi|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
-        "libmbim|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
-        "modemmanager|https://downloads.openwrt.org/snapshots/packages/$ARCH_3/packages"
-        "sms-tool|https://downloads.openwrt.org/releases/${op_branch}/packages/$ARCH_3/packages"
+        "modemmanager-rpcd|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
+        "luci-proto-modemmanager|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/luci"
+        "libqmi|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
+        "libmbim|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
+        "modemmanager|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
+        "sms-tool|https://downloads.$op_sourse.org/releases/${op_branch}/packages/$ARCH_3/packages"
         "luci-app-netspeedtest|https://fantastic-packages.github.io/packages/releases/23.05/packages/x86_64/luci"
         "luci-app-zerotier|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
         "tailscale|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
