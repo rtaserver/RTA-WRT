@@ -518,7 +518,7 @@ rebuild_firmware() {
     PACKAGES+=" internet-detector luci-app-internet-detector internet-detector-mod-modem-restart nlbwmon luci-app-nlbwmon vnstat2 vnstati2 luci-app-vnstat2 luci-app-netmonitor"
 
     # Speedtest
-    PACKAGES+=" librespeed-go python3-speedtest-cli iperf3 luci-app-netspeedtest"
+    # PACKAGES+=" librespeed-go python3-speedtest-cli iperf3 luci-app-netspeedtest"
 
     # Base64 Encode Decode
     PACKAGES+=" luci-app-base64"
