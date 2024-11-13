@@ -61,10 +61,14 @@ download_packages() {
         for entry in "${list[@]}"; do
             IFS="|" read -r filename base_url <<< "$entry"
             echo -e "${INFO} Processing file: $filename"
-            file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[0-9]+\.[0-9]+(\.[0-9]+)?(-r[0-9]+)?_[^.]+\.ipk" | sort -V | tail -n 1)
+            file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[^_]+_[^.]+\.ipk" | sort -V | tail -n 1)
             if [ -z "$file_urls" ]; then
-                echo -e "${WARNING} No matching stable file found. Trying general search..."
-                file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[^_]+_[^.]+\.ipk" | sort -V | tail -n 1)
+                echo -e "${WARNING} No matching stable file found. Trying general search V1 ..."
+                file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[_0-9a-zA-Z\._~-]*\.ipk" | sort -V | tail -n 1)
+                if [ -z "$file_urls" ]; then
+                    echo -e "${WARNING} No matching stable file found. Trying general search V2..."
+                    file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[0-9]+\.[0-9]+(\.[0-9]+)?(-[0-9]+)?_[^.]+\.ipk" | sort -V | tail -n 1)
+                fi
             fi
             if [ -n "$file_urls" ]; then
                 full_url="$base_url/$file_urls"
