@@ -326,7 +326,6 @@ custom_packages() {
         "tailscale|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
 
         "luci-app-tailscale|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
-        "luci-app-mmconfig|https://dllkids.xyz/packages/$ARCH_3"
         "luci-app-diskman|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
         "modeminfo|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
         "atinout|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
@@ -499,7 +498,7 @@ rebuild_firmware() {
     PACKAGES+=" luci-app-zerotier luci-app-cloudflared tailscale luci-app-tailscale"
 
     # Modem Tools
-    PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband luci-app-mmconfig sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"
+    PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"
 
     # Tunnel option
     OPENCLASH="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
