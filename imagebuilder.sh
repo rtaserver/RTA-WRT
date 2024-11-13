@@ -61,10 +61,10 @@ download_packages() {
         for entry in "${list[@]}"; do
             IFS="|" read -r filename base_url <<< "$entry"
             echo -e "${INFO} Processing file: $filename"
-            file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[_0-9a-zA-Z\._~-]*\.ipk" | sort -V | tail -n 1)
+            file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[0-9]+\.[0-9]+(\.[0-9]+)?(-r[0-9]+)?_[^.]+\.ipk" | sort -V | tail -n 1)
             if [ -z "$file_urls" ]; then
                 echo -e "${WARNING} No matching stable file found. Trying general search..."
-                file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[0-9a-zA-Z\._~-]*\.ipk" | grep -v 'git' | sort -V | tail -n 1)
+                file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[^_]+_[^.]+\.ipk" | sort -V | tail -n 1)
             fi
             if [ -n "$file_urls" ]; then
                 full_url="$base_url/$file_urls"
@@ -326,7 +326,7 @@ custom_packages() {
         "libqmi|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
         "libmbim|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
         "modemmanager|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
-        "sms-tool|https://downloads.$op_sourse.org/releases/${op_branch}/packages/$ARCH_3/packages"
+        "sms-tool|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
         "tailscale|https://downloads.$op_sourse.org/snapshots/packages/$ARCH_3/packages"
 
         "luci-app-tailscale|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
@@ -336,6 +336,7 @@ custom_packages() {
         "atinout|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
         "luci-app-poweroff|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
         "xmm-modem|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
+        "luci-app-lite-watchdog|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
 
         "luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
@@ -348,7 +349,6 @@ custom_packages() {
         "luci-app-zerotier|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
         "luci-app-ramfree|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
         "luci-app-3ginfo-lite|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
-        "luci-app-lite-watchdog|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
         "modemband|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/packages"
         "luci-app-modemband|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
         "luci-app-sms-tool-js|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
