@@ -20,9 +20,6 @@ on:
         options:
           - immortalwrt:23.05.4
           - openwrt:23.05.5
-          - openwrt:23.05.4
-          - openwrt:23.05.3
-          - openwrt:23.05.2
       target:
         description: "Select device target:"
         required: true
