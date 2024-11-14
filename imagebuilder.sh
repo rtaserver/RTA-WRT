@@ -97,7 +97,7 @@ download_packages() {
                 
                 while [ $attempt -le $max_attempts ]; do
                     echo -e "${INFO} Attempt $attempt to download $filename"
-                    if curl -L --max-time 60 --retry 2 -o "${filename}.ipk" "$full_url"; then
+                    if curl -fsSL --max-time 60 --retry 2 -o "${filename}.ipk" "$full_url"; then
                         download_success=true
                         break
                     else
