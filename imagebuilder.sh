@@ -61,22 +61,54 @@ download_packages() {
         for entry in "${list[@]}"; do
             IFS="|" read -r filename base_url <<< "$entry"
             echo -e "${INFO} Processing file: $filename"
-            file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[0-9]+\.[0-9]+(\.[0-9]+)?(_[a-z0-9]+)?_[a-z0-9]+\.ipk" | head -n 1)
-            if [ -z "$file_urls" ]; then
-                file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_[0-9.]+(_[a-z0-9~-]+)?_[a-z0-9]+\.ipk|${filename}.*\.ipk" | sort -V | tail -n 1)
-                if [ -z "$file_urls" ]; then
-                    file_urls=$(curl -sL "$base_url" | grep -oE "${filename}_.*.ipk" | head -n 1)
+            
+            # Array untuk menyimpan pola pencarian
+            local search_patterns=(
+                "${filename}_[0-9]+\.[0-9]+(\.[0-9]+)?(_[a-z0-9]+)?_[a-z0-9]+\.ipk"
+				"${filename}_[0-9]+\.[0-9]+(\.[0-9]+)?(_[a-z0-9]+)?_[a-z0-9]+\.apk"
+                "${filename}_[0-9.]+(_[a-z0-9~-]+)?_[a-z0-9]+\.ipk"
+				"${filename}_[0-9.]+(_[a-z0-9~-]+)?_[a-z0-9]+\.apk"
+                "${filename}.*\.ipk"
+				"${filename}.*\.apk"
+                "${filename}_.*.ipk"
+				"${filename}_.*.apk"
+            )
+            
+            local file_urls=""
+            local full_url=""
+            
+            # Coba berbagai pola pencarian
+            for pattern in "${search_patterns[@]}"; do
+                file_urls=$(curl -sL "$base_url" | grep -oE "$pattern" | sort -V | tail -n 1)
+                if [ -n "$file_urls" ]; then
+                    full_url="${base_url}/${file_urls%%\"*}"
+                    break
                 fi
-            fi
-            if [ -n "$file_urls" ]; then
-                full_url="${base_url}/${file_urls%%\"*}"
+            done
+            
+            # Percobaan download dengan mekanisme fallback
+            if [ -n "$full_url" ]; then
                 echo -e "${INFO} Downloading ${file_urls%%\"*}"
                 echo -e "${INFO} From $full_url"
-                curl -fsSL -o "${filename}.ipk" "$full_url"
-                if [ $? -eq 0 ]; then
-                    echo -e "${SUCCESS} Package [$filename] downloaded successfully."
-                else
-                    error_msg "Failed to download package [$filename]."
+                
+                local max_attempts=3
+                local attempt=1
+                local download_success=false
+                
+                while [ $attempt -le $max_attempts ]; do
+                    echo -e "${INFO} Attempt $attempt to download $filename"
+                    if curl -L --max-time 60 --retry 2 -o "${filename}.ipk" "$full_url"; then
+                        download_success=true
+                        break
+                    else
+                        echo -e "${WARNING} Download failed for $filename (Attempt $attempt)"
+                        ((attempt++))
+                        sleep 5
+                    fi
+                done
+                
+                if [ "$download_success" = false ]; then
+                    error_msg "FAILED: Could not download $filename after $max_attempts attempts"
                 fi
             else
                 error_msg "No matching file found for [$filename] at $base_url."
