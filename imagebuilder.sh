@@ -387,7 +387,7 @@ custom_packages() {
         "luci-app-modemband|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
         "luci-app-sms-tool-js|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
 
-        "luci-app-netspeedtest|https://fantastic-packages.github.io/packages/releases/$CURVER/packages/$ARCH_3/luci"
+        "luci-app-netspeedtest|https://fantastic-packages.github.io/packages/releases/$CURVER/packages/x86_64/luci"
     )
     download_packages "custom" other_packages[@]
 
