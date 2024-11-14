@@ -265,6 +265,6 @@ jobs:
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
-          git add README.md
-          git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')"
-          git push
+          git add README.md || echo "No changes"
+          git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes"
+          git push || echo "No changes"
