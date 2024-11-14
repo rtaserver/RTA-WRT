@@ -231,7 +231,6 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz
-          asset_name: ${{ github.event.repository.name }}-${{ github.sha }}
           tag: ${{ env.RELEASES_TAG }}-${{ env.DATE }}
           release_name: RTA-WRT - ${{ env.RELEASES_TAG }}-${{ env.DATE }}
           overwrite: true
