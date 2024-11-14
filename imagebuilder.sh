@@ -64,6 +64,8 @@ download_packages() {
             
             # Array untuk menyimpan pola pencarian
             local search_patterns=(
+                "\"${filename}[^\"]*\.ipk\""
+                "\"${filename}[^\"]*\.apk\""
                 "${filename}_.*\.ipk"
 				"${filename}_.*\.apk"
                 "${filename}.*\.ipk"
@@ -75,7 +77,7 @@ download_packages() {
             
             # Coba berbagai pola pencarian
             for pattern in "${search_patterns[@]}"; do
-                file_urls=$(curl -sL "$base_url" | grep -oE "$pattern" | head -n 1 | sort -V | tail -n 1)
+                file_urls=$(curl -sL "$base_url" | grep -oE "$pattern" | sed 's/"//g' | head -n 1 | sort -V | tail -n 1)
                 if [ -n "$file_urls" ]; then
                     full_url="${base_url}/${file_urls%%\"*}"
                     break
