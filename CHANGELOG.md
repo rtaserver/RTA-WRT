@@ -1,5 +1,13 @@
 # What's New!
 
+**Changelog** (15-11-2024):
+- Fixed Depends Lolcat
+- Fixed Navbar Terminal
+- Fixed Icon PORT in overview
+- Update OpenClash to v0.46.050-beta
+- Update Mihomo to v1.11.0
+
+
 **Changelog** (13-11-2024):
 - Added support for Immortalwrt
 - Updated dependencies to the latest versions
