@@ -355,7 +355,7 @@ custom_packages() {
     # Download IPK From Custom
     CURVER=$(echo $op_branch | awk -F. '{print $1"."$2}')
     other_packages=(
-        "modemmanager-rpcd|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/packages" #$op_sourse
+        "modemmanager-rpcd|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/packages"
         "luci-proto-modemmanager|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
         "libqmi|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/packages"
         "libmbim|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/packages"
