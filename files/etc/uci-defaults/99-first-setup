@@ -52,6 +52,7 @@ uci set network.modemmanager.device='/sys/devices/platform/scb/fd500000.pcie/pci
 uci set network.modemmanager.apn='internet'
 uci set network.modemmanager.auth='none'
 uci set network.modemmanager.iptype='ipv4'
+uci set network.modemmanager.force_connection='1'
 uci set network.tethering=interface
 uci set network.tethering.proto='dhcp'
 uci set network.tethering.device='usb0'
