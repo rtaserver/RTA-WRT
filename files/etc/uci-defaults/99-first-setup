@@ -16,7 +16,8 @@ msg "Processor: $(ubus call system board | grep '\"system\"' | sed 's/ \+/ /g' |
 msg "Device Model: $(ubus call system board | grep '\"model\"' | sed 's/ \+/ /g' | awk -F'\"' '{print $4}')"
 msg "Device Board: $(ubus call system board | grep '\"board_name\"' | sed 's/ \+/ /g' | awk -F'\"' '{print $4}')"
 sed -i "s#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' / ':'')+(luciversion||''),#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' build by RTA-WRT [ Ouc3kNF6 ]':''),#g" /www/luci-static/resources/view/status/include/10_system.js
-sed -i -E "s|icons/port_%s.png|icons/port_%s.gif" /www/luci-static/resources/view/status/include/29_ports.js
+sed -i -E "s|icons/port_%s.png|icons/port_%s.gif|g" /www/luci-static/resources/view/status/include/29_ports.js
+sed -i -E "s|system/ttyd|services/ttyd|g" /usr/share/ucode/luci/template/themes/material/header.ut
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
 sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/rtawrt/' /etc/profile
 if grep -q "ImmortalWrt" /etc/openwrt_release; then
