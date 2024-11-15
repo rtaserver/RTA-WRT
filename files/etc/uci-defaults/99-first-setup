@@ -16,6 +16,7 @@ msg "Processor: $(ubus call system board | grep '\"system\"' | sed 's/ \+/ /g' |
 msg "Device Model: $(ubus call system board | grep '\"model\"' | sed 's/ \+/ /g' | awk -F'\"' '{print $4}')"
 msg "Device Board: $(ubus call system board | grep '\"board_name\"' | sed 's/ \+/ /g' | awk -F'\"' '{print $4}')"
 sed -i "s#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' / ':'')+(luciversion||''),#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' build by RTA-WRT [ Ouc3kNF6 ]':''),#g" /www/luci-static/resources/view/status/include/10_system.js
+sed -i -E "s|icons/port_%s.png|icons/port_%s.gif" /www/luci-static/resources/view/status/include/29_ports.js
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
 sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/rtawrt/' /etc/profile
 if grep -q "ImmortalWrt" /etc/openwrt_release; then
@@ -41,6 +42,7 @@ uci commit system
 # configure wan interface
 msg "Setup WAN and LAN Interface"
 uci set network.lan.ipaddr="192.168.1.1"
+uci set network.lan.delegate='0'
 uci set network.wan=interface
 uci set network.wan.proto='dhcp'
 uci set network.wan.device='eth1'
@@ -53,6 +55,7 @@ uci set network.modemmanager.iptype='ipv4'
 uci set network.tethering=interface
 uci set network.tethering.proto='dhcp'
 uci set network.tethering.device='usb0'
+uci -q delete network.wan6
 uci commit network
 uci set firewall.@zone[1].network='wan modemmanager tethering'
 uci commit firewall
@@ -61,6 +64,10 @@ uci commit firewall
 uci -q delete dhcp.lan.dhcpv6
 uci -q delete dhcp.lan.ra
 uci -q delete dhcp.lan.ndp
+uci -q delete dhcp.lan.ra_slaac
+uci -q delete dhcp.lan.ra_flags
+uci -q delete dhcp.lan.max_preferred_lifetime
+uci -q delete dhcp.lan.max_valid_lifetime
 uci commit dhcp
 
 # configure WLAN
