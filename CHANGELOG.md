@@ -1,6 +1,6 @@
 # What's New!
 
-**Changelog** (15-11-2024):
+**Changelog** (17-11-2024):
 - Fixed Depends Lolcat
 - Fixed Navbar Terminal
 - Fixed Icon PORT in overview
