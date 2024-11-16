@@ -380,12 +380,12 @@ custom_packages() {
         "luci-app-log-viewer|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "luci-app-temp-status|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         
-        "luci-app-zerotier|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
-        "luci-app-ramfree|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
-        "luci-app-3ginfo-lite|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
-        "modemband|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/packages"
-        "luci-app-modemband|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
-        "luci-app-sms-tool-js|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
+        "luci-app-zerotier|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
+        "luci-app-ramfree|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
+        "luci-app-3ginfo-lite|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
+        "modemband|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/packages"
+        "luci-app-modemband|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
+        "luci-app-sms-tool-js|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
 
         "luci-app-netspeedtest|https://fantastic-packages.github.io/packages/releases/$CURVER/packages/x86_64/luci"
     )
