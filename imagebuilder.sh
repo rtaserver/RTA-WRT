@@ -355,13 +355,13 @@ custom_packages() {
     # Download IPK From Custom
     CURVER=$(echo $op_branch | awk -F. '{print $1"."$2}')
     other_packages=(
-        "modemmanager-rpcd|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/packages"
-        "luci-proto-modemmanager|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/luci"
-        "libqmi|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/packages"
-        "libmbim|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/packages"
-        "modemmanager|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/packages"
-        "sms-tool|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/packages"
-        "tailscale|https://downloads.immortalwrt.org/snapshots/packages/$ARCH_3/packages"
+        "modemmanager-rpcd|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
+        "luci-proto-modemmanager|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/luci"
+        "libqmi|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
+        "libmbim|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
+        "modemmanager|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
+        "sms-tool|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
+        "tailscale|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "python3-speedtest-cli|https://downloads.openwrt.org/releases/packages-$CURVER/$ARCH_3/packages"
 
         "luci-app-tailscale|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
