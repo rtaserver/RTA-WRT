@@ -278,12 +278,14 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.CHAT_ID }}
+          TOPIC_ID: 36
         run: |
           REPO_URL="https://github.com/rtaserver/RTA-WRT"
           DATE=$(date +"%Y-%m-%d %H:%M:%S")
           MESSAGE="*RTA-WRT* Firmware Update\n-> REPO: [KLIK DISINI]($REPO_URL)\n-> DATE: $DATE"
           BUTTON='{"inline_keyboard":[[{"text":"KLIK DISINI","url":"'$REPO_URL'"}]]}'
           
+          curl -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage?chat_id=-1002428347060&message_thread_id=36&text=Pesan"
           curl -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
           -H "Content-Type: application/json" \
-          -d '{"chat_id":"'$TELEGRAM_CHAT_ID'","text":"'"$MESSAGE"'","parse_mode":"Markdown","reply_markup":'"$BUTTON"'}'
+          -d '{"chat_id":"'$TELEGRAM_CHAT_ID'","message_thread_id":"'$TOPIC_ID'","text":"'"$MESSAGE"'","parse_mode":"Markdown","reply_markup":'"$BUTTON"'}'
