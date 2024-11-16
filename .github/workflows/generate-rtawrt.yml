@@ -274,6 +274,19 @@ jobs:
     runs-on: ubuntu-latest
     name: Notify Telegram
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Add changelog info to new release description
+        id: changelog
+        shell: bash
+        run: |
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
+          r="${r//'%'/'%25'}"
+          r="${r//$'\n'/'%0A'}"
+          r="${r//$'\r'/'%0D'}"  
+          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
+
       - name: Notify Telegram
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
@@ -282,7 +295,7 @@ jobs:
         run: |
           REPO_URL="https://github.com/rtaserver/RTA-WRT"
           DATE=$(date +"%Y-%m-%d %H:%M:%S")
-          MESSAGE="*RTA-WRT* Firmware Update ${{ inputs.releases_branch }}\n-> REPO: [KLIK DISINI]($REPO_URL)\n-> DATE: $DATE"
+          MESSAGE="*RTA-WRT* Firmware Update ${{ inputs.releases_branch }}\n-> REPO: [KLIK DISINI]($REPO_URL)\n-> DATE: $DATE\n->CHANGGELOG:\n${{ steps.changelog.outputs.CHANGELOG }}"
           BUTTON='{"inline_keyboard":[[{"text":"KLIK DISINI","url":"'$REPO_URL'"}]]}'
           
           curl -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage?chat_id=-1002428347060&message_thread_id=36&text=Pesan"
