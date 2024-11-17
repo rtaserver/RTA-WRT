@@ -324,6 +324,6 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
             -d "chat_id=$GROUP_ID" \
             -d "text=$MESSAGE" \
-            -d "parse_mode=MarkdownV2" \
+            -d "parse_mode=HTML" \
             -d "reply_markup=$(echo $BUTTONS | jq -c .)" \
             -d "message_thread_id=$MESSAGE_THREAD_ID"
