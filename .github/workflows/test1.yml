@@ -51,9 +51,11 @@ jobs:
           MESSAGE="\
             *NEW UPDATE*
 
-            >Name: RTA-WRT
-            >Tag: $RELEASES_TAG
-            >Release Date: $DATE"
+            ```
+            Name: RTA-WRT
+            Tag: $RELEASES_TAG
+            Release Date: $DATE
+            ```"
 
           BUTTONS='{
             "inline_keyboard": [
