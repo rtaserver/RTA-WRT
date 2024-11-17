@@ -57,7 +57,6 @@ jobs:
           DATE=$(date +"%Y-%m-%d %H:%M:%S")
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
           RELEASES_TAG=${RELEASES_BRANCH/:/_}
-          CHANGELOG=$(echo -e "${{ steps.changelog.outputs.CHANGELOG }}" | sed 's/%0A/\n/g')
           MESSAGE="
           ╔════════════════════╗
           ║ NEW UPDATE AVAILABLE ║
@@ -66,7 +65,7 @@ jobs:
           ➣ Tag: $RELEASES_TAG-$DATE
           ➣ Date : $DATE
           \n
-          $CHANGELOG"
+          ```${{ steps.changelog.outputs.CHANGELOG }}```"
 
           BUTTONS='{
             "inline_keyboard": [
