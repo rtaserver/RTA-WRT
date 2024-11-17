@@ -290,8 +290,7 @@ jobs:
           r="${r//'%'/'%25'}"
           r="${r//$'\n'/'%0A'}"
           r="${r//$'\r'/'%0D'}"
-          formatted_changelog=$(echo -e "$r" | sed 's/%0A/\n/g')
-          echo "CHANGELOG=$formatted_changelog" >> $GITHUB_OUTPUT 
+          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
 
       - name: Notify Telegram
         env:
@@ -302,6 +301,7 @@ jobs:
           DATE=$(date +"%Y-%m-%d %H:%M:%S")
           RELEASES_BRANCH="${{ inputs.releases_branch }}"${RELEASES_BRANCH%:*}
           RELEASES_TAG=${RELEASES_BRANCH/:/_}
+          CHANGELOG=$(echo -e "${{ steps.changelog.outputs.CHANGELOG }}" | sed 's/%0A/\n/g')
           MESSAGE="
           ╔════════════════════╗\n\
           ║ NEW UPDATE AVAILABLE ║\n\
@@ -310,7 +310,7 @@ jobs:
           ➣ Tag: $RELEASES_TAG-$DATE\n\
           ➣ Date : $DATE\n\
           \n\
-          ${{ steps.changelog.outputs.CHANGELOG }}"
+          $CHANGELOG"
 
           BUTTONS='{
             "inline_keyboard": [
