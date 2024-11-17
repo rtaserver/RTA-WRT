@@ -58,15 +58,13 @@ jobs:
           DATE=$(date +'%Y%m%d')
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
           RELEASES_TAG=${RELEASES_BRANCH/:/_}
-          MESSAGE='
+          MESSAGE="
           ╔════════════════════╗
           ║ NEW UPDATE AVAILABLE ║
           ╚════════════════════╝
           ➣ Name: RTA-WRT
           ➣ Tag: ${RELEASES_TAG}-${DATE}
-          ➣ Date : ${DATE}
-
-          ```P```'
+          ➣ Date : ${DATE}"
 
           BUTTONS='{
             "inline_keyboard": [
