@@ -39,13 +39,6 @@ jobs:
           sudo apt-get -qq install jq
           sudo timedatectl set-timezone "$TZ"
 
-      - name: Add changelog info to new release description
-        id: changelog
-        shell: bash
-        run: |
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
-          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
-
       - name: Notify Telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
@@ -54,8 +47,8 @@ jobs:
         run: |
           DATE=$(date +'%Y%m%d')
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
-          RELEASES_TAG=${RELEASES_BRANCH/:/_}
-          MESSAGE="\
+          RELEASES_TAG="${RELEASES_BRANCH/:/_}""
+          MESSAGE="
             **NEW UPDATE**
 
             >Name: RTA-WRT
@@ -75,4 +68,4 @@ jobs:
               -d "text=$MESSAGE" \
               -d "parse_mode=MarkdownV2" \
               -d "reply_markup=$(echo $BUTTONS | jq -c .)" \
-              -d "message_thread_id=$MESSAGE_THREAD_ID"  # Remove this line if you don't want to use threads
+              -d "message_thread_id=$MESSAGE_THREAD_ID"
