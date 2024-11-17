@@ -57,7 +57,7 @@ jobs:
           DATE=$(date +"%Y-%m-%d %H:%M:%S")
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
           RELEASES_TAG=${RELEASES_BRANCH/:/_}
-          MESSAGE="
+          MESSAGE='
           ╔════════════════════╗
           ║ NEW UPDATE AVAILABLE ║
           ╚════════════════════╝
@@ -65,7 +65,7 @@ jobs:
           ➣ Tag: $RELEASES_TAG-$DATE
           ➣ Date : $DATE
 
-          ```P```"
+          ```P```'
 
           BUTTONS='{
             "inline_keyboard": [
