@@ -302,10 +302,7 @@ jobs:
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
           RELEASES_TAG="${RELEASES_BRANCH/:/_}"
           MESSAGE=$(cat <<-END
-          ╔════════════════╗
-          ║ NEW UPDATE AVAILABLE ║
-          ╚════════════════╝
-  
+          <blockquote>🟢 NEW UPDATE AVAIBLE 🟢</blockquote>
   
           <blockquote>➣ Name: RTA-WRT</blockquote>
           <blockquote>➣ Tag: $RELEASES_TAG-$DATE</blockquote>
