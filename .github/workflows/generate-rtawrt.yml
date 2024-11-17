@@ -89,6 +89,9 @@ jobs:
         run: |
           sudo apt-get -qq update
           sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs
+          sudo apt-get -qq install jq python3 python3-pip
+          pip install telethon
+          pip install colorama
           sudo timedatectl set-timezone "$TZ"
           echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           echo -e "[\033[94m INFO \033[0m] TARGET: ${{ matrix.target }}"
@@ -224,7 +227,7 @@ jobs:
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
           echo -e "INFO files list: \n$(ls -l compiled_images_${{ env.TAG_NAME }} 2>/dev/null)"
-              
+
       - name: Upload Firmware to Release
         uses: svenstaro/upload-release-action@v2
         continue-on-error: true
@@ -275,6 +278,18 @@ jobs:
             - Default username: root
             - Default password: rtawrt
             - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
+
+      - name: Upload To Telegram
+        env:
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GROUP_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_THREAD_ID: 36
+        run: |
+          cd ${PWD}
+          chmod +x telebot.py
+          python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "RTA-WRT_${{ env.RELEASES_TAG }}" "$GROUP_ID" "imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz"
 
       - name: Update Readme
         run: |
