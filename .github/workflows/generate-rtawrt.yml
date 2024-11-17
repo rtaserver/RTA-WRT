@@ -298,31 +298,32 @@ jobs:
           GROUP_ID: ${{ secrets.CHAT_ID }}
           MESSAGE_THREAD_ID: 36
         run: |
-          DATE=$(date +"%Y-%m-%d %H:%M:%S")
-          RELEASES_BRANCH="${{ inputs.releases_branch }}"${RELEASES_BRANCH%:*}
-          RELEASES_TAG=${RELEASES_BRANCH/:/_}
-          CHANGELOG=$(echo -e "${{ steps.changelog.outputs.CHANGELOG }}" | sed 's/%0A/\n/g')
-          MESSAGE="
-          ╔════════════════════╗\n\
-          ║ NEW UPDATE AVAILABLE ║\n\
-          ╚════════════════════╝\n\
-          ➣ Name: RTA-WRT\n\
-          ➣ Tag: $RELEASES_TAG-$DATE\n\
-          ➣ Date : $DATE\n\
-          \n\
-          $CHANGELOG"
-
+          DATE=$(date +'%Y%m%d')
+          RELEASES_BRANCH="${{ inputs.releases_branch }}"
+          RELEASES_TAG="${RELEASES_BRANCH/:/_}"
+          MESSAGE=$(cat <<-END
+          ╔════════════════╗
+          ║ NEW UPDATE AVAILABLE ║
+          ╚════════════════╝
+  
+  
+          <blockquote>➣ Name: RTA-WRT</blockquote>
+          <blockquote>➣ Tag: $RELEASES_TAG-$DATE</blockquote>
+          <blockquote>➣ Date : $DATE</blockquote>
+          END
+          )  
+  
           BUTTONS='{
-            "inline_keyboard": [
-              [
-                {"text": "KLIK DISINI", "url": "https://github.com/rtaserver/RTA-WRT"}
+              "inline_keyboard": [
+                  [
+                      {"text": "KLIK DISINI", "url": "https://github.com/rtaserver/RTA-WRT"}
+                  ]
               ]
-            ]
           }'
-
+  
           curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-              -d "chat_id=$GROUP_ID" \
-              -d "text=$MESSAGE" \
-              -d "parse_mode=MarkdownV2" \  # Use MarkdownV2 for formatting
-              -d "reply_markup=$(echo $BUTTONS | jq -c .)" \
-              -d "message_thread_id=$MESSAGE_THREAD_ID"  # Remove this line if you don't want to use threads
+            -d "chat_id=$GROUP_ID" \
+            -d "text=$MESSAGE" \
+            -d "parse_mode=MarkdownV2" \
+            -d "reply_markup=$(echo $BUTTONS | jq -c .)" \
+            -d "message_thread_id=$MESSAGE_THREAD_ID"
