@@ -227,6 +227,7 @@ jobs:
               
       - name: Upload Firmware to Release
         uses: svenstaro/upload-release-action@v2
+        continue-on-error: true
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
@@ -238,9 +239,37 @@ jobs:
           body: |
             ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.RELEASES_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
             ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
-                
+        
+                  
             ${{ steps.changelog.outputs.CHANGELOG }}
-                
+        
+                  
+            See [here](https://github.com/rtaserver/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
+            - Default IP: 192.168.1.1
+            - Default username: root
+            - Default password: rtawrt
+            - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
+        
+        
+      - name: Retry Upload if Failed
+        if: ${{ failure() }}
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          file: imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz
+          tag: ${{ env.RELEASES_TAG }}-${{ env.DATE }}
+          release_name: RTA-WRT - ${{ env.RELEASES_TAG }}-${{ env.DATE }}
+          overwrite: true
+          prerelease: false
+          body: |
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.RELEASES_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+            ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
+
+
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+
             See [here](https://github.com/rtaserver/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
             - Default IP: 192.168.1.1
             - Default username: root
