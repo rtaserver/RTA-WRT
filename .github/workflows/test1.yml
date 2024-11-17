@@ -67,7 +67,7 @@ jobs:
                   <blockquote>➣ Tag: $RELEASES_TAG-$DATE</blockquote>
                   <blockquote>➣ Date : $DATE</blockquote>
 
-                  ${{ steps.changelog.outputs.CHANGELOG }}
+                  <pre>${{ steps.changelog.outputs.CHANGELOG }}</pre>
                   END
                   )  
       

@@ -310,6 +310,8 @@ jobs:
           <blockquote>➣ Name: RTA-WRT</blockquote>
           <blockquote>➣ Tag: $RELEASES_TAG-$DATE</blockquote>
           <blockquote>➣ Date : $DATE</blockquote>
+
+          <pre>${{ steps.changelog.outputs.CHANGELOG }}</pre>
           END
           )  
   
