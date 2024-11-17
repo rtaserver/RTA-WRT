@@ -44,9 +44,6 @@ jobs:
         shell: bash
         run: |
           r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
-          r="${r//'%'/'%25'}"
-          r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"
           echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
 
       - name: Notify Telegram
@@ -58,13 +55,14 @@ jobs:
           DATE=$(date +'%Y%m%d')
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
           RELEASES_TAG=${RELEASES_BRANCH/:/_}
-          MESSAGE="
-          ╔════════════════════╗
-          ║ NEW UPDATE AVAILABLE ║
-          ╚════════════════════╝
-          ➣ Name: RTA-WRT
-          ➣ Tag: ${RELEASES_TAG}-${DATE}
-          ➣ Date : ${DATE}"
+          MESSAGE="\
+            **NEW UPDATE**
+
+            >Name: RTA-WRT
+            >Tag: jh
+            >Release Date: $DATE 
+
+            ${{ steps.changelog.outputs.CHANGELOG }}"
 
           BUTTONS='{
             "inline_keyboard": [
