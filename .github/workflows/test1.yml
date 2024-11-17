@@ -47,12 +47,12 @@ jobs:
         run: |
           DATE=$(date +'%Y%m%d')
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
-          RELEASES_TAG="${RELEASES_BRANCH/:/_}""
+          RELEASES_TAG="${RELEASES_BRANCH/:/_}"
           MESSAGE="\
-            **NEW UPDATE**
+            *NEW UPDATE*
 
             >Name: RTA-WRT
-            >Tag: jh
+            >Tag: $RELEASES_TAG
             >Release Date: $DATE"
 
           BUTTONS='{
