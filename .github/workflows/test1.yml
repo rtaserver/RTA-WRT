@@ -64,8 +64,8 @@ jobs:
           ➣ Name: RTA-WRT
           ➣ Tag: $RELEASES_TAG-$DATE
           ➣ Date : $DATE
-          \n
-          ```${{ steps.changelog.outputs.CHANGELOG }}```"
+
+          ```P```"
 
           BUTTONS='{
             "inline_keyboard": [
