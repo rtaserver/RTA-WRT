@@ -277,6 +277,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Update Env
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq install jq
+
       - name: Add changelog info to new release description
         id: changelog
         shell: bash
@@ -284,21 +289,40 @@ jobs:
           r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
           r="${r//'%'/'%25'}"
           r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"  
-          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
+          r="${r//$'\r'/'%0D'}"
+          formatted_changelog=$(echo -e "$r" | sed 's/%0A/\n/g')
+          echo "CHANGELOG=$formatted_changelog" >> $GITHUB_OUTPUT 
 
       - name: Notify Telegram
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.CHAT_ID }}
-          TOPIC_ID: 36
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GROUP_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_THREAD_ID: 36
         run: |
-          REPO_URL="https://github.com/rtaserver/RTA-WRT"
           DATE=$(date +"%Y-%m-%d %H:%M:%S")
-          MESSAGE="*RTA-WRT* Firmware Update ${{ inputs.releases_branch }}\n-> REPO: [KLIK DISINI]($REPO_URL)\n-> DATE: $DATE\n->CHANGGELOG:\n${{ steps.changelog.outputs.CHANGELOG }}"
-          BUTTON='{"inline_keyboard":[[{"text":"KLIK DISINI","url":"'$REPO_URL'"}]]}'
-          
-          curl -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage?chat_id=-1002428347060&message_thread_id=36&text=Pesan"
-          curl -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
-          -H "Content-Type: application/json" \
-          -d '{"chat_id":"'$TELEGRAM_CHAT_ID'","message_thread_id":"'$TOPIC_ID'","text":"'"$MESSAGE"'","parse_mode":"Markdown","reply_markup":'"$BUTTON"'}'
+          RELEASES_BRANCH="${{ inputs.releases_branch }}"${RELEASES_BRANCH%:*}
+          RELEASES_TAG=${RELEASES_BRANCH/:/_}
+          MESSAGE="
+          ╔════════════════════╗\n\
+          ║ NEW UPDATE AVAILABLE ║\n\
+          ╚════════════════════╝\n\
+          ➣ Name: RTA-WRT\n\
+          ➣ Tag: $RELEASES_TAG-$DATE\n\
+          ➣ Date : $DATE\n\
+          \n\
+          ${{ steps.changelog.outputs.CHANGELOG }}"
+
+          BUTTONS='{
+            "inline_keyboard": [
+              [
+                {"text": "KLIK DISINI", "url": "https://github.com/rtaserver/RTA-WRT"}
+              ]
+            ]
+          }'
+
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+              -d "chat_id=$GROUP_ID" \
+              -d "text=$MESSAGE" \
+              -d "parse_mode=MarkdownV2" \  # Use MarkdownV2 for formatting
+              -d "reply_markup=$(echo $BUTTONS | jq -c .)" \
+              -d "message_thread_id=$MESSAGE_THREAD_ID"  # Remove this line if you don't want to use threads
