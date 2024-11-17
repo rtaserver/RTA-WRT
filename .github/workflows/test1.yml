@@ -37,6 +37,7 @@ jobs:
         run: |
           sudo apt-get -qq update
           sudo apt-get -qq install jq
+          sudo timedatectl set-timezone "$TZ"
 
       - name: Add changelog info to new release description
         id: changelog
@@ -54,7 +55,7 @@ jobs:
           GROUP_ID: ${{ secrets.CHAT_ID }}
           MESSAGE_THREAD_ID: 36
         run: |
-          DATE=$(date +"%Y-%m-%d %H:%M:%S")
+          DATE=$(date +'%Y%m%d')
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
           RELEASES_TAG=${RELEASES_BRANCH/:/_}
           MESSAGE='
@@ -62,8 +63,8 @@ jobs:
           ║ NEW UPDATE AVAILABLE ║
           ╚════════════════════╝
           ➣ Name: RTA-WRT
-          ➣ Tag: $RELEASES_TAG-$DATE
-          ➣ Date : $DATE
+          ➣ Tag: ${RELEASES_TAG}-${DATE}
+          ➣ Date : ${DATE}
 
           ```P```'
 
