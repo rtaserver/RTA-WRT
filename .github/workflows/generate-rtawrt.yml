@@ -399,18 +399,16 @@ jobs:
           ls -l downloaded-firmware
           chmod +x telebot.py
           MESSAGETXT="RTA-WRT ${{ inputs.releases_branch }} Image information"
-          if [ "${{ inputs.notiftele }}" == "true" ]; then
-            for File in downloaded-firmware/*/*.img.gz; do
-              FileName=$(basename "$File")
-              if [[ "$FileName" == *"immortalwrt"* ]]; then
-                Base="ImmortalWrt"
-              elif [[ "$FileName" == *"openwrt"* ]]; then
-                Base="OpenWrt"
-              else
-                Base="unknown"
-              fi
-              Device=$(echo "$FileName" | sed -E "s/(${Base}_)?[0-9A-Za-z-]+_([0-9]+\.[0-9]+\.[0-9]+)?_?//g" | sed -E "s/\.img\.gz$//g")
-              MESSAGE="\nBase = $Base\nDevice = $Device\n"
-              python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGE" "$GROUP_ID" "$MESSAGE_THREAD_ID" "$File"
-            done
-          fi
+          for File in downloaded-firmware/*/*.img.gz; do
+            FileName=$(basename "$File")
+            if [[ "$FileName" == *"immortalwrt"* ]]; then
+              Base="ImmortalWrt"
+            elif [[ "$FileName" == *"openwrt"* ]]; then
+              Base="OpenWrt"
+            else
+              Base="unknown"
+            fi
+            Device=$(echo "$FileName" | sed -E "s/(${Base}_)?[0-9A-Za-z-]+_([0-9]+\.[0-9]+\.[0-9]+)?_?//g" | sed -E "s/\.img\.gz$//g")
+            MESSAGE="\nBase = $Base\nDevice = $Device\n"
+            python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGE" "$GROUP_ID" "$MESSAGE_THREAD_ID" "$File"
+          done
