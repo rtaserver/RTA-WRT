@@ -321,6 +321,6 @@ rm -f /etc/uci-defaults/$(basename $0)
 if [ ! -e /etc/firs-setup ] then
     touch /etc/firs-setup
     # Reboot After Steps Complited
-    echo b > /proc/sysrq-trigger
+    # echo b > /proc/sysrq-trigger
 fi
 exit 1
