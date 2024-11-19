@@ -398,17 +398,22 @@ jobs:
           cd ${PWD}
           ls -l downloaded-firmware
           chmod +x telebot.py
-          MESSAGETXT="RTA-WRT ${{ inputs.releases_branch }} Image information"
+          DATE=$(date +'%Y%m%d')
+          RELEASES_BRANCH="${{ inputs.releases_branch }}"
+          RELEASES_TAG="${RELEASES_BRANCH/:/_}"
+          MSG='
+          <blockquote>🟢 NEW UPDATE AVAIBLE 🟢</blockquote>
+
+          <blockquote>➣ Tag: $RELEASES_TAG-$DATE</blockquote>
+          <blockquote>➣ Date : $DATE</blockquote>
+
+          <blockquote>List Firmware:
+          '
           for File in downloaded-firmware/*/*.img.gz; do
-            FileName=$(basename "$File")
-            if [[ "$FileName" == *"immortalwrt"* ]]; then
-              Base="ImmortalWrt"
-            elif [[ "$FileName" == *"openwrt"* ]]; then
-              Base="OpenWrt"
-            else
-              Base="unknown"
-            fi
-            Device=$(echo "$FileName" | sed -E "s/(${Base}_)?[0-9A-Za-z-]+_([0-9]+\.[0-9]+\.[0-9]+)?_?//g" | sed -E "s/\.img\.gz$//g")
-            MESSAGE="\nBase = $Base\nDevice = $Device\n"
-            python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGE" "$GROUP_ID" "$MESSAGE_THREAD_ID" "$File"
+              FileName=$(basename "$File")
+              MSG+="➣ ${FileName}"$'\n'
           done
+          MSG+='</blockquote>
+          
+          <pre>${{ steps.changelog.outputs.CHANGELOG }}</pre>'
+          python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MSG" "$GROUP_ID" "$MESSAGE_THREAD_ID" "downloaded-firmware/*/*.img.gz"

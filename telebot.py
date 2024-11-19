@@ -2,6 +2,7 @@ import sys
 import subprocess
 import os
 import glob
+import math
 
 def check_and_install_dependencies():
     required_packages = ['telethon', 'colorama']
@@ -104,6 +105,37 @@ async def send_file_to_chat(client, chat_id, file_path, message, topic_id=None):
     except Exception as e:
         print(f"{Fore.RED}✗ Error saat mengirim file: {e}")
 
+# Fungsi untuk mengirim file Group
+async def send_file_group_to_chat(client, chat_id, file_paths, message, topic_id=None, max_files_per_group=10):
+    try:
+        # Bagi file menjadi kelompok
+        file_groups = [file_paths[i:i + max_files_per_group] for i in range(0, len(file_paths), max_files_per_group)]
+        
+        for group_index, file_group in enumerate(file_groups, 1):
+            # Tambahkan informasi kelompok ke pesan
+            group_message = f"{message}\n\n(ID {group_index}/{len(file_groups)})"
+            
+            try:
+                if topic_id:
+                    await client.send_file(
+                        chat_id,
+                        file_group,
+                        caption=group_message,
+                        reply_to=topic_id
+                    )
+                else:
+                    await client.send_file(
+                        chat_id,
+                        file_group,
+                        caption=group_message
+                    )
+                print(f"{Fore.GREEN}✓ Kelompok file {group_index} berhasil dikirim")
+            except Exception as e:
+                print(f"{Fore.RED}✗ Error saat mengirim kelompok file {group_index}: {e}")
+    
+    except Exception as e:
+        print(f"{Fore.RED}✗ Error saat mengatur kelompok file: {e}")
+
 async def main():
     # Cek argumen wajib
     check_required_args()
@@ -138,10 +170,18 @@ async def main():
             if len(sys.argv) > 7:
                 file_path_pattern = sys.argv[7]
                 print(f"{Fore.WHITE}File Path: {file_path_pattern}")
-                for file_path in glob.glob(file_path_pattern):
-                    await send_file_to_chat(client, chat_id, file_path, message, topic_id)
+                
+                # Dapatkan daftar file
+                file_paths = glob.glob(file_path_pattern)
+                
+                if len(file_paths) > 1:
+                    # Jika lebih dari satu file, gunakan fungsi grouping
+                    await send_file_group_to_chat(client, chat_id, file_paths, message, topic_id)
+                elif len(file_paths) == 1:
+                    # Jika hanya satu file, kirim seperti biasa
+                    await send_file_to_chat(client, chat_id, file_paths[0], message, topic_id)
             else:
-                 # Kirim pesan ke grup dengan topic
+                # Kirim pesan ke grup dengan topic
                 await send_message_to_chat(client, chat_id, message, topic_id)
 
     except Exception as e:
@@ -151,8 +191,16 @@ async def main():
             if len(sys.argv) > 6:
                 file_path_pattern = sys.argv[6]
                 print(f"{Fore.WHITE}File Path: {file_path_pattern}")
-                for file_path in glob.glob(file_path_pattern):
-                    await send_file_to_chat(client, chat_id, file_path, message)
+                
+                # Dapatkan daftar file
+                file_paths = glob.glob(file_path_pattern)
+                
+                if len(file_paths) > 1:
+                    # Jika lebih dari satu file, gunakan fungsi grouping
+                    await send_file_group_to_chat(client, chat_id, file_paths, message)
+                elif len(file_paths) == 1:
+                    # Jika hanya satu file, kirim seperti biasa
+                    await send_file_to_chat(client, chat_id, file_paths[0], message)
             else:
                 # Kirim pesan normal
                 await send_message_to_chat(client, chat_id, message)
