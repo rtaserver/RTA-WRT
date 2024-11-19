@@ -1,5 +1,9 @@
 # What's New!
 
+**Changelog** (19-11-2024):
+- Latest Build
+- Bug Fixes
+
 **Changelog** (17-11-2024):
 - Fixed Depends Lolcat
 - Fixed Navbar Terminal
