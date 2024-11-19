@@ -23,7 +23,7 @@ Custom Script By FriWrt
 # Link Download
 
 <p align="center">
-<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_23.05.5-20241117"><img alt="Static Badge" src="https://img.shields.io/badge/OpenWrt--23.05.5-openwrt?style=for-the-badge&logo=openwrt&label=Download&color=%231aa5de"></a>
+<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_23.05.5-20241119"><img alt="Static Badge" src="https://img.shields.io/badge/OpenWrt--23.05.5-openwrt?style=for-the-badge&logo=openwrt&label=Download&color=%231aa5de"></a>
 <a href="https://github.com/rtaserver/RTA-WRT/releases/tag/immortalwrt_23.05.4-20241117"><img alt="Static Badge" src="https://img.shields.io/badge/ImmortalWrt--23.05.4-immorlalwrt?style=for-the-badge&logo=openwrt&label=Download&color=%231aa5de"></a>
 </p>
 
