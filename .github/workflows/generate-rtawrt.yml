@@ -397,5 +397,5 @@ jobs:
           MESSAGETXT="RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
           - Devices : ${{ env.TARGET }}"
           if [ "${{ inputs.notiftele }}" == "Yes" ]; then
-            python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGETXT" "$GROUP_ID" "$MESSAGE_THREAD_ID" "imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz"
+            python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGETXT" "$GROUP_ID" "$MESSAGE_THREAD_ID" "downloaded-firmware/*.img.gz"
           fi
