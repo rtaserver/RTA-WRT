@@ -328,7 +328,7 @@ jobs:
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
-          path: ${PWD}downloaded-firmware
+          path: downloaded-firmware
 
       - name: Update Env
         run: |
@@ -343,7 +343,7 @@ jobs:
         id: changelog
         shell: bash
         run: |
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' CHANGELOG.md)
           r="${r//'%'/'%25'}"
           r="${r//$'\n'/'%0A'}"
           r="${r//$'\r'/'%0D'}"
@@ -396,11 +396,11 @@ jobs:
           MESSAGE_THREAD_ID: 124
         run: |
           cd ${PWD}
-          ls -l ${PWD}/downloaded-firmware
+          ls -l downloaded-firmware
           chmod +x telebot.py
           MESSAGETXT="RTA-WRT ${{ inputs.releases_branch }} Image information"
           if [ "${{ inputs.notiftele }}" == "true" ]; then
-            for File in ${PWD}/downloaded-firmware*.img.gz; do
+            for File in downloaded-firmware*.img.gz; do
               FileName=$(basename "$File")
               if [[ "$FileName" == *"immortalwrt"* ]]; then
                 Base="ImmortalWrt"
