@@ -278,11 +278,10 @@ adjust_settings() {
     cd ${imagebuilder_path}
     echo -e "${STEPS} Start adjusting .config file settings..."
 
-    DTM=$(date '+%d-%M-%Y')
+    DTM=$(date '+%d-%m-%Y')
     CURVER=$(echo $op_branch | awk -F. '{print $1"."$2}')
 
-    sed -i "s/Ouc3kNF6/$DTM/g" "${custom_files_path}/etc/uci-defaults/99-first-setup"
-    sed -i "s|https://dl.openwrt.ai/latest/packages/|https://dl.openwrt.ai/$CURVER/packages/|g" "${custom_files_path}/etc/uci-defaults/99-first-setup"
+    sed -i "s|Ouc3kNF6|$DTM|g" "${custom_files_path}/etc/uci-defaults/99-first-setup"
 
     if [[ -s "repositories.conf" ]]; then
         sed -i '\|option check_signature| s|^|#|' repositories.conf
