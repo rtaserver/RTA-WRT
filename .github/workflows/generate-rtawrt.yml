@@ -328,7 +328,6 @@ jobs:
       - name: Download Artifact
         uses: actions/download-artifact@v3
         with:
-          name: firmware-${{ env.TAG_NAME }}
           path: downloaded-firmware
 
       - name: Update Env
