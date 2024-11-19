@@ -89,14 +89,14 @@ async def send_file_to_chat(client, chat_id, file_path, topic_id=None):
                 await client.send_file(
                     chat_id,
                     file_path,
-                    caption=f"File dikirim: {os.path.basename(file_path)}",
+                    #caption=f"File dikirim: {os.path.basename(file_path)}",
                     reply_to=topic_id
                 )
             else:
                 await client.send_file(
                     chat_id,
-                    file_path,
-                    caption=f"File dikirim: {os.path.basename(file_path)}"
+                    file_path
+                    #caption=f"File dikirim: {os.path.basename(file_path)}"
                 )
             print(f"{Fore.GREEN}✓ File berhasil dikirim: {file_path}")
         else:
