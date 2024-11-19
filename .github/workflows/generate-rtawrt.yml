@@ -41,11 +41,11 @@ on:
       notiftele:
         description: "Notif To Telegram:"
         required: true
-        default: "Yes"
+        default: "true"
         type: choice
         options:
-          - Yes
-          - No
+          - true
+          - false
 
 
 env:
@@ -373,7 +373,7 @@ jobs:
               ]
           }'
   
-          if [ "${{ inputs.notiftele }}" == "Yes" ]; then
+          if [ "${{ inputs.notiftele }}" == "true" ]; then
             curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
               -d "chat_id=$GROUP_ID" \
               -d "text=$MESSAGE" \
@@ -395,6 +395,6 @@ jobs:
           chmod +x telebot.py
           MESSAGETXT="RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
           - Devices : ${{ env.TARGET }}"
-          if [ "${{ inputs.notiftele }}" == "Yes" ]; then
+          if [ "${{ inputs.notiftele }}" == "true" ]; then
             python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGETXT" "$GROUP_ID" "$MESSAGE_THREAD_ID" "downloaded-firmware/*.img.gz"
           fi
