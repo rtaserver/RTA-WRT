@@ -38,6 +38,15 @@ on:
           - Amlogic HG680P
           - Amlogic B860H-V5
           - Amlogic B860H-V1-V2
+      notiftele:
+        description: "Notif To Telegram:"
+        required: true
+        default: "Yes"
+        type: choice
+        options:
+          - Yes
+          - No
+
 
 env:
   TZ: Asia/Jakarta
@@ -228,6 +237,13 @@ jobs:
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
           echo -e "INFO files list: \n$(ls -l compiled_images_${{ env.TAG_NAME }} 2>/dev/null)"
 
+      - name: Upload Firmware to Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: firmware-${{ env.TAG_NAME }}
+          path: imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz
+          retention-days: 7
+
       - name: Upload Firmware to Release
         uses: svenstaro/upload-release-action@v2
         continue-on-error: true
@@ -279,20 +295,6 @@ jobs:
             - Default password: rtawrt
             - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)          
 
-      - name: Upload To Telegram
-        env:
-          API_ID: ${{ secrets.API_ID }}
-          API_HASH: ${{ secrets.API_HASH }}
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          GROUP_ID: ${{ secrets.CHAT_ID }}
-          MESSAGE_THREAD_ID: 36
-        run: |
-          cd ${PWD}
-          chmod +x telebot.py
-          MESSAGETXT="RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
-          - Devices : $TARGET"
-          python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGETXT" "$GROUP_ID" "$MESSAGE_THREAD_ID" "imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz"
-
       - name: Update Readme
         run: |
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
@@ -322,6 +324,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: firmware-${{ env.TAG_NAME }}
+          path: downloaded-firmware
 
       - name: Update Env
         run: |
@@ -366,9 +374,28 @@ jobs:
               ]
           }'
   
-          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-            -d "chat_id=$GROUP_ID" \
-            -d "text=$MESSAGE" \
-            -d "parse_mode=HTML" \
-            -d "reply_markup=$(echo $BUTTONS | jq -c .)" \
-            -d "message_thread_id=$MESSAGE_THREAD_ID"
+          if [ "${{ inputs.notiftele }}" == "Yes" ]; then
+            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+              -d "chat_id=$GROUP_ID" \
+              -d "text=$MESSAGE" \
+              -d "parse_mode=HTML" \
+              -d "reply_markup=$(echo $BUTTONS | jq -c .)" \
+              -d "message_thread_id=$MESSAGE_THREAD_ID"
+          fi
+
+
+      - name: Upload To Telegram
+        env:
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GROUP_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_THREAD_ID: 124
+        run: |
+          cd ${PWD}
+          chmod +x telebot.py
+          MESSAGETXT="RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
+          - Devices : ${{ env.TARGET }}"
+          if [ "${{ inputs.notiftele }}" == "Yes" ]; then
+            python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGETXT" "$GROUP_ID" "$MESSAGE_THREAD_ID" "imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz"
+          fi
