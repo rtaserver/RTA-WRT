@@ -3,6 +3,7 @@
 **Changelog** (19-11-2024):
 - Latest Build
 - Bug Fixes
+- Fixed Booting
 
 **Changelog** (17-11-2024):
 - Fixed Depends Lolcat
