@@ -400,7 +400,7 @@ jobs:
           chmod +x telebot.py
           MESSAGETXT="RTA-WRT ${{ inputs.releases_branch }} Image information"
           if [ "${{ inputs.notiftele }}" == "true" ]; then
-            for File in downloaded-firmware*.img.gz; do
+            for File in downloaded-firmware/*/*.img.gz; do
               FileName=$(basename "$File")
               if [[ "$FileName" == *"immortalwrt"* ]]; then
                 Base="ImmortalWrt"
