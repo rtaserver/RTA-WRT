@@ -277,7 +277,7 @@ jobs:
             - Default IP: 192.168.1.1
             - Default username: root
             - Default password: rtawrt
-            - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
+            - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)          
 
       - name: Upload To Telegram
         env:
@@ -289,7 +289,9 @@ jobs:
         run: |
           cd ${PWD}
           chmod +x telebot.py
-          python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "RTA-WRT_${{ env.RELEASES_TAG }}" "$GROUP_ID" "imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz"
+          MESSAGETXT="RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
+          - Devices : $TARGET"
+          python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGETXT" "$GROUP_ID" "$MESSAGE_THREAD_ID" "imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz"
 
       - name: Update Readme
         run: |

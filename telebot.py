@@ -82,21 +82,21 @@ async def send_message_to_chat(client, chat_id, message, topic_id=None):
         print(f"{Fore.RED}✗ Error saat mengirim pesan: {e}")
 
 # Fungsi untuk mengirim file
-async def send_file_to_chat(client, chat_id, file_path, topic_id=None):
+async def send_file_to_chat(client, chat_id, file_path, message, topic_id=None):
     try:
         if os.path.exists(file_path):
             if topic_id:
                 await client.send_file(
                     chat_id,
                     file_path,
-                    #caption=f"File dikirim: {os.path.basename(file_path)}",
+                    caption=f"{message}",
                     reply_to=topic_id
                 )
             else:
                 await client.send_file(
                     chat_id,
-                    file_path
-                    #caption=f"File dikirim: {os.path.basename(file_path)}"
+                    file_path,
+                    caption=f"{message}"
                 )
             print(f"{Fore.GREEN}✓ File berhasil dikirim: {file_path}")
         else:
@@ -134,28 +134,28 @@ async def main():
             topic_id = int(sys.argv[6])
             print(f"{Fore.WHITE}Topic ID: {topic_id}")
             
-            # Kirim pesan ke grup dengan topic
-            await send_message_to_chat(client, chat_id, message, topic_id)
-            
             # Cek apakah ada file path (argumen ke-7)
             if len(sys.argv) > 7:
                 file_path_pattern = sys.argv[7]
                 print(f"{Fore.WHITE}File Path: {file_path_pattern}")
                 for file_path in glob.glob(file_path_pattern):
-                    await send_file_to_chat(client, chat_id, file_path, topic_id)
+                    await send_file_to_chat(client, chat_id, file_path, message, topic_id)
+            else:
+                 # Kirim pesan ke grup dengan topic
+                await send_message_to_chat(client, chat_id, message, topic_id)
 
     except Exception as e:
         # Jika tidak ada Topic ID, kirim langsung ke chat/channel
         try:
-            # Kirim pesan normal
-            await send_message_to_chat(client, chat_id, message)
-        
             # Cek apakah ada file path (argumen ke-6)
             if len(sys.argv) > 6:
                 file_path_pattern = sys.argv[6]
                 print(f"{Fore.WHITE}File Path: {file_path_pattern}")
                 for file_path in glob.glob(file_path_pattern):
-                    await send_file_to_chat(client, chat_id, file_path)
+                    await send_file_to_chat(client, chat_id, file_path, message)
+            else:
+                # Kirim pesan normal
+                await send_message_to_chat(client, chat_id, message)
         except Exception as e:
             print(f"{Fore.RED}✗ Error: {e}")
     
