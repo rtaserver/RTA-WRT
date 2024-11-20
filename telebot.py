@@ -70,12 +70,14 @@ async def send_message_to_chat(client, chat_id, message, topic_id=None):
         if topic_id:
             await client.send_message(
                 entity=chat_id,
+                parse_mode='HTML',
                 message=message,
                 reply_to=topic_id
             )
         else:
             await client.send_message(
                 entity=chat_id,
+                parse_mode='HTML',
                 message=message
             )
         print(f"{Fore.GREEN}✓ Pesan berhasil dikirim ke chat ID: {chat_id}")
@@ -90,6 +92,7 @@ async def send_file_to_chat(client, chat_id, file_path, message, topic_id=None):
                 await client.send_file(
                     chat_id,
                     file_path,
+                    parse_mode='HTML',
                     caption=f"{message}",
                     reply_to=topic_id
                 )
@@ -97,6 +100,7 @@ async def send_file_to_chat(client, chat_id, file_path, message, topic_id=None):
                 await client.send_file(
                     chat_id,
                     file_path,
+                    parse_mode='HTML',
                     caption=f"{message}"
                 )
             print(f"{Fore.GREEN}✓ File berhasil dikirim: {file_path}")
@@ -120,6 +124,7 @@ async def send_file_group_to_chat(client, chat_id, file_paths, message, topic_id
                     await client.send_file(
                         chat_id,
                         file_group,
+                        parse_mode='HTML',
                         caption=group_message,
                         reply_to=topic_id
                     )
@@ -127,6 +132,7 @@ async def send_file_group_to_chat(client, chat_id, file_paths, message, topic_id
                     await client.send_file(
                         chat_id,
                         file_group,
+                        parse_mode='HTML',
                         caption=group_message
                     )
                 print(f"{Fore.GREEN}✓ Kelompok file {group_index} berhasil dikirim")
@@ -183,6 +189,9 @@ async def main():
             else:
                 # Kirim pesan ke grup dengan topic
                 await send_message_to_chat(client, chat_id, message, topic_id)
+        else:
+            # Kirim pesan normal
+            await send_message_to_chat(client, chat_id, message)
 
     except Exception as e:
         # Jika tidak ada Topic ID, kirim langsung ke chat/channel

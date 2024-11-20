@@ -359,7 +359,7 @@ jobs:
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
           RELEASES_TAG="${RELEASES_BRANCH/:/_}"
           MESSAGE=$(cat <<-END
-          <blockquote>🟢 NEW UPDATE AVAIBLE 🟢</blockquote>
+          <blockquote>🟢 NEW UPDATE AVAILABLE 🟢</blockquote>
   
           <blockquote>➣ Name: RTA-WRT</blockquote>
           <blockquote>➣ Tag: $RELEASES_TAG-$DATE</blockquote>
@@ -401,19 +401,14 @@ jobs:
           DATE=$(date +'%Y%m%d')
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
           RELEASES_TAG="${RELEASES_BRANCH/:/_}"
-          MSG='
-          <blockquote>🟢 NEW UPDATE AVAIBLE 🟢</blockquote>
-
+          MESSAGE=$(cat <<-END
+          <blockquote>🟢 NEW UPDATE AVAILABLE 🟢</blockquote>
+  
+          <blockquote>➣ Name: RTA-WRT</blockquote>
           <blockquote>➣ Tag: $RELEASES_TAG-$DATE</blockquote>
           <blockquote>➣ Date : $DATE</blockquote>
 
-          <blockquote>List Firmware:
-          '
-          for File in downloaded-firmware/*/*.img.gz; do
-              FileName=$(basename "$File")
-              MSG+="➣ ${FileName}"$'\n'
-          done
-          MSG+='</blockquote>
-          
-          <pre>${{ steps.changelog.outputs.CHANGELOG }}</pre>'
-          python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MSG" "$GROUP_ID" "$MESSAGE_THREAD_ID" "downloaded-firmware/*/*.img.gz"
+          <pre>${{ steps.changelog.outputs.CHANGELOG }}</pre>
+          END
+          )
+          python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGE" "$GROUP_ID" "$MESSAGE_THREAD_ID" "downloaded-firmware/*/*.img.gz"
