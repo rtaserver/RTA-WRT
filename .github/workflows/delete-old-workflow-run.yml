@@ -8,7 +8,7 @@ jobs:
   stale:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v7.0.0
+      - uses: actions/stale@v9.0.0
         with:
           stale-issue-message: "Stale Issue"
           stale-pr-message: "Stale PR"
