@@ -17,11 +17,11 @@ msg "Device Model: $(ubus call system board | grep '\"model\"' | sed 's/ \+/ /g'
 msg "Device Board: $(ubus call system board | grep '\"board_name\"' | sed 's/ \+/ /g' | awk -F'\"' '{print $4}')"
 sed -i "s#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' / ':'')+(luciversion||''),#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' build by RTA-WRT [ Ouc3kNF6 ]':''),#g" /www/luci-static/resources/view/status/include/10_system.js
 sed -i -E "s|icons/port_%s.png|icons/port_%s.gif|g" /www/luci-static/resources/view/status/include/29_ports.js
-sed -i -E "s|system/ttyd|services/ttyd|g" /usr/share/ucode/luci/template/themes/material/header.ut
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
-sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/rtawrt/' /etc/profile
+sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/neofetch/' /etc/profile
 if grep -q "ImmortalWrt" /etc/openwrt_release; then
   sed -i "s/\(DISTRIB_DESCRIPTION='ImmortalWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
+  sed -i -E "s|services/ttyd|system/ttyd|g" /usr/share/ucode/luci/template/themes/material/header.ut
   msg Branch version: "$(grep 'DISTRIB_DESCRIPTION=' /etc/openwrt_release | awk -F"'" '{print $2}')"
 elif grep -q "OpenWrt" /etc/openwrt_release; then
   sed -i "s/\(DISTRIB_DESCRIPTION='OpenWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
@@ -116,7 +116,7 @@ msg "Step 1: Configure Password Login OpenWrt"
 # Step 2: Add Custom Repo and Disable opkg signature check
 msg "Step 2: Add Custom Repo and Disable opkg signature check"
 sed -i 's/option check_signature/# option check_signature/g' /etc/opkg.conf
-echo "src/gz custom_arch https://dl.openwrt.ai/packages-$(grep "VERSION" /etc/os-release | head -n 1 | awk -F '"' '{print $2}' | cut -d. -f1,2)/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
+#echo "src/gz custom_arch https://dl.openwrt.ai/packages-$(grep "VERSION" /etc/os-release | head -n 1 | awk -F '"' '{print $2}' | cut -d. -f1,2)/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
 
 
 # Step 3: Remove sysinfo banner if Devices Amlogic
@@ -313,10 +313,19 @@ msg "Step 17: Run Another Process"
 bash /root/install2.sh
 
 
+# Step 18: Set Openclash Config
+msg "Step 18: Set Openclash Config"
+if [ -f "/etc/config/openclash" ]; then
+  rm -rf /etc/config/openclash
+  mv /etc/config/openclash1 /etc/config/openclash
+else
+  msg "Openclash Config Not Found"
+fi
+
+
 # Log success
 msg "First Setup settings successfully applied..."
 
 
 # Remove this script after successful execution
 rm -f /etc/uci-defaults/$(basename $0)
-exit 1
