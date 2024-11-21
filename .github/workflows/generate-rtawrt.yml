@@ -411,4 +411,6 @@ jobs:
           <pre>${{ steps.changelog.outputs.CHANGELOG }}</pre>
           END
           )
-          python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGE" "$GROUP_ID" "$MESSAGE_THREAD_ID" "downloaded-firmware/*/*.img.gz"
+          if [ "${{ inputs.notiftele }}" == "true" ]; then
+            python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGE" "$GROUP_ID" "$MESSAGE_THREAD_ID" "downloaded-firmware/*/*.img.gz"
+          fi
