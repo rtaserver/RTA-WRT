@@ -72,6 +72,7 @@ uci -q delete dhcp.lan.max_preferred_lifetime
 uci -q delete dhcp.lan.max_valid_lifetime
 uci commit dhcp
 uci set network.lan.delegate='0'
+uci del network.lan.ip6assign
 uci commit network
 
 # configure WLAN
