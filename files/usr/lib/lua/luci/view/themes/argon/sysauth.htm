@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AirOS</title>
+    <link rel="stylesheet" href="<%=media%>/xidz.css">
+    <link rel="shortcut icon" href="<%=media%>/favicon.ico">
+    <form method="post" action="<%=pcdata(FULL_REQUEST_URI)%>">
+  <%- if fuser then %>
+    <div class="alert-message warning">
+      <center><p><%:Username Atau Sandi Salah%><br><%:Silahkan Ingat Kembali%></p></center>
+    </div>
+  <% end -%>
+  </head>
+  <body>
+    <div class="login_form_container">
+      <div class="login_form">
+        <h2>⚝ₒPₑNWᵣT⚝</h2>
+        <script type="text/javascript">window.setTimeout("waktu()",1000); function waktu(){var tanggal=new Date(); setTimeout("waktu()",1000); document.getElementById("jam").innerHTML=tanggal.getHours()+":"+tanggal.getMinutes()+":"+tanggal.getSeconds();}</script> <script language="JavaScript"> var tanggallengkap=new String(); var namahari=("Minggu Senin Selasa Rabu Kamis Jumat Sabtu"); namahari=namahari.split(" "); var namabulan=("Januari Februari Maret April Mei Juni Juli Agustus September Oktober November Desember"); namabulan=namabulan.split(" "); var tgl=new Date(); var hari=tgl.getDay(); var tanggal=tgl.getDate(); var bulan=tgl.getMonth(); var tahun=tgl.getFullYear(); tanggallengkap=namahari[hari] + ", " +tanggal + " " + namabulan[bulan] + " " + tahun; </script>       
+<center><script language='JavaScript'>document.write(tanggallengkap); </script> | <span id='jam' ></span></center>
+        <div class="input_group">
+          <i class="fa fa-user"></i>
+          <input class="input_text" type="text" name="luci_username" placeholder="Username Benar="off" value="<%=duser%>" />
+        </div>
+        <div class="input_group">
+          <i class="fa fa-unlock-alt"></i>
+          <input class="input_text" type="password" name="luci_password" placeholder="Password" autocomplete="off"/>
+        </div>
+        <div class="button_group" id="login_button">
+            <center><input type="submit" value="<%:Login%>" />
+		    </center>
+        </div>
+    </div>
+
+<script type="text/javascript">//<![CDATA[
+  var input = document.getElementsByName('luci_password')[0];
+  if (input)
+    input.focus();
+//]]></script>
+
+<%
+local uci  = require "luci.model.uci".cursor()
+local fs  = require "nixio.fs"
+local https_key = uci:get("uhttpd", "main", "key")
+local https_port = uci:get("uhttpd", "main", "listen_https")
+if type(https_port) == "table" then
+  https_port = https_port[1]
+end
+
+if https_port and fs.access(https_key) then
+  https_port = https_port:match("(%d+)$")
+%>
+
+<script type="text/javascript">//<![CDATA[
+  if (document.location.protocol != 'https:') {
+    var url = 'https://' + window.location.hostname + ':' + '<%=https_port%>' + window.location.pathname;
+    var img=new Image;
+    img.onload=function(){window.location = url};
+    img.src='https://' + window.location.hostname + ':' + '<%=https_port%>' + '<%=resource%>/icons/loading.gif?' + Math.random();
+    setTimeout(function(){
+      img.src=''
+    }, 300);
+  }
+//]]></script>
+
+<% end %>
+
+    <script src="login.js"></script>
+  </body>
+</html>

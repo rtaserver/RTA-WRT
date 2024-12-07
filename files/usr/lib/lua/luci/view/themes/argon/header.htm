@@ -1,0 +1,216 @@
+<%#
+	Argon is a clean HTML5 theme for LuCI. It is based on luci-theme-material Argon Template
+
+	luci-theme-argon
+	Copyright 2020 Jerrykuku <jerrykuku@qq.com>
+
+	Have a bug? Please create an issue here on GitHub!
+	https://github.com/jerrykuku/luci-theme-argon/issues
+
+	luci-theme-material:
+	Copyright 2015 Lutty Yang <lutty@wcan.in>
+
+	Argon Theme
+	https://demos.creative-tim.com/argon-dashboard/index.html
+
+	Licensed to the public under the Apache License 2.0
+-%>
+
+<%
+	local sys = require "luci.sys"
+	local util = require "luci.util"
+	local http = require "luci.http"
+	local disp = require "luci.dispatcher"
+	local ver = require "luci.version"
+
+	local boardinfo = util.ubus("system", "board")
+
+	local node = disp.context.dispatched
+
+	local fs = require "nixio.fs"
+	local nutil = require "nixio.util"
+	local uci = require 'luci.model.uci'.cursor()
+
+	-- send as HTML5
+	http.prepare_content("text/html")
+
+	math.randomseed(os.time())
+
+	-- Custom settings
+	local mode = 'normal'
+	local dark_css = fs.readfile('/www/luci-static/argon/css/dark.css')
+	local bar_color = '#5e72e4'
+	local primary, dark_primary, blur_radius, blur_radius_dark, blur_opacity
+	if fs.access('/etc/config/argon') then
+		primary = uci:get_first('argon', 'global', 'primary')
+		dark_primary = uci:get_first('argon', 'global', 'dark_primary')
+		blur_radius = uci:get_first('argon', 'global', 'blur')
+		blur_radius_dark = uci:get_first('argon', 'global', 'blur_dark')
+		blur_opacity = uci:get_first('argon', 'global', 'transparency')
+		blur_opacity_dark = uci:get_first('argon', 'global', 'transparency_dark')
+		mode = uci:get_first('argon', 'global', 'mode')
+		bar_color = mode == 'dark' and dark_primary or primary
+	end
+
+	-- Brand name
+	local brand_name = boardinfo.hostname or "?"
+-%>
+<!DOCTYPE html>
+<html lang="<%=luci.i18n.context.lang%>">
+
+<head>
+	<meta charset="utf-8">
+	<title>
+		<%=striptags( (boardinfo.hostname or "?") .. ( (node and node.title) and ' - ' .. translate(node.title) or '')) %>
+		- LuCI</title>
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+	<meta name="format-detection" content="telephone=no, email=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="x5-fullscreen" content="true">
+	<meta name="full-screen" content="yes">
+	<meta name="x5-page-mode" content="app">
+	<meta name="browsermode" content="application">
+	<meta name="msapplication-tap-highlight" content="no">
+	<meta name="msapplication-TileColor" content="<%=bar_color%>">
+	<meta name="application-name" content="<%=striptags( (boardinfo.hostname or "?") ) %> - LuCI">
+	<meta name="apple-mobile-web-app-title" content="<%=striptags( (boardinfo.hostname or "?") ) %> - LuCI">
+	<link rel="apple-touch-icon" sizes="60x60" href="<%=media%>/icon/apple-icon-60x60.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="<%=media%>/icon/apple-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="144x144" href="<%=media%>/icon/apple-icon-144x144.png">
+	<link rel="icon" type="image/png" sizes="192x192" href="<%=media%>/icon/android-icon-192x192.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="<%=media%>/icon/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="96x96" href="<%=media%>/icon/favicon-96x96.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="<%=media%>/icon/favicon-16x16.png">
+	<link rel="manifest" href="<%=media%>/icon/manifest.json"  crossorigin="use-credentials">
+	<meta name="msapplication-TileColor" content="<%=bar_color%>">
+	<meta name="msapplication-TileImage" content="<%=media%>/icon/ms-icon-144x144.png">
+	<meta name="theme-color" content="<%=bar_color%>">
+	<link rel="stylesheet" href="<%=media%>/css/cascade.css?v=2.3.1">
+	<style title="text/css">
+		<% if mode ~= 'dark' then %>
+			@media (prefers-color-scheme: dark) {
+				<%=dark_css%>
+			}
+		<% if fs.access('/etc/config/argon') then %>
+		:root {
+			--primary: <%=primary%>;
+			--dark-primary: <%=dark_primary%>;
+				--bar-bg: <%=primary%>;
+			--blur-radius:<%=blur_radius%>px;
+			--blur-opacity:<%=blur_opacity%>;
+			--blur-radius-dark:<%=blur_radius_dark%>px;
+			--blur-opacity-dark:<%=blur_opacity_dark%>;
+		}
+		<% end -%>
+		<% elseif mode == 'dark' then %>
+			<%=dark_css%>
+		<% if fs.access('/etc/config/argon') then %>
+		:root {
+			--primary: <%=primary%>;
+			--dark-primary: <%=dark_primary%>;
+				--bar-bg: <%=dark_primary%>;
+			--blur-radius:<%=blur_radius%>px;
+			--blur-opacity:<%=blur_opacity%>;
+			--blur-radius-dark:<%=blur_radius_dark%>px;
+			--blur-opacity-dark:<%=blur_opacity_dark%>;
+		}
+		<% end -%>
+		<% end -%>
+	</style>
+	<link rel="shortcut icon" href="<%=media%>/favicon.ico">
+	<% if node and node.css then %>
+	<link rel="stylesheet" href="<%=resource%>/<%=node.css%>">
+	<% end -%>
+	<% if css then %>
+	<style title="text/css">
+		<%=css %>
+	</style>
+	<% end -%>
+	<script src="<%=media%>/js/polyfill.min.js?v=2.3.1"></script>
+	<script src="<%=url('admin/translations', luci.i18n.context.lang)%>?v=<%=ver.luciversion%>"></script>
+	<script src="<%=resource%>/cbi.js?v=<%=ver.luciversion%>"></script>
+	<script src="<%=resource%>/luci.js?v=<%=ver.luciversion%>"></script>
+	<script src="<%=media%>/js/jquery.min.js?v=3.5.1"></script>
+</head>
+
+<body
+	class="lang_<%=luci.i18n.context.lang%> <% if node then %><%= striptags( node.title ) %><% end %> <% if luci.dispatcher.context.authsession then %>logged-in<% end %>"
+	data-page="<%= table.concat(disp.context.requestpath, "-") %>">
+
+	<div class="main">
+		<div class="main-left" id="mainmenu" style="display:none">
+			<div class="sidenav-header d-flex align-items-center">
+				<a class="brand" href="#"><%=brand_name%></a>
+				<div class="ml-auto">
+					<!-- Sidenav toggler -->
+					<div class="sidenav-toggler d-none d-xl-block active" data-action="sidenav-unpin"
+						data-target="#sidenav-main">
+						<div class="sidenav-toggler-inner">
+							<i class="sidenav-toggler-line"></i>
+							<i class="sidenav-toggler-line"></i>
+							<i class="sidenav-toggler-line"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="main-right">
+			<header class="bg-primary">
+				<div class="fill">
+					<div class="container">
+						<div class="flex1">
+							<a class="showSide"></a>
+<tr>
+             <td><a href='/cgi-bin/luci/admin/services/mihomo''><img src="<%=media%>/navbar/mihomo.png" width="35" height="35"></a></td>
+             <td><a href='/cgi-bin/luci/admin/services/openclash'><img src="<%=media%>/navbar/openclash.png" width="35" height="35"></a></td>
+<td><a href='/cgi-bin/luci/admin/network/network'><img src="<%=media%>/navbar/interface.png" width="35" height="35"></a></td>
+             <td><a href='/cgi-bin/luci/admin/system/tinyfm'><img src="<%=media%>/navbar/tinyfm.png" width="35" height="35"></a></td>
+             <td><a href='/cgi-bin/luci/admin/services/andromodem''><img src="<%=media%>/navbar/droidnet.png" width="35" height="35"></a></td>
+             
+
+      </tr>
+						</div>
+						<div class="status" id="indicators"></div>
+					</div>
+				</div>
+<style>#menu{color: red; height: 15px; padding-left: 0px; border-radius: 0;}#menu li, #menu ul{margin: 0 auto; padding: 0; list-style: none;}#menu ul{width: 95%;}#menu li{float: left; display: inline; position: relative;}#menu a{display: block; line-height: 15px; padding: 0 5px; text-decoration: none; color: #fff; font-size: 12px;}#menu a.dropdown-arrow:after{content: "\25BE"; margin-left: 5px;}#menu li a:hover{color: #006064; background: #f2f2f2;}#menu input{display: none; margin: 0; padding: 0; height: 20px; width: 100%; opacity: 0; cursor: pointer;}#menu label{display: none; line-height: 20px; text-align: center; position: absolute; left: 35px;}#menu label:before{font-size: 1.6em; content: "\2261"; margin-left: 20px;}#menu ul.sub-menus{height: auto; overflow: hidden; width: 170px; background: #f2f2f2; position: absolute; z-index: 99; display: none;}#menu ul.sub-menus li{display: block; width: 100%;}#menu ul.sub-menus a{color: #fff; font-size: 12px;}#menu li:hover ul.sub-menus{display: block;}#menu ul.sub-menus a:hover{background: #f2f2f2; color: #006064;}@media screen and (max-width: 200px){#menu{position: relative;}#menu ul{background: #111; position: absolute; top: 100%; right: 0; left: 0; z-index: 3; height: auto; display: none;}#menu ul.sub-menus{width: 100%; position: static;}#menu ul.sub-menus a{padding-left: 30px;}#menu li{display: block; float: none; width: auto;}#menu input, #menu label{position: absolute; top: 0; left: 0; display: block;}#menu input{z-index: 4;}#menu input:checked + label{color: #fff;}#menu input:checked + label:before{content: "\00d7";}#menu input:checked ~ ul{display: block;}}</style>
+<script>
+function updatemenu(){1==document.getElementById("responsive-menu").checked?(document.getElementById("menu").style.borderBottomRightRadius="0",document.getElementById("menu").style.borderBottomLeftRadius="0"):document.getElementById("menu").style.borderRadius="0px"}
+</script>
+<nav id='menu'>
+  <input type='checkbox' id='responsive-menu' onclick='updatemenu()'><label></label>
+  <ul>
+    <li><a href='/cgi-bin/luci/admin/status/overview'>Home</a></li>
+    <li><a href='/cgi-bin/luci/admin/services/ttyd'>Terminal</a></li>
+    <li><a href='http://192.168.8.1/' target='_blank'>Modem</a></li>
+    <li><a href='http://192.168.1.2/' target='_blank'>Router</a></li>    
+	<li><a id="yacd" target='_blank'>Yacd</a></li>
+	<script type="text/javascript">document.getElementById("yacd").setAttribute("href", "http://" + window.location.hostname + ":9090/ui/yacd/",);</script>
+  </ul>
+</nav>
+			</header>
+<br>
+			<div class="darkMask"></div>
+			<div id="maincontent">
+				<div class="container">
+					<%- if luci.sys.process.info("uid") == 0 and luci.sys.user.getuser("root") and not luci.sys.user.getpasswd("root") then -%>
+					<div class="alert-message error">
+						<h4><%:No password set!%></h4>
+						<p><%:There is no password set on this router. Please configure a root password to protect the web interface.%>
+						</p>
+						<% if disp.lookup("admin/system/admin") then %>
+						<div class="right"><a class="btn"
+								href="<%=url("admin/system/admin")%>"><%:Go to password configuration...%></a></div>
+						<% end %>
+					</div>
+					<%- end -%>
+
+					<noscript>
+						<div class="alert-message error">
+							<h4><%:JavaScript required!%></h4>
+							<p><%:You must enable JavaScript in your browser or LuCI will not work properly.%></p>
+						</div>
+					</noscript>
+
+					<div id="tabmenu" style="display:none"></div>
