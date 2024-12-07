@@ -274,7 +274,7 @@ download_imagebuilder() {
     # Untuk Openwrt 23.05.5 #
     #tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz
     # Untuk Openwrt 24.10.0 #
-    tar -zstd -zvf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.zst
+    tar --zstd -zvf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.zst
     mv -f *-imagebuilder-* ${openwrt_dir}
 
     sync && sleep 3
