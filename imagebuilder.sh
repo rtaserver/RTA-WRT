@@ -260,16 +260,13 @@ download_imagebuilder() {
     fi
 
     # Downloading imagebuilder files
-    # PIlih Salah Satu Versi #
     # Openwrt 23.05.5 #
     #download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.tar.xz"
     # Openwrt 24.10.0 #
     download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.tar.zst"
-    
     curl -fsSOL ${download_file}
     [[ "${?}" -eq "0" ]] || error_msg "Download failed: [ ${download_file} ]"
     echo -e "${SUCCESS} Download Base ${op_branch} ${target_name} successfully!"
-
     # Unzip and change the directory name
     # Untuk Openwrt 23.05.5 #
     #tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz
