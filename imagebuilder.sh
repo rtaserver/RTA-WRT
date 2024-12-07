@@ -267,10 +267,7 @@ download_imagebuilder() {
     curl -fsSOL ${download_file}
     [[ "${?}" -eq "0" ]] || error_msg "Download failed: [ ${download_file} ]"
     echo -e "${SUCCESS} Download Base ${op_branch} ${target_name} successfully!"
-    # Unzip and change the directory name
-    # Untuk Openwrt 23.05.5 #
-    #tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz
-    # Untuk Openwrt 24.10.0 #
+    # Unzip and change the directory
     tar --zstd -zvf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.zst
     mv -f *-imagebuilder-* ${openwrt_dir}
 
