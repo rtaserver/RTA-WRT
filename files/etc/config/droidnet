@@ -1,0 +1,17 @@
+
+config droidnet 'device'
+	option id ''
+	option display_app '10'
+	option display_msg '10'
+
+config droidnet 'monitoring'
+	option enable '0'
+	option ping 'http'
+	option host 'google.com'
+	option success_limit '5'
+	option failure_limit '3'
+	option wait_time '3'
+	option interface 'tethering'
+	option restart '0'
+	option tunnel_service 'tunnel'
+
