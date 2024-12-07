@@ -209,7 +209,7 @@ detect_mac80211() {
 			set wireless.default_${name}.device=${name}
 			set wireless.default_${name}.network=lan
 			set wireless.default_${name}.mode=ap
-			set wireless.default_${name}.ssid=RTA-WRT_2g
+			set wireless.default_${name}.ssid=xidz
 			set wireless.default_${name}.encryption=none
 EOF
 		uci -q commit wireless
