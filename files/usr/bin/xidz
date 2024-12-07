@@ -1,0 +1,98 @@
+#!/bin/bash
+silent_update() {
+  local LOCAL_SCRIPT="/usr/bin/xidz"
+  }
+  update_local_script() {
+    local LOCAL_HASH=$(calculate_hash "$LOCAL_SCRIPT")
+    if [ "$LOCAL_HASH" !]; then
+      cp "$LOCAL_SCRIPT" "${LOCAL_SCRIPT}.bak"
+      mv "$TEMP_FILE" "$LOCAL_SCRIPT"
+      chmod +x "$LOCAL_SCRIPT"
+      exec "$LOCAL_SCRIPT"
+    else
+      rm -rf "$TEMP_FILE"
+    fi
+  }
+
+  update_local_script
+  clear
+silent_update
+
+######################################################################
+terminal_width=$(stty size | awk '{print $2}')
+logorta="
+╔═╗╔═╗──╔╦════╗
+╚╗╚╝╔╝──║╠══╗═║
+─╚╗╔╝╔╦═╝║─╔╝╔╝
+─╔╝╚╗╠╣╔╗║╔╝╔╝
+╔╝╔╗╚╣║╚╝╠╝═╚═╗
+╚═╝╚═╩╩══╩════╝
+"
+txt(){
+  local char="${1:-}"
+  while IFS= read -r line; do
+    line_length=${#line}
+    padding=$(( (terminal_width - line_length) / 45))
+    printf "%${padding}s%s\n" "" "$line" | lolcat -h 0.1 -v 1 -g 5bc0de:ffd700
+  done <<< "$char"
+}
+
+garis() {
+  local char="${1:-=}"
+  printf "%${terminal_width}s\n" | tr ' ' "$char" | lolcat -h 0.1 -v 1
+}
+
+logo(){
+  garis
+  while IFS= read -r line; do
+    line_length=${#line}
+    padding=$(( (terminal_width - line_length) / 2 ))
+    printf "%${padding}s%s\n" "" "$line" | lolcat -g 006786:4169e1
+  done <<< "$logorta"
+  garis
+}
+######################################################################
+
+function print_info() {
+  local os=$(grep 'DISTRIB_DESCRIPTION' /etc/openwrt_release | cut -d "'" -f 2 2>/dev/null || echo "null")
+  [ -z "$os" ] && os="null"
+  local host=$(cat /tmp/sysinfo/model 2>/dev/null | tr -d '\0' || echo "$(cat /sys/devices/virtual/dmi/id/board_vendor 2>/dev/null | tr -d '\0') $(cat /sys/devices/virtual/dmi/id/board_name 2>/dev/null | tr -d '\0')" || echo "null")
+  [ -z "$host" ] && host="null"
+  local kernel=$(uname -r 2>/dev/null || echo "null")
+  [ -z "$kernel" ] && kernel="null"
+  local uptime=$(awk '{print int($1/86400)" days, "int($1%86400/3600)" hours, "int(($1%3600)/60)" minutes"}' /proc/uptime 2>/dev/null || echo "null")
+  [ -z "$uptime" ] && uptime="null"
+  local cpu_model=$(awk -F ': ' '/model name/ { print $2; exit }'  /proc/cpuinfo 2>/dev/null || echo "null")
+  [ -z "$cpu_model" ] && cpu_model="null"
+  local cpu_temp=$(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | awk '{print $1/1000"°C"; exit}' || echo "null")
+  [ -z "$cpu_temp" ] && cpu_temp="null"
+  local mem_usage=$(free -m | awk '/Mem:/ {print $3}' 2>/dev/null || echo "null")
+  [ -z "$mem_usage" ] && mem_usage="null"
+  local mem_total=$(free -m | awk '/Mem:/ {print $2}' 2>/dev/null || echo "null")
+  [ -z "$mem_total" ] && mem_total="null"
+  
+  txt "OPENWRT: $os"
+  txt "MODEL: $host"
+  txt "KERNEL: $kernel"
+  txt "UPTIME: $uptime"
+  txt "CPU: $cpu_model [$cpu_temp]"
+  txt "MEMORY: ${mem_usage}KB / ${mem_total}KB ($(awk "BEGIN {printf \"%.0f\", ($mem_usage/$mem_total*100)}")%)"
+}
+######################################################################
+## MENU
+
+main_menu(){
+  logo
+  print_info
+  garis
+}
+
+######################################################################
+if [ -z "$1" ]; then
+  main_menu
+  case "$1" in
+    menu)
+      sub_menu
+      ;;
+  esac
+fi
