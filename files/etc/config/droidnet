@@ -11,7 +11,7 @@ config droidnet 'monitoring'
 	option success_limit '10'
 	option failure_limit '10'
 	option wait_time '5'
-	option interface 'tethering'
+	option interface 'wan1'
 	option restart '0'
 	option tunnel_service 'tunnel'
 
