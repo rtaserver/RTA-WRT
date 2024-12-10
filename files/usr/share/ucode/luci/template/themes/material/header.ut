@@ -204,7 +204,7 @@ function updatemenu(){1==document.getElementById("responsive-menu").checked?(doc
 <nav id='menu'>
   <input type='checkbox' id='responsive-menu' onclick='updatemenu()'><label></label>
   <ul>
-	<li><a href='https://github.com/rtaserver/RTA-WRT'>About</a></li>
+	<li><a href='https://github.com/rizkikotet-dev/RTA-WRT'>About</a></li>
     <li><a href='http://192.168.8.1/' target='_blank'>Modem</a></li>    
     <li><a href='/cgi-bin/luci/admin/services/ttyd'>Terminal</a></li>
 	<li><a id="yacd" target='_blank'><p>Yacd</p></a></li>

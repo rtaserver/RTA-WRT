@@ -19,26 +19,27 @@ Custom Script By FriWrt
 </p>
 <br>
 
-
 # Link Download
 
 <p align="center">
-<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/openwrt_23.05.5-20241120"><img alt="Static Badge" src="https://img.shields.io/badge/OpenWrt--23.05.5-openwrt?style=for-the-badge&logo=openwrt&label=Download&color=%231aa5de"></a>
-<a href="https://github.com/rtaserver/RTA-WRT/releases/tag/immortalwrt_23.05.4-20241121"><img alt="Static Badge" src="https://img.shields.io/badge/ImmortalWrt--23.05.4-immorlalwrt?style=for-the-badge&logo=openwrt&label=Download&color=%231aa5de"></a>
+<a href="https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/openwrt_23.05.5-20241120"><img alt="Static Badge" src="https://img.shields.io/badge/OpenWrt--23.05.5-openwrt?style=for-the-badge&logo=openwrt&label=Download&color=%231aa5de"></a>
+<a href="https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/immortalwrt_23.05.4-20241121"><img alt="Static Badge" src="https://img.shields.io/badge/ImmortalWrt--23.05.4-immorlalwrt?style=for-the-badge&logo=openwrt&label=Download&color=%231aa5de"></a>
 </p>
 
 ---
-* [Apache License 2.0](https://github.com/rtaserver/RTA-WRT/blob/main/LICENSE)
-* [friWrt-MyWrtBuilder](https://github.com/frizkyiman/friWrt-MyWrtBuilder) by [frizkyiman](https://github.com/frizkyiman)
-* [MyWrtBuilder](https://github.com/Revincx/MyWrtBuilder) by [Revincx](https://github.com/Revincx)
+
+- [Apache License 2.0](https://github.com/rtaserver/RTA-WRT/blob/main/LICENSE)
+- [friWrt-MyWrtBuilder](https://github.com/frizkyiman/friWrt-MyWrtBuilder) by [frizkyiman](https://github.com/frizkyiman)
+- [MyWrtBuilder](https://github.com/Revincx/MyWrtBuilder) by [Revincx](https://github.com/Revincx)
 
 ---
 
 **Peringatan untuk Instalasi Pertama:**
 
-```Booting awal memerlukan waktu agak lama karena Penyimpanan Partisi Ulang dan konfigurasi tambahan```
+`Booting awal memerlukan waktu agak lama karena Penyimpanan Partisi Ulang dan konfigurasi tambahan`
 
 **List OpenWrt**
+
 ```
 - Amlogic Series
     -> s905x - STB HG680P
@@ -57,9 +58,11 @@ Custom Script By FriWrt
     -> xunlong_orangepi-r1-plus - Orange Pi R1 Plus
     -> xunlong_orangepi-r1-plus-lts - Orange Pi R1 Plus LTS
 ```
+
 ---
 
 **Informasi**
+
 ```
 - 192.168.1.1 | pengguna: root | kata sandi: rtawrt
 - SSID: RTA-WRT_2g / RTA-WRT_5g
@@ -73,22 +76,22 @@ Custom Script By FriWrt
 - Dukungan Layar OLED (hanya Raspberrry Pi 4B yang diuji),
 - dll.~
 ```
----
-Pratinjau
+
 ---
 
+## Pratinjau
 
-* Tampilan Masuk
+- Tampilan Masuk
 <p align="center">
     <img src="/pictures/Login.png">
 </p>
 
-* Tampilan Utama
+- Tampilan Utama
 <p align="center">
     <img src="/pictures/Dashboard.png">
 </p>
 
-* Tampilan Terminal
+- Tampilan Terminal
 <p align="center">
     <img src="/pictures/Terminal.png">
 </p>

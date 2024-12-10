@@ -47,7 +47,6 @@ on:
           - true
           - false
 
-
 env:
   TZ: Asia/Jakarta
   IMAGEBUILDER_SH: imagebuilder.sh
@@ -89,7 +88,7 @@ jobs:
           r="${r//'%'/'%25'}"
           r="${r//$'\n'/'%0A'}"
           r="${r//$'\r'/'%0D'}"  
-          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
+          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
 
       - name: Initialization environment (normal)
         # if: github.event.inputs.target != 'all' && !cancelled()
@@ -149,7 +148,6 @@ jobs:
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
 
-
       - name: Build Rootfs [ ${{ inputs.releases_branch }} ]
         id: imagebuilder
         if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
@@ -162,7 +160,7 @@ jobs:
           echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> ${GITHUB_ENV}
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
-  
+
       - name: Clear server space
         if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
         run: |
@@ -256,20 +254,19 @@ jobs:
           overwrite: true
           prerelease: false
           body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.RELEASES_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASES_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
             ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
-        
+
                   
             ${{ steps.changelog.outputs.CHANGELOG }}
-        
+
                   
-            See [here](https://github.com/rtaserver/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
+            See [here](https://github.com/rizkikotet-dev/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
             - Default IP: 192.168.1.1
             - Default username: root
             - Default password: rtawrt
             - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
-        
-        
+
       - name: Retry Upload if Failed
         if: ${{ failure() }}
         uses: svenstaro/upload-release-action@v2
@@ -282,18 +279,18 @@ jobs:
           overwrite: true
           prerelease: false
           body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.RELEASES_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASES_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
             ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
 
 
             ${{ steps.changelog.outputs.CHANGELOG }}
 
 
-            See [here](https://github.com/rtaserver/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
+            See [here](https://github.com/rizkikotet-dev/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
             - Default IP: 192.168.1.1
             - Default username: root
             - Default password: rtawrt
-            - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)          
+            - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
 
       - name: Update Readme
         run: |
@@ -315,7 +312,6 @@ jobs:
           git add README.md || echo "No changes"
           git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes"
           git push || echo "No changes"
-
 
   notify:
     needs: build
@@ -347,7 +343,7 @@ jobs:
           r="${r//'%'/'%25'}"
           r="${r//$'\n'/'%0A'}"
           r="${r//$'\r'/'%0D'}"
-          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
+          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
 
       - name: Notify Telegram
         env:
@@ -360,7 +356,7 @@ jobs:
           RELEASES_TAG="${RELEASES_BRANCH/:/_}"
           MESSAGE=$(cat <<-END
           <blockquote>🟢 NEW UPDATE AVAILABLE 🟢</blockquote>
-  
+
           <blockquote>➣ Name: RTA-WRT</blockquote>
           <blockquote>➣ Tag: $RELEASES_TAG-$DATE</blockquote>
           <blockquote>➣ Date : $DATE</blockquote>
@@ -368,15 +364,15 @@ jobs:
           <pre>${{ steps.changelog.outputs.CHANGELOG }}</pre>
           END
           )  
-  
+
           BUTTONS='{
               "inline_keyboard": [
                   [
-                      {"text": "KLIK DISINI", "url": "https://github.com/rtaserver/RTA-WRT"}
+                      {"text": "KLIK DISINI", "url": "https://github.com/rizkikotet-dev/RTA-WRT"}
                   ]
               ]
           }'
-  
+
           if [ "${{ inputs.notiftele }}" == "true" ]; then
             curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
               -d "chat_id=$GROUP_ID" \
@@ -386,31 +382,30 @@ jobs:
               -d "message_thread_id=$MESSAGE_THREAD_ID"
           fi
 
+      # - name: Upload To Telegram
+      #   env:
+      #     API_ID: ${{ secrets.API_ID }}
+      #     API_HASH: ${{ secrets.API_HASH }}
+      #     BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      #     GROUP_ID: ${{ secrets.CHAT_ID }}
+      #     MESSAGE_THREAD_ID: 124
+      #   run: |
+      #     cd ${PWD}
+      #     ls -l downloaded-firmware
+      #     chmod +x telebot.py
+      #     DATE=$(date +'%Y%m%d')
+      #     RELEASES_BRANCH="${{ inputs.releases_branch }}"
+      #     RELEASES_TAG="${RELEASES_BRANCH/:/_}"
+      #     MESSAGE=$(cat <<-END
+      #     <blockquote>🟢 NEW UPDATE AVAILABLE 🟢</blockquote>
 
-      - name: Upload To Telegram
-        env:
-          API_ID: ${{ secrets.API_ID }}
-          API_HASH: ${{ secrets.API_HASH }}
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          GROUP_ID: ${{ secrets.CHAT_ID }}
-          MESSAGE_THREAD_ID: 124
-        run: |
-          cd ${PWD}
-          ls -l downloaded-firmware
-          chmod +x telebot.py
-          DATE=$(date +'%Y%m%d')
-          RELEASES_BRANCH="${{ inputs.releases_branch }}"
-          RELEASES_TAG="${RELEASES_BRANCH/:/_}"
-          MESSAGE=$(cat <<-END
-          <blockquote>🟢 NEW UPDATE AVAILABLE 🟢</blockquote>
-  
-          <blockquote>➣ Name: RTA-WRT</blockquote>
-          <blockquote>➣ Tag: $RELEASES_TAG-$DATE</blockquote>
-          <blockquote>➣ Date : $DATE</blockquote>
+      #     <blockquote>➣ Name: RTA-WRT</blockquote>
+      #     <blockquote>➣ Tag: $RELEASES_TAG-$DATE</blockquote>
+      #     <blockquote>➣ Date : $DATE</blockquote>
 
-          <pre>${{ steps.changelog.outputs.CHANGELOG }}</pre>
-          END
-          )
-          if [ "${{ inputs.notiftele }}" == "true" ]; then
-            python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGE" "$GROUP_ID" "$MESSAGE_THREAD_ID" "downloaded-firmware/*/*.img.gz"
-          fi
+      #     <pre>${{ steps.changelog.outputs.CHANGELOG }}</pre>
+      #     END
+      #     )
+      #     if [ "${{ inputs.notiftele }}" == "true" ]; then
+      #       python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGE" "$GROUP_ID" "$MESSAGE_THREAD_ID" "downloaded-firmware/*/*.img.gz"
+      #     fi
