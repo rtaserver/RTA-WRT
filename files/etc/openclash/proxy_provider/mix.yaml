@@ -1,0 +1,51 @@
+proxies:
+# ◉ⓌⓁⒼ ◉ⓌⓈ ◉ⓈⓃⒾ #
+- name : 🅘🅓
+  server: 
+  port: 443
+  type: vless
+  uuid: 
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  servername: 
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: 
+  udp: true
+- name : 🅢🅖
+  server: 
+  port: 443
+  type: vless
+  uuid: 
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  servername: 
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: 
+  udp: true
+- name : 🅥🅘🅟
+  server: 
+  port: 443
+  type: vless
+  uuid: 
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  servername: 
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: 
+  udp: true
+  
