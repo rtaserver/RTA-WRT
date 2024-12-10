@@ -2,6 +2,6 @@
 # the system init finished. By default this file does nothing.
 
 # Auto mount disk drive on startup
-# change to your drive path and uncomment below
-
+# Auto Sinkron Waktu #
+#/sbin/sync_time.sh bug.com
 exit 0
