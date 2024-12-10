@@ -42,7 +42,7 @@ proxy-groups:
   disable-udp: false
   proxies:
   - REJECT
-  - MIX
+  - FL-X
 port: 7890
 socks-port: 7891
 mixed-port: 7893
