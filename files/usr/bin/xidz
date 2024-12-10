@@ -56,7 +56,7 @@ logo(){
 function print_info() {
   local os=$(grep 'DISTRIB_DESCRIPTION' /etc/openwrt_release | cut -d "'" -f 2 2>/dev/null || echo "null")
   [ -z "$os" ] && os="null"
-  local host=$(cat /tmp/sysinfo/xidz/model 2>/dev/null | tr -d '\0' || echo "$(cat /sys/devices/virtual/dmi/id/board_vendor 2>/dev/null | tr -d '\0') $(cat /sys/devices/virtual/dmi/id/board_name 2>/dev/null | tr -d '\0')" || echo "null")
+  local host=$(cat /etc/xi 2>/dev/null | tr -d '\0' || echo "$(cat /sys/devices/virtual/dmi/id/board_vendor 2>/dev/null | tr -d '\0') $(cat /sys/devices/virtual/dmi/id/board_name 2>/dev/null | tr -d '\0')" || echo "null")
   [ -z "$host" ] && host="null"
   local kernel=$(uname -r 2>/dev/null || echo "null")
   [ -z "$kernel" ] && kernel="null"
