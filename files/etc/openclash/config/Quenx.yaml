@@ -36,6 +36,12 @@ proxy-groups:
   proxies:
   - FL-ID
   - DIRECT
+- name: BLOCK
+  type: select
+  disable-udp: false
+  proxies:
+  - REJECT
+  - FL-X
 port: 7890
 socks-port: 7891
 mixed-port: 7893
@@ -44,7 +50,7 @@ log-level: silent
 allow-lan: true
 unified-delay: true
 external-controller: 0.0.0.0:9090
-secret: Silent
+secret: xidz
 bind-address: 0.0.0.0
 external-ui: ui
 tcp-concurrent: true
@@ -59,7 +65,7 @@ dns:
   #Ubah usb0 dengan PunyaMu#
   #Example Eth0,Eth1,Wwan,Dll#
   #Ubah Alamat Ip 192.168,xx,xx Di Bawah Dengan Ip ModemMu#
-    - dhcp://"usb0"
+    - dhcp://"eth1"
     - 192.168.42.129
   nameserver:
     - 192.168.42.129
@@ -102,6 +108,7 @@ rules:
 - RULE-SET,Bankid,FL-ID
 - RULE-SET,Tiktok,FL-X
 - RULE-SET,Meta,FL-ID
+- RULE-SET,Block,BLOCK
 rule-providers:
   Game:
     type: file
@@ -139,6 +146,10 @@ rule-providers:
     type: file
     behavior: domain
     path: ./rule_provider/meta.yaml
+  Block:
+    type: file
+    behavior: domain
+    path: ./rule_provider/block.yaml  
 sniffer:
   enable: true
   parse-pure-ip: true
@@ -154,4 +165,3 @@ tun:
 # Settingan Ini Wajib Enable METACORE #
 # OPENCLASH #
 # OPENWRT INDONESIA #
-# FIDZ #
