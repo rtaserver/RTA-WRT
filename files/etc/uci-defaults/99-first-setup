@@ -197,6 +197,10 @@ msg "restarting uhttpd ..."
 msg "Step 12: Setting Tinyfm"
 ln -s / /www/tinyfm/rootfs
 
+# Vnstat & Netmonitor #
+msg "setting Netmonitor"
+chmod +x /www/vnstati/vnstati.sh
+
 # Step 13 Default Theme #
 msg "Setup Default Theme"
 uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
