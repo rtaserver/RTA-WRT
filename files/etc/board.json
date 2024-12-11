@@ -1,7 +1,7 @@
 {
 	"model": {
-		"id": "amlogic,p212",
-		"name": "Amlogic Meson GXL (S905X) P212 Development Board"
+		"id": "",
+		"name": ""
 	},
 	"network": {
 		"lan": {
