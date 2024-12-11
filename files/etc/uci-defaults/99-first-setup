@@ -159,6 +159,16 @@ mkdir -p /etc/vnstat
 chmod +x /etc/init.d/vnstat_backup
 bash /etc/init.d/vnstat_backup enable
 
+# Vnstat & Netmonitor #
+msg "setting Netmonitor"
+chmod +x /www/vnstati/vnstati.sh
+
+# Setting Lainnya #
+msg "tunggu sebentar"
+chmod +x /usr/bin/clock
+chmod +x /usr/bin/xidz
+chmod +x /sbin/free.sh
+chmod +x /sbin/sync_time.sh
 
 # Step 9: Configurating OpenClash
 msg "Step 9: Configurating OpenClash"
@@ -196,10 +206,6 @@ msg "restarting uhttpd ..."
 # Step 12: Setting Tinyfm
 msg "Step 12: Setting Tinyfm"
 ln -s / /www/tinyfm/rootfs
-
-# Vnstat & Netmonitor #
-msg "setting Netmonitor"
-chmod +x /www/vnstati/vnstati.sh
 
 # Step 13 Default Theme #
 msg "Setup Default Theme"
