@@ -44,7 +44,12 @@ uci commit system
 msg "Setup WAN and LAN Interface"
 uci set network.lan.ipaddr="192.168.1.1"
 uci set network.lan.netmask='255.255.255.0'
+uci set network.lan.gateway='192.168.1.1'
+uci set network.lan.dns='192.168.1.1'
 uci set network.lan.delegate='0'
+uci set network.lan.type='bridge'
+uci set network.lan.ifname='eth0 eth1 eth2 wlan0'
+uci set dhcp.lan.ignore='1' #Nonaktifkan DHCP di Access Point
 uci set network.wan1=interface
 uci set network.wan1.proto='dhcp'
 uci set network.wan1.device='eth1'
@@ -67,6 +72,9 @@ uci set firewall.@zone[0].network='lan'
 uci set firewall.@zone[1].network='wan1 wan2 modemmanager'
 uci set firewall.@zone[1].masq='1'
 uci set firewall.@zone[1].mtu_fix='1'
+uci set firewall.@zone[0].input='ACCEPT'
+uci set firewall.@zone[0].output='ACCEPT'
+uci set firewall.@zone[0].forward='ACCEPT'
 uci commit firewall
 
 # configure ipv6
