@@ -546,7 +546,7 @@ rebuild_firmware() {
         EXCLUDED+=" -procd-ujail"
     fi
 
-    PACKAGES+=" $misc zram-swap adb parted losetup luci luci-ssl block-mount luci-app-poweroff luci-app-ramfree htop bash curl wget-ssl unzip jq luci-app-ttyd nano luci-app-tinyfm luci-app-eqosplus"
+    PACKAGES+=" $misc openssh-sftp-server zram-swap adb parted losetup luci luci-ssl block-mount luci-app-poweroff luci-app-ramfree htop bash curl wget-ssl unzip jq luci-app-ttyd nano luci-app-tinyfm luci-app-eqosplus"
 
     # Exclude package (must use - before packages name)
     EXCLUDED+=" -libgd"
