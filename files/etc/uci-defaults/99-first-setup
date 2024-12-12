@@ -45,7 +45,9 @@ msg "Setup WAN and LAN Interface"
 uci set network.lan.ipaddr="192.168.1.1"
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.gateway='192.168.1.1'
-uci set network.lan.dns='192.168.1.1'
+uci set network.lan.dns='8.8.8.8'
+set network.lan.type='bridge'
+set network.lan.ifname='eth0'
 uci set network.lan.delegate='0'
 uci set dhcp.lan.ignore='1'
 uci set network.wan=interface
@@ -63,12 +65,12 @@ uci set network.modemmanager.metric='10'
 uci -q delete network.wan6
 uci commit network
 uci set firewall.@zone[0].network='lan'
-uci set firewall.@zone[1].network='wan modemmanager'
-uci set firewall.@zone[1].masq='1'
-uci set firewall.@zone[1].mtu_fix='1'
 uci set firewall.@zone[0].input='ACCEPT'
 uci set firewall.@zone[0].output='ACCEPT'
 uci set firewall.@zone[0].forward='ACCEPT'
+uci set firewall.@zone[1].network='wan modemmanager'
+uci set firewall.@zone[1].masq='1'
+uci set firewall.@zone[1].mtu_fix='1'
 uci commit firewall
 
 # configure ipv6
