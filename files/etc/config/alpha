@@ -6,7 +6,7 @@ config theme 'theme'
 	option nav_01 '/cgi-bin/luci/admin/network/network
 config navbar
 	option name 'Overview'
-	option enable 'Enable'
+	option enable 'Disable'
 	option line '1'
 	option newtab 'No'
 	option icon '/www/luci-static/alpha/gaya/icon/navbar/overview.png'
@@ -23,7 +23,7 @@ config navbar
 config navbar
 	option name 'Terminal'
 	option enable 'Enable'
-	option line '2'
+	option line '1'
 	option newtab 'No'
 	option icon '/www/luci-static/alpha/gaya/icon/navbar/terminal.png'
 	option address '/cgi-bin/luci/admin/services/ttyd'
@@ -35,27 +35,11 @@ config navbar
 	option nav_05 '/cgi-bin/luci/admin/modem/main'
 	option nav_06 '/cgi-bin/luci/admin/modem/main'
 	option color '#2222359a'
-
-config navbar
-	option name 'Mihomo'
-	option enable 'Enable'
-	option line '3'
-	option newtab 'No'
-	option icon '/www/luci-static/alpha/gaya/icon/navbar/mihomo.png'
-	option address '/cgi-bin/luci/admin/services/mihomo'
-	option blur '10'
-	option nav_01 '/cgi-bin/luci/admin/modem/main'
-	option nav_02 '/cgi-bin/luci/admin/modem/main'
-	option nav_03 '/cgi-bin/luci/admin/modem/main'
-	option nav_04 '/cgi-bin/luci/admin/modem/main'
-	option nav_05 '/cgi-bin/luci/admin/modem/main'
-	option nav_06 '/cgi-bin/luci/admin/modem/main'
-	option color '#2222359a'
-
+	
 config navbar
 	option name 'Network'
 	option enable 'Enable'
-	option line '4'
+	option line '2'
 	option newtab 'No'
 	option icon '/www/luci-static/alpha/gaya/icon/navbar/network.png'
     option address '/cgi-bin/luci/admin/network/network'
@@ -71,7 +55,7 @@ config navbar
 config navbar
 	option name 'TinyFm'
 	option enable 'Enable'
-	option line '5'
+	option line '3'
 	option newtab 'No'
 	option icon '/www/luci-static/alpha/gaya/icon/navbar/tinyfm.png'
 	option address '/cgi-bin/luci/admin/system/tinyfm'
@@ -79,7 +63,7 @@ config navbar
 config navbar
 	option name 'DroidNet'
 	option enable 'Enable'
-	option line '6'
+	option line '4'
 	option newtab 'No'
 	option icon '/www/luci-static/alpha/gaya/icon/navbar/droid.png'
 	option address '/cgi-bin/luci/admin/services/droidnet'
@@ -87,10 +71,42 @@ config navbar
 config navbar
 	option name 'Modem'
 	option enable 'Enable'
-	option line '7'
+	option line '5'
 	option newtab 'Yes'
 	option icon '/www/luci-static/alpha/gaya/icon/navbar/modem.png'
-	option address 'http://192.168.8.1/'	
+	option address 'http://192.168.8.1/'
+	
+config navbar
+	option name 'Mihomo'
+	option enable 'Enable'
+	option line '6'
+	option newtab 'No'
+	option icon '/www/luci-static/alpha/gaya/icon/navbar/mihomo.png'
+	option address '/cgi-bin/luci/admin/services/mihomo'
+	option blur '10'
+	option nav_01 '/cgi-bin/luci/admin/modem/main'
+	option nav_02 '/cgi-bin/luci/admin/modem/main'
+	option nav_03 '/cgi-bin/luci/admin/modem/main'
+	option nav_04 '/cgi-bin/luci/admin/modem/main'
+	option nav_05 '/cgi-bin/luci/admin/modem/main'
+	option nav_06 '/cgi-bin/luci/admin/modem/main'
+	option color '#2222359a'
+
+config navbar
+	option name 'Openclash'
+	option enable 'Enable'
+	option line '7'
+	option newtab 'No'
+	option icon '/www/luci-static/alpha/gaya/icon/navbar/openclash.png'
+	option address '/cgi-bin/luci/admin/services/openclash'
+	option blur '10'
+	option nav_01 '/cgi-bin/luci/admin/modem/main'
+	option nav_02 '/cgi-bin/luci/admin/modem/main'
+	option nav_03 '/cgi-bin/luci/admin/modem/main'
+	option nav_04 '/cgi-bin/luci/admin/modem/main'
+	option nav_05 '/cgi-bin/luci/admin/modem/main'
+	option nav_06 '/cgi-bin/luci/admin/modem/main'
+	option color '#2222359a'	
 
 config navbar
 	option name 'Router'
