@@ -43,6 +43,7 @@ uci commit system
 # configure wan interface
 msg "Setup WAN and LAN Interface"
 uci set network.lan.ipaddr="192.168.1.1"
+uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.delegate='0'
 uci set network.wan1=interface
 uci set network.wan1.proto='dhcp'
@@ -62,7 +63,10 @@ uci set network.modemmanager.force_connection='1'
 uci set network.modemmanager.metric='10'
 uci -q delete network.wan6
 uci commit network
+uci set firewall.@zone[0].network='lan'
 uci set firewall.@zone[1].network='wan1 wan2 modemmanager'
+uci set firewall.@zone[1].masq='1'
+uci set firewall.@zone[1].mtu_fix='1'
 uci commit firewall
 
 # configure ipv6
@@ -165,10 +169,9 @@ chmod +x /www/vnstati/vnstati.sh
 
 # Setting Lainnya #
 msg "tunggu sebentar"
-chmod +x /usr/bin/clock
-chmod +x /usr/bin/xidz
 chmod +x /sbin/free.sh
 chmod +x /sbin/sync_time.sh
+
 
 # Step 9: Configurating OpenClash
 msg "Step 9: Configurating OpenClash"
