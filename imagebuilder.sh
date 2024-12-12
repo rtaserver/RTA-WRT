@@ -266,7 +266,7 @@ download_imagebuilder() {
     echo -e "${SUCCESS} Download Base ${op_branch} ${target_name} successfully!"
 
     # Unzip and change the directory name
-    tar --zstd -xvf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.zst
+    tar -xvf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.zst
     mv -f *-imagebuilder-* ${openwrt_dir}
 
     sync && sleep 3
