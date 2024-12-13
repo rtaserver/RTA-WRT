@@ -167,8 +167,8 @@ bash /etc/init.d/vnstat_backup enable
 
 
 # Step 9: Adjusting App Catagory
-msg "Step 9: Adjusting App Catagory"
-sed -i -E "s|status|services|g" /usr/lib/lua/luci/controller/base64.lua
+# msg "Step 9: Adjusting App Catagory"
+# sed -i -E "s|status|services|g" /usr/lib/lua/luci/controller/base64.lua
 
 
 # Step 10: Configurating OpenClash

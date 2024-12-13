@@ -1,0 +1,12 @@
+<%+header%>
+<div class="cbi-map">
+  <iframe
+    id="netmon"
+    style="width: 100%; min-height: 750px; border: none; border-radius: 2px"
+  ></iframe>
+</div>
+<script type="text/javascript">
+  document.getElementById("netmon").src =
+    "http://" + window.location.hostname + "/netdata.html";
+</script>
+<%+footer%>
