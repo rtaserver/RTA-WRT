@@ -366,6 +366,7 @@ custom_packages() {
         "luci-app-tailscale|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
         "luci-app-diskman|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
         "modeminfo|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
+        "luci-app-modeminfo|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
         "atinout|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
         "luci-app-poweroff|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
         "xmm-modem|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
@@ -563,7 +564,7 @@ rebuild_firmware() {
     fi
 
     if [ "$op_target" == "rpi-4" ]; then
-        misc+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio luci-app-oled"
+        misc+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio"
     elif [ "$ARCH_2" == "x86_64" ]; then
         misc+=" kmod-iwlwifi iw-full pciutils"
     fi
