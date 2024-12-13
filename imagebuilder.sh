@@ -406,13 +406,13 @@ custom_packages() {
     fi
 
     # Mihomo
-    mihomo_api="https://api.github.com/repos/rtaserver/OpenWrt-mihomo-Mod/releases"
-    mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-23.05" #$op_branch | cut -d '.' -f 1-2
+    mihomo_api="https://api.github.com/repos/rizkikotet-dev/OpenWrt-mihomo-Mod/releases"
+    mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-${CURVER}" #$op_branch | cut -d '.' -f 1-2
     mihomo_file_ipk_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file_ipk}.*.tar.gz" | head -n 1)"
 
     #passwall
     passwall_api="https://api.github.com/repos/xiaorouji/openwrt-passwall/releases"
-    passwall_file_ipk="luci-23.05_luci-app-passwall"
+    passwall_file_ipk="luci-${CURVER}_luci-app-passwall"
     passwall_file_zip="passwall_packages_ipk_${ARCH_3}"
     passwall_file_ipk_down="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*${passwall_file_ipk}.*.ipk" | head -n 1)"
     passwall_file_zip_down="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*${passwall_file_zip}.*.zip" | head -n 1)"
@@ -438,7 +438,7 @@ custom_packages() {
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download Mihomo package."
     fi
-    tar -xzvf "mihomo_${ARCH_3}-openwrt-23.05.tar.gz" && rm "mihomo_${ARCH_3}-openwrt-23.05.tar.gz"
+    tar -xzvf "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" && rm "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz"
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to extract Mihomo package."
     fi
