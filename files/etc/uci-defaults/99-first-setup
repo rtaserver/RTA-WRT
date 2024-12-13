@@ -46,31 +46,26 @@ uci set network.lan.ipaddr="192.168.1.1"
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.gateway='192.168.1.1'
 uci set network.lan.dns='8.8.8.8'
-uci set network.lan.type='bridge'
-uci set network.lan.ifname='eth0'
 uci set network.lan.delegate='0'
-uci set dhcp.lan.ignore='1'
-uci set network.wan=interface
-uci set network.wan.proto='dhcp'
-uci set network.wan.device='eth1'
-uci set network.wan.metric='1'
+uci set network.wan1=interface
+uci set network.wan1.proto='dhcp'
+uci set network.wan1.device='eth1'
+uci set network.wan1.metric='1'
+uci set network.wan2=interface
+uci set network.wan2.proto='dhcp'
+uci set network.wan2.device='eth2'
+uci set network.wan2.metric='2'
 uci set network.modemmanager=interface 
 uci set network.modemmanager.proto='modemmanager'
 uci set network.modemmanager.device='/sys/devices/platform/scb/fd500000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/usb2/2-1'
+uci set network.wan2.metric='10'
 uci set network.modemmanager.apn='internet'
 uci set network.modemmanager.auth='none'
 uci set network.modemmanager.iptype='ipv4'
 uci set network.modemmanager.force_connection='1'
-uci set network.modemmanager.metric='10'
 uci -q delete network.wan6
 uci commit network
-uci set firewall.@zone[0].network='lan'
-uci set firewall.@zone[0].input='ACCEPT'
-uci set firewall.@zone[0].output='ACCEPT'
-uci set firewall.@zone[0].forward='ACCEPT'
-uci set firewall.@zone[1].network='wan modemmanager'
-uci set firewall.@zone[1].masq='1'
-uci set firewall.@zone[1].mtu_fix='1'
+uci set firewall.@zone[1].network='wan1 wan2 modemmanager'
 uci commit firewall
 
 # configure ipv6
@@ -222,6 +217,14 @@ uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
 msg "NDeso"
 rm -rf /www/luci-static/resources/view/status/include/25_storage.js
 mv /etc/usb-mode.json /etc/usb-mode2.json
+
+# Step Config Network #
+if [ -f "/etc/config/network" ]; then
+  rm -rf /etc/config/network
+  mv /etc/config/network1 /etc/config/network
+else
+  msg "Config Not Found"
+fi
 
 # Step 15: Patch OpenClash
 msg "Step 15: Patch OpenClash"
