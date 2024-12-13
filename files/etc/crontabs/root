@@ -13,6 +13,6 @@
 # Sync time, change google.com to your bug host or ip
 # 0 12 * * * /sbin/sync_time.sh google.com
 
-0 * * * * /sbin/free.sh >/dev/null 2>&1
+* */8 * * * /sbin/free.sh >/dev/null 2>&1
 0 */3 * * * /etc/init.d/vnstat_backup backup
 */5 * * * * /www/vnstati/vnstati.sh >/dev/null 2>&1
