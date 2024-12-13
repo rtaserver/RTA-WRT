@@ -266,10 +266,10 @@ config authentication
 
 config groups
 	option enabled '1'
-	option config 'alkhanet.yaml'
-	option name 'LB-ALK'
-	option old_name 'LB-ALK'
-	option old_name_cfg 'LB-ALK'
+	option config 'quenx.yaml'
+	option name 'LB-QUEN'
+	option old_name 'LB-QUEN'
+	option old_name_cfg 'LB-QUEN'
 	option type 'load-balance'
 	option test_url 'http://www.gstatic.com/generate_204'
 	list other_group 'ISP_1'
@@ -280,7 +280,7 @@ config groups
 
 config groups
 	option enabled '1'
-	option config 'alkhanet.yaml'
+	option config 'quenx.yaml'
 	option name 'ISP_1'
 	option old_name 'ISP_1'
 	option old_name_cfg 'ISP_1'
@@ -290,7 +290,7 @@ config groups
 
 config groups
 	option enabled '1'
-	option config 'alkhanet.yaml'
+	option config 'quenx.yaml'
 	option name 'ISP_2'
 	option old_name 'ISP_2'
 	option old_name_cfg 'ISP_2'
@@ -300,39 +300,39 @@ config groups
 
 config groups
 	option enabled '1'
-	option config 'alkhanet.yaml'
+	option config 'quenx.yaml'
 	option name 'Chat'
 	option old_name 'Chat'
 	option old_name_cfg 'Chat'
 	option type 'select'
 	list other_group 'DIRECT'
-	list other_group 'LB-ALK'
+	list other_group 'LB-QUEN'
 	list other_group 'ISP_1'
 	list other_group 'ISP_2'
 	option disable_udp 'false'
 
 config groups
 	option enabled '1'
-	option config 'alkhanet.yaml'
+	option config 'quenx.yaml'
 	option name 'ADS'
 	option old_name 'ADS'
 	option old_name_cfg 'ADS'
 	option type 'select'
 	list other_group 'REJECT'
-	list other_group 'LB-ALK'
+	list other_group 'LB-QUEN'
 	list other_group 'ISP_1'
 	list other_group 'ISP_2'
 	option disable_udp 'false'
 
 config groups
 	option enabled '1'
-	option config 'alkhanet.yaml'
+	option config 'quenx.yaml'
 	option name 'Zerotier'
 	option old_name 'Zerotier'
 	option old_name_cfg 'Zerotier'
 	option type 'select'
 	list other_group 'DIRECT'
-	list other_group 'LB-ALK'
+	list other_group 'LB-QUEN'
 	list other_group 'ISP_1'
 	list other_group 'ISP_2'
 	option disable_udp 'false'
@@ -340,7 +340,7 @@ config groups
 config proxy-provider
 	option enabled '1'
 	option manual '1'
-	option config 'alkhanet.yaml'
+	option config 'quenx.yaml'
 	option name 'ALK1'
 	option type 'file'
 	option path './proxy_provider/alk1.yaml'
@@ -352,7 +352,7 @@ config proxy-provider
 config proxy-provider
 	option enabled '1'
 	option manual '1'
-	option config 'alkhanet.yaml'
+	option config 'quenx.yaml'
 	option name 'ALK2'
 	option type 'file'
 	option path './proxy_provider/alk2.yaml'
@@ -362,7 +362,7 @@ config proxy-provider
 	option health_check_interval '11'
 
 config rule_providers
-	option config 'alkhanet.yaml'
+	option config 'quenx.yaml'
 	option name 'Langsung'
 	option type 'file'
 	option behavior 'classical'
@@ -372,7 +372,7 @@ config rule_providers
 	option group 'Chat'
 
 config rule_providers
-	option config 'alkhanet.yaml'
+	option config 'quenx.yaml'
 	option name 'Iklan&Porn'
 	option type 'file'
 	option behavior 'classical'
@@ -382,7 +382,7 @@ config rule_providers
 	option group 'ADS'
 
 config rule_providers
-	option config 'alkhanet.yaml'
+	option config 'quenx.yaml'
 	option name 'Zero'
 	option type 'file'
 	option behavior 'classical'
