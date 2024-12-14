@@ -19,7 +19,7 @@ on:
     inputs:
       releases_branch:
         description: "Select the releases branch"
-        required: false
+        required: true
         default: "immortalwrt:23.05.4"
         type: choice
         options:

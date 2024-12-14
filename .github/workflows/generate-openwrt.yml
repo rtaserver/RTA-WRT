@@ -19,7 +19,7 @@ on:
     inputs:
       releases_branch:
         description: "Select the releases branch"
-        required: false
+        required: true
         default: "openwrt:23.05.5"
         type: choice
         options:
