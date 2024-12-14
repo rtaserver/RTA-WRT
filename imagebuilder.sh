@@ -349,7 +349,7 @@ custom_packages() {
     #     "luci-app-netmonitor|https://api.github.com/repos/rtaserver/rta-packages/releases"
     #     "luci-app-base64|https://api.github.com/repos/rtaserver/rta-packages/releases"
     # )
-    # download_packages "github" github_packages[@]
+    download_packages "github" github_packages[@]
 
     # Download IPK From Custom
     CURVER=$(echo $op_branch | awk -F. '{print $1"."$2}')
