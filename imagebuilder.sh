@@ -369,7 +369,8 @@ custom_packages() {
         "sms-tool|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "tailscale|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "luci-app-tailscale|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
-        "luci-app-diskman|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
+        #"luci-app-diskman|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
+        "luci-app-disks-info|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         "luci-app-modeminfo|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         "modeminfo|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         "atinout|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
@@ -506,7 +507,7 @@ rebuild_firmware() {
     PACKAGES+=" tailscale luci-app-tailscale"
 
     # NAS and Hard disk tools
-    PACKAGES+=" luci-app-diskman ntfs-3g"
+    PACKAGES+=" luci-app-disks-info ntfs-3g"
 
     # Docker
     #PACKAGES+=" docker docker-compose dockerd luci-app-dockerman"
@@ -533,7 +534,7 @@ rebuild_firmware() {
    # php8-mod-xml php8-mod-xmlreader php8-mod-xmlwriter php8-mod-zip libopenssl-legacy"
 
     # Misc and some custom .ipk files
-    misc+="luci-app-temp-status luci-app-rakitanmanager luci-theme-alpha luci-theme-argon luci-app-droidnet"
+    misc+=" luci-app-cpufreq luci-app-mmconfig luci-app-temp-status luci-app-rakitanmanager luci-theme-alpha luci-theme-argon luci-app-droidnet"
     
     if [ "$op_target" == "rpi-4" ]; then
         misc+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio luci-app-oled"
