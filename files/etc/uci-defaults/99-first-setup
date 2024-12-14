@@ -70,7 +70,6 @@ uci set firewall.@defaults[0].syn_flood='1'
 uci set firewall.@defaults[0].input='ACCEPT'
 uci set firewall.@defaults[0].output='ACCEPT'
 uci set firewall.@defaults[0].forward='REJECT'
-uci commit firewall
 uci set firewall.@zone[1].network='wan1 wan2 modemmanager'
 uci commit firewall
 
