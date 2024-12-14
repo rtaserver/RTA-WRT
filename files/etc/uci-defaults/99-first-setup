@@ -66,6 +66,11 @@ uci set network.modemmanager.iptype='ipv4'
 uci set network.modemmanager.force_connection='1'
 uci -q delete network.wan6
 uci commit network
+uci set firewall.@defaults[0].syn_flood='1'
+uci set firewall.@defaults[0].input='ACCEPT'
+uci set firewall.@defaults[0].output='ACCEPT'
+uci set firewall.@defaults[0].forward='REJECT'
+uci commit firewall
 uci set firewall.@zone[1].network='wan1 wan2 modemmanager'
 uci commit firewall
 
@@ -177,7 +182,6 @@ chmod +x /sbin/sync_time.sh
 msg "Step 9: Configurating OpenClash"
 bash /usr/bin/patchoc.sh
 sed -i '/exit 0/i #/usr/bin/patchoc.sh' /etc/rc.local
-ln -s /etc/openclash/history/config-wrt.db /etc/openclash/cache.db
 ln -s /etc/openclash/core/clash_meta  /etc/openclash/clash
 
 
@@ -217,6 +221,7 @@ uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
 # Step 14: Gabut #
 msg "NDeso"
 rm -rf /www/luci-static/resources/view/status/include/25_storage.js
+rm -rf /usr/share/openclash/openclash_version.sh
 mv /etc/usb-mode.json /etc/usb-mode2.json
 
 # Step Config Network #
@@ -302,9 +307,6 @@ document.getElementById("editor").src = "http://" + window.location.hostname + "
 <%+footer%>
 EOF
 
-# Step Remove OC Version #
-msg "Tunggu Sebentar"
-rm -rf /usr/share/openclash/openclash_version.sh
 
 # Step 16: Set All permission files
 msg "Step 16: Set All permission files"
