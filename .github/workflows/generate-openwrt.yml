@@ -12,6 +12,9 @@ name: Build OpenWrt with ImageBuilder
 
 on:
   repository_dispatch:
+  push:
+    tags:
+      - openwrt-*
   workflow_dispatch:
     inputs:
       releases_branch:
@@ -20,7 +23,6 @@ on:
         default: "openwrt:23.05.5"
         type: choice
         options:
-          - immortalwrt:23.05.4
           - openwrt:23.05.5
       target:
         description: "Select device target:"
@@ -246,17 +248,15 @@ jobs:
 
       - name: Upload Firmware to Release
         uses: svenstaro/upload-release-action@v2
-        continue-on-error: true
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz
-          tag: ${{ env.RELEASES_TAG }}-${{ env.DATE }}
-          release_name: RTA-WRT - ${{ env.RELEASES_TAG }}-${{ env.DATE }}
+          tag: ${{ github.ref }}
           overwrite: true
           prerelease: false
           body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASES_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ github.ref }}/total?style=for-the-badge&logo=Openwrt)
             ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
 
                   
@@ -268,52 +268,6 @@ jobs:
             - Default username: root
             - Default password: rtawrt
             - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
-
-      - name: Retry Upload if Failed
-        if: ${{ failure() }}
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file_glob: true
-          file: imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz
-          tag: ${{ env.RELEASES_TAG }}-${{ env.DATE }}
-          release_name: RTA-WRT - ${{ env.RELEASES_TAG }}-${{ env.DATE }}
-          overwrite: true
-          prerelease: false
-          body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASES_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
-            ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
-
-
-            ${{ steps.changelog.outputs.CHANGELOG }}
-
-
-            See [here](https://github.com/rizkikotet-dev/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
-            - Default IP: 192.168.1.1
-            - Default username: root
-            - Default password: rtawrt
-            - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
-
-      - name: Update Readme
-        run: |
-          RELEASES_BRANCH="${{ inputs.releases_branch }}"
-          WRT_SOURCE=${RELEASES_BRANCH%:*}
-          WRT_BRANCH=${RELEASES_BRANCH#*:}
-          if [[ "$WRT_SOURCE" == "openwrt" ]]; then
-            sed -i -E "s|openwrt_[0-9]+\.[0-9]+(\.[0-9]+)?-[0-9]+|${{ env.RELEASES_TAG }}-${{ env.DATE }}|g" ${PWD}/README.md
-            sed -i -E "s|OpenWrt--[0-9]+\.[0-9]+(\.[0-9]+)?-openwrt|OpenWrt--${WRT_BRANCH}-openwrt|g" ${PWD}/README.md
-          elif [[ "$WRT_SOURCE" == "immortalwrt" ]]; then
-            sed -i -E "s|immortalwrt_[0-9]+\.[0-9]+(\.[0-9]+)?-[0-9]+|${{ env.RELEASES_TAG }}-${{ env.DATE }}|g" ${PWD}/README.md
-            sed -i -E "s|ImmortalWrt--[0-9]+\.[0-9]+(\.[0-9]+)?-immortalwrt|ImmortalWrt--${WRT_BRANCH}-immortalwrt|g" ${PWD}/README.md
-          fi
-
-      - name: Commit changes
-        run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git add README.md || echo "No changes"
-          git commit -m "Auto Update $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes"
-          git push || echo "No changes"
 
   notify:
     needs: build

@@ -4,7 +4,7 @@
 
 </h1>
 
-<h3 align="center">Openwrt Terbaru - 23.05.5</h3>
+<h3 align="center">OpenWrt - 23.05.5 | ImmortalWrt - 23.05.4</h3>
 
 <!-- <h4 align="center">Join Telegram Untuk Mendapatkan Notifikasi Update Dan Tutorial</h4>
 <p align="center">
@@ -22,9 +22,7 @@ Custom Script By FriWrt
 # Link Download
 
 <p align="center">
-<a href="https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/openwrt_23.05.5-20241120"><img alt="Static Badge" src="https://img.shields.io/badge/OpenWrt--23.05.5-openwrt?style=for-the-badge&logo=openwrt&label=Download&color=%231aa5de"></a>
-<a href="https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/immortalwrt_23.05.4-20241214"><img alt="Static Badge" src="https://img.shields.io/badge/ImmortalWrt--23.05.4-immorlalwrt?style=for-the-badge&logo=openwrt&label=Download&color=%231aa5de"></a>
-</p>
+<a href="https://github.com/rizkikotet-dev/RTA-WRT/releases/"><img alt="Static Badge" src="https://img.shields.io/badge/Click_Here-openwrt?style=for-the-badge&logo=openwrt&label=Download&color=%231aa5de"></a>
 
 ---
 
