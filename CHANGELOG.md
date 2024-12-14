@@ -1,5 +1,9 @@
 # What's New!
 
+**Changelog** (14-12-2024):
+
+- Minor Bug Fixes
+
 **Changelog** (19-11-2024):
 
 - Latest Build
