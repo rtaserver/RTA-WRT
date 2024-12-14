@@ -310,6 +310,9 @@ document.getElementById("editor").src = "http://" + window.location.hostname + "
 <%+footer%>
 EOF
 
+# Step Remove OC Version #
+msg "Tunggu Sebentar"
+rm -rf /usr/share/openclash/openclash_version.sh
 
 # Step 16: Set All permission files
 msg "Step 16: Set All permission files"
