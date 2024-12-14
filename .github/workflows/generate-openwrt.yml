@@ -30,17 +30,17 @@ jobs:
       fail-fast: false
       matrix:
         target: |
-          - "Raspberry Pi 3B"
-          - "Raspberry Pi 4B"
-          - "NanoPi R2C"
-          - "NanoPi R2S"
-          - "NanoPi R4S"
-          - "Orange Pi R1 Plus"
-          - "Orange Pi R1 Plus LTS"
-          - "x86-64"
-          - "Amlogic HG680P"
-          - "Amlogic B860H-V5"
-          - "Amlogic B860H-V1-V2"
+          - Raspberry Pi 3B
+          - Raspberry Pi 4B
+          - NanoPi R2C
+          - NanoPi R2S
+          - NanoPi R4S
+          - Orange Pi R1 Plus
+          - Orange Pi R1 Plus LTS
+          - x86-64
+          - Amlogic HG680P
+          - Amlogic B860H-V5
+          - Amlogic B860H-V1-V2
 
     steps:
       - name: Checkout
