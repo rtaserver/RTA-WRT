@@ -346,8 +346,8 @@ custom_packages() {
         github_packages+=("luci-app-amlogic|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest")
     fi
     # github_packages+=(
-    #     "luci-app-netmonitor|https://api.github.com/repos/rtaserver/rta-packages/releases"
-    #     "luci-app-base64|https://api.github.com/repos/rtaserver/rta-packages/releases"
+    #     "luci-app-netmonitor|https://api.github.com/repos/rizkikotet-dev/rta-packages/releases"
+    #     "luci-app-base64|https://api.github.com/repos/rizkikotet-dev/rta-packages/releases"
     # )
     download_packages "github" github_packages[@]
 
