@@ -227,14 +227,6 @@ else
   msg "Config Not Found"
 fi
 
-# Step Config Firewall #
-if [ -f "/etc/config/firewall" ]; then
-  rm -rf /etc/config/firewall
-  mv /etc/config/firewall1 /etc/config/firewall
-else
-  msg "Config Not Found"
-fi
-
 # Step 15: Patch OpenClash
 msg "Step 15: Patch OpenClash"
 STATUS="/usr/lib/lua/luci/view/openclash/status.htm"
