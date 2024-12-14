@@ -105,7 +105,7 @@ jobs:
           sudo timedatectl set-timezone "$TZ"
           echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           echo -e "[\033[94m INFO \033[0m] TARGET: ${{ matrix.target }}"
-          echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+          echo "DATE=$(date +'%d%m%Y')" >> $GITHUB_ENV
 
       - name: Setup Environment Variables
         id: init
@@ -353,7 +353,7 @@ jobs:
           GROUP_ID: ${{ secrets.CHAT_ID }}
           MESSAGE_THREAD_ID: 36
         run: |
-          DATE=$(date +'%Y%m%d')
+          DATE=$(date +'%d%m%Y')
           RELEASES_BRANCH="${{ inputs.releases_branch }}"
           RELEASES_TAG="${RELEASES_BRANCH/:/_}"
           MESSAGE=$(cat <<-END
@@ -395,7 +395,7 @@ jobs:
       #     cd ${PWD}
       #     ls -l downloaded-firmware
       #     chmod +x telebot.py
-      #     DATE=$(date +'%Y%m%d')
+      #     DATE=$(date +'%d%m%Y')
       #     RELEASES_BRANCH="${{ inputs.releases_branch }}"
       #     RELEASES_TAG="${RELEASES_BRANCH/:/_}"
       #     MESSAGE=$(cat <<-END
