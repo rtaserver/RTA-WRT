@@ -367,8 +367,6 @@ custom_packages() {
         "libmbim|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "modemmanager|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "sms-tool|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
-        "tailscale|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
-        "luci-app-tailscale|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         "luci-app-diskman|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         #"luci-app-disks-info|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         "luci-app-modeminfo|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
@@ -450,12 +448,12 @@ custom_config() {
     echo -e "${INFO} Downloading custom script" 
     sync_time="https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/sbin/sync_time.sh"
     clock="https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/usr/bin/clock"
-    repair_ro="https://raw.githubusercontent.com/frizkyiman/fix-read-only/main/install2.sh"
+    #repair_ro="https://raw.githubusercontent.com/frizkyiman/fix-read-only/main/install2.sh"
     #mount_hdd="https://raw.githubusercontent.com/frizkyiman/auto-mount-hdd/main/mount_hdd"
 
     curl -fsSL -o "${custom_files_path}/sbin/sync_time.sh" "${sync_time}"
     curl -fsSL -o "${custom_files_path}/usr/bin/clock" "${clock}"
-    curl -fsSL -o "${custom_files_path}/root/install2.sh" "${repair_ro}"
+    #curl -fsSL -o "${custom_files_path}/root/install2.sh" "${repair_ro}"
     #curl -fsSL -o "${custom_files_path}/usr/bin/mount_hdd" "${mount_hdd}"
 
     echo -e "${INFO} All custom configuration setup completed!"
@@ -504,7 +502,7 @@ rebuild_firmware() {
     PACKAGES+=" $OPENCLASH $MIHOMO"
 
     # Remote Services
-    PACKAGES+=" tailscale luci-app-tailscale"
+    #PACKAGES+=" tailscale luci-app-tailscale"
 
     # NAS and Hard disk tools
     PACKAGES+=" luci-app-diskman ntfs-3g"
@@ -534,7 +532,7 @@ rebuild_firmware() {
    # php8-mod-xml php8-mod-xmlreader php8-mod-xmlwriter php8-mod-zip libopenssl-legacy"
 
     # Misc and some custom .ipk files
-    misc+=" luci-app-cpufreq luci-app-mmconfig luci-app-temp-status luci-app-rakitanmanager luci-theme-alpha luci-theme-argon luci-app-droidnet"
+    misc+=" tailscale luci-app-tailscale luci-app-cpufreq luci-app-mmconfig luci-app-temp-status luci-app-rakitanmanager luci-theme-alpha luci-theme-argon luci-app-droidnet"
     
     if [ "$op_target" == "rpi-4" ]; then
         misc+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio luci-app-oled"
