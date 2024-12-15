@@ -9,7 +9,7 @@
 			"protocol": "static"
 		},
                 "wan": {
-			"ports": ["eth1", "eth2", "wwan0"],
+			"ports": ["eth1", "eth2", "mm"],
 			"protocol": "dhcp"
                 }	
 	}
