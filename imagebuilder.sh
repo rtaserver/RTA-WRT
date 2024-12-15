@@ -354,6 +354,7 @@ custom_packages() {
     # Download IPK From Custom
     CURVER=$(echo $op_branch | awk -F. '{print $1"."$2}')
     other_packages=(
+        "luci-app-base64|https://github.com/noct99/blog.vpngame.com/raw/main"
         "luci-app-3ginfo-lite|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         "modemband|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         "luci-app-sms-tool|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
@@ -369,8 +370,8 @@ custom_packages() {
         "sms-tool|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "tailscale|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "luci-app-tailscale|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
-        #"luci-app-diskman|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
-        "luci-app-disks-info|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
+        "luci-app-diskman|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
+        #"luci-app-disks-info|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         "luci-app-modeminfo|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         "modeminfo|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         "atinout|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
@@ -507,7 +508,7 @@ rebuild_firmware() {
     PACKAGES+=" tailscale luci-app-tailscale"
 
     # NAS and Hard disk tools
-    PACKAGES+=" luci-app-disks-info ntfs-3g"
+    PACKAGES+=" luci-app-diskman ntfs-3g"
 
     # Docker
     #PACKAGES+=" docker docker-compose dockerd luci-app-dockerman"
@@ -519,7 +520,7 @@ rebuild_firmware() {
     PACKAGES+=" speedtestcli"
 
     # Base64 Encode Decode
-    #PACKAGES+=" luci-app-base64"
+    PACKAGES+=" luci-app-base64"
 
     # Custom Package #
     #Theme materual
