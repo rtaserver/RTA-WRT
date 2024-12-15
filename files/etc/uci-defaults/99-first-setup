@@ -336,8 +336,8 @@ check_permission "/usr/bin"
 
 
 # Step 17: Run Another Process
-msg "Step 17: Run Another Process"
-bash /root/install2.sh
+#msg "Step 17: Run Another Process"
+#bash /root/install2.sh
 
 
 # Log success
