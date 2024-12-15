@@ -274,7 +274,7 @@ jobs:
                           NEW UPDATE
           ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
           NAME   : 🔔 RTA\-WRT ImmortalWRT
-          TAG       : ${{ github.ref }}
+          TAG       : immortalwrt\-${DATE}
           DATE     : ${DATE2}
           REPO    : rizkikotet\-dev/RTA\-WRT
           ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
