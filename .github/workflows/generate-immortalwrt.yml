@@ -289,7 +289,7 @@ jobs:
               ]
           }'
 
-          if [ "${{ NOTIFE_TELEGRAM }}" == "true" ]; then
+          if [ "${NOTIFE_TELEGRAM}" == "true" ]; then
             curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
               -d "chat_id=$GROUP_ID" \
               -d "text=$MESSAGE" \
