@@ -246,9 +246,9 @@ jobs:
           file: downloaded-firmware/*/*.img.gz
           tag: ${{ github.ref }}
           overwrite: true
-          prerelease: ${PRERELEASE}
+          prerelease: ${{ env.PRERELEASE }}
           body: |
-            ### RTA-WRT ${OPENWRT_BASE}:${OPENWRT_BRANCH} Image information
+            ### RTA-WRT ${{ env.OPENWRT_BASE }}:${{ env.OPENWRT_BRANCH }}} Image information
 
                   
             ${{ steps.changelog.outputs.CHANGELOG }}
