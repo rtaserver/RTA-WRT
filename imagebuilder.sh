@@ -354,7 +354,6 @@ custom_packages() {
     # Download IPK From Custom
     CURVER=$(echo $op_branch | awk -F. '{print $1"."$2}')
     other_packages=(
-        "luci-app-base64|https://github.com/noct99/blog.vpngame.com/raw/main"
         "luci-app-3ginfo-lite|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         "modemband|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         "luci-app-sms-tool|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
@@ -520,7 +519,7 @@ rebuild_firmware() {
     PACKAGES+=" speedtestcli"
 
     # Base64 Encode Decode
-    PACKAGES+=" luci-app-base64"
+    #PACKAGES+=" luci-app-base64"
 
     # Custom Package #
     #Theme materual
