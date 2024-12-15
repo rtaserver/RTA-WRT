@@ -21,6 +21,7 @@ env:
   OPENWRT_BRANCH: 23.05.4
   IMAGEBUILDER_SH: imagebuilder.sh
   NOTIFE_TELEGRAM: true
+  PRERELEASE: false
 
 jobs:
   build:
@@ -205,34 +206,6 @@ jobs:
           path: imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz
           retention-days: 7
 
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
-        with:
-          path: downloaded-firmware
-
-      - name: Upload Firmware to Release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file_glob: true
-          file: downloaded-firmware/*/*.img.gz
-          tag: ${{ github.ref }}
-          overwrite: true
-          prerelease: false
-          body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ github.ref }}/total?style=for-the-badge&logo=Openwrt)
-            ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
-
-                  
-            ${{ steps.changelog.outputs.CHANGELOG }}
-
-                  
-            See [here](https://github.com/rizkikotet-dev/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
-            - Default IP: 192.168.1.1
-            - Default username: root
-            - Default password: rtawrt
-            - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
-
   notify:
     needs: build
     runs-on: ubuntu-latest
@@ -265,6 +238,28 @@ jobs:
           r="${r//$'\r'/'%0D'}"
           echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
 
+      - name: Upload Firmware to Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          file: downloaded-firmware/*/*.img.gz
+          tag: ${{ github.ref }}
+          overwrite: true
+          prerelease: ${PRERELEASE}
+          body: |
+            ### RTA-WRT ${OPENWRT_BASE}:${OPENWRT_BRANCH} Image information
+
+                  
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+                  
+            See [here](https://github.com/rizkikotet-dev/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
+            - Default IP: 192.168.1.1
+            - Default username: root
+            - Default password: rtawrt
+            - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
+
       - name: Notify Telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
@@ -272,16 +267,19 @@ jobs:
           MESSAGE_THREAD_ID: 36
         run: |
           DATE=$(date +'%d%m%Y')
-          MESSAGE=$(cat <<-END
-          <blockquote>🟢 NEW UPDATE AVAILABLE 🟢</blockquote>
-
-          <blockquote>➣ Name: RTA-WRT</blockquote>
-          <blockquote>➣ Tag: ${OPENWRT_BASE}_${OPENWRT_BRANCH}-$DATE</blockquote>
-          <blockquote>➣ Date : $DATE</blockquote>
-
-          <pre>${{ steps.changelog.outputs.CHANGELOG }}</pre>
-          END
-          )  
+          DATE2=$(date +'%d\-%m\-%Y')
+          MESSAGE=$(
+              cat <<EOF
+          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                          NEW UPDATE
+          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+          NAME   : 🔔 RTA\-WRT ImmortalWRT
+          TAG       : ${{ github.ref }}
+          DATE     : ${DATE2}
+          REPO    : rizkikotet\-dev/RTA\-WRT
+          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+          EOF
+          )
 
           BUTTONS='{
               "inline_keyboard": [
@@ -291,11 +289,11 @@ jobs:
               ]
           }'
 
-          if [ "${{ inputs.notiftele }}" == "true" ]; then
+          if [ "${{ NOTIFE_TELEGRAM }}" == "true" ]; then
             curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
               -d "chat_id=$GROUP_ID" \
               -d "text=$MESSAGE" \
-              -d "parse_mode=HTML" \
+              -d "parse_mode=MarkdownV2" \
               -d "reply_markup=$(echo $BUTTONS | jq -c .)" \
               -d "message_thread_id=$MESSAGE_THREAD_ID"
           fi
@@ -322,6 +320,6 @@ jobs:
       #     <pre>${{ steps.changelog.outputs.CHANGELOG }}</pre>
       #     END
       #     )
-      #     if [ "${{ inputs.notiftele }}" == "true" ]; then
+      #     if [ "${{ NOTIFE_TELEGRAM }}" == "true" ]; then
       #       python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGE" "$GROUP_ID" "$MESSAGE_THREAD_ID" "downloaded-firmware/*/*.img.gz"
       #     fi
