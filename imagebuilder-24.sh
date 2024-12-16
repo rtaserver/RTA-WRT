@@ -347,7 +347,7 @@ custom_packages() {
     fi
     github_packages+=(
         "luci-app-netmonitor|https://api.github.com/repos/rtaserver/rta-packages/releases"
-        #"luci-app-base64|https://api.github.com/repos/rtaserver/rta-packages/releases"
+        "luci-app-base64|https://api.github.com/repos/rtaserver/rta-packages/releases"
     )
     download_packages "github" github_packages[@]
 
@@ -517,7 +517,7 @@ rebuild_firmware() {
     PACKAGES+=" speedtestcli"
 
     # Base64 Encode Decode
-    #PACKAGES+=" luci-app-base64"
+    PACKAGES+=" luci-app-base64"
 
     # Custom Package #
     #Theme materual
