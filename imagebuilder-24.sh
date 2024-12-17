@@ -446,13 +446,9 @@ custom_config() {
     echo -e "${STEPS} Start adding custom config..."
 
     echo -e "${INFO} Downloading custom script" 
-    sync_time="https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/sbin/sync_time.sh"
-    clock="https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/usr/bin/clock"
     repair_ro="https://raw.githubusercontent.com/frizkyiman/fix-read-only/main/install2.sh"
     #mount_hdd="https://raw.githubusercontent.com/frizkyiman/auto-mount-hdd/main/mount_hdd"
 
-    curl -fsSL -o "${custom_files_path}/sbin/sync_time.sh" "${sync_time}"
-    curl -fsSL -o "${custom_files_path}/usr/bin/clock" "${clock}"
     curl -fsSL -o "${custom_files_path}/root/install2.sh" "${repair_ro}"
     #curl -fsSL -o "${custom_files_path}/usr/bin/mount_hdd" "${mount_hdd}"
 
