@@ -43,7 +43,7 @@ uci set network.lan.ipaddr="192.168.1.1"
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.gateway='192.168.1.1'
 uci set network.lan.type='bridge'
-uci set network.lan.ifname='eth0 eth1'
+uci set network.lan.ports='eth0 eth1'
 uci set dhcp.lan.leasetime='12h'
 uci set network.lan.dns='8.8.8.8'
 uci set network.lan.delegate='0'
@@ -72,7 +72,7 @@ uci set firewall.@zone[1].network='wan1 wan2'
 uci set firewall.@zone[1].masq='1'
 uci set firewall.@zone[1].mtu_fix='1'
 uci commit firewall
-/etc/init.d/firewall restart
+
 
 # configure WLAN
 uci set wireless.@wifi-device[0].disabled='0'
@@ -145,7 +145,6 @@ echo '#30 3 * * * ifdown fibocom && sleep 3 && ifup fibocom' >> /etc/crontabs/ro
 echo '* */8 * * * /sbin/free.sh >/dev/null 2>&1' >> /etc/crontabs/root
 echo '0 */3 * * * /etc/init.d/vnstat_backup backup' >> /etc/crontabs/root
 echo '*/5 * * * * /www/vnstati/vnstati.sh >/dev/null 2>&1' >> /etc/crontabs/root
-/etc/init.d/cron restart
 
 # setting permission auto sinkron jam #
 chmod +x /usr/bin/jam.sh
