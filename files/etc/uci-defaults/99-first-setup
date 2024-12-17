@@ -42,9 +42,12 @@ uci commit system
 uci set network.lan.ipaddr="192.168.1.1"
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.gateway='192.168.1.1'
+uci set network.lan.type='bridge'
+uci set network.lan.ifname='eth0 eth1'
 uci set dhcp.lan.leasetime='12h'
 uci set network.lan.dns='8.8.8.8'
 uci set network.lan.delegate='0'
+uci del network.lan.ip6assign
 uci set network.wan1=interface
 uci set network.wan1.proto='dhcp'
 uci set network.wan1.device='eth1'
@@ -55,10 +58,8 @@ uci set network.wan2.device='eth2'
 uci set network.wan2.metric='2'
 uci -q delete network.wan6
 uci commit network
-uci set firewall.@zone[1].network='wan1 wan2'
-uci commit firewall
-
-# configure ipv6
+/etc/init.d/network restart
+# configure ipv6 #
 uci -q delete dhcp.lan.dhcpv6
 uci -q delete dhcp.lan.ra
 uci -q delete dhcp.lan.ndp
@@ -67,9 +68,8 @@ uci -q delete dhcp.lan.ra_flags
 uci -q delete dhcp.lan.max_preferred_lifetime
 uci -q delete dhcp.lan.max_valid_lifetime
 uci commit dhcp
-uci set network.lan.delegate='0'
-uci del network.lan.ip6assign
-uci commit network
+uci set firewall.@zone[1].network='wan1 wan2'
+uci commit firewall
 
 # configure WLAN
 uci set wireless.@wifi-device[0].disabled='0'
@@ -204,14 +204,6 @@ ln -s / /www/tinyfm/rootfs
 
 # Step 13 Default Theme #
 uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
-
-# Step Config Network #
-if [ -f "/etc/config/network" ]; then
-  rm -rf /etc/config/network
-  mv /etc/config/network1 /etc/config/network
-else
-  msg "Config Not Found"
-fi
 
 # Step 14: Gabut #
 rm -rf /www/luci-static/resources/view/status/include/25_storage.js
