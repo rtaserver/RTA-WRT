@@ -106,6 +106,7 @@ else
   msg "No wireless device detected."
 fi
 
+
 # Step 1: Configure Password Login OpenWrt
 (echo "xidz"; sleep 1; echo "xidz") | passwd > /dev/null
 
@@ -132,8 +133,7 @@ sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
 sed -i -e '/413c:81d7/,+5d' /etc/usb-mode.json
 
 # Step 6: Disable /etc/config/xmm-modem
-uci set xmm-modem.@xmm-modem[0].enable='0'
-uci commit xmm-modem
+uci set xmm-modem.@xmm-modem[0].enable='0' && uci commit
 
 # Step 8: Setup Auto Vnstat Database Backup
 sed -i 's/;DatabaseDir "\/var\/lib\/vnstat"/DatabaseDir "\/etc\/vnstat"/' /etc/vnstat.conf
@@ -148,7 +148,6 @@ chmod +x /www/vnstati/vnstati.sh
 bash /usr/bin/patchoc.sh
 sed -i '/exit 0/i #/usr/bin/patchoc.sh' /etc/rc.local
 ln -s /etc/openclash/core/clash_meta  /etc/openclash/clash
-rm -rf /usr/share/openclash/openclash_version.sh
 
 
 # Step 10: Adding New Line For Enable i2c Oled Display if Devices Supported
@@ -178,8 +177,7 @@ msg "restarting uhttpd ..."
 ln -s / /www/tinyfm/rootfs
 
 # Step 13 Default Theme #
-uci set luci.main.mediaurlbase='/luci-static/argon'
-uci commit
+uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
 
 # setting permission #
 chmod +x /sbin/free.sh
@@ -187,6 +185,7 @@ chmod +x /usr/bin/jam.sh
 
 # Step 14: Gabut #
 rm -rf /www/luci-static/resources/view/status/include/25_storage.js
+rm -rf /usr/share/openclash/openclash_version.sh
 
 # Step 15: Patch OpenClash
 STATUS="/usr/lib/lua/luci/view/openclash/status.htm"
@@ -195,6 +194,7 @@ MYIP="/usr/lib/lua/luci/view/openclash/myip.htm"
 IMG="/luci-static/resources/openclash/img"
 CLIENT="/usr/lib/lua/luci/model/cbi/openclash/client.lua"
 CONT="/usr/lib/lua/luci/controller/openclash.lua"
+
 
 [ -f "/www/${IMG}/logo.png" ] && sed -i "s#https://ftp.jaist.ac.jp/pub/sourceforge.jp/storage/g/o/op/openclash/<%=RELEASE_BRANCH%>/img/logo.png#$IMG/logo.png#g" $STATUS
 [ -f "/www/${IMG}/meta.png" ] && sed -i "s#https://ftp.jaist.ac.jp/pub/sourceforge.jp/storage/g/o/op/openclash/<%=RELEASE_BRANCH%>/img/meta.png#$IMG/meta.png#g" $STATUS
