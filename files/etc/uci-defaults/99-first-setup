@@ -69,7 +69,10 @@ uci -q delete dhcp.lan.max_preferred_lifetime
 uci -q delete dhcp.lan.max_valid_lifetime
 uci commit dhcp
 uci set firewall.@zone[1].network='wan1 wan2'
+uci set firewall.@zone[1].masq='1'
+uci set firewall.@zone[1].mtu_fix='1'
 uci commit firewall
+/etc/init.d/firewall restart
 
 # configure WLAN
 uci set wireless.@wifi-device[0].disabled='0'
