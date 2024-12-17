@@ -29,7 +29,6 @@ fi
 msg "###############################################"
 
 # Set hostname and Timezone to Asia/Jakarta
-msg "Setup NTP Server and Time Zone to Asia/Jakarta"
 uci set system.@system[0].hostname='Xidz'
 uci set system.@system[0].timezone='WIB-7'
 uci set system.@system[0].zonename='Asia/Jakarta'
@@ -40,7 +39,6 @@ uci add_list system.ntp.server="time.google.com"
 uci commit system
 
 # configure wan interface
-msg "Setup WAN and LAN Interface"
 uci set network.lan.ipaddr="192.168.1.1"
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.gateway='192.168.1.1'
@@ -55,17 +53,9 @@ uci set network.wan2=interface
 uci set network.wan2.proto='dhcp'
 uci set network.wan2.device='eth2'
 uci set network.wan2.metric='2'
-uci set network.modemmanager=interface 
-uci set network.modemmanager.proto='modemmanager'
-uci set network.modemmanager.device='/sys/devices/platform/soc/d0078080.usb/c9000000.usb/xhci-hcd.3.auto/usb1/1-2/1-2.3'
-uci set network.modemmanager.metric='10'
-uci set network.modemmanager.apn='internet'
-uci set network.modemmanager.auth='none'
-uci set network.modemmanager.iptype='ipv4'
-uci set network.modemmanager.force_connection='1'
 uci -q delete network.wan6
 uci commit network
-uci set firewall.@zone[1].network='wan1 wan2 modemmanager'
+uci set firewall.@zone[1].network='wan1 wan2'
 uci commit firewall
 
 # configure ipv6
@@ -82,7 +72,6 @@ uci del network.lan.ip6assign
 uci commit network
 
 # configure WLAN
-msg "Setup Wireless if available"
 uci set wireless.@wifi-device[0].disabled='0'
 uci set wireless.@wifi-iface[0].disabled='0'
 uci set wireless.@wifi-iface[0].encryption='none'
@@ -116,7 +105,6 @@ else
 fi
 
 # Step 1: Configure Password Login OpenWrt
-msg "Step 1: Configure Password Login OpenWrt"
 (echo "xidz"; sleep 1; echo "xidz") | passwd > /dev/null
 
 
@@ -132,52 +120,60 @@ if opkg list-installed | grep -q "^luci-app-amlogic "; then
     rm -rf /etc/profile.d/30-sysinfo.sh
 fi
 
-
 # Step 3: Remove login password required when accessing terminal
-msg "Step 3: Remove login password required when accessing terminal"
-uci set ttyd.@ttyd[0].command='/bin/bash --login'
-uci commit ttyd
-
+uci set ttyd.@ttyd[0].command='/bin/bash --login' && uci commit
 
 # Step 4: Remove huawei me909s usb-modeswitch
-msg "Step 4: Remove huawei me909s usb-modeswitch"
 sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
 
-
 # Step 5: Remove dw5821e usb-modeswitch
-msg "Step 5: Remove dw5821e usb-modeswitch"
 sed -i -e '/413c:81d7/,+5d' /etc/usb-mode.json
-mv /etc/usb-mode.json /etc/usb-mode2.json
-
 
 # Step 6: Disable /etc/config/xmm-modem
-msg "Step 6: Disable /etc/config/xmm-modem"
-uci set xmm-modem.@xmm-modem[0].enable='0'
-uci commit xmm-modem
+uci set xmm-modem.@xmm-modem[0].enable='0' && uci commit
 
+# setting permission #
+chmod +x /sbin/free.sh
+
+# add script crontab #
+echo '#auto renew ip lease for modem rakitan' >> /etc/crontabs/root
+echo '#30 3 * * * echo AT+CFUN=4 | atinout - /dev/ttyUSB1 - && ifdown mm && sleep 3 && ifup mm' >> /etc/crontabs/root
+echo '#30 3 * * * ifdown fibocom && sleep 3 && ifup fibocom' >> /etc/crontabs/root
+echo '* */8 * * * /sbin/free.sh >/dev/null 2>&1' >> /etc/crontabs/root
+echo '0 */3 * * * /etc/init.d/vnstat_backup backup' >> /etc/crontabs/root
+echo '*/5 * * * * /www/vnstati/vnstati.sh >/dev/null 2>&1' >> /etc/crontabs/root
+/etc/init.d/cron restart
+
+# setting permission auto sinkron jam #
+chmod +x /usr/bin/jam.sh
+
+# add script rc.local #
+echo '# auto sinkron jam #' >> /etc/rc.local
+echo '#/usr/bin/jam.sh www.site.com' >> /etc/rc.local
+exit 0
+
+
+# add sysctl.conf #
+echo '# RAM 640M #' >> /etc/sysctl.conf
+echo 'net.nf_conntrack_max=163840' >> /etc/sysctl.conf
+echo '# Set both buffers to 32 MB#' >> /etc/sysctl.conf
+echo 'net.core.rmem_max=33554432' >> /etc/sysctl.conf
+echo 'net.core.wmem_max=33554432' >> /etc/sysctl.conf
 
 # Step 8: Setup Auto Vnstat Database Backup
-msg "Step 8: Setup Auto Vnstat Database Backup"
 sed -i 's/;DatabaseDir "\/var\/lib\/vnstat"/DatabaseDir "\/etc\/vnstat"/' /etc/vnstat.conf
 mkdir -p /etc/vnstat
 chmod +x /etc/init.d/vnstat_backup
 bash /etc/init.d/vnstat_backup enable
 
 # Vnstat & Netmonitor #
-msg "setting Netmonitor"
 chmod +x /www/vnstati/vnstati.sh
 
-# Setting Lainnya #
-msg "tunggu sebentar"
-chmod +x /sbin/free.sh
-chmod +x /sbin/sync_time.sh
-
-
 # Step 9: Configurating OpenClash
-msg "Step 9: Configurating OpenClash"
 bash /usr/bin/patchoc.sh
 sed -i '/exit 0/i #/usr/bin/patchoc.sh' /etc/rc.local
 ln -s /etc/openclash/core/clash_meta  /etc/openclash/clash
+rm -rf /usr/share/openclash/openclash_version.sh
 
 
 # Step 10: Adding New Line For Enable i2c Oled Display if Devices Supported
@@ -188,8 +184,6 @@ fi
 
 
 # Step 11: Setup PHP
-msg "Step 11: Setup PHP"
-msg "system not using php-cgi, patching php config ..."
 uci set uhttpd.main.ubus_prefix='/ubus'
 uci set uhttpd.main.interpreter='.php=/usr/bin/php-cgi'
 uci set uhttpd.main.index_page='cgi-bin/luci'
@@ -206,11 +200,9 @@ msg "restarting uhttpd ..."
 
 
 # Step 12: Setting Tinyfm
-msg "Step 12: Setting Tinyfm"
 ln -s / /www/tinyfm/rootfs
 
 # Step 13 Default Theme #
-msg "Setup Default Theme"
 uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
 
 # Step Config Network #
@@ -222,12 +214,9 @@ else
 fi
 
 # Step 14: Gabut #
-msg "NDeso"
 rm -rf /www/luci-static/resources/view/status/include/25_storage.js
-rm -rf /usr/share/openclash/openclash_version.sh
 
 # Step 15: Patch OpenClash
-msg "Step 15: Patch OpenClash"
 STATUS="/usr/lib/lua/luci/view/openclash/status.htm"
 DEV="/usr/lib/lua/luci/view/openclash/developer.htm"
 MYIP="/usr/lib/lua/luci/view/openclash/myip.htm"
@@ -303,7 +292,6 @@ EOF
 
 
 # Step 16: Set Openclash Config
-msg "Step 16: Set Openclash Config"
 if [ -f "/etc/config/openclash" ]; then
   rm -rf /etc/config/openclash
   mv /etc/config/openclash1 /etc/config/openclash
