@@ -71,8 +71,6 @@ uci -q delete dhcp.lan.max_valid_lifetime
 uci commit dhcp
 
 uci set firewall.@zone[1].network='wan1 wan2'
-uci set firewall.@zone[1].masq='1'
-uci set firewall.@zone[1].mtu_fix='1'
 uci commit firewall
 
 
@@ -135,34 +133,35 @@ sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
 sed -i -e '/413c:81d7/,+5d' /etc/usb-mode.json
 
 # Step 6: Disable /etc/config/xmm-modem
-uci set xmm-modem.@xmm-modem[0].enable='0' && uci commit
+uci set xmm-modem.@xmm-modem[0].enable='0'
+uci commit xmm-modem
 
 # setting permission #
 chmod +x /sbin/free.sh
 
 # add script crontab #
-echo '#auto renew ip lease for modem rakitan' >> /etc/crontabs/root
-echo '#30 3 * * * echo AT+CFUN=4 | atinout - /dev/ttyUSB1 - && ifdown mm && sleep 3 && ifup mm' >> /etc/crontabs/root
-echo '#30 3 * * * ifdown fibocom && sleep 3 && ifup fibocom' >> /etc/crontabs/root
-echo '* */8 * * * /sbin/free.sh >/dev/null 2>&1' >> /etc/crontabs/root
-echo '0 */3 * * * /etc/init.d/vnstat_backup backup' >> /etc/crontabs/root
-echo '*/5 * * * * /www/vnstati/vnstati.sh >/dev/null 2>&1' >> /etc/crontabs/root
-
+echo "#auto renew ip lease for modem rakitan" >> /etc/crontabs/root
+echo "#30 3 * * * echo AT+CFUN=4 | atinout - /dev/ttyUSB1 - && ifdown mm && sleep 3 && ifup mm" >> /etc/crontabs/root
+echo "#30 3 * * * ifdown fibocom && sleep 3 && ifup fibocom" >> /etc/crontabs/root
+echo "* */8 * * * /sbin/free.sh >/dev/null 2>&1" >> /etc/crontabs/root
+echo "0 */3 * * * /etc/init.d/vnstat_backup backup" >> /etc/crontabs/root
+echo "*/5 * * * * /www/vnstati/vnstati.sh >/dev/null 2>&1" >> /etc/crontabs/root
+/etc/init.d/cron restart
 # setting permission auto sinkron jam #
 chmod +x /usr/bin/jam.sh
 
 # add script rc.local #
-echo '# auto sinkron jam #' >> /etc/rc.local
-echo '#/usr/bin/jam.sh www.site.com' >> /etc/rc.local
+echo "# auto sinkron jam #" >> /etc/rc.local
+echo "#/usr/bin/jam.sh www.site.com" >> /etc/rc.local
 exit 0
 
 
 # add sysctl.conf #
-echo '# RAM 640M #' >> /etc/sysctl.conf
-echo 'net.nf_conntrack_max=163840' >> /etc/sysctl.conf
-echo '# Set both buffers to 32 MB#' >> /etc/sysctl.conf
-echo 'net.core.rmem_max=33554432' >> /etc/sysctl.conf
-echo 'net.core.wmem_max=33554432' >> /etc/sysctl.conf
+echo "# RAM 640M #' >> /etc/sysctl.conf
+echo "net.nf_conntrack_max=163840" >> /etc/sysctl.conf
+echo "# Set both buffers to 32 MB#' >> /etc/sysctl.conf
+echo "net.core.rmem_max=33554432" >> /etc/sysctl.conf
+echo "net.core.wmem_max=33554432" >> /etc/sysctl.conf
 
 # Step 8: Setup Auto Vnstat Database Backup
 sed -i 's/;DatabaseDir "\/var\/lib\/vnstat"/DatabaseDir "\/etc\/vnstat"/' /etc/vnstat.conf
@@ -207,7 +206,8 @@ msg "restarting uhttpd ..."
 ln -s / /www/tinyfm/rootfs
 
 # Step 13 Default Theme #
-uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
+uci set luci.main.mediaurlbase='/luci-static/argon'
+uci commit
 
 # Step 14: Gabut #
 rm -rf /www/luci-static/resources/view/status/include/25_storage.js
