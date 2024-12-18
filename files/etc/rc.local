@@ -1,0 +1,9 @@
+# Put your custom commands here that should be executed once
+# Auto mount disk drive on startup
+# change to your drive path and uncomment below
+# auto sinkron jam dengan bug #
+# ketik di terminal curl -i domainmu.com #
+# Jika ada respon date tanpa exp berarti bisa di pakai # ganti dengan domainmu yang bawah #
+# */15 * * * * /etc/init.d/openclash start #
+#/usr/bin/jam.sh www.site.com
+exit 0
