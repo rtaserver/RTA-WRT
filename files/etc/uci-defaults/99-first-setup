@@ -111,7 +111,6 @@ fi
 msg "Step 1: Configure Password Login OpenWrt"
 (echo "xidz"; sleep 1; echo "xidz") | passwd > /dev/null
 
-
 # Step 2: Add Custom Repo and Disable opkg signature check
 msg "Step 2: Add Custom Repo and Disable opkg signature check"
 sed -i 's/option check_signature/# option check_signature/g' /etc/opkg.conf
@@ -129,21 +128,17 @@ fi
 msg "Step 4: Remove login password required when accessing terminal"
 uci set ttyd.@ttyd[0].command='/bin/bash --login' && uci commit
 
-
 # Step 5: Remove huawei me909s usb-modeswitch
 msg "Step 5: Remove huawei me909s usb-modeswitch"
 sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
-
 
 # Step 6: Remove dw5821e usb-modeswitch
 msg "Step 6: Remove dw5821e usb-modeswitch"
 sed -i -e '/413c:81d7/,+5d' /etc/usb-mode.json
 
-
 # Step 7: Disable /etc/config/xmm-modem
 msg "Step 7: Disable /etc/config/xmm-modem"
 uci set xmm-modem.@xmm-modem[0].enable='0' && uci commit
-
 
 # Step 8: Setup Auto Vnstat Database Backup
 msg "Step 8: Setup Auto Vnstat Database Backup"
@@ -156,7 +151,6 @@ bash /etc/init.d/vnstat_backup enable
 # Step 9: Vnstat & Netmonitor #
 msg "Step 9: setting Netmonitor"
 chmod +x /www/vnstati/vnstati.sh
-
 
 # Step 10: Configurating OpenClash
 msg "Step 10: Configurating OpenClash"
@@ -194,23 +188,19 @@ msg "restarting uhttpd ..."
 msg "Step 13: Setting Tinyfm"
 ln -s / /www/tinyfm/rootfs
 
-
 # Step 14:Default Theme #
 msg "Step 14: Set Tema"
 uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
-
 
 # Step 15: Gabut #
 msg "Step 15: gabut bang"
 rm -rf /www/luci-static/resources/view/status/include/25_storage.js
 rm -rf /usr/share/openclash/openclash_version.sh
 
-
 # Step 16: setting permission #
 msg "Step 16: setting permission"
 chmod +x /sbin/free.sh
 chmod +x /usr/bin/jam.sh
-
 
 # Step 17: Patch OpenClash
 msg "Step 17: Patch OpenClash"
