@@ -4,4 +4,5 @@
 # Jika ada respon date tanpa exp berarti bisa di pakai # ganti dengan domainmu yang bawah #
 # */15 * * * * /etc/init.d/openclash start #
 #/usr/bin/jam.sh www.site.com
+
 exit 0
