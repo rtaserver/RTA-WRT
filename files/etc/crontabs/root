@@ -1,0 +1,15 @@
+# Use crontab.guru to set crontab schedule spesific time
+
+# Uncomment below if you want to use modem restart command on your need use case
+# auto renew ip lease for modem rakitan every monday to saturday at 03:30 AM
+#30 3 * * 1,2,3,4,5,6 echo  AT+CFUN=4 | atinout - /dev/ttyUSB1 - && sleep 3 && ifdown wan && sleep 3 && echo  AT+CFUN=1 | atinout - /dev/ttyUSB1 - && sleep 3 && ifup wan
+
+# auto restart for modem rakitan once a week at sunday at every 03:30 AM
+#30 3 * * 0 echo  AT^RESET | atinout - /dev/ttyUSB1 - && sleep 20 && ifdown wan && ifup wan
+
+# auto restart for modem rakitan every day at 03:30 AM
+#30 3 * * * echo  AT^RESET | atinout - /dev/ttyUSB1 - && sleep 20 && ifdown wan && ifup wan
+
+* */8 * * * /sbin/free.sh >/dev/null 2>&1
+0 */3 * * * /etc/init.d/vnstat_backup backup
+*/5 * * * * /www/vnstati/vnstati.sh >/dev/null 2>&1
