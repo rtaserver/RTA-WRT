@@ -1,7 +1,0 @@
-# Use crontab.guru to set crontab schedule spesific time
-# auto renew ip lease for modem rakitan #
-#30 3 * * * echo AT+CFUN=4 | atinout - /dev/ttyUSB1 - && ifdown mm && sleep 3 && ifup mm
-#30 3 * * * ifdown fibocom && sleep 3 && ifup fibocom
-* */8 * * * /sbin/free.sh >/dev/null 2>&1
-0 */3 * * * /etc/init.d/vnstat_backup backup
-*/5 * * * * /www/vnstati/vnstati.sh >/dev/null 2>&1
