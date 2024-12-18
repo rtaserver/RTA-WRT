@@ -10,6 +10,9 @@
 # auto restart for modem rakitan every day at 03:30 AM
 #30 3 * * * echo  AT^RESET | atinout - /dev/ttyUSB1 - && sleep 20 && ifdown wan && ifup wan
 
+# Untuk modem rakitan fibocom #
+#30 3 * * * ifdown fibocom && sleep 3 && ifup fibocom
+
 * */8 * * * /sbin/free.sh >/dev/null 2>&1
 0 */3 * * * /etc/init.d/vnstat_backup backup
 */5 * * * * /www/vnstati/vnstati.sh >/dev/null 2>&1
