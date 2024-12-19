@@ -403,13 +403,13 @@ custom_packages() {
     fi
 
     # Mihomo
-    mihomo_api="https://api.github.com/repos/rtaserver/OpenWrt-mihomo-Mod/releases"
-    mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-23.05" #$op_branch | cut -d '.' -f 1-2
-    mihomo_file_ipk_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file_ipk}.*.tar.gz" | head -n 1)"
+    #mihomo_api="https://api.github.com/repos/rtaserver/OpenWrt-mihomo-Mod/releases"
+    #mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-23.05" #$op_branch | cut -d '.' -f 1-2
+    #mihomo_file_ipk_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file_ipk}.*.tar.gz" | head -n 1)"
 
 
     # Output download information
-    echo -e "${STEPS} Installing OpenClash, Mihomo"
+    echo -e "${STEPS} Installing OpenClash"#, Mihomo
 
     echo -e "${INFO} Downloading OpenClash package"
     curl -fsSOL ${openclash_file_ipk_down}
@@ -423,16 +423,16 @@ custom_packages() {
     fi
     echo -e "${INFO} OpenClash Packages downloaded successfully."
 
-    echo -e "${INFO} Downloading Mihomo package"
-    curl -fsSOL ${mihomo_file_ipk_down}
-    if [ "$?" -ne 0 ]; then
-        error_msg "Error: Failed to download Mihomo package."
-    fi
-    tar -xzvf "mihomo_${ARCH_3}-openwrt-23.05.tar.gz" && rm "mihomo_${ARCH_3}-openwrt-23.05.tar.gz"
-    if [ "$?" -ne 0 ]; then
-        error_msg "Error: Failed to extract Mihomo package."
-    fi
-    echo -e "${INFO} Mihomo Packages downloaded successfully."
+    #echo -e "${INFO} Downloading Mihomo package"
+    #curl -fsSOL ${mihomo_file_ipk_down}
+    #if [ "$?" -ne 0 ]; then
+        #error_msg "Error: Failed to download Mihomo package."
+    #fi
+    #tar -xzvf "mihomo_${ARCH_3}-openwrt-23.05.tar.gz" && rm "mihomo_${ARCH_3}-openwrt-23.05.tar.gz"
+    #if [ "$?" -ne 0 ]; then
+        #error_msg "Error: Failed to extract Mihomo package."
+    #fi
+    #echo -e "${INFO} Mihomo Packages downloaded successfully."
 
 
     echo -e "${SUCCESS} Download and extraction All complete."
