@@ -238,8 +238,8 @@ jobs:
               "rockchip-armv8-xunlong_orangepi-r1-plus-lts|Orange-Pi-R1-Plus-LTS_ext4-sysupgrade"
               "x86-64-generic-ext4-combined-efi|x86-64-Generic_ext4-combined-efi"
               "x86-64-generic-ext4-combined|x86-64-Generic_ext4-combined"
-              "24.10.0-Rc2_HG680P_Oc_Mihomo_WifiOn_|Amlogic_HG680P"
-              "24.10.0-Rc2_B860H_Oc_Mihomo_WifiOn_|Amlogic_B860HV1-V2"
+              "23.05.5_HG680P_Oc_Mihomo_WifiOn_|Amlogic_HG680P"
+              "23.05.5_B860H_Oc_Mihomo_WifiOn_|Amlogic_B860HV1-V2"
               "amlogic_s905x2_|Amlogic_B860HV5"
           )
           for pattern in "${search_replace_patterns[@]}"; do
