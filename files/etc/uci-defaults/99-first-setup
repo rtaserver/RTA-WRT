@@ -129,9 +129,6 @@ uci set ttyd.@ttyd[0].command='/bin/bash --login' && uci commit
 msg "Step 5: Remove huawei me909s usb-modeswitch"
 sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
 
-# Step 6: Remove dw5821e usb-modeswitch
-#msg "Step 6: Remove dw5821e usb-modeswitch"
-#sed -i -e '/413c:81d7/,+5d' /etc/usb-mode.json
 
 # Step 7: Disable /etc/config/xmm-modem
 msg "Step 7: Disable /etc/config/xmm-modem"
