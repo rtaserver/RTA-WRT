@@ -13,8 +13,6 @@ config device
 	option type 'bridge'
 	option ipv6 '0'
 	list ports 'eth0'
-	list ports 'eth1'
-	list ports 'eth2'
  
 config interface 'lan'
 	option device 'br-lan'
@@ -30,3 +28,9 @@ config interface 'wan1'
 config interface 'wan2'
 	option proto 'dhcp'
 	option device 'eth2'
+
+config interface 'tailscale'
+	option proto 'static'
+	option ipaddr '100.67.246.24'
+	option netmask '255.0.0.0'
+	option device 'tailscale0'
