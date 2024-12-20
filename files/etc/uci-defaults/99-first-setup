@@ -47,9 +47,11 @@ uci set network.lan.gateway='192.168.1.1'
 uci set network.wan1=interface
 uci set network.wan1.proto='dhcp'
 uci set network.wan1.device='eth1'
+uci set network.wan1.metric='5'
 uci set network.wan2=interface
 uci set network.wan2.proto='dhcp'
 uci set network.wan2.device='eth2'
+uci set network.wan2.metric='10'
 uci -q delete network.wan6
 uci commit network
 uci set firewall.@zone[1].network='wan1 wan2'
