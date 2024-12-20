@@ -3,7 +3,7 @@
 
 </h1>
 
-<h3 align="center">Openwrt 23.05.5 Stable &  Openwrt 24.10.0-RC2</h3>
+<h3 align="center">Openwrt 23.05.5 & Openwrt 24.10.0-RC2</h3>
 
 <p align="center">
 Builder With ImageBuilder
