@@ -13,6 +13,8 @@ config device
 	option type 'bridge'
 	option ipv6 '0'
 	list ports 'eth0'
+	list ports 'eth1'
+	list ports 'eth2'
  
 config interface 'lan'
 	option device 'br-lan'
@@ -24,9 +26,7 @@ config interface 'lan'
 config interface 'wan1'
 	option device 'eth1'
 	option proto 'dhcp'
-        option metric '1'
     
 config interface 'wan2'
 	option proto 'dhcp'
 	option device 'eth2'
-	option metric '2'
