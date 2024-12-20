@@ -10,6 +10,8 @@ Builder With ImageBuilder
 </p>
 <p align="center">
 Custom Script By FriWrt
+<p align="center">
+Remod Version By Xidz
 </p>
 
 ---
