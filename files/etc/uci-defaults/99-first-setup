@@ -47,11 +47,9 @@ uci set network.lan.gateway='192.168.1.1'
 uci set network.wan1=interface
 uci set network.wan1.proto='dhcp'
 uci set network.wan1.device='eth1'
-uci set network.wan1.metric='1'
 uci set network.wan2=interface
 uci set network.wan2.proto='dhcp'
 uci set network.wan2.device='eth2'
-uci set network.wan2.metric='2'
 uci -q delete network.wan6
 uci commit network
 uci set firewall.@zone[1].network='wan1 wan2'
@@ -131,11 +129,9 @@ uci set ttyd.@ttyd[0].command='/bin/bash --login' && uci commit
 msg "Step 5: Remove huawei me909s usb-modeswitch"
 sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
 
-
 # Step 6: Remove dw5821e usb-modeswitch
-msg "Step 6: Remove dw5821e usb-modeswitch"
-sed -i -e '/413c:81d7/,+5d' /etc/usb-mode.json
-
+#msg "Step 6: Remove dw5821e usb-modeswitch"
+#sed -i -e '/413c:81d7/,+5d' /etc/usb-mode.json
 
 # Step 7: Disable /etc/config/xmm-modem
 msg "Step 7: Disable /etc/config/xmm-modem"
@@ -200,7 +196,6 @@ ln -s / /www/tinyfm/rootfs
 msg "Step 14: Set Tema"
 uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
 
-
 # Step 15: Gabut #
 msg "Step 15: gabut bang"
 rm -rf /www/luci-static/resources/view/status/include/25_storage.js
@@ -208,8 +203,8 @@ rm -rf /usr/share/openclash/openclash_version.sh
 /etc/init.d/cron restart
 
 
-# Step 17: Patch OpenClash
-msg "Step 17: Patch OpenClash"
+# Step 16: Patch OpenClash
+msg "Step 16: Patch OpenClash"
 STATUS="/usr/lib/lua/luci/view/openclash/status.htm"
 DEV="/usr/lib/lua/luci/view/openclash/developer.htm"
 MYIP="/usr/lib/lua/luci/view/openclash/myip.htm"
@@ -285,30 +280,37 @@ document.getElementById("editor").src = "http://" + window.location.hostname + "
 EOF
 
 
-# Step 18: Set Openclash Config #
-msg "Step 18: Set Config Oc"
+# Step 17: Set Openclash Config #
+msg "Step 17: Set Openclash"
 if [ -f "/etc/config/openclash" ]; then
   rm -rf /etc/config/openclash
   mv /etc/config/openclash1 /etc/config/openclash
 fi
 
-# Step 19: Set Network Config #
-msg "Step 18: Set Config network"
+# Step 18: Set Network Config #
+msg "Step 18: Set Network"
 if [ -f "/etc/config/network" ]; then
   rm -rf /etc/config/network
   mv /etc/config/network1 /etc/config/network
 fi
 
-# Step 20: Set Tailscale Config #
-msg "Step 18: Set Config network"
+# Step 19: Set Tailscale Config #
+msg "Step 19: Set Tailscale"
 if [ -f "/etc/config/tailscale" ]; then
   rm -rf /etc/config/tailscale
   mv /etc/config/tailscale1 /etc/config/tailscale  
 fi
 
+# Step 19: Set Firewall Config #
+msg "Step 19: Set Firewall"
+if [ -f "/etc/config/firewall" ]; then
+  rm -rf /etc/config/firewall
+  mv /etc/config/firewall1 /etc/config/firewall
+fi
 
-# Step 19: Set All permission files
-msg "Step 19: Set All permission files"
+
+# Step 20: Set All permission files
+msg "Step 20: Set All permission files"
 check_permission() {
     local DIR=${1:-.}
 
