@@ -11,7 +11,7 @@ Builder With ImageBuilder
 <p align="center">
 Custom Script By FriWrt
 <p align="center">
-Remod Version By Xidz
+Mod Version By Xidz
 </p>
 
 ---
