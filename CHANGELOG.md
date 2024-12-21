@@ -1,9 +1,11 @@
 # What's New!
 
 **Changelog** (21-12-2024):
-- Latest Build
-- Bug Fixes
+- OpenWrt 24.10.0-Rc2
+- Bug All Fixes
 - Fixed Booting
+- Update Mihomo To v1.14.0
+- Add Zashboard
 
 **Changelog** (17-11-2024):
 - Fixed Depends Lolcat
