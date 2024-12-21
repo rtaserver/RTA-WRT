@@ -186,6 +186,7 @@ msg "restarting uhttpd ..."
 msg "Step 13: setting permission"
 chmod +x /sbin/free.sh
 chmod +x /usr/bin/jam.sh
+chmod +x -R /usr/share/openclash/ui/zashboard
 
 # Step 13: Setting Tinyfm
 msg "Step 13: Setting Tinyfm"
@@ -199,6 +200,7 @@ uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
 msg "Step 15: gabut bang"
 rm -rf /www/luci-static/resources/view/status/include/25_storage.js
 rm -rf /usr/share/openclash/openclash_version.sh
+rm -rf /usr/share/openclash/ui/dashboard
 /etc/init.d/cron restart
 
 
