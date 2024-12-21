@@ -1,24 +1,22 @@
 <h1 align="center">
-  <br>RTA WRT - Custom OpenWrt<br>
+  <br>Custom OpenWrt<br>
 
 </h1>
 
-<h3 align="center">Openwrt 23.05.5 & 24.10.0-RC2</h3>
+<h3 align="center">OpenWrt23.05.5 | 24.10.0</h3>
 
 <p align="center">
 Builder With ImageBuilder
 </p>
 <p align="center">
 Custom Script By FriWrt
-<p align="center">
-Mod Version By Xidz
 </p>
 
 ---
 * [Apache License 2.0](https://github.com/rtaserver/RTA-WRT/blob/main/LICENSE)
 * [friWrt-MyWrtBuilder](https://github.com/frizkyiman/friWrt-MyWrtBuilder) by [frizkyiman](https://github.com/frizkyiman)
-* [RTA-SERVER](https://github.com/rtaserver)) by [RTASERVER]
 * [MyWrtBuilder](https://github.com/Revincx/MyWrtBuilder) by [Revincx](https://github.com/Revincx)
+* [RTA-WRT](https://github.com/rtaserver/RTA-WRT) by [RTASERVER](https://github.com/rtaserver)
 
 ---
 
@@ -29,9 +27,8 @@ Mod Version By Xidz
 **List OpenWrt**
 ```
 - Amlogic Series
-    -> s905x - STB HG680P
+    -> s905x - STB HG680P B860H-V1-V2
     -> s905x2 - STB B860H-V5
-    -> s905x-b860h - STB B860H-V1-V2
 - Generic Series
     -> x86-64
 - FriendlyArm Series
@@ -57,7 +54,7 @@ Mod Version By Xidz
 - Openclash
 - Mihomo
 - TinyFm filemanager
-- Tema Argon Mod
+- Tema Argon
 - Tema Alpha
 - 3ginfo lite dan Modeminfo, sms-tool, dan aplikasi dukungan modem lainnya,
 - Dukungan Layar OLED (hanya Raspberrry Pi 4B yang diuji),
