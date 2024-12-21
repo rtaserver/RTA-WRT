@@ -1,0 +1,45 @@
+{
+    "admin/services/mihomo": {
+        "title": "MihomoTProxy",
+        "action": {
+            "type": "alias",
+            "path": "admin/services/mihomo/config"
+        },
+        "depends": {
+            "acl": [ "luci-app-mihomo" ],
+            "uci": { "mihomo": true }
+        }
+    },
+    "admin/services/mihomo/config": {
+        "title": "Config",
+        "order": 10,
+        "action": {
+            "type": "view",
+            "path": "mihomo/config"
+        }
+    },
+    "admin/services/mihomo/editor": {
+        "title": "Editor",
+        "order": 20,
+        "action": {
+            "type": "view",
+            "path": "mihomo/editor"
+        }
+    },
+    "admin/services/mihomo/advancededitor": {
+        "title": "Advanced Editor",
+        "order": 30,
+        "action": {
+            "type": "view",
+            "path": "mihomo/advancededitor"
+        }
+    },
+    "admin/services/mihomo/log": {
+        "title": "Log",
+        "order": 40,
+        "action": {
+            "type": "view",
+            "path": "mihomo/log"
+        }
+    }
+}
