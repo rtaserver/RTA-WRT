@@ -403,8 +403,8 @@ custom_packages() {
     fi
 
     # Mihomo
-    mihomo_api="https://api.github.com/repos/rtaserver/OpenWrt-mihomo-Mod/releases"
-    mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-23.05" #$op_branch | cut -d '.' -f 1-2
+    mihomo_api="https://api.github.com/repos/morytyann/OpenWrt-mihomo/releases"
+    mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-24.10" #$op_branch | cut -d '.' -f 1-2
     mihomo_file_ipk_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file_ipk}.*.tar.gz" | head -n 1)"
 
     #passwall
@@ -416,7 +416,7 @@ custom_packages() {
 
 
     # Output download information
-    echo -e "${STEPS} Installing OpenClash, Mihomo" #And Passwall"
+    echo -e "${STEPS} Installing OpenClash" #, Mihomo And Passwall"
 
     echo -e "${INFO} Downloading OpenClash package"
     curl -fsSOL ${openclash_file_ipk_down}
@@ -435,7 +435,7 @@ custom_packages() {
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download Mihomo package."
     fi
-    tar -xzvf "mihomo_${ARCH_3}-openwrt-23.05.tar.gz" && rm "mihomo_${ARCH_3}-openwrt-23.05.tar.gz"
+    tar -xzvf "mihomo_${ARCH_3}-openwrt-24.10.tar.gz" && rm "mihomo_${ARCH_3}-openwrt-24.10.tar.gz"
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to extract Mihomo package."
     fi
@@ -516,9 +516,9 @@ rebuild_firmware() {
 
     # Tunnel option
     OPENCLASH="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
-    MIHOMO+="mihomo luci-app-mihomo"
+    #MIHOMO+="mihomo luci-app-mihomo"
     #PASSWALL+="chinadns-ng resolveip dns2socks dns2tcp ipt2socks microsocks tcping xray-core xray-plugin luci-app-passwall"
-    PACKAGES+=" $OPENCLASH $MIHOMO" #$PASSWALL"
+    PACKAGES+=" $OPENCLASH" #$MIHOMO $PASSWALL"
 
     # Remote Services
     PACKAGES+=" tailscale"
