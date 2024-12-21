@@ -1,5 +1,5 @@
 <h1 align="center">
-  <br>Custom OpenWrt<br>
+  <br>Custom OpenWrt Device<br>
 
 </h1>
 
@@ -9,7 +9,7 @@
 Builder With ImageBuilder
 </p>
 <p align="center">
-Custom Script By FriWrt
+Custom Script By FriWrt | Remod By Xidz
 </p>
 
 ---
