@@ -1,5 +1,5 @@
 <h1 align="center">
-  <br>Custom OpenWrt Device<br>
+  <br>Custom OpenWrt<br>
 
 </h1>
 
