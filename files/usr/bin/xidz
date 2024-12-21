@@ -71,12 +71,12 @@ function print_info() {
   local mem_total=$(free -m | awk '/Mem:/ {print $2}' 2>/dev/null || echo "null")
   [ -z "$mem_total" ] && mem_total="null"
   
-  txt "OS: $os"
-  txt "MODEL: $host"
-  txt "KERNEL: $kernel"
-  txt "UPTIME: $uptime"
-  txt "CPU: $cpu_model [$cpu_temp]"
-  txt "MEMORY: ${mem_usage}KB / ${mem_total}KB ($(awk "BEGIN {printf \"%.0f\", ($mem_usage/$mem_total*100)}")%)"
+  txt "⚝ OS: $os"
+  txt "⚝ MODEL: $host"
+  txt "⚝ KERNEL: $kernel"
+  txt "⚝ UPTIME: $uptime"
+  txt "⚝ CPU: $cpu_model [$cpu_temp]"
+  txt "⚝ MEMORY: ${mem_usage}KB / ${mem_total}KB ($(awk "BEGIN {printf \"%.0f\", ($mem_usage/$mem_total*100)}")%)"
 }
 ######################################################################
 ## MENU
