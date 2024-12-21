@@ -17,7 +17,7 @@ Mod Version By Xidz
 ---
 * [Apache License 2.0](https://github.com/rtaserver/RTA-WRT/blob/main/LICENSE)
 * [friWrt-MyWrtBuilder](https://github.com/frizkyiman/friWrt-MyWrtBuilder) by [frizkyiman](https://github.com/frizkyiman)
-* [RTA-SERVER](https://github.com/rtaserver)) by [Rizky-Kotet]
+* [RTA-SERVER](https://github.com/rtaserver)) by [RTASERVER]
 * [MyWrtBuilder](https://github.com/Revincx/MyWrtBuilder) by [Revincx](https://github.com/Revincx)
 
 ---
