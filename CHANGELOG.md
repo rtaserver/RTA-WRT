@@ -1,6 +1,6 @@
 # What's New!
 
-**Changelog** (19-11-2024):
+**Changelog** (21-12-2024):
 - Latest Build
 - Bug Fixes
 - Fixed Booting
