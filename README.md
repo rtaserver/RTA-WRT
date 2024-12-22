@@ -27,8 +27,9 @@ Custom Script By FriWrt | Remod By Xidz
 **List OpenWrt**
 ```
 - Amlogic Series
-    -> s905x - STB HG680P B860H-V1-V2
+    -> s905x  - STB HG680P B860H-V1-V2
     -> s905x2 - STB B860H-V5
+    -> s912   - STB A95X
 - Generic Series
     -> x86-64
 - FriendlyArm Series
