@@ -52,6 +52,9 @@ uci set network.wan2=interface
 uci set network.wan2.proto='dhcp'
 uci set network.wan2.device='eth2'
 uci set network.wan2.metric='10'
+uci set network.rakitan=interface
+uci set network.rakitan.proto='none'
+uci set network.rakitan.device='wwan0'
 uci -q delete network.wan6
 uci commit network
 uci set firewall.@zone[1].network='wan1 wan2'
