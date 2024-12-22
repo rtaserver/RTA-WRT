@@ -7,19 +7,18 @@ config defaults
 
 config zone
 	option name 'lan'
-	list network 'lan'
-        list network 'UTL_LAN'
+	option network 'lan'
+        option network 'UTL_LAN'
 	option input 'ACCEPT'
 	option output 'ACCEPT'
 	option forward 'ACCEPT'
 
 config zone
 	option name 'wan'
+        option network 'wan1 wan2'
 	option input 'REJECT'
 	option output 'ACCEPT'
 	option forward 'REJECT'
-        list network 'wan1'
-	list network 'wan2'
 	option masq '1'
 	option mtu_fix '1'
 
