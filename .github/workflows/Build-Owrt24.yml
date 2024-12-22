@@ -21,6 +21,8 @@ on:
           - immortalwrt:24.10.0-rc1
           - openwrt:24.10.0-rc2
           - openwrt:24.10.0-rc3
+          - openwrt:24.10.0-rc4
+          
   
       target:
         description: "Select device Target"
