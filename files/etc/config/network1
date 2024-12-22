@@ -34,7 +34,7 @@ config interface 'wan2'
 	option device 'eth2'
         option metric '10'
 
-config interface 'wwan0'
+config interface 'rakitan'
 	option proto 'none'
 	option device 'wwan0'
 
