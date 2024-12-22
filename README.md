@@ -3,7 +3,7 @@
 
 </h1>
 
-<h3 align="center">OpenWrt23.05.5 | 24.10.0</h3>
+<h3 align="center">OpenWrt 24.10.0</h3>
 
 <p align="center">
 Builder With ImageBuilder
