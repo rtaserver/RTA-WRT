@@ -34,6 +34,10 @@ config interface 'wan2'
 	option device 'eth2'
         option metric '10'
 
+config interface 'wwan0'
+	option proto 'none'
+	option device 'wwan0'
+
 config interface 'UTL_LAN'
 	option proto 'dhcp'
 	option device 'eth1'
