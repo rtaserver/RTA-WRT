@@ -19,9 +19,7 @@ on:
         type: choice
         options:
           - immortalwrt:23.05.4
-          - immortalwrt:23.05.3
           - openwrt:23.05.5
-          - openwrt:23.05.4
   
       target:
         description: "Select device Target"
@@ -38,6 +36,7 @@ on:
           - Orange Pi R1 Plus
           - Orange Pi R1 Plus LTS
           - x86-64
+          - Amlogic A95X
           - Amlogic HG680P
           - Amlogic B860H-V5
           - Amlogic B860H-V1-V2
@@ -93,7 +92,7 @@ jobs:
         id: set-matrix
         run: |
           if [ "${{ inputs.target }}" == "all" ]; then
-            echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','NanoPi R2C','NanoPi R2S','NanoPi R4S','Orange Pi R1 Plus','Orange Pi R1 Plus LTS','x86-64','Amlogic HG680P','Amlogic B860H-V5','Amlogic B860H-V1-V2']" >> $GITHUB_OUTPUT
+            echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','NanoPi R2C','NanoPi R2S','NanoPi R4S','Orange Pi R1 Plus','Orange Pi R1 Plus LTS','x86-64','Amlogic A95X','Amlogic HG680P','Amlogic B860H-V5','Amlogic B860H-V1-V2']" >> $GITHUB_OUTPUT
           else
             echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
           fi
@@ -160,19 +159,23 @@ jobs:
             echo "TAG_NAME=openwrt_xunlong_xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
           elif [ "$TARGET" == "x86-64" ]; then
             echo "TARGET_NAME=generic" >> $GITHUB_ENV
-            echo "TAG_NAME=23.05.5-X86-64" >> $GITHUB_ENV
+            echo "TAG_NAME=24.10.0-Rc2-X86-64" >> $GITHUB_ENV
+          elif [ "$TARGET" == "Amlogic A95X" ]; then
+            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
+            echo "openwrt_board=s912" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic_s912" >> $GITHUB_ENV
           elif [ "$TARGET" == "Amlogic HG680P" ]; then
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board=s905x" >> $GITHUB_ENV
-            echo "TAG_NAME=23.05.5-HG680P" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic_hg680p" >> $GITHUB_ENV
           elif [ "$TARGET" == "Amlogic B860H-V5" ]; then
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board=s905x2" >> $GITHUB_ENV
-            echo "TAG_NAME=23.05.5-B860HV5" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic_s905x2" >> $GITHUB_ENV
           elif [ "$TARGET" == "Amlogic B860H-V1-V2" ]; then
             echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
             echo "openwrt_board=s905x-b860h" >> $GITHUB_ENV
-            echo "TAG_NAME=23.05.5-B860H" >> $GITHUB_ENV
+            echo "TAG_NAME=openwrt_amlogic_b860h" >> $GITHUB_ENV
           fi
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
@@ -236,11 +239,12 @@ jobs:
               "rockchip-armv8-friendlyarm_nanopi-r4s|NanoPi_R4S_ext4-sysupgrade"
               "rockchip-armv8-xunlong_orangepi-r1-plus|Orange-Pi-R1_ext4-sysupgrade"
               "rockchip-armv8-xunlong_orangepi-r1-plus-lts|Orange-Pi-R1-Plus-LTS_ext4-sysupgrade"
-              "_23.05.5-X86-64-efi_|x86-64-Generic_ext4-combined-efi"
-              "_23.05.5-X86-64_|x86-64-Generic_ext4-combined"
-              "_23.05.5-HG680P_|Amlogic_HG680P"
-              "_23.05.5-B860H_|Amlogic_B860HV1-V2"
-              "_23.05.5-B860HV5_|Amlogic_B860HV5"
+              "x86-64-efi_|x86-64-Generic_ext4-combined-efi"
+              "x86-64_|x86-64-Generic_ext4-combined"
+              "_amlogic_s912_|Amlogic_A95X"
+              "_amlogic_hg680p_|Amlogic_HG680P"
+              "_amlogic_b860h_|Amlogic_B860HV1-V2"
+              "_amlogic_s905x2_|Amlogic_B860HV5"
           )
           for pattern in "${search_replace_patterns[@]}"; do
               search="${pattern%%|*}"
