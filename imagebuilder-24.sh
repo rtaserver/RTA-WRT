@@ -354,7 +354,7 @@ custom_packages() {
     # Download IPK From Custom
     CURVER=$(echo $op_branch | awk -F. '{print $1"."$2}')
     other_packages=(
-        "tailscale|https://downloads.$op_sourse.org/releases/24.10.0-rc2/packages/$ARCH_3/packages"
+        "tailscale|https://downloads.$op_sourse.org/releases/24.10.0-rc4/packages/$ARCH_3/packages"
         "luci-app-3ginfo-lite|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         "modemband|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
         "luci-app-sms-tool|https://dl.openwrt.ai/packages-24.10/$ARCH_3/kiddin9"
