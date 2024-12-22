@@ -37,8 +37,3 @@ config interface 'wan2'
 config interface 'rakitan'
 	option proto 'none'
 	option device 'wwan0'
-
-config interface 'UTL_LAN'
-	option proto 'dhcp'
-	option device 'eth1'
-	option force_link '1'
