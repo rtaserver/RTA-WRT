@@ -63,12 +63,10 @@ dns:
   listen: 127.0.0.1:5053
   proxy-server-nameserver:
   #Ubah usb0 dengan PunyaMu#
-  #Example Eth0,Eth1,Wwan,Dll#
-  #Ubah Alamat Ip 192.168,xx,xx Di Bawah Dengan Ip ModemMu#
+  #Example eth0,eth1,wwan,Dll#
+  #Tambahkan Alamat Ip modemmu example -192.168,xx,xx Di Bawah#
     - dhcp://"eth1"
-    - 192.168.42.129
   nameserver:
-    - 192.168.42.129
     - 8.8.8.8
     - 1.1.1.1
     - https://dns.google/dns-query
