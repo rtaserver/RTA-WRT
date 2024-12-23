@@ -53,18 +53,10 @@ uci set network.WAN2=interface
 uci set network.WAN2.proto='dhcp'
 uci set network.WAN2.device='eth2'
 uci set network.WAN2.metric='10'
-uci set network.MM=interface 
-uci set network.MM.proto='modemmanager'
-uci set network.MM.device='/sys/devices/platform/soc/d0078080.usb/c9000000.usb/xhci-hcd.3.auto/usb1/1-2/1-2.3'
-uci set network.MM.apn='internet'
-uci set network.MM.auth='none'
-uci set network.MM.iptype='ipv4'
-uci set network.MM.metric='20'
-uci set network.MM.force_connection='1'
 
 uci -q delete network.wan6
 uci commit network
-uci set firewall.@zone[1].network='WAN1 WAN2 MM'
+uci set firewall.@zone[1].network='WAN1 WAN2'
 uci commit firewall
 
 # configure ipv6 #
@@ -136,20 +128,16 @@ fi
 msg "Step 4: Remove login password required when accessing terminal"
 uci set ttyd.@ttyd[0].command='/bin/bash --login' && uci commit
 
-
 # Step 5: Remove huawei me909s usb-modeswitch
 msg "Step 5: Remove huawei me909s usb-modeswitch"
 sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
 
-
 # remove dw5821e usb-modeswitch
 sed -i -e '/413c:81d7/,+5d' /etc/usb-mode.json
-
 
 # Step 7: Disable /etc/config/xmm-modem
 msg "Step 7: Disable /etc/config/xmm-modem"
 uci set xmm-modem.@xmm-modem[0].enable='0' && uci commit
-
 
 # Step 8: Setup Auto Vnstat Database Backup
 msg "Step 8: Setup Auto Vnstat Database Backup"
@@ -158,11 +146,9 @@ mkdir -p /etc/vnstat
 chmod +x /etc/init.d/vnstat_backup
 bash /etc/init.d/vnstat_backup enable
 
-
 # Step 9: Vnstat & Netmonitor #
 msg "Step 9: setting Netmonitor"
 chmod +x /www/vnstati/vnstati.sh
-
 
 # Step 10: Configurating OpenClash
 msg "Step 10: Configurating OpenClash"
