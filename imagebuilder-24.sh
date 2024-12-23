@@ -260,13 +260,13 @@ download_imagebuilder() {
     fi
 
     # Downloading imagebuilder files
-    download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.tar.zst"
+    download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.tar.xz"
     curl -fsSOL ${download_file}
     [[ "${?}" -eq "0" ]] || error_msg "Download failed: [ ${download_file} ]"
     echo -e "${SUCCESS} Download Base ${op_branch} ${target_name} successfully!"
 
     # Unzip and change the directory name
-    tar -xvf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.zst
+    tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz
     mv -f *-imagebuilder-* ${openwrt_dir}
 
     sync && sleep 3
