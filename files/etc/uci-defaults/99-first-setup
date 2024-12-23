@@ -61,9 +61,6 @@ uci set network.MM.auth='none'
 uci set network.MM.iptype='ipv4'
 uci set network.MM.metric='20'
 uci set network.MM.force_connection='1'
-uci set network.UTL-LAN=interface
-uci set network.UTL-LAN.proto='dhcp'
-uci set network.UTL-LAN.device='eth1'
 
 uci -q delete network.wan6
 uci commit network
