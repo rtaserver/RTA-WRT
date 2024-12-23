@@ -43,8 +43,3 @@ config interface 'MM'
 config interface 'RAKITAN'
 	option proto 'none'
 	option device 'wwan0'
-    
-config interface 'UTL-LAN'
-	option proto 'dhcp'
-	option device 'eth1'
-	
