@@ -1,0 +1,49 @@
+config interface 'loopback'
+	option device 'lo'
+	option proto 'static'
+	option ipaddr '127.0.0.1'
+	option netmask '255.0.0.0'
+
+config globals 'globals'
+	option ula_prefix 'fd2f:b2d6:fc0b::/48'
+
+config device
+	option name 'br-lan'
+	option type 'bridge'
+	list ports 'eth0'
+ 
+config interface 'lan'
+	option device 'br-lan'
+	option proto 'static'
+	option ipaddr '192.168.1.1'
+	option gateway '192.168.1.1'
+	option netmask '255.255.255.0'
+	option ip6assign '60'
+
+config interface 'WAN1'
+	option device 'eth1'
+	option proto 'dhcp'
+	option metric '5'
+    
+config interface 'WAN2'
+	option proto 'dhcp'
+	option device 'eth2'
+	option metric '10'
+
+config interface 'MM'
+	option proto 'modemmanager'
+	option device '/sys/devices/platform/soc/d0078080.usb/c9000000.usb/xhci-hcd.3.auto/usb1/1-2/1-2.3'
+	option apn 'internet'
+	option auth 'none'
+	option iptype 'ipv4'
+	option loglevel 'ERR'
+	option metric '20'
+
+config interface 'RAKITAN'
+	option proto 'none'
+	option device 'wwan0'
+    
+config interface 'UTL-LAN'
+	option proto 'dhcp'
+	option device 'eth1'
+	
