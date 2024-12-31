@@ -1,5 +1,11 @@
 # What's New!
 
+**Changelog** (31-12-2024):
+
+- Remove Docker
+- Update Mihomo TProxy
+- Minor Bug Fixes
+
 **Changelog** (14-12-2024):
 
 - Minor Bug Fixes
