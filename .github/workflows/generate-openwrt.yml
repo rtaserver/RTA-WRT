@@ -313,13 +313,15 @@ jobs:
         run: |
           DATE=$(date +'%d%m%Y')
           DATE2=$(date +'%d\-%m\-%Y')
+          TAG="${{ env.RELEASES_TAG }}-${{ env.DATE }}"
+          NEWTAG=$(echo "$TAG" | sed -E 's/([_\-\.\[\]()])/\\\1/g')
           MESSAGE=$(
               cat <<EOF
           ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
                           NEW UPDATE
           ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
           NAME   : 🔔 RTA\-WRT OpenWRT
-          TAG       : ${{ env.RELEASES_TAG }}\-${{ env.DATE }}
+          TAG       : $NEWTAG
           DATE     : ${DATE2}
           REPO    : rizkikotet\-dev/RTA\-WRT
           ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
