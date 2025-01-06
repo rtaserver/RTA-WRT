@@ -1,36 +1,34 @@
 #=====================================================================================
-# Workflow for Building OpenWrt with Image Builder
-# Repository: https://github.com/ophub/amlogic-s9xxx-openwrt
-# Description: This workflow builds OpenWrt images using the Image Builder.
-# Instructions: For more details, visit: https://openwrt.org/docs/guide-user/additional-software/imagebuilder
-# Download from:
-#   - https://downloads.openwrt.org/releases
-#   - https://downloads.immortalwrt.org/releases
+# https://github.com/ophub/amlogic-s9xxx-openwrt
+# Description:   Build OpenWrt with Image Builder
+# Instructions:  https://openwrt.org/docs/guide-user/additional-software/imagebuilder
+# Download from: https://downloads.openwrt.org/releases
+#                https://downloads.immortalwrt.org/releases
 #=====================================================================================
 
 name: Build OpenWrt with ImageBuilder
 
 on:
-  push:
-    tags:
-      - openwrt-*
-
-env:
-  TZ: Asia/Jakarta
-  OPENWRT_BASE: openwrt
-  OPENWRT_BRANCH: 23.05.5
-  IMAGEBUILDER_SH: imagebuilder.sh
-  NOTIFE_TELEGRAM: true
-  PRERELEASE: false
-
-jobs:
-  build:
-    runs-on: ubuntu-24.04
-    name: "${{ matrix.target }}"
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      releases_branch:
+        description: "Select the releases branch"
+        required: false
+        default: "openwrt:23.05.5"
+        type: choice
+        options:
+          - openwrt:24.10.0-rc5
+          - immortalwrt:24.10.0-rc3
+          - immortalwrt:23.05.4
+          - openwrt:23.05.5
+      target:
+        description: "Select device target:"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
           - Raspberry Pi 3B
           - Raspberry Pi 4B
           - NanoPi R2C
@@ -42,6 +40,44 @@ jobs:
           - Amlogic HG680P
           - Amlogic B860H-V5
           - Amlogic B860H-V1-V2
+      notiftele:
+        description: "Notif To Telegram:"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - true
+          - false
+
+
+env:
+  TZ: Asia/Jakarta
+  IMAGEBUILDER_SH: imagebuilder.sh
+
+jobs:
+  prebuild:
+    runs-on: ubuntu-latest
+    name: ${{ inputs.releases_branch }}
+    outputs:
+      target: ${{ steps.set-matrix.outputs.target }}
+    steps:
+      - name: Set Matrix Run
+        id: set-matrix
+        run: |
+          if [ "${{ inputs.target }}" == "all" ]; then
+            echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','NanoPi R2C','NanoPi R2S','NanoPi R4S','Orange Pi R1 Plus','Orange Pi R1 Plus LTS','x86-64','Amlogic HG680P','Amlogic B860H-V5','Amlogic B860H-V1-V2']" >> $GITHUB_OUTPUT
+          else
+            echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
+          fi
+  build:
+    needs: prebuild
+    runs-on: ubuntu-24.04
+    if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
+    name: "${{ matrix.target }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{fromJSON(needs.prebuild.outputs.target)}}
 
     steps:
       - name: Checkout
@@ -55,7 +91,7 @@ jobs:
           r="${r//'%'/'%25'}"
           r="${r//$'\n'/'%0A'}"
           r="${r//$'\r'/'%0D'}"  
-          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
+          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
 
       - name: Initialization environment (normal)
         # if: github.event.inputs.target != 'all' && !cancelled()
@@ -115,16 +151,20 @@ jobs:
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
 
-      - name: Build Rootfs [ $OPENWRT_BASE ]
+
+      - name: Build Rootfs [ ${{ inputs.releases_branch }} ]
         id: imagebuilder
         if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
         run: |
           echo -e "[\033[95m STEPS \033[0m] Building Firmware And Rootfs"
+          TARGET_NAME="${{ env.TARGET_NAME }}"
+          RELEASES_BRANCH="${{ inputs.releases_branch }}"${RELEASES_BRANCH%:*}
           chmod +x ${IMAGEBUILDER_SH}
-          bash ${IMAGEBUILDER_SH} "${OPENWRT_BASE}:${OPENWRT_BRANCH}" "${{ env.TARGET_NAME }}"
+          bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "${{ env.TARGET_NAME }}"
+          echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> ${GITHUB_ENV}
           echo "status=success" >> ${GITHUB_OUTPUT}
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
-
+  
       - name: Clear server space
         if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
         run: |
@@ -186,9 +226,9 @@ jobs:
                   if [[ -f "$file" ]]; then
                       if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
                         kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
-                        new_name="RTA-WRT_${OPENWRT_BASE}_${OPENWRT_BRANCH}_${replace}_${kernel}.img.gz"
+                        new_name="RTA-WRT_${{ env.RELEASES_TAG }}_${replace}_${kernel}.img.gz"
                       else
-                        new_name="RTA-WRT_${OPENWRT_BASE}_${OPENWRT_BRANCH}_${replace}.img.gz"
+                        new_name="RTA-WRT_${{ env.RELEASES_TAG }}_${replace}.img.gz"
                       fi
                       echo -e "[\033[94m INFO \033[0m] Renaming: $file -> $new_name"
                       mv "$file" "compiled_images_${{ env.TAG_NAME }}/$new_name"
@@ -205,6 +245,33 @@ jobs:
           name: firmware-${{ env.TAG_NAME }}
           path: imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz
           retention-days: 7
+
+      - name: Upload Firmware to Release
+        uses: svenstaro/upload-release-action@v2
+        continue-on-error: true
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          file: imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz
+          tag: ${{ env.RELEASES_TAG }}-${{ env.DATE }}
+          release_name: RTA-WRT - ${{ env.RELEASES_TAG }}-${{ env.DATE }}
+          overwrite: true
+          prerelease: false
+          body: |
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.RELEASES_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+            ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
+        
+                  
+            ${{ steps.changelog.outputs.CHANGELOG }}
+        
+                  
+            See [here](https://github.com/rtaserver/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
+            - Default IP: 192.168.1.1
+            - Default username: root
+            - Default password: rtawrt
+            - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
+
+
 
   notify:
     needs: build
@@ -236,29 +303,7 @@ jobs:
           r="${r//'%'/'%25'}"
           r="${r//$'\n'/'%0A'}"
           r="${r//$'\r'/'%0D'}"
-          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
-
-      - name: Upload Firmware to Release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file_glob: true
-          file: downloaded-firmware/*/*.img.gz
-          tag: ${{ github.ref }}
-          overwrite: true
-          prerelease: ${{ env.PRERELEASE }}
-          body: |
-            ### RTA-WRT ${{ env.OPENWRT_BASE }}:${{ env.OPENWRT_BRANCH }}} Image information
-
-                  
-            ${{ steps.changelog.outputs.CHANGELOG }}
-
-                  
-            See [here](https://github.com/rizkikotet-dev/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
-            - Default IP: 192.168.1.1
-            - Default username: root
-            - Default password: rtawrt
-            - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
+          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
 
       - name: Notify Telegram
         env:
@@ -288,8 +333,8 @@ jobs:
                   ]
               ]
           }'
-
-          if [ "${NOTIFE_TELEGRAM}" == "true" ]; then
+  
+          if [ "${{ inputs.notiftele }}" == "true" ]; then
             curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
               -d "chat_id=$GROUP_ID" \
               -d "text=$MESSAGE" \
@@ -297,6 +342,7 @@ jobs:
               -d "reply_markup=$(echo $BUTTONS | jq -c .)" \
               -d "message_thread_id=$MESSAGE_THREAD_ID"
           fi
+
 
       # - name: Upload To Telegram
       #   env:
@@ -320,6 +366,6 @@ jobs:
       #     <pre>${{ steps.changelog.outputs.CHANGELOG }}</pre>
       #     END
       #     )
-      #     if [ "${{ NOTIFE_TELEGRAM }}" == "true" ]; then
+      #     if [ "${{ inputs.notiftele }}" == "true" ]; then
       #       python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGE" "$GROUP_ID" "$MESSAGE_THREAD_ID" "downloaded-firmware/*/*.img.gz"
       #     fi
