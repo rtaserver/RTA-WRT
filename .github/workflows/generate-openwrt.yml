@@ -1,11 +1,3 @@
-#=====================================================================================
-# https://github.com/ophub/amlogic-s9xxx-openwrt
-# Description:   Build OpenWrt with Image Builder
-# Instructions:  https://openwrt.org/docs/guide-user/additional-software/imagebuilder
-# Download from: https://downloads.openwrt.org/releases
-#                https://downloads.immortalwrt.org/releases
-#=====================================================================================
-
 name: Build OpenWrt with ImageBuilder
 
 on:
@@ -49,10 +41,11 @@ on:
           - true
           - false
 
-
 env:
   TZ: Asia/Jakarta
   IMAGEBUILDER_SH: imagebuilder.sh
+  DEBIAN_FRONTEND: noninteractive
+  PYTHONUNBUFFERED: 1
 
 jobs:
   prebuild:
@@ -65,14 +58,16 @@ jobs:
         id: set-matrix
         run: |
           if [ "${{ inputs.target }}" == "all" ]; then
-            echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','NanoPi R2C','NanoPi R2S','NanoPi R4S','Orange Pi R1 Plus','Orange Pi R1 Plus LTS','x86-64','Amlogic HG680P','Amlogic B860H-V5','Amlogic B860H-V1-V2']" >> $GITHUB_OUTPUT
+            targets=('Raspberry Pi 3B' 'Raspberry Pi 4B' 'NanoPi R2C' 'NanoPi R2S' 'NanoPi R4S' 'Orange Pi R1 Plus' 'Orange Pi R1 Plus LTS' 'x86-64' 'Amlogic HG680P' 'Amlogic B860H-V5' 'Amlogic B860H-V1-V2')
           else
-            echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
+            targets=("${{ inputs.target }}")
           fi
+          echo "target=$(jq -nc '$ARGS.positional' --args "${targets[@]}")" >> $GITHUB_OUTPUT
+
   build:
     needs: prebuild
     runs-on: ubuntu-24.04
-    if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
+    if: ${{ github.event.repository.owner.id == github.event.sender.id }}
     name: "${{ matrix.target }}"
     strategy:
       fail-fast: false
@@ -80,175 +75,132 @@ jobs:
         target: ${{fromJSON(needs.prebuild.outputs.target)}}
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Add changelog info to new release description
+      - name: Extract Changelog
         id: changelog
-        shell: bash
         run: |
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
-          r="${r//'%'/'%25'}"
-          r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"  
-          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
+          changelog=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' CHANGELOG.md)
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          echo "$changelog" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Initialization environment (normal)
-        # if: github.event.inputs.target != 'all' && !cancelled()
-        env:
-          DEBIAN_FRONTEND: noninteractive
+      - name: Setup Build Environment
         run: |
           sudo apt-get -qq update
-          sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs
-          sudo apt-get -qq install jq python3 python3-pip
-          pip install telethon
-          pip install colorama
+          sudo apt-get -qq install \
+            build-essential libncurses5-dev libncursesw5-dev \
+            zlib1g-dev gawk git gettext libssl-dev xsltproc \
+            rsync wget unzip tar gzip qemu-utils mkisofs \
+            jq python3 python3-pip
+          pip install telethon colorama
           sudo timedatectl set-timezone "$TZ"
           echo "TARGET=${{ matrix.target }}" >> $GITHUB_ENV
-          echo -e "[\033[94m INFO \033[0m] TARGET: ${{ matrix.target }}"
           echo "DATE=$(date +'%d%m%Y')" >> $GITHUB_ENV
 
-      - name: Setup Environment Variables
-        id: init
+      - name: Configure Target Variables
+        id: config
         run: |
-          if [ "$TARGET" == "Raspberry Pi 3B" ]; then
-            echo "TARGET_NAME=rpi-3" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_rpi-3" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Raspberry Pi 4B" ]; then
-            echo "TARGET_NAME=rpi-4" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_rpi-4" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi R2C" ]; then
-            echo "TARGET_NAME=friendlyarm_nanopi-r2c" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_friendlyarm_nanopi-r2c" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi R2S" ]; then
-            echo "TARGET_NAME=friendlyarm_nanopi-r2s" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_friendlyarm_nanopi-r2s" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi R4S" ]; then
-            echo "TARGET_NAME=friendlyarm_nanopi-r4s" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_friendlyarm_nanopi-r4s" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Orange Pi R1 Plus" ]; then
-            echo "TARGET_NAME=xunlong_orangepi-r1-plus" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_xunlong_orangepi-r1-plus" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Orange Pi R1 Plus LTS" ]; then
-            echo "TARGET_NAME=xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_xunlong_xunlong_orangepi-r1-plus-lts" >> $GITHUB_ENV
-          elif [ "$TARGET" == "x86-64" ]; then
-            echo "TARGET_NAME=generic" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_generic" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Amlogic HG680P" ]; then
-            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
-            echo "openwrt_board=s905x" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_amlogic_s905x" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Amlogic B860H-V5" ]; then
-            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
-            echo "openwrt_board=s905x-b860h" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_amlogic_s905x-b860h" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Amlogic B860H-V1-V2" ]; then
-            echo "TARGET_NAME=amlogic" >> $GITHUB_ENV
-            echo "openwrt_board=s905x2" >> $GITHUB_ENV
-            echo "TAG_NAME=openwrt_amlogic_s905x2" >> $GITHUB_ENV
+          declare -A target_configs=(
+            ["Raspberry Pi 3B"]="rpi-3:openwrt_rpi-3"
+            ["Raspberry Pi 4B"]="rpi-4:openwrt_rpi-4"
+            ["NanoPi R2C"]="friendlyarm_nanopi-r2c:openwrt_friendlyarm_nanopi-r2c"
+            ["NanoPi R2S"]="friendlyarm_nanopi-r2s:openwrt_friendlyarm_nanopi-r2s"
+            ["NanoPi R4S"]="friendlyarm_nanopi-r4s:openwrt_friendlyarm_nanopi-r4s"
+            ["Orange Pi R1 Plus"]="xunlong_orangepi-r1-plus:openwrt_xunlong_orangepi-r1-plus"
+            ["Orange Pi R1 Plus LTS"]="xunlong_orangepi-r1-plus-lts:openwrt_xunlong_orangepi-r1-plus-lts"
+            ["x86-64"]="generic:openwrt_generic"
+          )
+          
+          amlogic_configs=(
+            ["Amlogic HG680P"]="amlogic:s905x:openwrt_amlogic_s905x"
+            ["Amlogic B860H-V5"]="amlogic:s905x-b860h:openwrt_amlogic_s905x-b860h"
+            ["Amlogic B860H-V1-V2"]="amlogic:s905x2:openwrt_amlogic_s905x2"
+          )
+          
+          if [[ -n "${target_configs[${{ matrix.target }}]}" ]]; then
+            IFS=: read -r target_name tag_name <<< "${target_configs[${{ matrix.target }}]}"
+          elif [[ -n "${amlogic_configs[${{ matrix.target }}]}" ]]; then
+            IFS=: read -r target_name board tag_name <<< "${amlogic_configs[${{ matrix.target }}]}"
+            echo "openwrt_board=$board" >> $GITHUB_ENV
           fi
-          echo "status=success" >> ${GITHUB_OUTPUT}
-          echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
+          
+          echo "TARGET_NAME=$target_name" >> $GITHUB_ENV
+          echo "TAG_NAME=$tag_name" >> $GITHUB_ENV
+          echo "status=success" >> $GITHUB_OUTPUT
 
-
-      - name: Build Rootfs [ ${{ inputs.releases_branch }} ]
-        id: imagebuilder
-        if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
+      - name: Build OpenWrt Image
+        if: steps.config.outputs.status == 'success'
+        id: build
         run: |
-          echo -e "[\033[95m STEPS \033[0m] Building Firmware And Rootfs"
-          TARGET_NAME="${{ env.TARGET_NAME }}"
-          RELEASES_BRANCH="${{ inputs.releases_branch }}"${RELEASES_BRANCH%:*}
-          chmod +x ${IMAGEBUILDER_SH}
-          bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "${{ env.TARGET_NAME }}"
-          echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> ${GITHUB_ENV}
-          echo "status=success" >> ${GITHUB_OUTPUT}
-          echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
-  
-      - name: Clear server space
-        if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
+          chmod +x $IMAGEBUILDER_SH
+          releases_branch="${{ inputs.releases_branch }}"
+          bash $IMAGEBUILDER_SH "${releases_branch%:*}" "${{ env.TARGET_NAME }}"
+          echo "RELEASES_TAG=${releases_branch/:/_}" >> $GITHUB_ENV
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Package Amlogic Images
+        if: env.TARGET_NAME == 'amlogic' && steps.build.outputs.status == 'success'
         run: |
           cd imagebuilder
-          rm -rf $(ls . | grep -v "^bin$" | xargs) 2>/dev/null
-          df -hT ${PWD}
+          git clone --depth 1 https://github.com/ophub/amlogic-s9xxx-openwrt.git ophub_builder
+          mkdir -p ophub_builder/openwrt-armvirt
+          mv bin/targets/*/*/*rootfs.tar.gz ophub_builder/openwrt-armvirt/
+          cd ophub_builder
+          sudo ./remake -b ${{ env.openwrt_board }} -k 5.15.y_5.10.y -s 1024
+          mkdir -p ../compiled_images_${{ env.TAG_NAME }}
+          cp openwrt/out/*.img.gz ../compiled_images_${{ env.TAG_NAME }}/
 
-      - name: Prepare file First
+      - name: Prepare Release Files
         run: |
           cd imagebuilder
-          echo -e "[\033[95m STEPS \033[0m] Prepare File.."
           mkdir -p compiled_images_${{ env.TAG_NAME }}
           if [[ "${{ env.TARGET_NAME }}" != "amlogic" ]]; then
-            for file in bin/targets/*/*/*.img.gz; do mv "$file" compiled_images_${{ env.TAG_NAME }}; done
-          else
-            for file in bin/targets/*/*/*rootfs.tar.gz; do mv "$file" compiled_images_${{ env.TAG_NAME }}; done
+            find bin/targets -name "*.img.gz" -exec mv {} compiled_images_${{ env.TAG_NAME }}/ \;
           fi
-          echo -e "INFO files list: \n$(ls -l compiled_images_${{ env.TAG_NAME }} 2>/dev/null)"
-
-      - name: Packaging OpenWrt For Amlogic
-        run: |
-          cd imagebuilder
-          if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
-            echo -e "[\033[95m STEPS \033[0m] Cloning Ophub Repacking Amlogic"
-            git clone --depth 1 https://github.com/ophub/amlogic-s9xxx-openwrt.git ophub_builder
-            mkdir -p ophub_builder/openwrt-armvirt
-            mv compiled_images_${{ env.TAG_NAME }}/*rootfs.tar.gz ophub_builder/openwrt-armvirt/
-            cd ophub_builder
-            sudo ./remake -b ${{ env.openwrt_board }} -k 5.15.y_5.10.y -s 1024
-            for file in openwrt/out/*.img.gz; do cp -f "$file" ../compiled_images_${{ env.TAG_NAME }}; done
-          fi
-
-      - name: Prepare Before Uploads
-        id: prepare2
-        run: |
-          cd imagebuilder
-          echo -e "[\033[95m STEPS \033[0m] Replace Name"
-          search_replace_patterns=(
-              "bcm27xx-bcm2710-rpi-3|Raspberry-Pi-3_ext4-sysupgrade"
-              "bcm27xx-bcm2711-rpi-4|Raspberry-Pi-4_ext4-sysupgrade"
-              "rockchip-armv8-friendlyarm_nanopi-r2c|NanoPi_R2C_ext4-sysupgrade"
-              "rockchip-armv8-friendlyarm_nanopi-r2s|NanoPi_R2S_ext4-sysupgrade"
-              "rockchip-armv8-friendlyarm_nanopi-r4s|NanoPi_R4S_ext4-sysupgrade"
-              "rockchip-armv8-xunlong_orangepi-r1-plus|Orange-Pi-R1_ext4-sysupgrade"
-              "rockchip-armv8-xunlong_orangepi-r1-plus-lts|Orange-Pi-R1-Plus-LTS_ext4-sysupgrade"
-              "x86-64-generic-ext4-combined-efi|x86-64-Generic_ext4-combined-efi"
-              "x86-64-generic-ext4-combined|x86-64-Generic_ext4-combined"
-              "x86-64-generic-squashfs-combined-efi|x86-64-Generic_squashfs-combined-efi"
-              "x86-64-generic-squashfs-combined|x86-64-Generic_squashfs-combined"
-              "_amlogic_s905x_|Amlogic_HG680P"
-              "_amlogic_s905x-b860h_|Amlogic_B860HV1-V2"
-              "_amlogic_s905x2_|Amlogic_B860HV5"
+          
+          # Define file naming patterns
+          declare -A patterns=(
+            ["bcm27xx-bcm2710-rpi-3"]="Raspberry-Pi-3_ext4-sysupgrade"
+            ["bcm27xx-bcm2711-rpi-4"]="Raspberry-Pi-4_ext4-sysupgrade"
+            ["rockchip-armv8-friendlyarm_nanopi-r2c"]="NanoPi_R2C_ext4-sysupgrade"
+            ["rockchip-armv8-friendlyarm_nanopi-r2s"]="NanoPi_R2S_ext4-sysupgrade"
+            ["rockchip-armv8-friendlyarm_nanopi-r4s"]="NanoPi_R4S_ext4-sysupgrade"
+            ["rockchip-armv8-xunlong_orangepi-r1-plus"]="Orange-Pi-R1_ext4-sysupgrade"
+            ["rockchip-armv8-xunlong_orangepi-r1-plus-lts"]="Orange-Pi-R1-Plus-LTS_ext4-sysupgrade"
+            ["x86-64-generic-ext4-combined"]="x86-64-Generic_ext4-combined"
+            ["x86-64-generic-ext4-combined-efi"]="x86-64-Generic_ext4-combined-efi"
+            ["_amlogic_s905x_"]="Amlogic_HG680P"
+            ["_amlogic_s905x-b860h_"]="Amlogic_B860HV1-V2"
+            ["_amlogic_s905x2_"]="Amlogic_B860HV5"
           )
-          for pattern in "${search_replace_patterns[@]}"; do
-              search="${pattern%%|*}"
-              replace="${pattern##*|}"
-
-              for file in compiled_images_${{ env.TAG_NAME }}/*${search}*.img.gz; do
-                  if [[ -f "$file" ]]; then
-                      if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
-                        kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
-                        new_name="RTA-WRT_${{ env.RELEASES_TAG }}_${replace}_${kernel}.img.gz"
-                      else
-                        new_name="RTA-WRT_${{ env.RELEASES_TAG }}_${replace}.img.gz"
-                      fi
-                      echo -e "[\033[94m INFO \033[0m] Renaming: $file -> $new_name"
-                      mv "$file" "compiled_images_${{ env.TAG_NAME }}/$new_name"
-                  fi
-              done
+          
+          # Rename files
+          for search in "${!patterns[@]}"; do
+            for file in compiled_images_${{ env.TAG_NAME }}/*${search}*.img.gz; do
+              if [[ -f "$file" ]]; then
+                if [[ "${{ env.TARGET_NAME }}" == "amlogic" ]]; then
+                  kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
+                  new_name="RTA-WRT_${{ env.RELEASES_TAG }}_${patterns[$search]}_${kernel}.img.gz"
+                else
+                  new_name="RTA-WRT_${{ env.RELEASES_TAG }}_${patterns[$search]}.img.gz"
+                fi
+                mv "$file" "compiled_images_${{ env.TAG_NAME }}/$new_name"
+              fi
+            done
           done
-          echo "status=success" >> ${GITHUB_OUTPUT}
-          echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
-          echo -e "INFO files list: \n$(ls -l compiled_images_${{ env.TAG_NAME }} 2>/dev/null)"
 
-      - name: Upload Firmware to Artifact
+      - name: Upload to Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ env.TAG_NAME }}
           path: imagebuilder/compiled_images_${{ env.TAG_NAME }}/*.img.gz
           retention-days: 7
 
-      - name: Upload Firmware to Release
+      - name: Create GitHub Release
         uses: svenstaro/upload-release-action@v2
-        continue-on-error: true
+        continue-on-error: false
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
@@ -256,116 +208,50 @@ jobs:
           tag: ${{ env.RELEASES_TAG }}-${{ env.DATE }}
           release_name: RTA-WRT - ${{ env.RELEASES_TAG }}-${{ env.DATE }}
           overwrite: true
-          prerelease: false
           body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.RELEASES_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
-            ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
-        
-                  
+            ![GitHub Downloads](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.RELEASES_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+            ### RTA-WRT ${{ env.RELEASES_TAG }}-${{ env.DATE }} Image Information
+            
             ${{ steps.changelog.outputs.CHANGELOG }}
-        
-                  
-            See [here](https://github.com/rtaserver/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
-            - Default IP: 192.168.1.1
-            - Default username: root
-            - Default password: rtawrt
-            - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
-
-
+            
+            See [here](https://github.com/rtaserver/RTA-WRT?tab=readme-ov-file#detail-firmware) for more details.
+            
+            Default Credentials:
+            - IP: 192.168.1.1
+            - Username: root
+            - Password: rtawrt
+            - WiFi SSID: RTAWRT_2g | RTAWRT_5g (if supported)
 
   notify:
     needs: build
     runs-on: ubuntu-latest
-    name: Notify Telegram
+    if: inputs.notiftele == 'true'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
-        with:
-          path: downloaded-firmware
-
-      - name: Update Env
-        run: |
-          sudo apt-get -qq update
-          sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs
-          sudo apt-get -qq install jq python3 python3-pip
-          pip install telethon
-          pip install colorama
-          sudo timedatectl set-timezone "$TZ"
-
-      - name: Add changelog info to new release description
-        id: changelog
-        shell: bash
-        run: |
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' CHANGELOG.md)
-          r="${r//'%'/'%25'}"
-          r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"
-          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
-
-      - name: Notify Telegram
+      - name: Send Telegram Notification
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           GROUP_ID: ${{ secrets.CHAT_ID }}
           MESSAGE_THREAD_ID: 36
         run: |
-          DATE=$(date +'%d%m%Y')
           DATE2=$(date +'%d\-%m\-%Y')
-          MESSAGE=$(
-              cat <<EOF
-          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+          MESSAGE="▬▬▬▬▬▬▬▬▬▬▬▬▬▬
                           NEW UPDATE
           ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
           NAME   : 🔔 RTA\-WRT OpenWRT
-          TAG       : openwrt\-${DATE}
+          TAG       : ${{ env.RELEASES_TAG }}\-${{ env.DATE }}
           DATE     : ${DATE2}
           REPO    : rizkikotet\-dev/RTA\-WRT
-          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-          EOF
-          )
+          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
 
           BUTTONS='{
-              "inline_keyboard": [
-                  [
-                      {"text": "KLIK DISINI", "url": "https://github.com/rizkikotet-dev/RTA-WRT"}
-                  ]
-              ]
+            "inline_keyboard": [[
+              {"text": "KLIK DISINI", "url": "https://github.com/rizkikotet-dev/RTA-WRT"}
+            ]]
           }'
-  
-          if [ "${{ inputs.notiftele }}" == "true" ]; then
-            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-              -d "chat_id=$GROUP_ID" \
-              -d "text=$MESSAGE" \
-              -d "parse_mode=MarkdownV2" \
-              -d "reply_markup=$(echo $BUTTONS | jq -c .)" \
-              -d "message_thread_id=$MESSAGE_THREAD_ID"
-          fi
 
-
-      # - name: Upload To Telegram
-      #   env:
-      #     API_ID: ${{ secrets.API_ID }}
-      #     API_HASH: ${{ secrets.API_HASH }}
-      #     BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-      #     GROUP_ID: ${{ secrets.CHAT_ID }}
-      #     MESSAGE_THREAD_ID: 124
-      #   run: |
-      #     cd ${PWD}
-      #     ls -l downloaded-firmware
-      #     chmod +x telebot.py
-      #     DATE=$(date +'%d%m%Y')
-      #     MESSAGE=$(cat <<-END
-      #     <blockquote>🟢 NEW UPDATE AVAILABLE 🟢</blockquote>
-
-      #     <blockquote>➣ Name: RTA-WRT</blockquote>
-      #     <blockquote>➣ Tag: ${OPENWRT_BASE}_${OPENWRT_BRANCH}-$DATE</blockquote>
-      #     <blockquote>➣ Date : $DATE</blockquote>
-
-      #     <pre>${{ steps.changelog.outputs.CHANGELOG }}</pre>
-      #     END
-      #     )
-      #     if [ "${{ inputs.notiftele }}" == "true" ]; then
-      #       python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGE" "$GROUP_ID" "$MESSAGE_THREAD_ID" "downloaded-firmware/*/*.img.gz"
-      #     fi
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+            -d "chat_id=$GROUP_ID" \
+            -d "text=$MESSAGE" \
+            -d "parse_mode=MarkdownV2" \
+            -d "reply_markup=$BUTTONS" \
+            -d "message_thread_id=$MESSAGE_THREAD_ID"
