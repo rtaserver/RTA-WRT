@@ -258,14 +258,14 @@ jobs:
           overwrite: true
           prerelease: false
           body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rtaserver/RTA-WRT/${{ env.RELEASES_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASES_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
             ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
         
                   
             ${{ steps.changelog.outputs.CHANGELOG }}
         
                   
-            See [here](https://github.com/rtaserver/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
+            See [here](https://github.com/rizkikotet-dev/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
             - Default IP: 192.168.1.1
             - Default username: root
             - Default password: rtawrt
