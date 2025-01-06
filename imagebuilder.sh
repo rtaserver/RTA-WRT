@@ -375,6 +375,8 @@ custom_packages() {
         "tailscale|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "python3-speedtest-cli|https://downloads.openwrt.org/releases/packages-$CURVER/$ARCH_3/packages"
 
+        "dns2tcp|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/packages"
+
         "luci-app-tailscale|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
         "luci-app-diskman|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
         "modeminfo|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
