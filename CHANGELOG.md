@@ -1,5 +1,10 @@
 # What's New!
 
+**Changelog** (06-01-2025):
+
+- Test Build OpenWrt 24.10
+- Update Mihomo TProxy
+
 **Changelog** (31-12-2024):
 
 - Remove Docker
