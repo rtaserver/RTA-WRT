@@ -260,6 +260,8 @@ download_imagebuilder() {
     fi
 
     # Downloading imagebuilder files
+    CURVER=$(echo $op_branch | awk -F. '{print $1"."$2}')
+    if [[ $CURVER == "23.05" ]]; then
     download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.tar.xz"
     curl -fsSOL ${download_file}
     [[ "${?}" -eq "0" ]] || error_msg "Download failed: [ ${download_file} ]"
@@ -268,6 +270,16 @@ download_imagebuilder() {
     # Unzip and change the directory name
     tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz
     mv -f *-imagebuilder-* ${openwrt_dir}
+    else
+    download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.tar.zst"
+    curl -fsSOL ${download_file}
+    [[ "${?}" -eq "0" ]] || error_msg "Download failed: [ ${download_file} ]"
+    echo -e "${SUCCESS} Download Base ${op_branch} ${target_name} successfully!"
+
+    # Unzip and change the directory name
+    tar --use-compress-program=unzstd -xvf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.zst
+    mv -f *-imagebuilder-* ${openwrt_dir}
+    fi
 
     sync && sleep 3
     echo -e "${INFO} [ ${make_path} ] directory status: $(ls -al 2>/dev/null)"
