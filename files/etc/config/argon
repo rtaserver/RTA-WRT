@@ -1,0 +1,11 @@
+
+config global
+	option primary '#7b86ad'
+	option dark_primary '#7b86ad'
+	option blur '0'
+	option blur_dark '0'
+	option transparency '0.3'
+	option transparency_dark '0.3'
+	option mode 'light'
+	option online_wallpaper 'none'
+
