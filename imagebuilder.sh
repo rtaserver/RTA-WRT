@@ -272,22 +272,9 @@ download_imagebuilder() {
     fi
     download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
 
-    # Fungsi retry download
-    MAX_RETRIES=5
-    RETRY_DELAY=5
-    for ((i = 1; i <= MAX_RETRIES; i++)); do
-        echo "Attempt $i of $MAX_RETRIES to download ${download_file}..."
-        curl -fsSOL "${download_file}"
-        if [ "$?" -ne 0 ]; then
-            echo "Download failed. Retrying in ${RETRY_DELAY} seconds..."
-            sleep $RETRY_DELAY
-        else
-            break
-        fi
-    done
-
-    if [[ ! -f *-imagebuilder-* ]]; then
-        error_msg "Failed to download ${download_file} after ${MAX_RETRIES} attempts."
+    curl -fsSOL "${download_file}"
+    if [ "$?" -ne 0 ]; then
+         error_msg "Failed to download ${download_file}"
     fi
 
     # Ekstraksi file
