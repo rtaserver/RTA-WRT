@@ -277,9 +277,13 @@ download_imagebuilder() {
     RETRY_DELAY=5
     for ((i = 1; i <= MAX_RETRIES; i++)); do
         echo "Attempt $i of $MAX_RETRIES to download ${download_file}..."
-        curl -fsSOL "${download_file}" && break
-        echo "Download failed. Retrying in ${RETRY_DELAY} seconds..."
-        sleep "${RETRY_DELAY}"
+        curl -fsSOL "${download_file}"
+        if [ "$?" -ne 0 ]; then
+            echo "Download failed. Retrying in ${RETRY_DELAY} seconds..."
+            sleep $RETRY_DELAY
+        else
+            break
+        fi
     done
 
     if [[ ! -f *-imagebuilder-* ]]; then
