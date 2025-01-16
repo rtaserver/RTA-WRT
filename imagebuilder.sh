@@ -227,6 +227,7 @@ download_imagebuilder() {
             ARCH_3="x86_64"
             ;;
         *)
+            echo -e "${INFO} Available target devices: h5-*, h616-*, h618-*, h6-*, s905*, rk*, x86-64"
             error_msg "Unknown target: ${op_devices}"
             ;;
     esac
@@ -597,12 +598,12 @@ rebuild_firmware() {
         error_msg "OpenWrt build failed. Check logs for details."
     else
         mkdir -p out_firmware out_rootfs
-        if [ -f "${openwrt_dir}/bin/targets/*/*.img.gz" ]; then
-            cp -f ${openwrt_dir}/bin/targets/*/*.img.gz out_firmware
+        if [ -f "bin/targets/*/*/*.img.gz" ]; then
+            cp -f bin/targets/*/*/*.img.gz out_firmware
             echo -e "${SUCCESS} Coppy Image Successfully."
         fi
-        if [ -f "${openwrt_dir}/bin/targets/*/*-rootfs.tar.gz" ]; then
-            cp -f ${openwrt_dir}/bin/targets/*/*-rootfs.tar.gz out_rootfs
+        if [ -f "bin/targets/*/*/*-rootfs.tar.gz" ]; then
+            cp -f bin/targets/*/*/*-rootfs.tar.gz out_rootfs
             echo -e "${SUCCESS} Coppy Rootfs Successfully."
         fi
         sync && sleep 3
