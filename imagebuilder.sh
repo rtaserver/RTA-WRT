@@ -601,14 +601,10 @@ rebuild_firmware() {
         if [[ -f "bin/targets/*/*/*.img.gz" ]]; then
             cp -f bin/targets/*/*/*.img.gz out_firmware
             echo -e "${SUCCESS} Coppy Image Successfully."
-        else
-            error_msg "Image file not found in ${openwrt_dir}/bin/targets/*/*/*.img.gz"
         fi
         if [[ -f "bin/targets/*/*/*-rootfs.tar.gz" ]]; then
             cp -f bin/targets/*/*/*-rootfs.tar.gz out_rootfs
             echo -e "${SUCCESS} Coppy Rootfs Successfully."
-        else
-            error_msg "Rootfs file not found in ${openwrt_dir}/bin/targets/*/*/*-rootfs.tar.gz"
         fi
         sync && sleep 3
         echo -e "${INFO} [ ${openwrt_dir}/bin/targets/*/* ] directory status: $(ls bin/targets/*/* -al 2>/dev/null)"
@@ -625,6 +621,8 @@ ulobuilder() {
     if [[ -f "out_rootfs/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz" ]]; then
         cp -f out_rootfs/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz ULO-Builder-main/rootfs
         cd ULO-Builder-main
+        # mv ./.github/workflows/ULO_Workflow.patch ./ULO_Workflow.patch
+        # patch -p1 < ./ULO_Workflow.patch
         sudo ./ulo -y -m ${op_devices} -r ${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz -k ${KERNEL} -s 1024
         cp -rf ./out/${op_devices}/* ${imagebuilder_path}/out_firmware
     else
