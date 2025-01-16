@@ -515,8 +515,20 @@ custom_files() {
 
 # Rebuild OpenWrt firmware
 rebuild_firmware() {
-    cd ${imagebuilder_path}
+    set -e  # Hentikan eksekusi jika terjadi kesalahan
     echo -e "${STEPS} Start building OpenWrt with Image Builder..."
+    
+    # Validasi variabel penting
+    if [[ -z ${imagebuilder_path} || -z ${op_sourse} || -z ${op_target} || -z ${target_profile} ]]; then
+        error_msg "Error: Required variables are not set. Exiting..."
+    fi
+
+    # Masuk ke direktori Image Builder
+    cd "${imagebuilder_path}" || { error_msg "Error: Unable to access ${imagebuilder_path}"; }
+
+    # Membersihkan build lama
+    make clean || { error_msg "Error: Failed to clean previous build"; }
+    mkdir -p out_firmware out_rootfs
 
     # Selecting default packages, lib, theme, app and i18n, etc.
     PACKAGES+=" file lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
@@ -591,44 +603,56 @@ rebuild_firmware() {
         fi
     fi
 
-    # Rebuild firmware
-    make clean
+    # Membuat image firmware
     make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files"
-    if [ $? -ne 0 ]; then
-        error_msg "OpenWrt build failed. Check logs for details."
+    if [[ $? -ne 0 ]]; then
+        error_msg "Error: OpenWrt build failed. Check logs for details."
     else
-        mkdir -p out_firmware out_rootfs
-        if [[ -f "bin/targets/*/*/*.img.gz" ]]; then
+        # Memindahkan hasil build
+        if [[ -s "bin/targets/*/*/*.img.gz" ]]; then
             cp -f bin/targets/*/*/*.img.gz out_firmware
-            echo -e "${SUCCESS} Coppy Image Successfully."
+            echo -e "${SUCCESS} Copy Image Successfully."
         fi
-        if [[ -f "bin/targets/*/*/*-rootfs.tar.gz" ]]; then
+        if [[ -s "bin/targets/*/*/*-rootfs.tar.gz" ]]; then
             cp -f bin/targets/*/*/*-rootfs.tar.gz out_rootfs
-            echo -e "${SUCCESS} Coppy Rootfs Successfully."
+            echo -e "${SUCCESS} Copy Rootfs Successfully."
         fi
-        sync && sleep 3
-        echo -e "${INFO} [ ${openwrt_dir}/bin/targets/*/* ] directory status: $(ls bin/targets/*/* -al 2>/dev/null)"
-        echo -e "${SUCCESS} The rebuild is successful, the current path: [ ${PWD} ]"
+        echo -e "${SUCCESS} Build completed successfully."
     fi
 }
 
 ulobuilder() {
     echo -e "${STEPS} Start Repacking firmware With UloBuilder..."
-    cd ${imagebuilder_path}
+    
+    # Validasi variabel
+    if [[ -z ${imagebuilder_path} || -z ${op_sourse} || -z ${op_branch} || -z ${op_devices} || -z ${KERNEL} ]]; then
+        error_msg "Error: Required variables are not set. Exiting..."
+    fi
+
+    # Pindah ke direktori imagebuilder
+    cd "${imagebuilder_path}" || { echo "Error: Unable to access ${imagebuilder_path}"; exit 1; }
+
+    # Unduh UloBuilder
     curl -fsSOL https://github.com/armarchindo/ULO-Builder/archive/refs/heads/main.zip
     unzip -q main.zip && rm -f main.zip
     mkdir -p ULO-Builder-main/rootfs
-    if [[ -f "out_rootfs/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz" ]]; then
-        cp -f out_rootfs/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz ULO-Builder-main/rootfs
+
+    # Periksa keberadaan rootfs
+    local rootfs_file="out_rootfs/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz"
+    if [[ -s "${rootfs_file}" ]]; then
+        cp -f "${rootfs_file}" ULO-Builder-main/rootfs
         cd ULO-Builder-main
-        # mv ./.github/workflows/ULO_Workflow.patch ./ULO_Workflow.patch
-        # patch -p1 < ./ULO_Workflow.patch
-        sudo ./ulo -y -m ${op_devices} -r ${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz -k ${KERNEL} -s 1024
-        cp -rf ./out/${op_devices}/* ${imagebuilder_path}/out_firmware
+
+        # Jalankan UloBuilder
+        sudo ./ulo -y -m "${op_devices}" -r "${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz" -k "${KERNEL}" -s 1024
+
+        # Pindahkan output firmware
+        cp -rf ./out/"${op_devices}"/* "${imagebuilder_path}/out_firmware"
     else
-        error_msg "Rootfs file not found in ${openwrt_dir}/bin/targets/*/*/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz"
+        error_msg "Error: Rootfs file not found: ${rootfs_file}"
     fi
 }
+
 
 # Show welcome message
 echo -e "${STEPS} Welcome to Rebuild OpenWrt Using the Image Builder."
