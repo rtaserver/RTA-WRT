@@ -537,7 +537,7 @@ rebuild_firmware() {
     PACKAGES+=" $OPENCLASH $MIHOMO $PASSWALL"
 
     # Remote Services
-    PACKAGES+=" luci-app-zerotier luci-app-cloudflared tailscale luci-app-tailscale"
+    PACKAGES+=" luci-app-zerotier luci-app-cloudflared"
 
     # NAS and Hard disk tools
     PACKAGES+=" luci-app-diskman luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
@@ -596,26 +596,31 @@ rebuild_firmware() {
     if [ $? -ne 0 ]; then
         error_msg "OpenWrt build failed. Check logs for details."
     else
-        sync && sleep 3
-        echo -e "${INFO} [ ${openwrt_dir}/bin/targets/*/* ] directory status: $(ls bin/targets/*/* -al 2>/dev/null)"
-        mkdir -p out_firmware
+        mkdir -p out_firmware out_rootfs
         if [ -f "${openwrt_dir}/bin/targets/*/*/*.img.gz" ]; then
             cp -f ${openwrt_dir}/bin/targets/*/*/*.img.gz out_firmware
+            echo -e "${SUCCESS} Coppy Image Successfully."
         fi
+        if [ -f "${openwrt_dir}/bin/targets/*/*/*rootfs.tar.gz" ]; then
+            cp -f ${openwrt_dir}/bin/targets/*/*/*rootfs.tar.gz out_rootfs
+            echo -e "${SUCCESS} Coppy Rootfs Successfully."
+        fi
+        sync && sleep 3
+        echo -e "${INFO} [ ${openwrt_dir}/bin/targets/*/* ] directory status: $(ls bin/targets/*/* -al 2>/dev/null)"
         echo -e "${SUCCESS} The rebuild is successful, the current path: [ ${PWD} ]"
     fi
 }
 
 ulobuilder() {
-    echo -e "${STEPS} Start uploading firmware to UloBuilder..."
+    echo -e "${STEPS} Start Repacking firmware With UloBuilder..."
     cd ${imagebuilder_path}
     curl -fsSOL https://github.com/armarchindo/ULO-Builder/archive/refs/heads/main.zip
     unzip -q main.zip && rm -f main.zip
     mkdir -p ULO-Builder-main/rootfs
-    if [ -f "${openwrt_dir}/bin/targets/*/*/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz" ]; then
-        cp -f ${openwrt_dir}/bin/targets/*/*/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz ULO-Builder-main/rootfs
+    if [ -f "out_rootfs/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz" ]; then
+        cp -f out_rootfs/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz ULO-Builder-main/rootfs
         cd ULO-Builder-main
-        bash ./ulo -y -m ${op_devices} -r ${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz -k ${KERNEL} -s 1024
+        sudo ./ulo -y -m ${op_devices} -r ${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz -k ${KERNEL} -s 1024
         cp -rf ./out/${op_devices}/* ${imagebuilder_path}/out_firmware
     else
         error_msg "Rootfs file not found in ${openwrt_dir}/bin/targets/*/*/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz"
