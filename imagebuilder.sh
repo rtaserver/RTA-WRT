@@ -613,7 +613,7 @@ rebuild_firmware() {
             mv -f "$file" "${imagebuilder_path}/out_firmware"
             echo -e "${SUCCESS} Firmware successfully created: $file"
         done
-        for file in ${imagebuilder_path}/bin/targets/*/*/*-rootfs.tar.gz; do
+        for file in ${imagebuilder_path}/bin/targets/*/*/*rootfs.tar.gz; do
             [[ -e "$file" ]] || continue
             mv -f "$file" "${imagebuilder_path}/out_rootfs"
             echo -e "${SUCCESS} Rootfs successfully created: $file"
