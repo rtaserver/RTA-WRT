@@ -57,7 +57,6 @@ on:
           - true
           - false
 
-
 env:
   TZ: Asia/Jakarta
   IMAGEBUILDER_SH: imagebuilder.sh
@@ -91,24 +90,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Add changelog info to new release description
-        id: changelog
-        shell: bash
+      - name: Parse Release Branch
         run: |
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
-          r="${r//'%'/'%25'}"
-          r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"  
-          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
+          RELEASE_BRANCH="${{ inputs.releases_branch }}"
+          RELEASE_TAG="${RELEASE_BRANCH/:/_}"
+          echo "RELEASE_BRANCH=${RELEASE_BRANCH}" >> $GITHUB_ENV
+          echo "RELEASE_TAG=${RELEASE_TAG}" >> $GITHUB_ENV
 
-      - name: Initialization environment (normal)
-        # if: github.event.inputs.devices != 'all' && !cancelled()
+      - name: Install Required Packages
+        run: |
+          PACKAGES="build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs jq python3 python3-pip"
+          sudo apt-get -qq update
+          sudo apt-get -qq install $PACKAGES
+
+      - name: Initialization Environment
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get -qq update
-          sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs
-          sudo apt-get -qq install jq python3 python3-pip
           pip install telethon
           pip install colorama
           sudo timedatectl set-timezone "$TZ"
@@ -116,26 +114,24 @@ jobs:
           echo -e "[\033[94m INFO \033[0m] DEVICES: ${{ matrix.devices }}"
           echo "DATE=$(date +'%d%m%Y')" >> $GITHUB_ENV
 
-
-      - name: Build Rootfs [ ${{ inputs.releases_branch }} ]
+      - name: Build Image And Rootfs [ ${{ env.DEVICES}} ]
         id: imagebuilder
         run: |
           echo -e "[\033[95m STEPS \033[0m] Building Firmware And Rootfs"
-          RELEASES_BRANCH="${{ inputs.releases_branch }}"${RELEASES_BRANCH%:*}
           chmod +x ${IMAGEBUILDER_SH}
-          bash ${IMAGEBUILDER_SH} ${RELEASES_BRANCH} "${{ env.DEVICES }}"
-          echo "RELEASES_TAG=${RELEASES_BRANCH/:/_}" >> ${GITHUB_ENV}
-          echo "status=success" >> ${GITHUB_OUTPUT}
+          bash ${IMAGEBUILDER_SH} ${{ env.RELEASE_BRANCH }} "${{ env.DEVICES }}"
+          echo "status=success" >> $GITHUB_OUTPUT
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
-  
-      - name: Clear server space
-        if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
+
+      - name: Clear Server Space
+        if: ${{ steps.imagebuilder.outputs.status == 'success' }} && !cancelled()
         run: |
           cd imagebuilder
-          rm -rf $(ls . | grep -v "^out_firmware$" | xargs) 2>/dev/null
+          rm -rf $(ls . | grep -v "^out_firmware$") 2>/dev/null
           df -hT ${PWD}
 
       - name: Upload Firmware to Artifact
+        if: ${{ steps.imagebuilder.outputs.status == 'success' }}
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ env.DEVICES }}
@@ -149,18 +145,16 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: imagebuilder/out_firmware/*.img.gz
-          tag: ${{ env.RELEASES_TAG }}-${{ env.DATE }}
-          release_name: RTA-WRT - ${{ env.RELEASES_TAG }}-${{ env.DATE }}
+          tag: ${{ env.RELEASE_TAG }}-${{ env.DATE }}
+          release_name: RTA-WRT - ${{ env.RELEASE_TAG }}-${{ env.DATE }}
           overwrite: true
           prerelease: false
           body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASES_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASE_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
             ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
-        
-                  
+
             ${{ steps.changelog.outputs.CHANGELOG }}
-        
-                  
+
             See [here](https://github.com/rizkikotet-dev/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
             - Default IP: 192.168.1.1
             - Default username: root
