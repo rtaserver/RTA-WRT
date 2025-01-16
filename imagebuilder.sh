@@ -185,71 +185,38 @@ download_imagebuilder() {
     cd "${make_path}" || { error_msg "Failed to change directory to ${make_path}"; }
     echo -e "${STEPS} Start downloading OpenWrt files..."
 
-    case "${op_target}" in
-        "amlogic" | "AMLOGIC")
-            op_target="amlogic"
-            target_profile=""
+    case "${op_devices}" in
+        h5-*|h616-*|h618-*|h6-*)
+            op_target="allwinner"
+            target_profile="generic"
             target_system="armsr/armv8"
             target_name="armsr-armv8"
             ARCH_1="arm64"
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
+            KERNEL="6.6.6-AW64-DBAI"
             ;;
-        "rpi-3")
-            op_target="rpi-3"
-            target_profile="rpi-3"
-            target_system="bcm27xx/bcm2710"
-            target_name="bcm27xx-bcm2710"
-            ARCH_1="arm64"
-            ARCH_2="aarch64"
-            ARCH_3="aarch64_cortex-a53"
-            ;;
-        "rpi-4")
-            op_target="rpi-4"
-            target_profile="rpi-4"
-            target_system="bcm27xx/bcm2711"
-            target_name="bcm27xx-bcm2711"
-            ARCH_1="arm64"
-            ARCH_2="aarch64"
-            ARCH_3="aarch64_cortex-a72"
-            ;;
-        "friendlyarm_nanopi-r2c")
-            op_target="nanopi-r2c"
-            target_profile="friendlyarm_nanopi-r2c"
-            target_system="rockchip/armv8"
-            target_name="rockchip-armv8"
+        s905*)
+            op_target="amlogic"
+            target_profile="generic"
+            target_system="armsr/armv8"
+            target_name="armsr-armv8"
             ARCH_1="arm64"
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
+            KERNEL="6.1.66-DBAI"
             ;;
-        "friendlyarm_nanopi-r2s")
-            op_target="nanopi-r2s"
-            target_profile="friendlyarm_nanopi-r2s"
-            target_system="rockchip/armv8"
-            target_name="rockchip-armv8"
+        rk*)
+            op_target="rockchip"
+            target_profile="generic"
+            target_system="armsr/armv8"
+            target_name="armsr-armv8"
             ARCH_1="arm64"
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
+            KERNEL="5.10.160-rk35v-dbai"
             ;;
-        "friendlyarm_nanopi-r4s")
-            op_target="nanopi-r4s"
-            target_profile="friendlyarm_nanopi-r4s"
-            target_system="rockchip/armv8"
-            target_name="rockchip-armv8"
-            ARCH_1="arm64"
-            ARCH_2="aarch64"
-            ARCH_3="aarch64_generic"
-            ;;
-        "xunlong_orangepi-r1-plus")
-            op_target="orangepi-r1-plus"
-            target_profile="xunlong_orangepi-r1-plus"
-            target_system="rockchip/armv8"
-            target_name="rockchip-armv8"
-            ARCH_1="arm64"
-            ARCH_2="aarch64"
-            ARCH_3="aarch64_generic"
-            ;;
-        "generic" | "x86-64" | "x86_64")
+        x86-64|x86_64)
             op_target="x86-64"
             target_profile="generic"
             target_system="x86/64"
@@ -259,7 +226,7 @@ download_imagebuilder() {
             ARCH_3="x86_64"
             ;;
         *)
-            error_msg "Unknown target: ${op_target}"
+            error_msg "Unknown target: ${op_devices}"
             ;;
     esac
 
@@ -592,9 +559,9 @@ rebuild_firmware() {
 
     # Misc and some custom .ipk files
     misc=""
-    if [ "$op_target" == "openwrt" ]; then
+    if [ "$op_sourse" == "openwrt" ]; then
         misc+=" luci-app-temp-status luci-app-cpu-status-mini"
-    elif [ "$op_target" == "immortalwrt" ]; then
+    elif [ "$op_sourse" == "immortalwrt" ]; then
         misc+=" "
     fi
 
@@ -630,7 +597,25 @@ rebuild_firmware() {
     else
         sync && sleep 3
         echo -e "${INFO} [ ${openwrt_dir}/bin/targets/*/* ] directory status: $(ls bin/targets/*/* -al 2>/dev/null)"
+        mkdir -p out_firmware
+        cp -f ${openwrt_dir}/bin/targets/*/*/*.img.gz out_firmware
         echo -e "${SUCCESS} The rebuild is successful, the current path: [ ${PWD} ]"
+    fi
+}
+
+ulobuilder() {
+    echo -e "${STEPS} Start uploading firmware to UloBuilder..."
+    cd ${imagebuilder_path}
+    curl -fsSOL https://github.com/armarchindo/ULO-Builder/archive/refs/heads/main.zip
+    unzip -q main.zip && rm -f main.zip
+    mkdir -p ULO-Builder-main/rootfs
+    if [ -f "${openwrt_dir}/bin/targets/*/*/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz" ]; then
+        cp -f ${openwrt_dir}/bin/targets/*/*/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz ULO-Builder-main/rootfs
+        cd ULO-Builder-main
+        bash ./ulo -y -m ${op_devices} -r ${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz -k ${KERNEL} -s 1024
+        cp -rf ./out/${op_devices}/* ${imagebuilder_path}/out_firmware
+    else
+        error_msg "Rootfs file not found in ${openwrt_dir}/bin/targets/*/*/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz"
     fi
 }
 
@@ -638,14 +623,14 @@ rebuild_firmware() {
 echo -e "${STEPS} Welcome to Rebuild OpenWrt Using the Image Builder."
 [[ -x "${0}" ]] || error_msg "Please give the script permission to run: [ chmod +x ${0} ]"
 [[ -z "${1}" ]] && error_msg "Please specify the OpenWrt Branch, such as [ ${0} openwrt:22.03.3 x86-64 ]"
-[[ -z "${2}" ]] && error_msg "Please specify the OpenWrt Target, such as [ ${0} openwrt:22.03.3 x86-64 ]"
+[[ -z "${2}" ]] && error_msg "Please specify the OpenWrt Devices, such as [ ${0} openwrt:22.03.3 x86-64 ]"
 [[ "${1}" =~ ^[a-z]{3,}:[0-9]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 amlogic"
 [[ "${2}" =~ ^[a-zA-Z0-9_-]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 amlogic"
 op_sourse="${1%:*}"
 op_branch="${1#*:}"
-op_target="${2}"
+op_devices="${2}"
 echo -e "${INFO} Rebuild path: [ ${PWD} ]"
-echo -e "${INFO} Rebuild Source: [ ${op_sourse} ], Branch: [ ${op_branch} ], Target: ${op_target}"
+echo -e "${INFO} Rebuild Source: [ ${op_sourse} ], Branch: [ ${op_branch} ], Devives: ${op_devices}"
 echo -e "${INFO} Server space usage before starting to compile: \n$(df -hT ${make_path}) \n"
 #
 # Perform related operations
@@ -655,6 +640,13 @@ custom_packages
 custom_config
 custom_files
 rebuild_firmware
+case "${op_devices}" in
+    h5-*|h616-*|h618-*|h6-*|s905*|rk*)
+        ulobuilder
+        ;;
+    *)
+        ;;
+esac
 #
 # Show server end information
 echo -e "Server space usage after compilation: \n$(df -hT ${make_path}) \n"
