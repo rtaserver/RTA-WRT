@@ -528,7 +528,7 @@ rebuild_firmware() {
 
     # Membersihkan build lama
     make clean || { error_msg "Error: Failed to clean previous build"; }
-    mkdir -p out_firmware out_rootfs
+    mkdir -p ${imagebuilder_path}/out_firmware ${imagebuilder_path}/out_rootfs
 
     # Selecting default packages, lib, theme, app and i18n, etc.
     PACKAGES+=" file lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
@@ -609,12 +609,12 @@ rebuild_firmware() {
         error_msg "Error: OpenWrt build failed. Check logs for details."
     else
         # Memindahkan hasil build
-        if [[ -s "bin/targets/*/*/*.img.gz" ]]; then
-            cp -f bin/targets/*/*/*.img.gz out_firmware
+        if [[ -s "${imagebuilder_path}/bin/targets/*/*/*.img.gz" ]]; then
+            cp -f ${imagebuilder_path}/bin/targets/*/*/*.img.gz out_firmware
             echo -e "${SUCCESS} Copy Image Successfully."
         fi
-        if [[ -s "bin/targets/*/*/*-rootfs.tar.gz" ]]; then
-            cp -f bin/targets/*/*/*-rootfs.tar.gz out_rootfs
+        if [[ -s "${imagebuilder_path}/bin/targets/*/*/*-rootfs.tar.gz" ]]; then
+            cp -f ${imagebuilder_path}/bin/targets/*/*/*-rootfs.tar.gz out_rootfs
             echo -e "${SUCCESS} Copy Rootfs Successfully."
         fi
         echo -e "${SUCCESS} Build completed successfully."
@@ -630,7 +630,7 @@ ulobuilder() {
     fi
 
     # Pindah ke direktori imagebuilder
-    cd "${imagebuilder_path}" || { echo "Error: Unable to access ${imagebuilder_path}"; exit 1; }
+    cd "${imagebuilder_path}" || { error_msg "Error: Unable to access ${imagebuilder_path}"; }
 
     # Unduh UloBuilder
     curl -fsSOL https://github.com/armarchindo/ULO-Builder/archive/refs/heads/main.zip
@@ -638,7 +638,7 @@ ulobuilder() {
     mkdir -p ULO-Builder-main/rootfs
 
     # Periksa keberadaan rootfs
-    local rootfs_file="out_rootfs/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz"
+    local rootfs_file="${imagebuilder_path}/out_rootfs/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz"
     if [[ -s "${rootfs_file}" ]]; then
         cp -f "${rootfs_file}" ULO-Builder-main/rootfs
         cd ULO-Builder-main
