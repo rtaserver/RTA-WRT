@@ -608,15 +608,16 @@ rebuild_firmware() {
     if [[ $? -ne 0 ]]; then
         error_msg "Error: OpenWrt build failed. Check logs for details."
     else
-        # Memindahkan hasil build
-        if [[ -s "${imagebuilder_path}/bin/targets/*/*/*.img.gz" ]]; then
-            cp -f ${imagebuilder_path}/bin/targets/*/*/*.img.gz out_firmware
-            echo -e "${SUCCESS} Copy Image Successfully."
-        fi
-        if [[ -s "${imagebuilder_path}/bin/targets/*/*/*-rootfs.tar.gz" ]]; then
-            cp -f ${imagebuilder_path}/bin/targets/*/*/*-rootfs.tar.gz out_rootfs
-            echo -e "${SUCCESS} Copy Rootfs Successfully."
-        fi
+        for file in ${imagebuilder_path}/bin/targets/*/*/*.img.gz; do
+            [[ -e "$file" ]] || continue
+            mv -f "$file" "${imagebuilder_path}/out_firmware"
+            echo -e "${SUCCESS} Firmware successfully created: $file"
+        done
+        for file in ${imagebuilder_path}/bin/targets/*/*/*-rootfs.tar.gz; do
+            [[ -e "$file" ]] || continue
+            mv -f "$file" "${imagebuilder_path}/out_rootfs"
+            echo -e "${SUCCESS} Rootfs successfully created: $file"
+        done
         echo -e "${SUCCESS} Build completed successfully."
     fi
 }
