@@ -97,6 +97,7 @@ download_packages() {
                     echo -e "${INFO} Attempt $attempt to download $filename"
                     if curl -fsSL --max-time 60 --retry 2 -o "${filename}.ipk" "$full_url"; then
                         download_success=true
+                        echo -e "${SUCCESS} Package [$filename] downloaded successfully."
                         break
                     else
                         echo -e "${WARNING} Download failed for $filename (Attempt $attempt)"
@@ -598,7 +599,9 @@ rebuild_firmware() {
         sync && sleep 3
         echo -e "${INFO} [ ${openwrt_dir}/bin/targets/*/* ] directory status: $(ls bin/targets/*/* -al 2>/dev/null)"
         mkdir -p out_firmware
-        cp -f ${openwrt_dir}/bin/targets/*/*/*.img.gz out_firmware
+        if [ -f "${openwrt_dir}/bin/targets/*/*/*.img.gz" ]; then
+            cp -f ${openwrt_dir}/bin/targets/*/*/*.img.gz out_firmware
+        fi
         echo -e "${SUCCESS} The rebuild is successful, the current path: [ ${PWD} ]"
     fi
 }
