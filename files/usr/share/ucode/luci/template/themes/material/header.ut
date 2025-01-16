@@ -56,13 +56,14 @@
 	<div class="fill">
 		<div class="container">
 			<span class="showSide"></span>
-			<a id="logo" href="{{ ctx.authsession ? dispatcher.build_url('admin/status/overview') : '#' }}"><img src="{{ media }}/brand.png" alt="OpenWrt"></a>
+			<a id="logo" href="{{ ctx.authsession ? dispatcher.build_url('admin/status/overview') : '#' }}"><img src="{{ media }}/brand.png" width="210" height="50" alt="OpenWrt"></a>
 			<tr>
 			 <td><a href='/cgi-bin/luci/admin/services/openclash'><img src="{{ media }}/navbar/clash.png" width="35" height="35"></a></td>
              <td><a href='/cgi-bin/luci/admin/services/passwall'><img src="{{ media }}/navbar/passwall.png" width="35" height="35"></a></td>
 			 <td><a href='/cgi-bin/luci/admin/services/mihomo'><img src="{{ media }}/navbar/mihomo.png" width="35" height="35"></a></td>
 			 <td><a href='/cgi-bin/luci/admin/system/tinyfm'><img src="{{ media }}/navbar/tinyfm.png" width="35" height="35"></a></td>
-			 <td><a href='/cgi-bin/luci/admin/status/realtime'><img src="{{ media }}/navbar/netmon.png" width="35" height="35"></a></td>
+             <td><a href='/cgi-bin/luci/admin/services/ttyd'><img src="{{ media }}/navbar/terminal.png" width="35" height="35"></a></td>
+			 <td><a href='/cgi-bin/luci/admin/status/netmon'><img src="{{ media }}/navbar/netmon.png" width="35" height="35"></a></td>
              <td><a href='/cgi-bin/luci/admin/network/network'><img src="{{ media }}/navbar/interface.png" width="35" height="35"></a></td>
             </tr>
 			<span class="status" id="indicators"></span>
@@ -70,7 +71,7 @@
 	</div>
 <style>
 #menu {
-    background: linear-gradient(90deg, rgba(0,103,134,1) 0%, rgba(0,153,199,1) 50%, rgba(91,192,222,1) 100%);
+    background: linear-gradient(90deg, #7b86ad, #7b86ad, #f694b9);
     color: #fff;
     height: 17px;
     padding-left: 0px;
@@ -204,7 +205,7 @@ function updatemenu(){1==document.getElementById("responsive-menu").checked?(doc
 <nav id='menu'>
   <input type='checkbox' id='responsive-menu' onclick='updatemenu()'><label></label>
   <ul>
-	<li><a href='https://github.com/rtaserver/RTA-WRT'>About</a></li>
+	<li><a href='https://github.com/rizkikotet-dev/RTA-WRT'>About</a></li>
     <li><a href='http://192.168.8.1/' target='_blank'>Modem</a></li>    
     <li><a href='/cgi-bin/luci/admin/services/ttyd'>Terminal</a></li>
 	<li><a id="yacd" target='_blank'><p>Yacd</p></a></li>

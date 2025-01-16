@@ -182,143 +182,182 @@ dl_zip_gh() {
 
 # Downloading OpenWrt ImageBuilder
 download_imagebuilder() {
-    cd ${make_path}
+    cd "${make_path}" || { error_msg "Failed to change directory to ${make_path}"; }
     echo -e "${STEPS} Start downloading OpenWrt files..."
 
-    if [[ "${op_target}" == "amlogic" || "${op_target}" == "AMLOGIC" ]]; then
-        op_target="amlogic"
-        target_profile=""
-        target_system="armsr/armv8"
-        target_name="armsr-armv8"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "rpi-3" ]]; then
-        op_target="rpi-3"
-        target_profile="rpi-3"
-        target_system="bcm27xx/bcm2710"
-        target_name="bcm27xx-bcm2710"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_cortex-a53"
-    elif [[ "${op_target}" == "rpi-4" ]]; then
-        op_target="rpi-4"
-        target_profile="rpi-4"
-        target_system="bcm27xx/bcm2711"
-        target_name="bcm27xx-bcm2711"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_cortex-a72"
-    elif [[ "${op_target}" == "friendlyarm_nanopi-r2c" ]]; then
-        op_target="nanopi-r2c"
-        target_profile="friendlyarm_nanopi-r2c"
-        target_system="rockchip/armv8"
-        target_name="rockchip-armv8"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "friendlyarm_nanopi-r2s" ]]; then
-        op_target="nanopi-r2s"
-        target_profile="friendlyarm_nanopi-r2s"
-        target_system="rockchip/armv8"
-        target_name="rockchip-armv8"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "friendlyarm_nanopi-r4s" ]]; then
-        op_target="nanopi-r4s"
-        target_profile="friendlyarm_nanopi-r4s"
-        target_system="rockchip/armv8"
-        target_name="rockchip-armv8"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "xunlong_orangepi-r1-plus" ]]; then
-        op_target="orangepi-r1-plus"
-        target_profile="xunlong_orangepi-r1-plus"
-        target_system="rockchip/armv8"
-        target_name="rockchip-armv8"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "xunlong_orangepi-r1-plus-lts" ]]; then
-        op_target="orangepi-r1-plus-lts"
-        target_profile="xunlong_orangepi-r1-plus-lts"
-        target_system="rockchip/armv8"
-        target_name="rockchip-armv8"
-        ARCH_1="arm64"
-        ARCH_2="aarch64"
-        ARCH_3="aarch64_generic"
-    elif [[ "${op_target}" == "generic" || "${op_target}" == "x86-64" || "${op_target}" == "x86_64" ]]; then
-        op_target="x86-64"
-        target_profile="generic"
-        target_system="x86/64"
-        target_name="x86-64"
-        ARCH_1="amd64"
-        ARCH_2="x86_64"
-        ARCH_3="x86_64"
+    case "${op_target}" in
+        "amlogic" | "AMLOGIC")
+            op_target="amlogic"
+            target_profile=""
+            target_system="armsr/armv8"
+            target_name="armsr-armv8"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_generic"
+            ;;
+        "rpi-3")
+            op_target="rpi-3"
+            target_profile="rpi-3"
+            target_system="bcm27xx/bcm2710"
+            target_name="bcm27xx-bcm2710"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_cortex-a53"
+            ;;
+        "rpi-4")
+            op_target="rpi-4"
+            target_profile="rpi-4"
+            target_system="bcm27xx/bcm2711"
+            target_name="bcm27xx-bcm2711"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_cortex-a72"
+            ;;
+        "friendlyarm_nanopi-r2c")
+            op_target="nanopi-r2c"
+            target_profile="friendlyarm_nanopi-r2c"
+            target_system="rockchip/armv8"
+            target_name="rockchip-armv8"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_generic"
+            ;;
+        "friendlyarm_nanopi-r2s")
+            op_target="nanopi-r2s"
+            target_profile="friendlyarm_nanopi-r2s"
+            target_system="rockchip/armv8"
+            target_name="rockchip-armv8"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_generic"
+            ;;
+        "friendlyarm_nanopi-r4s")
+            op_target="nanopi-r4s"
+            target_profile="friendlyarm_nanopi-r4s"
+            target_system="rockchip/armv8"
+            target_name="rockchip-armv8"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_generic"
+            ;;
+        "xunlong_orangepi-r1-plus")
+            op_target="orangepi-r1-plus"
+            target_profile="xunlong_orangepi-r1-plus"
+            target_system="rockchip/armv8"
+            target_name="rockchip-armv8"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_generic"
+            ;;
+        "generic" | "x86-64" | "x86_64")
+            op_target="x86-64"
+            target_profile="generic"
+            target_system="x86/64"
+            target_name="x86-64"
+            ARCH_1="amd64"
+            ARCH_2="x86_64"
+            ARCH_3="x86_64"
+            ;;
+        *)
+            error_msg "Unknown target: ${op_target}"
+            ;;
+    esac
+
+    # Penentuan URL file download
+    CURVER=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
+    if [[ "${CURVER}" == "23.05" ]]; then
+        archive_ext="tar.xz"
+    else
+        archive_ext="tar.zst"
+    fi
+    download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
+
+    curl -fsSOL "${download_file}"
+    if [ "$?" -ne 0 ]; then
+         error_msg "Failed to download ${download_file}"
     fi
 
-    # Downloading imagebuilder files
-    download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.tar.xz"
-    curl -fsSOL ${download_file}
-    [[ "${?}" -eq "0" ]] || error_msg "Download failed: [ ${download_file} ]"
-    echo -e "${SUCCESS} Download Base ${op_branch} ${target_name} successfully!"
+    # Ekstraksi file
+    if [[ "${archive_ext}" == "tar.xz" ]]; then
+        tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz
+    else
+        tar --use-compress-program=unzstd -xvf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.zst
+    fi
 
-    # Unzip and change the directory name
-    tar -xJf *-imagebuilder-* && sync && rm -f *-imagebuilder-*.tar.xz
-    mv -f *-imagebuilder-* ${openwrt_dir}
+    mv -f *-imagebuilder-* "${openwrt_dir}" || {
+        error_msg "Failed to move extracted files to ${openwrt_dir}."
+    }
 
     sync && sleep 3
     echo -e "${INFO} [ ${make_path} ] directory status: $(ls -al 2>/dev/null)"
 }
 
+
 # Adjust related files in the ImageBuilder directory
 adjust_settings() {
-    cd ${imagebuilder_path}
+    cd "${imagebuilder_path}" || { error_msg "Failed to change directory to ${imagebuilder_path}"; }
     echo -e "${STEPS} Start adjusting .config file settings..."
 
+    # Variabel
     DTM=$(date '+%d-%m-%Y')
-    CURVER=$(echo $op_branch | awk -F. '{print $1"."$2}')
+    CURVER=$(echo "$op_branch" | awk -F. '{print $1"."$2}')
 
-    sed -i "s|Ouc3kNF6|$DTM|g" "${custom_files_path}/etc/uci-defaults/99-first-setup"
+    # Update 99-first-setup
+    if [[ -s "${custom_files_path}/etc/uci-defaults/99-first-setup" ]]; then
+        sed -i "s|Ouc3kNF6|$DTM|g" "${custom_files_path}/etc/uci-defaults/99-first-setup"
+        echo -e "${INFO} Updated 99-first-setup with date: $DTM"
+    else
+        echo -e "${WARN} File 99-first-setup not found or is empty."
+    fi
 
+    # Update repositories.conf
     if [[ -s "repositories.conf" ]]; then
         sed -i '\|option check_signature| s|^|#|' repositories.conf
+        echo -e "${INFO} Updated repositories.conf to disable signature checks."
+    else
+        echo -e "${WARN} File repositories.conf not found or is empty."
     fi
 
+    # Update Makefile
     if [[ -s "Makefile" ]]; then
         sed -i "s/install \$(BUILD_PACKAGES)/install \$(BUILD_PACKAGES) --force-overwrite --force-downgrade/" Makefile
+        echo -e "${INFO} Updated Makefile to include force-overwrite and force-downgrade."
+    else
+        echo -e "${WARN} File Makefile not found or is empty."
     fi
 
-    # For .config file
+    # Update .config
     if [[ -s ".config" ]]; then
+        echo -e "${INFO} Updating .config file settings..."
 
         # Resize Boot and Rootfs partition size
         sed -i "s/CONFIG_TARGET_KERNEL_PARTSIZE=.*/CONFIG_TARGET_KERNEL_PARTSIZE=128/" .config
         sed -i "s/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=1024/" .config
 
-        if [ "$op_target" == "amlogic" ]; then
+        # Specific settings for Amlogic
+        if [[ "$op_target" == "amlogic" ]]; then
             sed -i "s|CONFIG_TARGET_ROOTFS_CPIOGZ=.*|# CONFIG_TARGET_ROOTFS_CPIOGZ is not set|g" .config
             sed -i "s|CONFIG_TARGET_ROOTFS_EXT4FS=.*|# CONFIG_TARGET_ROOTFS_EXT4FS is not set|g" .config
             sed -i "s|CONFIG_TARGET_ROOTFS_SQUASHFS=.*|# CONFIG_TARGET_ROOTFS_SQUASHFS is not set|g" .config
             sed -i "s|CONFIG_TARGET_IMAGES_GZIP=.*|# CONFIG_TARGET_IMAGES_GZIP is not set|g" .config
+            echo -e "${INFO} Updated Amlogic-specific .config settings."
         fi
 
-        if [ "$ARCH_2" == "x86_64" ]; then
-            # Not generate ISO images for it is too big
+        # Specific settings for x86_64 architecture
+        if [[ "$ARCH_2" == "x86_64" ]]; then
             sed -i "s/CONFIG_ISO_IMAGES=y/# CONFIG_ISO_IMAGES is not set/" .config
-            # Not generate VHDX images
             sed -i "s/CONFIG_VHDX_IMAGES=y/# CONFIG_VHDX_IMAGES is not set/" .config
+            echo -e "${INFO} Updated x86_64-specific .config settings."
         fi
     else
-        echo -e "${INFO} [ ${imagebuilder_path} ] directory status: $(ls -al 2>/dev/null)"
-        error_msg "There is no .config file in the [ ${download_file} ]"
+        error_msg "No .config file found in ${imagebuilder_path}. Ensure the correct file is available."
     fi
 
+    # Sinkronisasi dan cek status direktori
     sync && sleep 3
     echo -e "${INFO} [ ${imagebuilder_path} ] directory status: $(ls -al 2>/dev/null)"
 }
+
 
 # Add custom packages
 # If there is a custom package or ipk you would prefer to use create a [ packages ] directory,
@@ -345,10 +384,10 @@ custom_packages() {
         echo "Adding [luci-app-amlogic] from bulider script type."
         github_packages+=("luci-app-amlogic|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest")
     fi
-    github_packages+=(
-        "luci-app-netmonitor|https://api.github.com/repos/rtaserver/rta-packages/releases"
-        "luci-app-base64|https://api.github.com/repos/rtaserver/rta-packages/releases"
-    )
+    # github_packages+=(
+    #     "luci-app-netmonitor|https://api.github.com/repos/rizkikotet-dev/rta-packages/releases"
+    #     "luci-app-base64|https://api.github.com/repos/rizkikotet-dev/rta-packages/releases"
+    # )
     download_packages "github" github_packages[@]
 
     # Download IPK From Custom
@@ -363,13 +402,16 @@ custom_packages() {
         "tailscale|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "python3-speedtest-cli|https://downloads.openwrt.org/releases/packages-$CURVER/$ARCH_3/packages"
 
-        "luci-app-tailscale|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
-        "luci-app-diskman|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
-        "modeminfo|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
-        "atinout|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
-        "luci-app-poweroff|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
-        "xmm-modem|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
-        "luci-app-lite-watchdog|https://dl.openwrt.ai/$CURVER/packages/$ARCH_3/kiddin9"
+        "dns2tcp|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/packages"
+
+        "luci-app-tailscale|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
+        "luci-app-diskman|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
+        "modeminfo|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
+        "luci-app-modeminfo|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
+        "atinout|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
+        "luci-app-poweroff|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
+        "xmm-modem|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
+        "luci-app-lite-watchdog|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
 
         "luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
@@ -405,8 +447,8 @@ custom_packages() {
     fi
 
     # Mihomo
-    mihomo_api="https://api.github.com/repos/rtaserver/OpenWrt-mihomo-Mod/releases"
-    mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-23.05" #$op_branch | cut -d '.' -f 1-2
+    mihomo_api="https://api.github.com/repos/rizkikotet-dev/OpenWrt-mihomo-Mod/releases"
+    mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-${CURVER}" #$op_branch | cut -d '.' -f 1-2
     mihomo_file_ipk_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file_ipk}.*.tar.gz" | head -n 1)"
 
     #passwall
@@ -437,7 +479,7 @@ custom_packages() {
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to download Mihomo package."
     fi
-    tar -xzvf "mihomo_${ARCH_3}-openwrt-23.05.tar.gz" && rm "mihomo_${ARCH_3}-openwrt-23.05.tar.gz"
+    tar -xzvf "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" && rm "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz"
     if [ "$?" -ne 0 ]; then
         error_msg "Error: Failed to extract Mihomo package."
     fi
@@ -515,7 +557,7 @@ rebuild_firmware() {
     modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi usbutils luci-proto-mbim luci-proto-ncm \
     kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial-sierrawireless \
     kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem \
-    kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft"
+    kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty"
     
     # Modem Tools
     PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"
@@ -530,19 +572,13 @@ rebuild_firmware() {
     PACKAGES+=" luci-app-zerotier luci-app-cloudflared tailscale luci-app-tailscale"
 
     # NAS and Hard disk tools
-    PACKAGES+=" luci-app-diskman luci-app-hd-idle luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
-
-    # Docker
-    PACKAGES+=" docker docker-compose dockerd luci-app-dockerman"
+    PACKAGES+=" luci-app-diskman luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
 
     # Bandwidth And Network Monitoring
-    PACKAGES+=" internet-detector luci-app-internet-detector internet-detector-mod-modem-restart nlbwmon luci-app-nlbwmon vnstat2 vnstati2 luci-app-vnstat2 luci-app-netmonitor"
+    PACKAGES+=" internet-detector luci-app-internet-detector internet-detector-mod-modem-restart nlbwmon luci-app-nlbwmon vnstat2 vnstati2 luci-app-vnstat2 netdata"
 
     # Speedtest
     PACKAGES+=" librespeed-go python3-speedtest-cli iperf3 luci-app-netspeedtest"
-
-    # Base64 Encode Decode
-    PACKAGES+=" luci-app-base64"
 
     # Material Theme
     PACKAGES+=" luci-theme-material"
@@ -563,7 +599,7 @@ rebuild_firmware() {
     fi
 
     if [ "$op_target" == "rpi-4" ]; then
-        misc+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio luci-app-oled"
+        misc+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio"
     elif [ "$ARCH_2" == "x86_64" ]; then
         misc+=" kmod-iwlwifi iw-full pciutils"
     fi

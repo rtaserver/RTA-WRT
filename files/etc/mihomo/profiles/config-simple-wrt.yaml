@@ -1,0 +1,146 @@
+proxy-groups:
+  - name: MAIN-MENU
+    type: select
+    disable-udp: false
+    proxies:
+      - SERVER-SG
+      - SERVER-ID
+      - FALLBACK-ALL-SERVER
+      - LOADBAlANCE-ALL-SERVER
+      - SERVER-DIRECT
+    url: http://cp.cloudflare.com/generate_204
+    interval: 60
+  - name: SERVER-SG
+    type: select
+    disable-udp: false
+    proxies:
+      - FALLBACK-SG
+      - LOADBALANCE-SG
+      - BESTPING-SG
+    use:
+      - PP-SG
+    url: http://cp.cloudflare.com/generate_204
+    interval: 60
+  - name: SERVER-ID
+    type: select
+    disable-udp: false
+    proxies:
+      - FALLBACK-ID
+      - LOADBALANCE-ID
+      - BESTPING-ID
+    use:
+      - PP-ID
+    url: http://cp.cloudflare.com/generate_204
+    interval: 60
+  - name: SERVER-DIRECT
+    type: select
+    disable-udp: false
+    proxies:
+      - DIRECT-LB
+    use:
+      - PP-DIRECT
+  #==============================================
+  - name: FALLBACK-SG
+    type: fallback
+    disable-udp: false
+    use:
+      - PP-SG
+    url: http://cp.cloudflare.com/generate_204
+    interval: 180
+    hidden: true
+  - name: LOADBALANCE-SG
+    type: load-balance
+    strategy: round-robin
+    disable-udp: false
+    use:
+      - PP-SG
+    url: http://cp.cloudflare.com/generate_204
+    interval: 180
+    hidden: true
+  - name: BESTPING-SG
+    type: url-test
+    disable-udp: false
+    use:
+      - PP-SG
+    url: http://cp.cloudflare.com/generate_204
+    interval: 180
+    tolerance: 60
+  #===============================================
+  - name: FALLBACK-ID
+    type: fallback
+    disable-udp: false
+    use:
+      - PP-ID
+    url: http://cp.cloudflare.com/generate_204
+    interval: 180
+    hidden: true
+  - name: LOADBALANCE-ID
+    type: load-balance
+    strategy: round-robin
+    disable-udp: false
+    use:
+      - PP-ID
+    url: http://cp.cloudflare.com/generate_204
+    interval: 180
+    hidden: true
+  - name: BESTPING-ID
+    type: url-test
+    disable-udp: false
+    use:
+      - PP-ID
+    url: http://cp.cloudflare.com/generate_204
+    interval: 180
+    tolerance: 60
+  #===============================================
+  - name: FALLBACK-ALL-SERVER
+    type: fallback
+    disable-udp: false
+    use:
+      - PP-ID
+    url: http://cp.cloudflare.com/generate_204
+    interval: 180
+    hidden: true
+  - name: LOADBAlANCE-ALL-SERVER
+    type: load-balance
+    strategy: round-robin
+    disable-udp: false
+    proxies:
+      - SERVER-SG
+      - SERVER-ID
+    url: http://cp.cloudflare.com/generate_204
+    interval: 180
+    hidden: true
+  #===============================================
+  - name: DIRECT-LB
+    type: load-balance
+    strategy: round-robin
+    disable-udp: false
+    use:
+      - PP-DIRECT
+    url: http://cp.cloudflare.com/generate_204
+    interval: 180
+    hidden: true
+proxy-providers:
+  PP-ID:
+    type: file
+    path: "./proxy_provider/pp-id.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 180
+  PP-SG:
+    type: file
+    path: "./proxy_provider/pp-sg.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 180
+  PP-DIRECT:
+    type: file
+    path: "./proxy_provider/pp-direct.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 180
+rules:
+  - MATCH,MAIN-MENU

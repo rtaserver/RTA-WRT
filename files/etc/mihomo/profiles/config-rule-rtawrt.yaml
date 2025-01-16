@@ -1,0 +1,174 @@
+proxy-groups:
+- name: Traffic-Umum
+  type: select
+  disable-udp: false
+  proxies:
+  - SERVER-SG
+  - SERVER-ID
+- name: Traffic-Indo
+  type: select
+  disable-udp: false
+  proxies:
+  - SERVER-ID
+  - SERVER-SG
+- name: Traffic-Direct
+  type: select
+  disable-udp: false
+  proxies:
+  - DIRECT-LB
+  - Traffic-Indo
+  - Traffic-Umum
+  use:
+  - PP-DIRECT
+- name: Traffic-Gaming
+  type: select
+  disable-udp: false
+  proxies:
+  - DIRECT-LB
+  - SERVER-GAME
+  - SERVER-ID
+  - SERVER-SG
+  use:
+  - PP-DIRECT
+- name: Traffic-Gaming-Port
+  type: select
+  disable-udp: false
+  proxies:
+  - DIRECT-LB
+  - SERVER-GAME
+  - SERVER-ID
+  - SERVER-SG
+  use:
+  - PP-DIRECT
+- name: Traffic-Manual-Reject
+  type: select
+  disable-udp: false
+  proxies:
+  - REJECT
+  - Traffic-Umum
+  - Traffic-Indo
+- name: Traffic-Porn
+  type: select
+  disable-udp: false
+  proxies:
+  - REJECT
+  - Traffic-Umum
+  - Traffic-Indo
+- name: Traffic-Ads
+  type: select
+  disable-udp: false
+  proxies:
+  - REJECT
+  - Traffic-Umum
+  - Traffic-Indo
+- name: DIRECT-LB
+  type: load-balance
+  strategy: round-robin
+  disable-udp: false
+  use:
+  - PP-DIRECT
+  url: http://cp.cloudflare.com/generate_204
+  interval: 300
+  hidden: true
+- name: SERVER-SG
+  type: fallback
+  disable-udp: false
+  use:
+  - PP-SG
+  url: http://www.gstatic.com/generate_204
+  interval: 300
+  hidden: true
+- name: SERVER-ID
+  type: fallback
+  disable-udp: false
+  use:
+  - PP-ID
+  url: http://www.gstatic.com/generate_204
+  interval: 300
+  hidden: true
+- name: SERVER-GAME
+  type: fallback
+  disable-udp: false
+  use:
+  - PP-GAME
+  url: http://www.gstatic.com/generate_204
+  interval: 300
+  hidden: true
+proxy-providers:
+  PP-ID:
+    type: file
+    path: "./proxy_provider/pp-id.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 180
+  PP-SG:
+    type: file
+    path: "./proxy_provider/pp-sg.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 180
+  PP-GAME:
+    type: file
+    path: "./proxy_provider/pp-gaming.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 180
+  PP-DIRECT:
+    type: file
+    path: "./proxy_provider/pp-direct.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 180
+rule-providers:
+  RP-DIRECT:
+    type: file
+    behavior: classical
+    path: "./rule_provider/rp-direct.yaml"
+  RP-UMUM:
+    type: file
+    behavior: classical
+    path: "./rule_provider/rp-umum.yaml"
+  RP-REJECT:
+    type: file
+    behavior: classical
+    path: "./rule_provider/rp-reject.yaml"
+  RP-INDO:
+    type: http
+    path: "./rule_provider/rp-indo.yaml"
+    url: https://raw.githubusercontent.com/rtaserver/Clash-Rule-IP-Indo/main/rule-indo.yaml
+    interval: 600
+    proxy: Traffic-Umum
+    behavior: classical
+    format: yaml
+rules:
+- DST-PORT,123/136/137-139,Traffic-Direct,udp
+- RULE-SET,RP-DIRECT,Traffic-Direct
+- RULE-SET,RP-REJECT,Traffic-Manual-Reject
+- AND,((NETWORK,udp),(OR,((DST-PORT,443),(GEOSITE,youtube)))),REJECT
+- AND,((GEOSITE,oisd-full),(NOT,((DOMAIN-SUFFIX,googlesyndication.com)))),Traffic-Ads
+- AND,((GEOSITE,rule-ads),(NOT,((DOMAIN-SUFFIX,googlesyndication.com)))),Traffic-Ads
+- GEOSITE,oisd-nsfw,Traffic-Porn
+- GEOIP,GOOGLE,Traffic-Umum
+- GEOSITE,GOOGLE,Traffic-Umum
+- AND,((NETWORK,TCP),(DST-PORT,5228-5230),(OR,((DOMAIN-KEYWORD,google)))),Traffic-Umum
+- AND,((NETWORK,UDP),(DST-PORT,5228-5230),(OR,((DOMAIN-KEYWORD,google)))),Traffic-Umum
+- GEOSITE,rule-gaming,Traffic-Gaming
+- AND,((NOT,((RULE-SET,RP-UMUM))),(NETWORK,TCP)),Traffic-Gaming-Port
+- AND,((NOT,((RULE-SET,RP-UMUM))),(NETWORK,UDP)),Traffic-Gaming-Port
+- GEOSITE,rule-indo,Traffic-Indo
+- GEOSITE,rule-sosmed,Traffic-Indo
+- GEOSITE,rule-streaming,Traffic-Indo
+- GEOIP,id,Traffic-Indo
+- GEOIP,facebook,Traffic-Indo
+- GEOIP,netflix,Traffic-Indo
+- GEOIP,telegram,Traffic-Indo
+- GEOIP,twitter,Traffic-Indo
+- RULE-SET,RP-INDO,Traffic-Indo
+- GEOSITE,rule-speedtest,Traffic-Umum
+- AND,((RULE-SET,RP-UMUM),(NETWORK,TCP)),Traffic-Umum
+- AND,((RULE-SET,RP-UMUM),(NETWORK,UDP)),Traffic-Umum
+- MATCH,Traffic-Umum

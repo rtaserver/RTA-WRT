@@ -18,10 +18,11 @@ msg "Device Board: $(ubus call system board | grep '\"board_name\"' | sed 's/ \+
 sed -i "s#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' / ':'')+(luciversion||''),#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' build by RTA-WRT [ Ouc3kNF6 ]':''),#g" /www/luci-static/resources/view/status/include/10_system.js
 sed -i -E "s|icons/port_%s.png|icons/port_%s.gif|g" /www/luci-static/resources/view/status/include/29_ports.js
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
-sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/neofetch/' /etc/profile
+sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/rtawrt/' /etc/profile
 if grep -q "ImmortalWrt" /etc/openwrt_release; then
   sed -i "s/\(DISTRIB_DESCRIPTION='ImmortalWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
   sed -i -E "s|services/ttyd|system/ttyd|g" /usr/share/ucode/luci/template/themes/material/header.ut
+  sed -i -E "s|services/ttyd|system/ttyd|g" /usr/lib/lua/luci/view/themes/argon/header.htm
   msg Branch version: "$(grep 'DISTRIB_DESCRIPTION=' /etc/openwrt_release | awk -F"'" '{print $2}')"
 elif grep -q "OpenWrt" /etc/openwrt_release; then
   sed -i "s/\(DISTRIB_DESCRIPTION='OpenWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
@@ -54,12 +55,9 @@ uci set network.modemmanager.apn='internet'
 uci set network.modemmanager.auth='none'
 uci set network.modemmanager.iptype='ipv4'
 uci set network.modemmanager.force_connection='1'
-uci set network.tethering=interface
-uci set network.tethering.proto='dhcp'
-uci set network.tethering.device='usb0'
 uci -q delete network.wan6
 uci commit network
-uci set firewall.@zone[1].network='wan modemmanager tethering'
+uci set firewall.@zone[1].network='wan modemmanager'
 uci commit firewall
 
 # configure ipv6
@@ -167,8 +165,8 @@ bash /etc/init.d/vnstat_backup enable
 
 
 # Step 9: Adjusting App Catagory
-msg "Step 9: Adjusting App Catagory"
-sed -i -E "s|status|services|g" /usr/lib/lua/luci/controller/base64.lua
+# msg "Step 9: Adjusting App Catagory"
+# sed -i -E "s|status|services|g" /usr/lib/lua/luci/controller/base64.lua
 
 
 # Step 10: Configurating OpenClash
@@ -322,6 +320,10 @@ if [ -f "/etc/config/openclash" ]; then
 else
   msg "Openclash Config Not Found"
 fi
+
+# Step 19: set argon as default theme
+msg "Step 19: set argon as default theme"
+uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
 
 
 # Log success
