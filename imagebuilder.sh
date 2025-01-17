@@ -182,10 +182,10 @@ download_imagebuilder() {
     echo -e "${INFO} Extracting archive..."
     case "${archive_ext}" in
         tar.xz)
-            tar -xJf *-imagebuilder-* || error_msg "Failed to extract tar.xz archive."
+            tar -xJf *-imagebuilder-* > /dev/null 2>&1 || error_msg "Failed to extract tar.xz archive."
             ;;
         tar.zst)
-            tar --use-compress-program=unzstd -xvf *-imagebuilder-* || error_msg "Failed to extract tar.zst archive."
+            tar -xvf *-imagebuilder-* > /dev/null 2>&1 || error_msg "Failed to extract tar.zst archive."
             ;;
         *)
             error_msg "Unknown archive extension: ${archive_ext}"
@@ -374,18 +374,18 @@ custom_packages() {
     curl -fsSOL "${openclash_file_ipk_down}" || error_msg "Error: Failed to download OpenClash package."
     curl -fsSL -o "${core_dir}/clash_meta.gz" "${clash_meta}" || error_msg "Error: Failed to download Clash Meta package."
     gzip -d "$core_dir/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
-    echo -e "${INFO} OpenClash Packages downloaded successfully."
+    echo -e "${SUCCESS} OpenClash Packages downloaded successfully."
 
     echo -e "${INFO} Downloading Mihomo package"
     curl -fsSOL "${mihomo_file_ipk_down}" || error_msg "Error: Failed to download Mihomo package."
-    tar -xzvf "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" && rm "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" || error_msg "Error: Failed to extract Mihomo package."
-    echo -e "${INFO} Mihomo Packages downloaded successfully."
+    tar -xzvf "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" > /dev/null 2>&1 && rm "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" || error_msg "Error: Failed to extract Mihomo package."
+    echo -e "${SUCCESS} Mihomo Packages downloaded successfully."
 
     echo -e "${INFO} Downloading Passwall package"
     curl -fsSOL "${passwall_file_ipk_down}" || error_msg "Error: Failed to download Passwall package."
     curl -fsSOL "${passwall_file_zip_down}" || error_msg "Error: Failed to download Passwall Zip package."
     unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip" || error_msg "Error: Failed to extract Passwall package."
-    echo -e "${INFO} Passwall Packages downloaded successfully."
+    echo -e "${SUCCESS} Passwall Packages downloaded successfully."
 
     sync && sleep 3
     echo -e "${INFO} [packages] directory status after all operations:"
