@@ -78,10 +78,10 @@ Custom Script By FriWrt
 
 - Tampilan Masuk
 <p align="center">
-    <img src="/pictures/login.png">
+    <img src="/pictures/Login.png">
 </p>
 
 - Tampilan Utama
 <p align="center">
-    <img src="/pictures/dashboard.png">
+    <img src="/pictures/Dashboard.png">
 </p>
