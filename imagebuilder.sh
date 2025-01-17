@@ -340,43 +340,52 @@ custom_packages() {
 
     download_packages "custom" other_packages[@]
 
-    # Download OpenClash package
-    echo -e "${STEPS} Installing OpenClash..."
+    # OpenClash
     openclash_api="https://api.github.com/repos/vernesong/OpenClash/releases"
     openclash_file_ipk="luci-app-openclash"
-    openclash_file_ipk_down="$(curl -s ${openclash_api} | grep "browser_download_url" | grep -oE "https.*${openclash_file_ipk}.*.ipk" | head -n 1)"
+    openclash_file_ipk_down=$(curl -s "${openclash_api}" | grep "browser_download_url" | grep -oE "https.*${openclash_file_ipk}.*.ipk" | head -n 1)
 
-    if [[ -n "${openclash_file_ipk_down}" ]]; then
-        curl -fsSOL "${openclash_file_ipk_down}" && echo -e "${INFO} OpenClash package downloaded."
+    echo -e "${STEPS} Start Clash Core Download !"
+    core_dir="${custom_files_path}/etc/openclash/core"
+    mkdir -p "$core_dir"
+    if [[ "$ARCH_3" == "x86_64" ]]; then
+        clash_meta=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-$ARCH_1-compatible" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
     else
-        echo -e "${WARN} Failed to fetch OpenClash package."
+        clash_meta=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-$ARCH_1" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
     fi
 
-    # Mihomo core download
-    echo -e "${STEPS} Downloading Mihomo core..."
+    # Mihomo
     mihomo_api="https://api.github.com/repos/rizkikotet-dev/OpenWrt-mihomo-Mod/releases"
-    mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-${CURVER}"
-    mihomo_file_ipk_down="$(curl -s ${mihomo_api} | grep "browser_download_url" | grep -oE "https.*${mihomo_file_ipk}.*.tar.gz" | head -n 1)"
+    mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-${CURVER}" #$op_branch | cut -d '.' -f 1-2
+    mihomo_file_ipk_down=$(curl -s "${mihomo_api}" | grep "browser_download_url" | grep -oE "https.*${mihomo_file_ipk}.*.tar.gz" | head -n 1)
 
-    if [[ -n "${mihomo_file_ipk_down}" ]]; then
-        curl -fsSOL "${mihomo_file_ipk_down}"
-        tar -xzvf "${mihomo_file_ipk}.tar.gz" && rm "${mihomo_file_ipk}.tar.gz"
-        echo -e "${INFO} Mihomo core downloaded and extracted."
-    else
-        echo -e "${WARN} Failed to fetch Mihomo package."
-    fi
-
-    # Passwall package download
-    echo -e "${STEPS} Installing Passwall..."
+    #passwall
     passwall_api="https://api.github.com/repos/xiaorouji/openwrt-passwall/releases"
     passwall_file_ipk="luci-23.05_luci-app-passwall"
-    passwall_file_ipk_down="$(curl -s ${passwall_api} | grep "browser_download_url" | grep -oE "https.*${passwall_file_ipk}.*.ipk" | head -n 1)"
+    passwall_file_zip="passwall_packages_ipk_${ARCH_3}"
+    passwall_file_ipk_down=$(curl -s "${passwall_api}" | grep "browser_download_url" | grep -oE "https.*${passwall_file_ipk}.*.ipk" | head -n 1)
+    passwall_file_zip_down=$(curl -s "${passwall_api}" | grep "browser_download_url" | grep -oE "https.*${passwall_file_zip}.*.zip" | head -n 1)
 
-    if [[ -n "${passwall_file_ipk_down}" ]]; then
-        curl -fsSOL "${passwall_file_ipk_down}" && echo -e "${INFO} Passwall package downloaded."
-    else
-        echo -e "${WARN} Failed to fetch Passwall package."
-    fi
+
+    # Output download information
+    echo -e "${STEPS} Installing OpenClash, Mihomo And Passwall"
+
+    echo -e "${INFO} Downloading OpenClash package"
+    curl -fsSOL "${openclash_file_ipk_down}" || error_msg "Error: Failed to download OpenClash package."
+    curl -fsSL -o "${core_dir}/clash_meta.gz" "${clash_meta}" || error_msg "Error: Failed to download Clash Meta package."
+    gzip -d "$core_dir/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
+    echo -e "${INFO} OpenClash Packages downloaded successfully."
+
+    echo -e "${INFO} Downloading Mihomo package"
+    curl -fsSOL "${mihomo_file_ipk_down}" || error_msg "Error: Failed to download Mihomo package."
+    tar -xzvf "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" && rm "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" || error_msg "Error: Failed to extract Mihomo package."
+    echo -e "${INFO} Mihomo Packages downloaded successfully."
+
+    echo -e "${INFO} Downloading Passwall package"
+    curl -fsSOL "${passwall_file_ipk_down}" || error_msg "Error: Failed to download Passwall package."
+    curl -fsSOL "${passwall_file_zip_down}" || error_msg "Error: Failed to download Passwall Zip package."
+    unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip" || error_msg "Error: Failed to extract Passwall package."
+    echo -e "${INFO} Passwall Packages downloaded successfully."
 
     sync && sleep 3
     echo -e "${INFO} [packages] directory status after all operations:"
