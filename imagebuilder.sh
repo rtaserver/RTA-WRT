@@ -612,11 +612,12 @@ ulobuilder() {
 
     # Copy the firmware output
     echo -e "${INFO} Moving firmware output to ${imagebuilder_path}/out_firmware"
-    cp -rf ./out/"${op_devices}"/* "${imagebuilder_path}/out_firmware"
-    if [[ $? -ne 0 ]]; then
-        error_msg "Error: Failed to copy firmware output."
-        return 1
-    fi
+    echo -e "${INFO} Directory status: $(ls -l out/${op_devices} 2>/dev/null)"
+    for file in out/${op_devices}/*.img.gz; do
+        [[ -e "$file" ]] || continue
+        mv -f "$file" "${imagebuilder_path}/out_firmware"
+        echo -e "${SUCCESS} Firmware successfully Copyed: $file"
+    done
 
     echo -e "${SUCCESS} Firmware repacking completed successfully."
 }
