@@ -343,8 +343,10 @@ custom_packages() {
         "modemmanager|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "sms-tool|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "tailscale|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
+        
         "python3-speedtest-cli|https://downloads.openwrt.org/releases/packages-$CURVER/$ARCH_3/packages"
         "dns2tcp|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/packages"
+        
         "luci-app-tailscale|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
         "luci-app-diskman|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
         "modeminfo|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
@@ -353,6 +355,7 @@ custom_packages() {
         "luci-app-poweroff|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
         "xmm-modem|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
         "luci-app-lite-watchdog|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
+        
         "luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "internet-detector-mod-modem-restart|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
@@ -360,12 +363,16 @@ custom_packages() {
         "luci-app-disks-info|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "luci-app-log-viewer|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "luci-app-temp-status|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
+
+        "luci-app-argon-config|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
+        "luci-theme-argon|https://downloads.openwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
         "luci-app-zerotier|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
         "luci-app-ramfree|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
         "luci-app-3ginfo-lite|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
         "modemband|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/packages"
         "luci-app-modemband|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
         "luci-app-sms-tool-js|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
+
         "luci-app-netspeedtest|https://fantastic-packages.github.io/packages/releases/$CURVER/packages/x86_64/luci"
     )
 
@@ -536,8 +543,8 @@ rebuild_firmware() {
     # Speedtest
     PACKAGES+=" librespeed-go python3-speedtest-cli iperf3 luci-app-netspeedtest"
 
-    # Material Theme
-    PACKAGES+=" luci-theme-material"
+    # Theme
+    PACKAGES+=" luci-theme-material luci-theme-argon luci-app-argon-config"
 
     # PHP8
     PACKAGES+=" libc php8 php8-fastcgi php8-fpm coreutils-stat zoneinfo-asia php8-cgi \
