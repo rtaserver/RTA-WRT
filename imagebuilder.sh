@@ -9,8 +9,27 @@
 #         https://github.com/rtaserver/RTA-WRT
 #
 # Command: ./config/imagebuilder/imagebuilder.sh <source:branch> <target>
-# Example: ./config/imagebuilder/imagebuilder.sh openwrt:21.02.3 x86_64
-#
+# Example: ./config/imagebuilder/imagebuilder.sh openwrt:21.02.3 x86-64
+# Available Devices
+#- s905x | Amlogic S905X
+#- s905x2 | Amlogic S905X2
+#- s905x3 | Amlogic S905X3
+#- s905x4 | Amlogic S905X4
+#- h5-orangepi-zeroplus2 | Alwiner H5 Orange Pi Zero Plus 2
+#- h5-orangepi-zeroplus | Alwiner H5 Orange Pi Zero Plus
+#- h5-orangepi-prime | Alwiner H5 Orange Pi Prime
+#- h5-orangepi-pc2 | Alwiner H5 Orange Pi PC 2
+#- h6-orangepi-lite2 | Alwiner H6 Orange Pi Lite 2
+#- h6-orangepi-1plus | Alwiner H6 Orange Pi 1 Plus
+#- h6-orangepi-3 | Alwiner H6 Orange Pi 3
+#- h6-orangepi-3lts | Alwiner H6 Orange Pi 3 LTS
+#- h616-orangepi-zero2 | Alwiner H616 Orange Pi Zero 2
+#- h618-orangepi-zero2w | Alwiner H618 Orange Pi Zero 2W
+#- h618-orangepi-zero3 | Alwiner H618 Orange Pi Zero 3
+#- rk3566-orangepi-3b | Rockchip RK3566 Orange Pi 3B
+#- rk3588-orangepi-5plus | Rockchip RK3588 Orange Pi 5 Plus
+#- rk3588s-orangepi-5 | Rockchip RK3588S Orange Pi 5
+#- x86-64 | x86 64bit
 #================================================================================================
 
 # Default parameters
@@ -678,10 +697,10 @@ rename_firmware() {
 # Show welcome message
 echo -e "${STEPS} Welcome to Rebuild OpenWrt Using the Image Builder."
 [[ -x "${0}" ]] || error_msg "Please give the script permission to run: [ chmod +x ${0} ]"
-[[ -z "${1}" ]] && error_msg "Please specify the OpenWrt Branch, such as [ ${0} openwrt:22.03.3 x86-64 ]"
-[[ -z "${2}" ]] && error_msg "Please specify the OpenWrt Devices, such as [ ${0} openwrt:22.03.3 x86-64 ]"
-[[ "${1}" =~ ^[a-z]{3,}:[0-9]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 amlogic"
-[[ "${2}" =~ ^[a-zA-Z0-9_-]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 amlogic"
+[[ -z "${1}" ]] && error_msg "Please specify the OpenWrt Branch, such as [ ${0} openwrt:22.03.3 x86-64 or openwrt:22.03.3 s905x ]"
+[[ -z "${2}" ]] && error_msg "Please specify the OpenWrt Devices, such as [ ${0} openwrt:22.03.3 x86-64 or openwrt:22.03.3 s905x ]"
+[[ "${1}" =~ ^[a-z]{3,}:[0-9]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 s905x"
+[[ "${2}" =~ ^[a-zA-Z0-9_-]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 s905x"
 op_sourse="${1%:*}"
 op_branch="${1#*:}"
 op_devices="${2}"

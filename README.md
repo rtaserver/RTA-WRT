@@ -19,7 +19,7 @@ Custom Script By FriWrt
 </p>
 <br>
 
-# Link Download
+## Link Download
 
 <p align="center">
 <a href="https://github.com/rizkikotet-dev/RTA-WRT/releases/"><img alt="Static Badge" src="https://img.shields.io/badge/Click_Here-openwrt?style=for-the-badge&logo=openwrt&label=Download&color=%231aa5de"></a>
@@ -29,37 +29,34 @@ Custom Script By FriWrt
 - [Apache License 2.0](https://github.com/rtaserver/RTA-WRT/blob/main/LICENSE)
 - [friWrt-MyWrtBuilder](https://github.com/frizkyiman/friWrt-MyWrtBuilder) by [frizkyiman](https://github.com/frizkyiman)
 - [MyWrtBuilder](https://github.com/Revincx/MyWrtBuilder) by [Revincx](https://github.com/Revincx)
-
+- [ULO-Builder](https://github.com/armarchindo/ULO-Builder) By [DBAI](https://github.com/armarchindo)
 ---
 
-**Peringatan untuk Instalasi Pertama:**
+## Peringatan untuk Instalasi Pertama
 
 `Booting awal memerlukan waktu agak lama karena Penyimpanan Partisi Ulang dan konfigurasi tambahan`
 
-**List OpenWrt**
+## Device yang Didukung
 
-```
-- Amlogic Series
-    -> s905x - STB HG680P
-    -> s905x2 - STB B860H-V5
-    -> s905x-b860h - STB B860H-V1-V2
-- Generic Series
-    -> x86-64
-- FriendlyArm Series
-    -> nanopi-r4s - NanoPi R4S
-    -> nanopi-r2s - NanoPi R2S
-    -> nanopi-r2c - NanoPi R2C
-- Raspberry Pi Series
-    -> rpi-4 - Raspberry Pi 4B
-    -> rpi-3 - Raspberry Pi 3B
-- Xunlong Series
-    -> xunlong_orangepi-r1-plus - Orange Pi R1 Plus
-    -> xunlong_orangepi-r1-plus-lts - Orange Pi R1 Plus LTS
-```
+### Amlogic
+     s905x (HG680P, B860Hv1/v2)
+     s905x2 (HG680FJ, B860Hv5, MNC CYBORG001)
+     s905x3 
+     s905x4 (AKARI AX810, dll)
 
----
+ ### Allwinner
+     H5 (Orange Pi Zero Plus 2, Orange Pi Zero Plus, Orange Pi Prime, Orange Pi PC2)
+     H6 (Orange Pi 1 Plus, Orange Pi Lite 2, Orange Pi 3 LTS, Orange Pi 3)
+     H616 (Orange Pi Zero 2)
+     H618 (Orange Pi Zero 3, Orange Pi Zero 2W)
 
-**Informasi**
+ ### Rockchip
+     RK3566 (Orange Pi 3B)
+     RK3588S (Orange Pi 5)
+     RK3588 (Orange Pi 5 Plus)
+
+
+## Informasi
 
 ```
 - 192.168.1.1 | pengguna: root | kata sandi: rtawrt
@@ -81,15 +78,10 @@ Custom Script By FriWrt
 
 - Tampilan Masuk
 <p align="center">
-    <img src="/pictures/Login.png">
+    <img src="/pictures/login.png">
 </p>
 
 - Tampilan Utama
 <p align="center">
-    <img src="/pictures/Dashboard.png">
-</p>
-
-- Tampilan Terminal
-<p align="center">
-    <img src="/pictures/Terminal.png">
+    <img src="/pictures/dashboard.png">
 </p>
