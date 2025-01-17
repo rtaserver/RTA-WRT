@@ -302,8 +302,12 @@ custom_packages() {
     [[ -d "packages" ]] || mkdir -p "packages"
     if [[ -d "${custom_packages_path}" ]]; then
         # Copy custom packages
-        cp -rf "${custom_packages_path}"/* packages/
-        echo -e "${INFO} [packages] directory populated. Status: $(ls -al packages 2>/dev/null)"
+        cp -rf "${custom_packages_path}/"* "packages/" > /dev/null 2>&1
+        if [[ $? -eq 0 ]]; then
+            echo -e "${SUCCESS} Custom packages successfully copied to the [ packages ] directory."
+        else
+            echo -e "${WARN} Failed to copy packages from ${custom_packages_path} to the [ packages ] directory."
+        fi
     else
         echo -e "${WARN} No customized packages found in ${custom_packages_path}."
     fi
@@ -488,7 +492,7 @@ rebuild_firmware() {
     cd "${imagebuilder_path}" || { error_msg "Error: Unable to access ${imagebuilder_path}"; }
 
     # Membersihkan build lama
-    make clean || { error_msg "Error: Failed to clean previous build"; }
+    make clean > /dev/null 2>&1 || { error_msg "Error: Failed to clean previous build"; }
     mkdir -p ${imagebuilder_path}/out_firmware ${imagebuilder_path}/out_rootfs
 
     # Selecting default packages, lib, theme, app and i18n, etc.
