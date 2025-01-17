@@ -586,84 +586,143 @@ rebuild_firmware() {
 }
 
 ulobuilder() {
-    echo -e "${STEPS} Start Repacking firmware With UloBuilder..."
+    local readonly ULO_REPO="https://github.com/armarchindo/ULO-Builder/archive/refs/heads/main.zip"
+    local readonly REQUIRED_SPACE_MB=2048  # 2GB minimum required space
+
+    echo -e "${STEPS} Starting firmware repackaging with UloBuilder..."
 
     # Validate required variables
-    if [[ -z "${imagebuilder_path}" || -z "${op_sourse}" || -z "${op_branch}" || -z "${op_devices}" || -z "${KERNEL}" ]]; then
-        error_msg "Error: Required variables are not set. Exiting..."
-        return 1
+    local readonly REQUIRED_VARS=("imagebuilder_path" "op_sourse" "op_branch" "op_devices" "KERNEL")
+    for var in "${REQUIRED_VARS[@]}"; do
+        if [[ -z "${!var}" ]]; then
+            error_msg "Required variable '${var}' is not set"
+        fi
+    done
+
+    # Check available disk space
+    local available_space
+    available_space=$(df -m "${imagebuilder_path}" | awk 'NR==2 {print $4}')
+    if [[ ${available_space} -lt ${REQUIRED_SPACE_MB} ]]; then
+        error_msg "Insufficient disk space. Required: ${REQUIRED_SPACE_MB}MB, Available: ${available_space}MB"
     fi
 
-    # Navigate to the imagebuilder directory
-    cd "${imagebuilder_path}" || { error_msg "Error: Unable to access ${imagebuilder_path}"; return 1; }
+    # Create working directory structure
+    local readonly work_dir="${imagebuilder_path}"
+    local readonly ulo_dir="${work_dir}/ULO-Builder-main"
+    local readonly output_dir="${work_dir}/out_firmware"
 
-    # Download UloBuilder
+    # Navigate to working directory
+    if ! cd "${work_dir}"; then
+        error_msg "Failed to access working directory: ${work_dir}"
+    fi
+
+    # Download and extract UloBuilder
     echo -e "${INFO} Downloading UloBuilder..."
-    curl -fsSOL https://github.com/armarchindo/ULO-Builder/archive/refs/heads/main.zip
-    if [[ $? -ne 0 ]]; then
-        error_msg "Error: Failed to download UloBuilder."
-        return 1
+    if ! curl -fsSL "${ULO_REPO}" -o main.zip; then
+        error_msg "Failed to download UloBuilder from ${ULO_REPO}"
     fi
 
-    unzip -q main.zip && rm -f main.zip
-    mkdir -p ULO-Builder-main/rootfs
+    if ! unzip -q main.zip; then
+        error_msg "Failed to extract UloBuilder archive"
+        rm -f main.zip
+    fi
+    rm -f main.zip
 
-    # Check if rootfs exists
-    local rootfs_file="${imagebuilder_path}/out_rootfs/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz"
+    # Prepare UloBuilder directory
+    mkdir -p "${ulo_dir}/rootfs"
+
+    # Validate and copy rootfs
+    local readonly rootfs_file="${work_dir}/out_rootfs/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz"
     if [[ ! -f "${rootfs_file}" ]]; then
-        error_msg "Error: Rootfs file not found: ${rootfs_file}"
-        return 1
+        error_msg "Rootfs file not found: ${rootfs_file}"
     fi
 
-    # Copy rootfs to UloBuilder
-    cp -f "${rootfs_file}" ULO-Builder-main/rootfs
+    echo -e "${INFO} Copying rootfs file..."
+    if ! cp -f "${rootfs_file}" "${ulo_dir}/rootfs/"; then
+        error_msg "Failed to copy rootfs file"
+    fi
 
     # Change to UloBuilder directory
-    cd ULO-Builder-main || { error_msg "Error: Unable to access ULO-Builder directory"; return 1; }
+    if ! cd "${ulo_dir}"; then
+        error_msg "Failed to access UloBuilder directory: ${ulo_dir}"
+    }
 
-    # Patch UloBuilder
-    echo -e "${INFO} Patching UloBuilder..."
-    mv ./.github/workflows/ULO_Workflow.patch ./ULO_Workflow.patch
-    patch -p1 < ./ULO_Workflow.patch
+    # Apply patches
+    echo -e "${INFO} Applying UloBuilder patches..."
+    if [[ -f "./.github/workflows/ULO_Workflow.patch" ]]; then
+        mv ./.github/workflows/ULO_Workflow.patch ./ULO_Workflow.patch
+        if ! patch -p1 < ./ULO_Workflow.patch; then
+            error_msg "Failed to apply UloBuilder patch"
+        fi
+    else
+        error_msg "UloBuilder patch file not found"
+    fi
 
     # Run UloBuilder
     echo -e "${INFO} Running UloBuilder..."
-    sudo ./ulo -y -m "${op_devices}" -r "${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz" -k "${KERNEL}" -s 1024
-    if [[ $? -ne 0 ]]; then
-        error_msg "Error: UloBuilder execution failed."
-        return 1
+    local readonly rootfs_basename=$(basename "${rootfs_file}")
+    if ! sudo ./ulo -y -m "${op_devices}" -r "${rootfs_basename}" -k "${KERNEL}" -s 1024; then
+        error_msg "UloBuilder execution failed"
     fi
 
-    # Copy the firmware output
-    echo -e "${INFO} Moving firmware output to ${imagebuilder_path}/out_firmware"
-    echo -e "${INFO} Directory status: $(ls -l ./out/${op_devices} 2>/dev/null)"
-    cp -rf ./out/${op_devices}/* ${imagebuilder_path}/out_firmware/
+    # Verify and copy output files
+    local readonly device_output_dir="./out/${op_devices}"
+    if [[ ! -d "${device_output_dir}" ]]; then
+        error_msg "UloBuilder output directory not found: ${device_output_dir}"
+    fi
 
-    echo -e "${SUCCESS} Firmware repacking completed successfully."
+    echo -e "${INFO} Copying firmware files to output directory..."
+    if ! cp -rf "${device_output_dir}"/* "${output_dir}/"; then
+        error_msg "Failed to copy firmware files to output directory"
+    fi
+
+    # Verify output files exist
+    if ! ls "${output_dir}"/* >/dev/null 2>&1; then
+        error_msg "No firmware files found in output directory"
+    fi
+
+    echo -e "${SUCCESS} Firmware repacking completed successfully!"
 }
 
 rename_firmware() {
     echo -e "${STEPS} Renaming firmware files..."
 
-    cd ${imagebuilder_path}/out_firmware || { error_msg "Failed to change directory to ${imagebuilder_path}/out_firmware"; return 1; }
+    # Verify and change to firmware directory
+    local readonly firmware_dir="${imagebuilder_path}/out_firmware"
+    if ! cd "${firmware_dir}"; then
+        error_msg "Failed to change directory to ${firmware_dir}"
+    fi
+
+    # Define board mapping patterns with improved organization
     declare -A search_replace_patterns=(
+        # Allwinner H5
         ["h5-orangepi-pc2"]="Alwiner_OrangePi_PC2"
         ["h5-orangepi-prime"]="Alwiner_OrangePi_Prime"
         ["h5-orangepi-zeroplus"]="Alwiner_OrangePi_ZeroPlus"
         ["h5-orangepi-zeroplus2"]="Alwiner_OrangePi_ZeroPlus2"
+        
+        # Allwinner H6
         ["h6-orangepi-1plus"]="Alwiner_OrangePi_1Plus"
         ["h6-orangepi-3"]="Alwiner_OrangePi_3"
         ["h6-orangepi-3lts"]="Alwiner_OrangePi_3LTS"
         ["h6-orangepi-lite2"]="Alwiner_OrangePi_Lite2"
+        
+        # Allwinner H616/H618
         ["h616-orangepi-zero2"]="Alwiner_OrangePi_Zero2"
         ["h618-orangepi-zero2w"]="Alwiner_OrangePi_Zero2W"
         ["h618-orangepi-zero3"]="Alwiner_OrangePi_Zero3"
+        
+        # Rockchip
         ["rk3566-orangepi-3b"]="Rockchip_OrangePi_3B"
         ["rk3588s-orangepi-5"]="Rockchip_OrangePi_5"
-        ["s905x"]="Amlogic_S905X"
-        ["s905x2"]="Amlogic_S905X2"
-        ["s905x3"]="Amlogic_S905X3"
-        ["s905x4"]="Amlogic_S905X4"
+        
+        # Amlogic
+        ["s905x-"]="Amlogic_s905x"
+        ["s905x2-"]="Amlogic_s905x2"
+        ["s905x3-"]="Amlogic_s905x3"
+        ["s905x4-"]="Amlogic_s905x4"
+        
+        # x86-64
         ["x86-64-generic-ext4-combined-efi"]="X86_64_Generic_Ext4_Combined_EFI"
         ["x86-64-generic-ext4-combined"]="X86_64_Generic_Ext4_Combined"
         ["x86-64-generic-ext4-rootfs"]="X86_64_Generic_Ext4_Rootfs"
@@ -672,26 +731,53 @@ rename_firmware() {
         ["x86-64-generic-squashfs-rootfs"]="X86_64_Generic_Squashfs_Rootfs"
     )
 
+    local renamed_count=0
+    local skipped_count=0
+
+    # Process each file in the directory
     for file in *; do
-        if [[ -f "$file" ]]; then
-            for search in "${!search_replace_patterns[@]}"; do
-                replace="${search_replace_patterns[$search]}"
-                if [[ "$file" =~ $search ]]; then
-                    case "${op_target}" in
-                        amlogic|allwinner|rockchip)
-                            kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
-                            new_name="RTA-WRT-${op_source}-${op_branch}-${replace}-${kernel}.img.gz"
-                            ;;
-                        x86-64)
-                            new_name="RTA-WRT-${op_source}-${op_branch}-${replace}.img.gz"
-                            ;;
-                    esac
-                    echo -e "${INFO} Renaming $file to $new_name"
-                    mv -f "$file" "$new_name"
+        # Skip if not a regular file
+        [[ ! -f "$file" ]] && continue
+        
+        local new_name=""
+        for search in "${!search_replace_patterns[@]}"; do
+            local replace="${search_replace_patterns[$search]}"
+            if [[ "$file" =~ $search ]]; then
+                # Generate new filename based on target platform
+                case "${op_target}" in
+                    amlogic|allwinner|rockchip)
+                        local kernel
+                        kernel=$(echo "$file" | grep -oP 'k[0-9.]+' || echo "unknown")
+                        new_name="RTA-WRT-${op_source}-${op_branch}-${replace}-${kernel}.img.gz"
+                        ;;
+                    x86-64)
+                        new_name="RTA-WRT-${op_source}-${op_branch}-${replace}.img.gz"
+                        ;;
+                    *)
+                        error_msg "Unknown target platform: ${op_target}"
+                        ;;
+                esac
+                
+                # Perform the rename operation
+                if [[ -n "$new_name" && "$file" != "$new_name" ]]; then
+                    echo -e "${INFO} Renaming: $file → $new_name"
+                    if mv -f "$file" "$new_name"; then
+                        ((renamed_count++))
+                    else
+                        error_msg "Failed to rename: $file"
+                    fi
+                else
+                    ((skipped_count++))
                 fi
-            done
-        fi
+                break
+            fi
+        done
     done
+
+    # Report summary
+    echo -e "${INFO} Rename operation completed:"
+    echo -e "${INFO} - Files renamed: ${renamed_count}"
+    echo -e "${INFO} - Files skipped: ${skipped_count}"
 }
 
 # Show welcome message

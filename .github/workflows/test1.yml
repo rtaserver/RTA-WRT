@@ -29,24 +29,30 @@ on:
         type: choice
         options:
           - all
+          # Amlogic Devices
           - s905x
           - s905x2
           - s905x3
           - s905x4
+          # Allwinner H5
           - h5-orangepi-zeroplus2
           - h5-orangepi-zeroplus
           - h5-orangepi-prime
           - h5-orangepi-pc2
+          # Allwinner H6
           - h6-orangepi-lite2
           - h6-orangepi-1plus
           - h6-orangepi-3
           - h6-orangepi-3lts
+          # Allwinner H616/H618
           - h616-orangepi-zero2
           - h618-orangepi-zero2w
           - h618-orangepi-zero3
+          # Rockchip
           - rk3566-orangepi-3b
           - rk3588-orangepi-5plus
           - rk3588s-orangepi-5
+          # x86
           - x86-64
       notiftele:
         description: "Notif To Telegram:"
@@ -54,12 +60,18 @@ on:
         default: "true"
         type: choice
         options:
-          - true
-          - false
+          - "true"
+          - "false"
 
 env:
   TZ: Asia/Jakarta
   IMAGEBUILDER_SH: imagebuilder.sh
+  DEBIAN_FRONTEND: noninteractive
+  PYTHON_PACKAGES: "telethon colorama"
+  APT_PACKAGES: >-
+    build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git
+    gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils
+    mkisofs jq python3 python3-pip
 
 jobs:
   prebuild:
@@ -72,14 +84,16 @@ jobs:
         id: set-matrix
         run: |
           if [ "${{ inputs.devices }}" == "all" ]; then
-            echo "devices=['s905x','s905x2','s905x3','s905x4','h5-orangepi-zeroplus2','h5-orangepi-zeroplus','h5-orangepi-prime','h5-orangepi-pc2','h6-orangepi-lite2','h6-orangepi-1plus','h6-orangepi-3','h6-orangepi-3lts','h616-orangepi-zero2','h618-orangepi-zero2w','h618-orangepi-zero3','rk3566-orangepi-3b','rk3588-orangepi-5plus','rk3588s-orangepi-5','x86-64']" >> $GITHUB_OUTPUT
+            DEVICES_LIST='["s905x","s905x2","s905x3","s905x4","h5-orangepi-zeroplus2","h5-orangepi-zeroplus","h5-orangepi-prime","h5-orangepi-pc2","h6-orangepi-lite2","h6-orangepi-1plus","h6-orangepi-3","h6-orangepi-3lts","h616-orangepi-zero2","h618-orangepi-zero2w","h618-orangepi-zero3","rk3566-orangepi-3b","rk3588-orangepi-5plus","rk3588s-orangepi-5","x86-64"]'
           else
-            echo "devices=['${{ inputs.devices }}']" >> $GITHUB_OUTPUT
+            DEVICES_LIST="[\"${{ inputs.devices }}\"]"
           fi
+          echo "devices=$DEVICES_LIST" >> $GITHUB_OUTPUT
+
   build:
     needs: prebuild
     runs-on: ubuntu-24.04
-    if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
+    if: ${{ github.event.repository.owner.id == github.event.sender.id }}
     name: "${{ matrix.devices }}"
     strategy:
       fail-fast: false
@@ -87,47 +101,48 @@ jobs:
         devices: ${{fromJSON(needs.prebuild.outputs.devices)}}
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Install Required Packages
         run: |
-          PACKAGES="build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs jq python3 python3-pip"
           sudo apt-get -qq update
-          sudo apt-get -qq install $PACKAGES
+          sudo apt-get -qq install ${{ env.APT_PACKAGES }}
+          pip install ${{ env.PYTHON_PACKAGES }}
 
-      - name: Initialization Environment
-        env:
-          DEBIAN_FRONTEND: noninteractive
+      - name: Initialize Environment
         run: |
-          pip install telethon
-          pip install colorama
           sudo timedatectl set-timezone "$TZ"
           RELEASE_BRANCH="${{ inputs.releases_branch }}"
           RELEASE_TAG="${RELEASE_BRANCH/:/_}"
           echo "RELEASE_BRANCH=${RELEASE_BRANCH}" >> $GITHUB_ENV
           echo "RELEASE_TAG=${RELEASE_TAG}" >> $GITHUB_ENV
           echo "DEVICES=${{ matrix.devices }}" >> $GITHUB_ENV
-          echo -e "[\033[94m INFO \033[0m] DEVICES: ${{ matrix.devices }}"
           echo "DATE=$(date +'%d%m%Y')" >> $GITHUB_ENV
+          echo -e "[\033[94m INFO \033[0m] Building for device: ${{ matrix.devices }}"
 
-      - name: Build Image And Rootfs [ ${{ env.DEVICES}} ]
+      - name: Build Image and Rootfs
         id: imagebuilder
         run: |
-          echo -e "[\033[95m STEPS \033[0m] Building Firmware And Rootfs"
+          echo -e "[\033[95m STEPS \033[0m] Starting firmware and rootfs build"
           chmod +x ${IMAGEBUILDER_SH}
-          bash ${IMAGEBUILDER_SH} ${{ env.RELEASE_BRANCH }} "${{ env.DEVICES }}"
-          echo "status=success" >> $GITHUB_OUTPUT
-          echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
+          if bash ${IMAGEBUILDER_SH} ${{ env.RELEASE_BRANCH }} "${{ env.DEVICES }}"; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo -e "[\033[92m SUCCESS \033[0m] Build completed successfully"
+          else
+            echo "status=failed" >> $GITHUB_OUTPUT
+            echo -e "[\033[91m ERROR \033[0m] Build failed"
+            exit 1
+          fi
 
-      - name: Clear server space
-        if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
+      - name: Clean Build Space
+        if: ${{ steps.imagebuilder.outputs.status == 'success' && !cancelled() }}
         run: |
           cd imagebuilder
-          sudo find . -mindepth 1 -not -path './out_firmware*' -exec rm -rf {} + > /dev/null 2>&1
+          sudo find . -mindepth 1 -not -path './out_firmware*' -delete
           df -hT ${PWD}
 
-      - name: Upload Firmware to Artifact
+      - name: Upload to Artifacts
         if: ${{ steps.imagebuilder.outputs.status == 'success' }}
         uses: actions/upload-artifact@v4
         with:
@@ -135,7 +150,7 @@ jobs:
           path: imagebuilder/out_firmware/*.img.gz
           retention-days: 7
 
-      - name: Upload Firmware to Release
+      - name: Upload to Release
         if: ${{ steps.imagebuilder.outputs.status == 'success' }}
         uses: svenstaro/upload-release-action@v2
         continue-on-error: false
@@ -148,51 +163,50 @@ jobs:
           overwrite: true
           prerelease: false
           body: |
-            ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASE_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
-            ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image information
+            ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASE_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+            ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image Information
 
             ${{ steps.changelog.outputs.CHANGELOG }}
 
-            See [here](https://github.com/rizkikotet-dev/RTA-WRT?tab=readme-ov-file#detail-firmware) for more detail feature and other information.
-            - Default IP: 192.168.1.1
-            - Default username: root
-            - Default password: rtawrt
-            - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
-
+            See [here](https://github.com/rizkikotet-dev/RTA-WRT?tab=readme-ov-file#detail-firmware) for detailed features and information.
+            
+            Default Settings:
+            - IP Address: 192.168.1.1
+            - Username: root
+            - Password: rtawrt
+            - WIFI SSID: RTAWRT_2g | RTAWRT_5g (if supported)
 
   notify:
     needs: build
     runs-on: ubuntu-latest
+    if: ${{ inputs.notiftele == 'true' }}
     name: Notify Telegram
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Download Artifact
+      - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
           path: downloaded-firmware
 
-      - name: Update Env
+      - name: Setup Environment
         run: |
           sudo apt-get -qq update
-          sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs
-          sudo apt-get -qq install jq python3 python3-pip
-          pip install telethon
-          pip install colorama
+          sudo apt-get -qq install ${{ env.APT_PACKAGES }}
+          pip install ${{ env.PYTHON_PACKAGES }}
           sudo timedatectl set-timezone "$TZ"
 
-      - name: Add changelog info to new release description
+      - name: Generate Changelog
         id: changelog
-        shell: bash
         run: |
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' CHANGELOG.md)
-          r="${r//'%'/'%25'}"
-          r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"
-          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT 
+          changelog=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' CHANGELOG.md)
+          changelog="${changelog//'%'/'%25'}"
+          changelog="${changelog//$'\n'/'%0A'}"
+          changelog="${changelog//$'\r'/'%0D'}"
+          echo "CHANGELOG=$changelog" >> $GITHUB_OUTPUT
 
-      - name: Notify Telegram
+      - name: Send Telegram Notification
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           GROUP_ID: ${{ secrets.CHAT_ID }}
@@ -200,37 +214,23 @@ jobs:
         run: |
           DATE=$(date +'%d%m%Y')
           DATE2=$(date +'%d\-%m\-%Y')
-          TAG="${{ env.RELEASES_TAG }}-${{ env.DATE }}"
+          TAG="${{ env.RELEASES_TAG }}-${DATE}"
           NEWTAG=$(echo "$TAG" | sed -E 's/([_\-\.\[\]()])/\\\1/g')
-          MESSAGE=$(
-              cat <<EOF
-          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-                          NEW UPDATE
-          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-          NAME   : 🔔 RTA\-WRT OpenWRT
-          TAG       : $NEWTAG
-          DATE     : ${DATE2}
-          REPO    : rizkikotet\-dev/RTA\-WRT
-          ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-          EOF
-          )
-
+          
+          MESSAGE="▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n                          NEW UPDATE\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬\nNAME   : 🔔 RTA\-WRT OpenWRT\nTAG       : ${NEWTAG}\nDATE     : ${DATE2}\nREPO    : rizkikotet\-dev/RTA\-WRT\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+          
           BUTTONS='{
               "inline_keyboard": [
-                  [
-                      {"text": "KLIK DISINI", "url": "https://github.com/rizkikotet-dev/RTA-WRT"}
-                  ]
+                  [{"text": "KLIK DISINI", "url": "https://github.com/rizkikotet-dev/RTA-WRT"}]
               ]
           }'
-  
-          if [ "${{ inputs.notiftele }}" == "true" ]; then
-            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-              -d "chat_id=$GROUP_ID" \
-              -d "text=$MESSAGE" \
-              -d "parse_mode=MarkdownV2" \
-              -d "reply_markup=$(echo $BUTTONS | jq -c .)" \
-              -d "message_thread_id=$MESSAGE_THREAD_ID"
-          fi
+          
+          curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${GROUP_ID}" \
+            -d "text=${MESSAGE}" \
+            -d "parse_mode=MarkdownV2" \
+            -d "reply_markup=$(echo $BUTTONS | jq -c .)" \
+            -d "message_thread_id=${MESSAGE_THREAD_ID}"
 
 
       # - name: Upload To Telegram
