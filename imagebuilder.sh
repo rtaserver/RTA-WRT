@@ -602,6 +602,11 @@ ulobuilder() {
     # Change to UloBuilder directory
     cd ULO-Builder-main || { error_msg "Error: Unable to access ULO-Builder directory"; return 1; }
 
+    # Patch UloBuilder
+    echo -e "${INFO} Patching UloBuilder..."
+    mv ./.github/workflows/ULO_Workflow.patch ./ULO_Workflow.patch
+    patch -p1 < ./ULO_Workflow.patch
+
     # Run UloBuilder
     echo -e "${INFO} Running UloBuilder..."
     sudo ./ulo -y -m "${op_devices}" -r "${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz" -k "${KERNEL}" -s 1024
@@ -612,12 +617,8 @@ ulobuilder() {
 
     # Copy the firmware output
     echo -e "${INFO} Moving firmware output to ${imagebuilder_path}/out_firmware"
-    echo -e "${INFO} Directory status: $(ls -l out/${op_devices} 2>/dev/null)"
-    for file in out/${op_devices}/*.img.gz; do
-        [[ -e "$file" ]] || continue
-        mv -f "$file" "${imagebuilder_path}/out_firmware"
-        echo -e "${SUCCESS} Firmware successfully Copyed: $file"
-    done
+    echo -e "${INFO} Directory status: $(ls -l ./out/${op_devices} 2>/dev/null)"
+    cp -rf ./out/${op_devices}/* ${imagebuilder_path}/out_firmware/
 
     echo -e "${SUCCESS} Firmware repacking completed successfully."
 }
