@@ -120,6 +120,13 @@ jobs:
           echo "status=success" >> $GITHUB_OUTPUT
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
 
+      - name: Clear server space
+        if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
+        run: |
+          cd imagebuilder
+          sudo find . -mindepth 1 -not -path './out_firmware*' -exec rm -rf {} + > /dev/null 2>&1
+          df -hT ${PWD}
+
       - name: Upload Firmware to Artifact
         if: ${{ steps.imagebuilder.outputs.status == 'success' }}
         uses: actions/upload-artifact@v4
@@ -129,6 +136,7 @@ jobs:
           retention-days: 7
 
       - name: Upload Firmware to Release
+        if: ${{ steps.imagebuilder.outputs.status == 'success' }}
         uses: svenstaro/upload-release-action@v2
         continue-on-error: false
         with:
@@ -150,7 +158,6 @@ jobs:
             - Default username: root
             - Default password: rtawrt
             - Default WIFI name: RTAWRT_2g | RTAWRT_5g (if device supported)
-
 
 
   notify:
