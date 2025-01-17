@@ -689,104 +689,70 @@ rename_firmware() {
 
     # Verify and change to firmware directory
     local readonly firmware_dir="${imagebuilder_path}/out_firmware"
-    if [[ ! -d "${firmware_dir}" ]]; then
-        error_msg "Firmware directory ${firmware_dir} does not exist"
-    fi
-
     if ! cd "${firmware_dir}"; then
         error_msg "Failed to change directory to ${firmware_dir}"
     fi
 
-    # Check if there are any .img.gz files
-    if ! compgen -G "*.img.gz" > /dev/null; then
-        error_msg "No .img.gz files found in ${firmware_dir}"
-    fi
-
     # Define board mapping patterns with improved organization
-    declare -A search_replace_patterns=(
+    search_replace_patterns=(
         # Allwinner H5
-        ["-h5-orangepi-pc2-"]="Allwinner_OrangePi_PC2"
-        ["-h5-orangepi-prime-"]="Allwinner_OrangePi_Prime"
-        ["-h5-orangepi-zeroplus-"]="Allwinner_OrangePi_ZeroPlus"
-        ["-h5-orangepi-zeroplus2-"]="Allwinner_OrangePi_ZeroPlus2"
+        "-h5-orangepi-pc2-|Alwiner_OrangePi_PC2"
+        "-h5-orangepi-prime-|Alwiner_OrangePi_Prime"
+        "-h5-orangepi-zeroplus-|Alwiner_OrangePi_ZeroPlus"
+        "-h5-orangepi-zeroplus2-|Alwiner_OrangePi_ZeroPlus2"
     
         # Allwinner H6
-        ["-h6-orangepi-1plus-"]="Allwinner_OrangePi_1Plus"
-        ["-h6-orangepi-3-"]="Allwinner_OrangePi_3"
-        ["-h6-orangepi-3lts-"]="Allwinner_OrangePi_3LTS"
-        ["-h6-orangepi-lite2-"]="Allwinner_OrangePi_Lite2"
+        "-h6-orangepi-1plus-|Alwiner_OrangePi_1Plus"
+        "-h6-orangepi-3-|Alwiner_OrangePi_3"
+        "-h6-orangepi-3lts-|Alwiner_OrangePi_3LTS"
+        "-h6-orangepi-lite2-|Alwiner_OrangePi_Lite2"
     
         # Allwinner H616/H618
-        ["-h616-orangepi-zero2-"]="Allwinner_OrangePi_Zero2"
-        ["-h618-orangepi-zero2w-"]="Allwinner_OrangePi_Zero2W"
-        ["-h618-orangepi-zero3-"]="Allwinner_OrangePi_Zero3"
+        "-h616-orangepi-zero2-|Alwiner_OrangePi_Zero2"
+        "-h618-orangepi-zero2w-|Alwiner_OrangePi_Zero2W"
+        "-h618-orangepi-zero3"-]="Alwiner_OrangePi_Zero3"
     
         # Rockchip
-        ["-rk3566-orangepi-3b-"]="Rockchip_OrangePi_3B"
-        ["-rk3588s-orangepi-5-"]="Rockchip_OrangePi_5"
+        "-rk3566-orangepi-3b-|Rockchip_OrangePi_3B"
+        "-rk3588s-orangepi-5-|Rockchip_OrangePi_5"
     
         # Amlogic
-        ["-s905x-"]="Amlogic_s905x"
-        ["-s905x2-"]="Amlogic_s905x2"
-        ["-s905x3-"]="Amlogic_s905x3"
-        ["-s905x4-"]="Amlogic_s905x4"
+        "-s905x-|Amlogic_s905x"
+        "-s905x2-|Amlogic_s905x2"
+        "-s905x3-|Amlogic_s905x3"
+        "-s905x4-|Amlogic_s905x4"
     
         # x86-64
-        ["x86-64-generic-ext4-combined-efi"]="X86_64_Generic_Ext4_Combined_EFI"
-        ["x86-64-generic-ext4-combined"]="X86_64_Generic_Ext4_Combined"
-        ["x86-64-generic-ext4-rootfs"]="X86_64_Generic_Ext4_Rootfs"
-        ["x86-64-generic-squashfs-combined-efi"]="X86_64_Generic_Squashfs_Combined_EFI"
-        ["x86-64-generic-squashfs-combined"]="X86_64_Generic_Squashfs_Combined"
-        ["x86-64-generic-squashfs-rootfs"]="X86_64_Generic_Squashfs_Rootfs"
+        "x86-64-generic-ext4-combined-efi|X86_64_Generic_Ext4_Combined_EFI"
+        "x86-64-generic-ext4-combined|X86_64_Generic_Ext4_Combined"
+        "x86-64-generic-ext4-rootfs|X86_64_Generic_Ext4_Rootfs"
+        "x86-64-generic-squashfs-combined-efi|X86_64_Generic_Squashfs_Combined_EFI"
+        "x86-64-generic-squashfs-combined|X86_64_Generic_Squashfs_Combined"
+        "x86-64-generic-squashfs-rootfs|X86_64_Generic_Squashfs_Rootfs"
     )
 
-    local renamed_count=0
-    local failed_count=0
+    for pattern in "${search_replace_patterns[@]}"; do
+        search="${pattern%%|*}"
+        replace="${pattern##*|}"
 
-    for search in "${!search_replace_patterns[@]}"; do
-        local replace="${search_replace_patterns[$search]}"
-        
-        # Use find to handle possible glob expansion issues
-        while IFS= read -r -d '' file; do
-            if [[ ! -f "$file" ]]; then
-                continue
+        for file in *${search}*.img.gz; do
+            if [[ -f "$file" ]]; then
+                local kernel=""
+                if [[ "$file" =~ k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)? ]]; then
+                    kernel="${BASH_REMATCH[0]}"
+                fi
+                if [[ -n "$kernel" ]]; then
+                    new_name="RTA-WRT${op_source}-${op_branch}-${replace}-${kernel}.img.gz"
+                else
+                    new_name="RTA-WRT${op_source}-${op_branch}-${replace}.img.gz"
+                fi
+                echo -e "${INFO} Renaming: $file → $new_name"
+                mv "$file" "$new_name"
             fi
-
-            local kernel=""
-            if [[ "$file" =~ k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)? ]]; then
-                kernel="${BASH_REMATCH[0]}"
-            fi
-
-            local new_name
-            if [[ -n "$kernel" ]]; then
-                new_name="RTA-WRT${op_source}-${op_branch}-${replace}-${kernel}.img.gz"
-            else
-                new_name="RTA-WRT${op_source}-${op_branch}-${replace}.img.gz"
-            fi
-
-            # Check if target file already exists
-            if [[ -e "$new_name" && "$file" != "$new_name" ]]; then
-                error_msg "Cannot rename $file: Target file $new_name already exists"
-                ((failed_count++))
-                continue
-            fi
-
-            echo -e "${INFO} Renaming: $file → $new_name"
-            if mv "$file" "$new_name"; then
-                ((renamed_count++))
-            else
-                error_msg "Failed to rename $file to $new_name"
-                ((failed_count++))
-            fi
-        done < <(find . -maxdepth 1 -name "*${search}*.img.gz" -print0)
+        done
     done
 
     echo -e "${INFO} Rename operation completed:"
-    echo -e "${INFO} Successfully renamed: ${renamed_count} files"
-    if ((failed_count > 0)); then
-        echo -e "${WARNING} Failed to rename: ${failed_count} files"
-    fi
-
 }
 
 # Show welcome message
