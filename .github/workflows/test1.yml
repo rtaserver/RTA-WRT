@@ -120,11 +120,11 @@ jobs:
           echo "status=success" >> $GITHUB_OUTPUT
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
 
-      - name: Clear Server Space
-        if: ${{ steps.imagebuilder.outputs.status == 'success' }} && !cancelled()
+      - name: Clear server space
+        if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
         run: |
           cd imagebuilder
-          rm -rf $(ls . | grep -v "^out_firmware$") 2>/dev/null
+          find . -mindepth 1 -not -name 'out_firmware' -exec rm -rf {} +
           df -hT ${PWD}
 
       - name: Upload Firmware to Artifact
@@ -137,7 +137,7 @@ jobs:
 
       - name: Upload Firmware to Release
         uses: svenstaro/upload-release-action@v2
-        continue-on-error: true
+        continue-on-error: false
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
