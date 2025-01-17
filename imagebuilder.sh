@@ -175,18 +175,14 @@ download_imagebuilder() {
             ARCH_3="aarch64_generic"
             KERNEL="5.10.160-rk35v-dbai"
             ;;
-        bcm27*) # Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit)
-            if [[ "${op_devices}" == "bcm2710" ]]; then
-                op_target="bcm2710"
-                target_profile="rpi-3"
-                target_system="bcm27xx/bcm2710"
-                target_name="bcm27xx-bcm2710"
-                ARCH_1="arm64"
-                ARCH_2="aarch64"
-                ARCH_3="aarch64_cortex-a53"
-            else
-                error_msg "Unknown target: ${op_devices}"
-            fi
+        bcm2710*) # Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit)
+            op_target="bcm2710"
+            target_profile="rpi-3"
+            target_system="bcm27xx/bcm2710"
+            target_name="bcm27xx-bcm2710"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_cortex-a53"
             ;;
         x86-64|x86_64)
             op_target="x86-64"
