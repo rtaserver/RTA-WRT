@@ -627,51 +627,51 @@ rename_firmware() {
     echo -e "${STEPS} Renaming firmware files..."
 
     cd ${imagebuilder_path}/out_firmware || { error_msg "Failed to change directory to ${imagebuilder_path}/out_firmware"; return 1; }
-    search_replace_patterns=(
-        "h5-orangepi-pc2|Alwiner_OrangePi_PC2"
-        "h5-orangepi-prime|Alwiner_OrangePi_Prime"
-        "h5-orangepi-zeroplus|Alwiner_OrangePi_ZeroPlus"
-        "h5-orangepi-zeroplus2|Alwiner_OrangePi_ZeroPlus2"
-        "h6-orangepi-1plus|Alwiner_OrangePi_1Plus"
-        "h6-orangepi-3|Alwiner_OrangePi_3"
-        "h6-orangepi-3lts|Alwiner_OrangePi_3LTS"
-        "h6-orangepi-lite2|Alwiner_OrangePi_Lite2"
-        "h616-orangepi-zero2|Alwiner_OrangePi_Zero2"
-        "h618-orangepi-zero2w|Alwiner_OrangePi_Zero2W"
-        "h618-orangepi-zero3|Alwiner_OrangePi_Zero3"
-        "rk3566-orangepi-3b|Rockchip_OrangePi_3B"
-        "rk3588s-orangepi-5|Rockchip_OrangePi_5"
-        "s905x|Amlogic_S905X"
-        "s905x2|Amlogic_S905X2"
-        "s905x3|Amlogic_S905X3"
-        "s905x4|Amlogic_S905X4"
-        "x86-64-generic-ext4-combined-efi|X86_64_Generic_Ext4_Combined_EFI"
-        "x86-64-generic-ext4-combined|X86_64_Generic_Ext4_Combined"
-        "x86-64-generic-ext4-rootfs|X86_64_Generic_Ext4_Rootfs"
-        "x86-64-generic-squashfs-combined-efi|X86_64_Generic_Squashfs_Combined_EFI"
-        "x86-64-generic-squashfs-combined|X86_64_Generic_Squashfs_Combined"
-        "x86-64-generic-squashfs-rootfs|X86_64_Generic_Squashfs_Rootfs"
-
+    declare -A search_replace_patterns=(
+        ["h5-orangepi-pc2"]="Alwiner_OrangePi_PC2"
+        ["h5-orangepi-prime"]="Alwiner_OrangePi_Prime"
+        ["h5-orangepi-zeroplus"]="Alwiner_OrangePi_ZeroPlus"
+        ["h5-orangepi-zeroplus2"]="Alwiner_OrangePi_ZeroPlus2"
+        ["h6-orangepi-1plus"]="Alwiner_OrangePi_1Plus"
+        ["h6-orangepi-3"]="Alwiner_OrangePi_3"
+        ["h6-orangepi-3lts"]="Alwiner_OrangePi_3LTS"
+        ["h6-orangepi-lite2"]="Alwiner_OrangePi_Lite2"
+        ["h616-orangepi-zero2"]="Alwiner_OrangePi_Zero2"
+        ["h618-orangepi-zero2w"]="Alwiner_OrangePi_Zero2W"
+        ["h618-orangepi-zero3"]="Alwiner_OrangePi_Zero3"
+        ["rk3566-orangepi-3b"]="Rockchip_OrangePi_3B"
+        ["rk3588s-orangepi-5"]="Rockchip_OrangePi_5"
+        ["s905x"]="Amlogic_S905X"
+        ["s905x2"]="Amlogic_S905X2"
+        ["s905x3"]="Amlogic_S905X3"
+        ["s905x4"]="Amlogic_S905X4"
+        ["x86-64-generic-ext4-combined-efi"]="X86_64_Generic_Ext4_Combined_EFI"
+        ["x86-64-generic-ext4-combined"]="X86_64_Generic_Ext4_Combined"
+        ["x86-64-generic-ext4-rootfs"]="X86_64_Generic_Ext4_Rootfs"
+        ["x86-64-generic-squashfs-combined-efi"]="X86_64_Generic_Squashfs_Combined_EFI"
+        ["x86-64-generic-squashfs-combined"]="X86_64_Generic_Squashfs_Combined"
+        ["x86-64-generic-squashfs-rootfs"]="X86_64_Generic_Squashfs_Rootfs"
     )
-    for pattern in "${search_replace_patterns[@]}"; do
-        search="${pattern%%|*}"
-        replace="${pattern##*|}"
 
-        for file in *; do
-            if [[ -f "$file" ]]; then
-                case "${op_target}" in
-                    amlogic|allwinner|rockchip)
-                        kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
-                        new_name="RTA-WRT-${op_source}_${op_branch}-${replace}-${kernel}.img.gz"
-                        ;;
-                    x86-64)
-                        new_name="RTA-WRT-${op_source}-${op_branch}-${replace}.img.gz"
-                        ;;
-                esac
-                echo -e "${INFO} Renaming $file to $new_name"
-                mv -f "$file" "$new_name"
-            fi
-        done
+    for file in *; do
+        if [[ -f "$file" ]]; then
+            for search in "${!search_replace_patterns[@]}"; do
+                replace="${search_replace_patterns[$search]}"
+                if [[ "$file" =~ $search ]]; then
+                    case "${op_target}" in
+                        amlogic|allwinner|rockchip)
+                            kernel=$(echo "$file" | grep -oP 'k[0-9.]+')
+                            new_name="RTA-WRT-${op_source}-${op_branch}-${replace}-${kernel}.img.gz"
+                            ;;
+                        x86-64)
+                            new_name="RTA-WRT-${op_source}-${op_branch}-${replace}.img.gz"
+                            ;;
+                    esac
+                    echo -e "${INFO} Renaming $file to $new_name"
+                    mv -f "$file" "$new_name"
+                fi
+            done
+        fi
     done
 }
 
