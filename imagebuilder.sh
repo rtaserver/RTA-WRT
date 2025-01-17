@@ -249,20 +249,20 @@ adjust_settings() {
         sed -i "s/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=1024/" "${CONFIG_FILE}"
 
         # Amlogic-specific settings
-        if [[ "$op_target" == "amlogic" ]]; then
-            sed -i "s|CONFIG_TARGET_ROOTFS_CPIOGZ=.*|# CONFIG_TARGET_ROOTFS_CPIOGZ is not set|g" "${CONFIG_FILE}"
-            sed -i "s|CONFIG_TARGET_ROOTFS_EXT4FS=.*|# CONFIG_TARGET_ROOTFS_EXT4FS is not set|g" "${CONFIG_FILE}"
-            sed -i "s|CONFIG_TARGET_ROOTFS_SQUASHFS=.*|# CONFIG_TARGET_ROOTFS_SQUASHFS is not set|g" "${CONFIG_FILE}"
-            sed -i "s|CONFIG_TARGET_IMAGES_GZIP=.*|# CONFIG_TARGET_IMAGES_GZIP is not set|g" "${CONFIG_FILE}"
-            echo -e "${INFO} Updated Amlogic-specific .config settings."
-        fi
-
-        # x86_64-specific settings
-        if [[ "$ARCH_2" == "x86_64" ]]; then
-            sed -i "s/CONFIG_ISO_IMAGES=y/# CONFIG_ISO_IMAGES is not set/" "${CONFIG_FILE}"
-            sed -i "s/CONFIG_VHDX_IMAGES=y/# CONFIG_VHDX_IMAGES is not set/" "${CONFIG_FILE}"
-            echo -e "${INFO} Updated x86_64-specific .config settings."
-        fi
+        case "${op_target}" in
+            amlogic|allwinner|rockchip)
+                sed -i "s/CONFIG_TARGET_ROOTFS_CPIOGZ=.*/# CONFIG_TARGET_ROOTFS_CPIOGZ is not set/" "${CONFIG_FILE}"
+                sed -i "s/CONFIG_TARGET_ROOTFS_EXT4FS=.*/# CONFIG_TARGET_ROOTFS_EXT4FS is not set/" "${CONFIG_FILE}"
+                sed -i "s/CONFIG_TARGET_ROOTFS_SQUASHFS=.*/# CONFIG_TARGET_ROOTFS_SQUASHFS is not set/" "${CONFIG_FILE}"
+                sed -i "s/CONFIG_TARGET_IMAGES_GZIP=.*/# CONFIG_TARGET_IMAGES_GZIP is not set/" "${CONFIG_FILE}"
+                echo -e "${INFO} Updated Amlogic-specific .config settings."
+                ;;
+            x86-64)
+                sed -i "s/CONFIG_ISO_IMAGES=y/# CONFIG_ISO_IMAGES is not set/" "${CONFIG_FILE}"
+                sed -i "s/CONFIG_VHDX_IMAGES=y/# CONFIG_VHDX_IMAGES is not set/" "${CONFIG_FILE}"
+                echo -e "${INFO} Updated x86_64-specific .config settings."
+                ;;
+        esac
     else
         error_msg "No .config file found in ${imagebuilder_path}. Ensure the correct file is available."
     fi
