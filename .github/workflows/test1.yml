@@ -54,6 +54,14 @@ on:
           - rk3588s-orangepi-5
           # x86
           - x86-64
+      prerelease:
+        description: "Pre-release:"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
       notiftele:
         description: "Notif To Telegram:"
         required: true
@@ -161,7 +169,7 @@ jobs:
           tag: ${{ env.RELEASE_TAG }}-${{ env.DATE }}
           release_name: RTA-WRT - ${{ env.RELEASE_TAG }}-${{ env.DATE }}
           overwrite: true
-          prerelease: false
+          prerelease: ${{ inputs.prerelease }}
           body: |
             ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASE_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
             ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image Information
