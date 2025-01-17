@@ -29,6 +29,7 @@
 #- rk3566-orangepi-3b | Rockchip RK3566 Orange Pi 3B
 #- rk3588-orangepi-5plus | Rockchip RK3588 Orange Pi 5 Plus
 #- rk3588s-orangepi-5 | Rockchip RK3588S Orange Pi 5
+#- bcm2710 | Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit)
 #- x86-64 | x86 64bit
 #================================================================================================
 
@@ -173,6 +174,19 @@ download_imagebuilder() {
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
             KERNEL="5.10.160-rk35v-dbai"
+            ;;
+        bcm27*) # Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit)
+            if [[ "${op_devices}" == "bcm2710" ]]; then
+                op_target="bcm2710"
+                target_profile="rpi-3"
+                target_system="bcm27xx/bcm2710"
+                target_name="bcm27xx-bcm2710"
+                ARCH_1="arm64"
+                ARCH_2="aarch64"
+                ARCH_3="aarch64_cortex-a53"
+            else
+                error_msg "Unknown target: ${op_devices}"
+            fi
             ;;
         x86-64|x86_64)
             op_target="x86-64"
@@ -707,6 +721,9 @@ rename_firmware() {
     # Pola pencarian dan penggantian
     local search_replace_patterns=(
         # Format: "search|replace"
+
+        # bcm27xx
+        "-bcm27xx-bcm2710-rpi-3|Broadcom_RaspberryPi_3"
         
         # Allwinner
         "-h5-orangepi-pc2-|Allwinner_OrangePi_PC2"

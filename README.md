@@ -55,6 +55,12 @@ Custom Script By FriWrt
      RK3588S (Orange Pi 5)
      RK3588 (Orange Pi 5 Plus)
 
+ ### Broadcom
+     BCM2710 (Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit))
+
+ ### Generic
+     x86-64
+
 
 ## Informasi
 
