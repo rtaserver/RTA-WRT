@@ -218,7 +218,6 @@ download_imagebuilder() {
     # Finalize and verify
     sync && sleep 3
     echo -e "${SUCCESS} OpenWrt ImageBuilder downloaded and extracted successfully."
-    echo -e "${INFO} Directory status: $(ls -al 2>/dev/null)"
 }
 
 
@@ -288,8 +287,7 @@ adjust_settings() {
 
     # Final synchronization and directory status check
     sync && sleep 3
-    echo -e "${INFO} [ ${imagebuilder_path} ] Directory status after adjustments:"
-    ls -al 2>/dev/null
+    echo -e "${SUCCESS} Adjusted .config file and related settings successfully."
 }
 
 
@@ -406,9 +404,9 @@ custom_packages() {
     unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip" || error_msg "Error: Failed to extract Passwall package."
     echo -e "${SUCCESS} Passwall Packages downloaded successfully."
 
+    # Sync and provide directory status
     sync && sleep 3
-    echo -e "${INFO} [packages] directory status after all operations:"
-    ls -al 2>/dev/null
+    echo -e "${SUCCESS} All custom packages successfully downloaded and extracted."
 }
 
 # Add custom packages, lib, theme, app and i18n, etc.
@@ -443,7 +441,9 @@ custom_config() {
         fi
     done
 
-    echo -e "${INFO} All custom configuration setup completed!"
+    # Sync and provide directory status
+    sync && sleep 3
+    echo -e "${SUCCESS} All custom configuration setup completed!"
 }
 
 # Add custom files
@@ -465,14 +465,13 @@ custom_files() {
             echo -e "${ERROR} Failed to copy files from ${custom_files_path} to the [ files ] directory."
             return 1
         fi
-
-        # Sync and provide directory status
-        sync && sleep 3
-        echo -e "${INFO} [ files ] directory status:"
-        ls -al "files"
     else
         echo -e "${WARNING} No customized files were found in ${custom_files_path}."
     fi
+
+    # Sync and provide directory status
+    sync && sleep 3
+    echo -e "${SUCCESS} All custom files successfully added."
 }
 
 # Rebuild OpenWrt firmware
@@ -567,7 +566,7 @@ rebuild_firmware() {
     PACKAGES+=" $MISC zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-poweroff luci-app-log-viewer luci-app-ramfree htop bash curl wget wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
 
     # Membuat image firmware
-    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files"
+    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files" >/dev/null 2>&1
     if [[ $? -ne 0 ]]; then
         error_msg "Error: OpenWrt build failed. Check logs for details."
     else
@@ -581,6 +580,8 @@ rebuild_firmware() {
             mv -f "$file" "${imagebuilder_path}/out_rootfs"
             echo -e "${SUCCESS} Rootfs successfully created: $file"
         done
+
+        sync && sleep 3
         echo -e "${SUCCESS} Build completed successfully."
     fi
 }
@@ -661,7 +662,7 @@ ulobuilder() {
     # Run UloBuilder
     echo -e "${INFO} Running UloBuilder..."
     local readonly rootfs_basename=$(basename "${rootfs_file}")
-    if ! sudo ./ulo -y -m "${op_devices}" -r "${rootfs_basename}" -k "${KERNEL}" -s 1024; then
+    if ! sudo ./ulo -y -m "${op_devices}" -r "${rootfs_basename}" -k "${KERNEL}" -s 1024 >/dev/null 2>&1; then
         error_msg "UloBuilder execution failed"
     fi
 
@@ -681,48 +682,52 @@ ulobuilder() {
         error_msg "No firmware files found in output directory"
     fi
 
+    sync && sleep 3
     echo -e "${SUCCESS} Firmware repacking completed successfully!"
 }
 
 rename_firmware() {
     echo -e "${STEPS} Renaming firmware files..."
 
-    # Verify and change to firmware directory
-    local readonly firmware_dir="${imagebuilder_path}/out_firmware"
-    if ! cd "${firmware_dir}"; then
-        error_msg "Failed to change directory to ${firmware_dir}"
+    # Validasi direktori firmware
+    local firmware_dir="${imagebuilder_path}/out_firmware"
+    if [[ -z "$imagebuilder_path" ]] || [[ ! -d "$firmware_dir" ]]; then
+        error_msg "Invalid firmware directory: ${firmware_dir}"
     fi
 
-    # Define board mapping patterns with improved organization
-    search_replace_patterns=(
-        # Allwinner H5
-        "-h5-orangepi-pc2-|Alwiner_OrangePi_PC2"
-        "-h5-orangepi-prime-|Alwiner_OrangePi_Prime"
-        "-h5-orangepi-zeroplus-|Alwiner_OrangePi_ZeroPlus"
-        "-h5-orangepi-zeroplus2-|Alwiner_OrangePi_ZeroPlus2"
-    
-        # Allwinner H6
-        "-h6-orangepi-1plus-|Alwiner_OrangePi_1Plus"
-        "-h6-orangepi-3-|Alwiner_OrangePi_3"
-        "-h6-orangepi-3lts-|Alwiner_OrangePi_3LTS"
-        "-h6-orangepi-lite2-|Alwiner_OrangePi_Lite2"
-    
-        # Allwinner H616/H618
-        "-h616-orangepi-zero2-|Alwiner_OrangePi_Zero2"
-        "-h618-orangepi-zero2w-|Alwiner_OrangePi_Zero2W"
-        "-h618-orangepi-zero3"-]="Alwiner_OrangePi_Zero3"
-    
+    # Pindah ke direktori firmware
+    cd "${firmware_dir}" || {
+       error_msg "Failed to change directory to ${firmware_dir}"
+    }
+
+    # Pola pencarian dan penggantian
+    local search_replace_patterns=(
+        # Format: "search|replace"
+        
+        # Allwinner
+        "-h5-orangepi-pc2-|Allwinner_OrangePi_PC2"
+        "-h5-orangepi-prime-|Allwinner_OrangePi_Prime"
+        "-h5-orangepi-zeroplus-|Allwinner_OrangePi_ZeroPlus"
+        "-h5-orangepi-zeroplus2-|Allwinner_OrangePi_ZeroPlus2"
+        "-h6-orangepi-1plus-|Allwinner_OrangePi_1Plus"
+        "-h6-orangepi-3-|Allwinner_OrangePi_3"
+        "-h6-orangepi-3lts-|Allwinner_OrangePi_3LTS"
+        "-h6-orangepi-lite2-|Allwinner_OrangePi_Lite2"
+        "-h616-orangepi-zero2-|Allwinner_OrangePi_Zero2"
+        "-h618-orangepi-zero2w-|Allwinner_OrangePi_Zero2W"
+        "-h618-orangepi-zero3-|Allwinner_OrangePi_Zero3"
+        
         # Rockchip
         "-rk3566-orangepi-3b-|Rockchip_OrangePi_3B"
         "-rk3588s-orangepi-5-|Rockchip_OrangePi_5"
-    
+        
         # Amlogic
         "-s905x-|Amlogic_s905x"
         "-s905x2-|Amlogic_s905x2"
         "-s905x3-|Amlogic_s905x3"
         "-s905x4-|Amlogic_s905x4"
-    
-        # x86-64
+
+        # x86_64
         "x86-64-generic-ext4-combined-efi|X86_64_Generic_Ext4_Combined_EFI"
         "x86-64-generic-ext4-combined|X86_64_Generic_Ext4_Combined"
         "x86-64-generic-ext4-rootfs|X86_64_Generic_Ext4_Rootfs"
@@ -731,28 +736,33 @@ rename_firmware() {
         "x86-64-generic-squashfs-rootfs|X86_64_Generic_Squashfs_Rootfs"
     )
 
-    for pattern in "${search_replace_patterns[@]}"; do
-        search="${pattern%%|*}"
-        replace="${pattern##*|}"
+   for pattern in "${search_replace_patterns[@]}"; do
+        local search="${pattern%%|*}"
+        local replace="${pattern##*|}"
 
-        for file in *${search}*.img.gz; do
+        for file in *"${search}"*.img.gz; do
             if [[ -f "$file" ]]; then
                 local kernel=""
                 if [[ "$file" =~ k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)? ]]; then
                     kernel="${BASH_REMATCH[0]}"
                 fi
+                local new_name
                 if [[ -n "$kernel" ]]; then
                     new_name="RTA-WRT${op_source}-${op_branch}-${replace}-${kernel}.img.gz"
                 else
                     new_name="RTA-WRT${op_source}-${op_branch}-${replace}.img.gz"
                 fi
                 echo -e "${INFO} Renaming: $file → $new_name"
-                mv "$file" "$new_name"
+                mv "$file" "$new_name" || {
+                    echo -e "${ERROR} Failed to rename $file"
+                    return 1
+                }
             fi
         done
     done
 
-    echo -e "${INFO} Rename operation completed:"
+    sync && sleep 3
+    echo -e "${INFO} Rename operation completed."
 }
 
 # Show welcome message
