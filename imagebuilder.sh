@@ -691,7 +691,7 @@ rename_firmware() {
     local readonly firmware_dir="${imagebuilder_path}/out_firmware"
     if ! cd "${firmware_dir}"; then
         error_msg "Failed to change directory to ${firmware_dir}"
-    }
+    fi
 
     # Define board mapping patterns with improved organization
     declare -A search_replace_patterns=(
