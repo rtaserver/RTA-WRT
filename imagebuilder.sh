@@ -645,7 +645,7 @@ ulobuilder() {
     # Change to UloBuilder directory
     if ! cd "${ulo_dir}"; then
         error_msg "Failed to access UloBuilder directory: ${ulo_dir}"
-    }
+    fi
 
     # Apply patches
     echo -e "${INFO} Applying UloBuilder patches..."
