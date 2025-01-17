@@ -691,36 +691,36 @@ rename_firmware() {
     local readonly firmware_dir="${imagebuilder_path}/out_firmware"
     if ! cd "${firmware_dir}"; then
         error_msg "Failed to change directory to ${firmware_dir}"
-    fi
+    }
 
     # Define board mapping patterns with improved organization
     declare -A search_replace_patterns=(
         # Allwinner H5
-        ["h5-orangepi-pc2"]="Alwiner_OrangePi_PC2"
-        ["h5-orangepi-prime"]="Alwiner_OrangePi_Prime"
-        ["h5-orangepi-zeroplus"]="Alwiner_OrangePi_ZeroPlus"
-        ["h5-orangepi-zeroplus2"]="Alwiner_OrangePi_ZeroPlus2"
+        ["armsr-h5-orangepi-pc2"]="Alwiner_OrangePi_PC2"
+        ["armsr-h5-orangepi-prime"]="Alwiner_OrangePi_Prime"
+        ["armsr-h5-orangepi-zeroplus"]="Alwiner_OrangePi_ZeroPlus"
+        ["armsr-h5-orangepi-zeroplus2"]="Alwiner_OrangePi_ZeroPlus2"
         
         # Allwinner H6
-        ["h6-orangepi-1plus"]="Alwiner_OrangePi_1Plus"
-        ["h6-orangepi-3"]="Alwiner_OrangePi_3"
-        ["h6-orangepi-3lts"]="Alwiner_OrangePi_3LTS"
-        ["h6-orangepi-lite2"]="Alwiner_OrangePi_Lite2"
+        ["armsr-h6-orangepi-1plus"]="Alwiner_OrangePi_1Plus"
+        ["armsr-h6-orangepi-3"]="Alwiner_OrangePi_3"
+        ["armsr-h6-orangepi-3lts"]="Alwiner_OrangePi_3LTS"
+        ["armsr-h6-orangepi-lite2"]="Alwiner_OrangePi_Lite2"
         
         # Allwinner H616/H618
-        ["h616-orangepi-zero2"]="Alwiner_OrangePi_Zero2"
-        ["h618-orangepi-zero2w"]="Alwiner_OrangePi_Zero2W"
-        ["h618-orangepi-zero3"]="Alwiner_OrangePi_Zero3"
+        ["armsr-h616-orangepi-zero2"]="Alwiner_OrangePi_Zero2"
+        ["armsr-h618-orangepi-zero2w"]="Alwiner_OrangePi_Zero2W"
+        ["armsr-h618-orangepi-zero3"]="Alwiner_OrangePi_Zero3"
         
         # Rockchip
-        ["rk3566-orangepi-3b"]="Rockchip_OrangePi_3B"
-        ["rk3588s-orangepi-5"]="Rockchip_OrangePi_5"
+        ["armsr-rk3566-orangepi-3b"]="Rockchip_OrangePi_3B"
+        ["armsr-rk3588s-orangepi-5"]="Rockchip_OrangePi_5"
         
         # Amlogic
-        ["s905x-"]="Amlogic_s905x"
-        ["s905x2-"]="Amlogic_s905x2"
-        ["s905x3-"]="Amlogic_s905x3"
-        ["s905x4-"]="Amlogic_s905x4"
+        ["armsr-s905x"]="Amlogic_s905x"
+        ["armsr-s905x2"]="Amlogic_s905x2"
+        ["armsr-s905x3"]="Amlogic_s905x3"
+        ["armsr-s905x4"]="Amlogic_s905x4"
         
         # x86-64
         ["x86-64-generic-ext4-combined-efi"]="X86_64_Generic_Ext4_Combined_EFI"
@@ -743,20 +743,17 @@ rename_firmware() {
         for search in "${!search_replace_patterns[@]}"; do
             local replace="${search_replace_patterns[$search]}"
             if [[ "$file" =~ $search ]]; then
-                # Generate new filename based on target platform
-                case "${op_target}" in
-                    amlogic|allwinner|rockchip)
-                        local kernel
-                        kernel=$(echo "$file" | grep -oP 'k[0-9.]+' || echo "unknown")
-                        new_name="RTA-WRT-${op_source}-${op_branch}-${replace}-${kernel}.img.gz"
-                        ;;
-                    x86-64)
-                        new_name="RTA-WRT-${op_source}-${op_branch}-${replace}.img.gz"
-                        ;;
-                    *)
-                        error_msg "Unknown target platform: ${op_target}"
-                        ;;
-                esac
+                # Extract kernel version based on platform
+                local kernel=""
+                if [[ "$file" =~ k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)? ]]; then
+                    kernel="${BASH_REMATCH[0]}"
+                fi
+
+                if [[ -n "$kernel" ]]; then
+                    new_name="RTA-WRT${op_source}-${op_branch}-${replace}-${kernel}.img.gz"
+                else
+                    new_name="RTA-WRT${op_source}-${op_branch}-${replace}.img.gz"
+                fi
                 
                 # Perform the rename operation
                 if [[ -n "$new_name" && "$file" != "$new_name" ]]; then
