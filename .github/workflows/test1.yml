@@ -120,13 +120,6 @@ jobs:
           echo "status=success" >> $GITHUB_OUTPUT
           echo -e "[\033[92m SUCCESS \033[0m] Status: Success"
 
-      - name: Clear server space
-        if: ${{ steps.imagebuilder.outputs.status }} == 'success' && !cancelled()
-        run: |
-          cd imagebuilder
-          find . -mindepth 1 -not -name 'out_firmware' -exec rm -rf {} +
-          df -hT ${PWD}
-
       - name: Upload Firmware to Artifact
         if: ${{ steps.imagebuilder.outputs.status == 'success' }}
         uses: actions/upload-artifact@v4
