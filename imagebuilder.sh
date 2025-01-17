@@ -750,7 +750,7 @@ rename_firmware() {
         while IFS= read -r -d '' file; do
             if [[ ! -f "$file" ]]; then
                 continue
-            }
+            fi
 
             local kernel=""
             if [[ "$file" =~ k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)? ]]; then
@@ -769,7 +769,7 @@ rename_firmware() {
                 error_msg "Cannot rename $file: Target file $new_name already exists"
                 ((failed_count++))
                 continue
-            }
+            fi
 
             echo -e "${INFO} Renaming: $file → $new_name"
             if mv "$file" "$new_name"; then
