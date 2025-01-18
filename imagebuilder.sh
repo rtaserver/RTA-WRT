@@ -587,10 +587,16 @@ rebuild_firmware() {
     PACKAGES+=" $MISC zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-poweroff luci-app-log-viewer luci-app-ramfree htop bash curl wget wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
 
     # Membuat image firmware
-    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files"
-    if [[ $? -ne 0 ]]; then
-        error_msg "Error: OpenWrt build failed. Check logs for details."
-    else
+    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files" >/dev/null 2>&1 &
+    make_pid=$!
+
+    # Menampilkan progress bar
+    echo "Building firmware..."
+    while kill -0 $make_pid 2>/dev/null; do
+        echo -n "."
+        sleep 1
+    done
+    if wait $make_pid; then
         for file in ${imagebuilder_path}/bin/targets/*/*/*.img.gz; do
             [[ -e "$file" ]] || continue
             mv -f "$file" "${imagebuilder_path}/out_firmware"
@@ -604,6 +610,8 @@ rebuild_firmware() {
 
         sync && sleep 3
         echo -e "${SUCCESS} Build completed successfully."
+    else
+        error_msg "Error: OpenWrt build failed. Check logs for details."
     fi
 }
 
