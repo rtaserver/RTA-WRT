@@ -346,6 +346,8 @@ custom_packages() {
         
         "python3-speedtest-cli|https://downloads.openwrt.org/releases/packages-$CURVER/$ARCH_3/packages"
         "dns2tcp|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/packages"
+        "luci-app-argon-config|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
+        "luci-theme-argon|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
         
         "luci-app-tailscale|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
         "luci-app-diskman|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
@@ -364,8 +366,6 @@ custom_packages() {
         "luci-app-log-viewer|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "luci-app-temp-status|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
 
-        "luci-app-argon-config|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
-        "luci-theme-argon|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
         "luci-app-zerotier|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
         "luci-app-ramfree|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
         "luci-app-3ginfo-lite|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
@@ -587,17 +587,9 @@ rebuild_firmware() {
     PACKAGES+=" $MISC zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-poweroff luci-app-log-viewer luci-app-ramfree htop bash curl wget wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
 
     # Membuat image firmware dan menampilkan progress bar
-    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files" >/dev/null 2>&1 &  
-    make_pid=$!
-
-    # Menampilkan progress bar
-    echo -e "${INFO} Building firmware..."
-    while kill -0 $make_pid 2>/dev/null; do
-        echo -n "."
-        sleep 1
-    done
-    if wait $make_pid; then
-        echo -e "\n${INFO} Firmware build completed."
+    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files"
+    if [[ $? -eq 0 ]]; then
+        echo -e "${SUCCESS} Firmware build completed."
         for file in ${imagebuilder_path}/bin/targets/*/*/*.img.gz; do
             [[ -e "$file" ]] || continue
             mv -f "$file" "${imagebuilder_path}/out_firmware"
