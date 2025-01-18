@@ -716,6 +716,75 @@ ulobuilder() {
     echo -e "${SUCCESS} Firmware repacking completed successfully!"
 }
 
+build_mod_sdcard() {
+    if [[ "${op_devices}" == "s905x" ]]; then
+        echo -e "${STEPS} Start building SD Card image for S905X devices..."
+        cd "${imagebuilder_path}/out_firmware" || { error_msg "Failed to change directory to ${imagebuilder_path}/out_firmware"; return 1; }
+
+        local image_path="${imagebuilder_path}/out_firmware/*-s905x-*"
+        for file in ${image_path}; do
+            [[ -e "$file" ]] || continue
+            echo -e "${INFO} Creating SD Card image for S905X devices..."
+
+            # Unduh dan siapkan mod boot SD Card
+            curl -fsSOL https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip
+            unzip -q main.zip && rm -f main.zip
+            cd mod-boot-sdcard-main || { error_msg "Failed to change directory to mod-boot-sdcard-main"; return 1; }
+            
+            mkdir -p openwrt/boot
+            mv "../$(basename "$file")" openwrt/
+            cp BootCardMaker/u-boot.bin openwrt/
+            cp files/mod-boot-sdcard.tar.gz openwrt/
+            cd openwrt || { error_msg "Failed to change directory to openwrt"; return 1; }
+
+            # Ekstrak file gambar
+            gunzip "$(basename "$file")"
+            image_file="${file%.gz}"
+            device=$(sudo losetup -fP --show "$image_file")
+            if [[ -z "$device" ]]; then
+                error_msg "Failed to create loop device for $image_file"
+                return 1
+            fi
+
+            # Mount dan update boot konfigurasi
+            sudo mount "${device}p1" /boot || { error_msg "Failed to mount ${device}p1"; sudo losetup -d "$device"; return 1; }
+            sudo tar -xzvf mod-boot-sdcard.tar.gz -C /boot
+
+            # Update root path di konfigurasi
+            uenv=$(sudo grep APPEND /boot/uEnv.txt | awk -F "root=" '{print $2}')
+            extlinux=$(sudo grep append /boot/extlinux/extlinux.conf | awk -F "root=" '{print $2}')
+            sudo sed -i "s|$extlinux|$uenv|g" /boot/extlinux/extlinux.conf
+
+            # Buat gambar untuk B860H
+            dtb_b860h="meson-gxl-s905x-b860h.dtb"
+            sudo sed -i "s|meson-gxl.*.dtb|$dtb_b860h|g" /boot/boot.ini
+            sudo sed -i "s|meson-gxl.*.dtb|$dtb_b860h|g" /boot/extlinux/extlinux.conf
+            sudo sed -i "s|meson-gxl.*.dtb|$dtb_b860h|g" /boot/uEnv.txt
+
+            sudo umount /boot
+            sudo dd if=u-boot.bin of="$image_file" bs=1 count=444 conv=fsync 2>/dev/null
+            sudo dd if=u-boot.bin of="$image_file" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null
+            gzip -c "$image_file" > "${image_file%-s905x-*}-b860h.img.gz"
+
+            # Siapkan gambar untuk HG680P
+            sudo mount "${device}p1" /boot
+            dtb_hg680p="meson-gxl-s905x-p212.dtb"
+            sudo sed -i "s|meson-gxl.*.dtb|$dtb_hg680p|g" /boot/boot.ini
+            sudo sed -i "s|meson-gxl.*.dtb|$dtb_hg680p|g" /boot/extlinux/extlinux.conf
+            sudo sed -i "s|meson-gxl.*.dtb|$dtb_hg680p|g" /boot/uEnv.txt
+
+            sudo umount /boot
+            sudo dd if=u-boot.bin of="$image_file" bs=1 count=444 conv=fsync 2>/dev/null
+            sudo dd if=u-boot.bin of="$image_file" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null
+            gzip -c "$image_file" > "${image_file%-s905x-*}-hg680p.img.gz"
+
+            # Hapus loop device
+            sudo losetup -d "$device"
+        done
+        echo -e "${SUCCESS} SD Card images for B860H and HG680P have been successfully created."
+    fi
+}
+
 rename_firmware() {
     echo -e "${STEPS} Renaming firmware files..."
 
@@ -822,6 +891,7 @@ rebuild_firmware
 case "${op_devices}" in
     h5-*|h616-*|h618-*|h6-*|s905*|rk*)
         ulobuilder
+        build_mod_sdcard
         ;;
     *)
         ;;
