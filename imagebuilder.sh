@@ -587,7 +587,7 @@ rebuild_firmware() {
     PACKAGES+=" $MISC zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-poweroff luci-app-log-viewer luci-app-ramfree htop bash curl wget wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
 
     # Membuat image firmware
-    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files" >/dev/null 2>&1
+    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files"
     if [[ $? -ne 0 ]]; then
         error_msg "Error: OpenWrt build failed. Check logs for details."
     else
