@@ -755,20 +755,37 @@ build_mod_sdcard() {
 
         # Extract the image file
         echo -e "${INFO} Extracting image file..."
-        if ! gunzip "$file"; then
+        if ! gunzip -k "$file"; then
             error_msg "Failed to extract $file"
             return 1
         fi
 
-        # Create loop device
-        echo -e "${INFO} Creating loop device for $file..."
-        device=$(sudo losetup -fP --show "$file")
-        if [[ -z "$device" ]]; then
-            error_msg "Failed to create loop device for $file"
+        local img_file="${file%.gz}"
+        if [[ ! -f "$img_file" ]]; then
+            error_msg "Extracted file $img_file does not exist. Extraction may have failed."
             return 1
         fi
 
-        # Helper function to update boot configuration
+        # Create loop device
+        echo -e "${INFO} Creating loop device for $img_file..."
+        device=$(sudo losetup -fP --show "$img_file")
+        if [[ -z "$device" ]]; then
+            error_msg "Failed to create loop device for $img_file"
+            return 1
+        fi
+
+        # Ensure cleanup on exit
+        sudo losetup -d $device; sudo umount /boot 2>/dev/null
+
+        # Mount and update boot configuration
+        echo -e "${INFO} Mounting boot partition and updating configuration..."
+        sudo mount "${device}p1" /boot || { error_msg "Failed to mount ${device}p1"; return 1; }
+        if ! sudo tar -xzvf mod-boot-sdcard.tar.gz -C /boot; then
+            error_msg "Failed to extract mod-boot-sdcard.tar.gz"
+            return 1
+        fi
+
+        # Update boot configuration for specific device
         update_boot_config() {
             local dtb_file="$1"
             echo -e "${INFO} Updating boot configuration for ${dtb_file}..."
@@ -777,36 +794,31 @@ build_mod_sdcard() {
             sudo sed -i "s|meson-gxl.*.dtb|$dtb_file|g" /boot/uEnv.txt
         }
 
-        # Mount and update boot configuration for B860H
-        sudo mount "${device}p1" /boot || { error_msg "Failed to mount ${device}p1"; sudo losetup -d "$device"; return 1; }
-        sudo tar -xzvf mod-boot-sdcard.tar.gz -C /boot || { error_msg "Failed to extract mod-boot-sdcard.tar.gz"; return 1; }
-        update_boot_config "meson-gxl-s905x-b860h.dtb"
-        sudo umount /boot
+        # Finalize images for B860H and HG680P
+        finalize_image() {
+            local target_file="$1"
+            local dtb="$2"
+            local suffix="$3"
 
-        # Finalize the image
-        echo -e "${INFO} Finalizing image for B860H..."
-        sudo dd if=u-boot.bin of="$file" bs=1 count=444 conv=fsync 2>/dev/null
-        sudo dd if=u-boot.bin of="$file" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null
-        gzip -c "$file" > "${file%-s905x-*}-b860h.img.gz"
+            echo -e "${INFO} Preparing image for ${suffix}..."
+            sudo mount "${device}p1" /boot || { error_msg "Failed to remount ${device}p1"; return 1; }
+            update_boot_config "$dtb"
+            sudo umount /boot
 
-        # Prepare for HG680P
-        echo -e "${INFO} Preparing image for HG680P..."
-        sudo mount "${device}p1" /boot || { error_msg "Failed to remount ${device}p1"; sudo losetup -d "$device"; return 1; }
-        update_boot_config "meson-gxl-s905x-p212.dtb"
-        sudo umount /boot
+            echo -e "${INFO} Finalizing image for ${suffix}..."
+            sudo dd if=u-boot.bin of="$img_file" bs=1 count=444 conv=fsync 2>/dev/null
+            sudo dd if=u-boot.bin of="$img_file" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null
+            gzip -c "$img_file" > "$target_file"
+        }
 
-        # Finalize the image for HG680P
-        echo -e "${INFO} Finalizing image for HG680P..."
-        sudo dd if=u-boot.bin of="$file" bs=1 count=444 conv=fsync 2>/dev/null
-        sudo dd if=u-boot.bin of="$file" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null
-        gzip -c "$file" > "${file%-s905x-*}-hg680p.img.gz"
+        finalize_image "${img_file%-s905x-*}-b860h.img.gz" "meson-gxl-s905x-b860h.dtb" "B860H"
+        finalize_image "${img_file%-s905x-*}-hg680p.img.gz" "meson-gxl-s905x-p212.dtb" "HG680P"
 
-        # Cleanup
         echo -e "${INFO} Cleaning up..."
         sudo losetup -d "$device"
     done
 
-    echo -e "${SUCCESS} SD Card images for B860H and HG680P have been successfully created."
+    echo -e "${SUCCESS} SD Card images for S905X devices have been successfully created."
 }
 
 rename_firmware() {
