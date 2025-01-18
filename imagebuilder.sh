@@ -718,37 +718,53 @@ ulobuilder() {
 
 # Modify boot files for Amlogic devices
 build_mod_sdcard() {
+    echo -e "${STEPS} Modifying boot files for Amlogic devices..."
     cd "${imagebuilder_path}/out_firmware" || { error_msg "Failed to change directory to ${imagebuilder_path}/out_firmware"; return 1; }
 
     # Create necessary directories
-    echo "Creating directory structure..."
+    echo -e "${INFO} Creating directories..."
     local imgpath="${imagebuilder_path}/out_firmware"
     sudo mkdir -p ${imgpath}/boot
 
     # Download and unzip the modification files
+    echo -e "${INFO} Downloading mod-boot-sdcard..."
     if ! curl -fsSOL https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip; then
         error_msg "Failed to download mod-boot-sdcard"
         return 1
     fi
+    echo -e "${SUCCESS} mod-boot-sdcard successfully downloaded."
 
+    # Extract the downloaded file
+    echo -e "${INFO} Extracting mod-boot-sdcard..."
     if ! unzip -q main.zip && rm -f main.zip; then
         error_msg "Failed to extract mod-boot-sdcard"
         return 1
     fi
+    echo -e "${SUCCESS} mod-boot-sdcard successfully extracted."
+
+    # Find the OpenWRT image file
+    echo -e "${INFO} Finding OpenWRT image file..."
+    filename=$(find . -name "*-s905x-*")
+    file_type=$(basename "$filename" | sed -E 's/.*\.(img\.(gz|xz))$/\1/')
+    file_name=$(basename "$filename" | sed -E 's/\.(gz|xz)$//')
+    echo -e "${SUCCESS} OpenWRT image file found: ${file_name}.${file_type}"
 
     # Move bootloader and image files to the appropriate location
-    echo "Moving files..."
+    echo -e "${INFO} Moving bootloader and image files..."
     sudo mv mod-boot-sdcard-main/BootCardMaker/u-boot.bin ${imgpath}/
     sudo mv mod-boot-sdcard-main/files/mod-boot-sdcard.tar.gz ${imgpath}/
     rm -rf mod-boot-sdcard-main
+    echo -e "${SUCCESS} Bootloader and image files successfully moved."
 
     # Decompress the OpenWRT image
-    echo "Decompressing OpenWRT image..."
-    sudo gunzip openwrt-23.05.5-armsr-s905x-k6.1.66-DBAI.img.gz
+    echo -e "${INFO} Decompressing the OpenWRT image..."
+    sudo gunzip ${file_name}.gz
+    echo -e "${SUCCESS} OpenWRT image successfully decompressed."
 
     # Set up loop device for the image
-    echo "Setting up loop device..."
-    local device=$(sudo losetup -fP --show openwrt-23.05.5-armsr-s905x-k6.1.66-DBAI.img)
+    echo -e "${INFO} Setting up loop device..."
+    local device=$(sudo losetup -fP --show ${file_name})
+    echo -e "${SUCCESS} Loop device successfully set up: ${device}"
 
     # Define a generic function to handle mounting and updating boot files
     modify_boot_files() {
@@ -756,24 +772,28 @@ build_mod_sdcard() {
         local image_suffix=$2
 
         # Mount the first partition of the image
-        echo "Mounting the first partition..."
+        echo -e "${INFO} Mounting the image..."
         sudo mount ${device}p1 boot
+        echo -e "${SUCCESS} Image successfully mounted."
 
         # Extract and apply boot modifications
-        echo "Extracting boot modifications..."
+        echo -e "${INFO} Extracting and applying boot modifications..."
         sudo tar -xzvf mod-boot-sdcard.tar.gz -C boot
+        echo -e "${SUCCESS} Boot modifications successfully applied."
 
         # Get the current uEnv.txt and extlinux.conf root settings
         local uenv=$(sudo cat boot/uEnv.txt | grep APPEND | awk -F "root=" '{print $2}')
         local extlinux=$(sudo cat boot/extlinux/extlinux.conf | grep append | awk -F "root=" '{print $2}')
 
         # Replace the extlinux root with the uEnv root
-        echo "Updating extlinux configuration..."
+        echo -e "${INFO} Setting root partition..."
         sudo sed -i "s|$extlinux|$uenv|g" boot/extlinux/extlinux.conf
+        echo -e "${SUCCESS} Root partition successfully set."
 
         # Set the correct DTB file
-        echo "Setting device tree blob (DTB)..."
+        echo -e "${INFO} Setting DTB file..."
         local boot=$(sudo cat boot/boot.ini | grep dtb | awk -F "/" '{print $4}' | cut -d'"' -f1)
+        echo -e "${INFO} Current DTB file: ${boot}"
 
         # Update all necessary configuration files
         sudo sed -i "s|$boot|$dtb|g" boot/boot.ini
@@ -781,29 +801,33 @@ build_mod_sdcard() {
         sudo sed -i "s|$boot|$dtb|g" boot/uEnv.txt
 
         # Unmount the partition
-        echo "Unmounting the image..."
+        echo -e "${INFO} Unmounting the image..."
         sudo umount ${device}p1
+        echo -e "${SUCCESS} Image successfully unmounted."
         sleep 1
 
         # Write the bootloader (u-boot) to the device
-        echo "Writing u-boot to the device..."
+        echo -e "${INFO} Writing the bootloader..."
         sudo dd if=u-boot.bin of=${device} bs=1 count=444 conv=fsync 2>/dev/null
         sudo dd if=u-boot.bin of=${device} bs=512 skip=1 seek=1 conv=fsync 2>/dev/null
+        echo -e "${SUCCESS} Bootloader successfully written."
 
         # Detach the loop device
-        echo "Detaching loop device..."
+        echo -e "${INFO} Detaching the loop device..."
         sudo losetup -d ${device}
+        echo -e "${SUCCESS} Loop device successfully detached."
 
         # Compress the image again
-        echo "Compressing the OpenWRT image..."
+        echo -e "${INFO} Compressing the image..."
         sudo gzip openwrt-23.05.5-armsr-s905x-${image_suffix}-k6.1.66-DBAI.img
+        echo -e "${SUCCESS} Image successfully compressed."
     }
 
     # Modify boot files for each device
     modify_boot_files "meson-gxl-s905x-b860h.dtb" "B860H"
     modify_boot_files "meson-gxl-s905x-p212.dtb" "HG680P"
 
-    echo "Process completed successfully!"
+    echo -e "${SUCCESS} Boot files successfully modified."
 }
 
 rename_firmware() {
