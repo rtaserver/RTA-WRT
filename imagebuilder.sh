@@ -591,7 +591,7 @@ rebuild_firmware() {
     make_pid=$!
 
     # Menampilkan progress bar
-    echo "Building firmware..."
+    echo -e "${INFO} Building firmware..."
     while kill -0 $make_pid 2>/dev/null; do
         echo -n "."
         sleep 1
