@@ -751,14 +751,15 @@ build_mod_sdcard() {
 
     # Move bootloader and image files to the appropriate location
     echo -e "${INFO} Moving bootloader and image files..."
-    sudo mv mod-boot-sdcard-main/BootCardMaker/u-boot.bin ${imgpath}/
-    sudo mv mod-boot-sdcard-main/files/mod-boot-sdcard.tar.gz ${imgpath}/
-    rm -rf mod-boot-sdcard-main
+    sudo mv mod-boot-sdcard-main/BootCardMaker/u-boot.bin ${imgpath}/ >/dev/null 2>&1
+    sudo mv mod-boot-sdcard-main/files/mod-boot-sdcard.tar.gz ${imgpath}/ >/dev/null 2>&1
+    rm -rf mod-boot-sdcard-main >/dev/null 2>&1
     echo -e "${SUCCESS} Bootloader and image files successfully moved."
 
     # Decompress the OpenWRT image
     echo -e "${INFO} Decompressing the OpenWRT image..."
-    sudo gunzip ${file_name}.gz
+    sudo gunzip ${file_name}.gz >/dev/null 2>&1
+    sudo rm -f ${file_name}.gz >/dev/null 2>&1
     echo -e "${SUCCESS} OpenWRT image successfully decompressed."
 
     # Set up loop device for the image
@@ -773,7 +774,7 @@ build_mod_sdcard() {
 
         # Mount the first partition of the image
         echo -e "${INFO} Mounting the image..."
-        sudo mount ${device}p1 boot
+        sudo mount ${device}p1 boot >/dev/null 2>&1
         echo -e "${SUCCESS} Image successfully mounted."
 
         # Extract and apply boot modifications
@@ -787,7 +788,7 @@ build_mod_sdcard() {
 
         # Replace the extlinux root with the uEnv root
         echo -e "${INFO} Setting root partition..."
-        sudo sed -i "s|$extlinux|$uenv|g" boot/extlinux/extlinux.conf
+        sudo sed -i "s|$extlinux|$uenv|g" boot/extlinux/extlinux.conf >/dev/null 2>&1
         echo -e "${SUCCESS} Root partition successfully set."
 
         # Set the correct DTB file
@@ -796,13 +797,13 @@ build_mod_sdcard() {
         echo -e "${INFO} Current DTB file: ${boot}"
 
         # Update all necessary configuration files
-        sudo sed -i "s|$boot|$dtb|g" boot/boot.ini
-        sudo sed -i "s|$boot|$dtb|g" boot/extlinux/extlinux.conf
-        sudo sed -i "s|$boot|$dtb|g" boot/uEnv.txt
+        sudo sed -i "s|$boot|$dtb|g" boot/boot.ini >/dev/null 2>&1
+        sudo sed -i "s|$boot|$dtb|g" boot/extlinux/extlinux.conf >/dev/null 2>&1
+        sudo sed -i "s|$boot|$dtb|g" boot/uEnv.txt >/dev/null 2>&1
 
         # Unmount the partition
         echo -e "${INFO} Unmounting the image..."
-        sudo umount ${device}p1
+        sudo umount ${device}p1 >/dev/null 2>&1
         echo -e "${SUCCESS} Image successfully unmounted."
         sleep 1
 
@@ -814,7 +815,7 @@ build_mod_sdcard() {
 
         # Detach the loop device
         echo -e "${INFO} Detaching the loop device..."
-        sudo losetup -d ${device}
+        sudo losetup -d ${device} >/dev/null 2>&1
         echo -e "${SUCCESS} Loop device successfully detached."
 
         # Compress the image again
