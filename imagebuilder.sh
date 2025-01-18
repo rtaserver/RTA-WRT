@@ -586,8 +586,8 @@ rebuild_firmware() {
 
     PACKAGES+=" $MISC zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-poweroff luci-app-log-viewer luci-app-ramfree htop bash curl wget wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
 
-    # Membuat image firmware
-    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files" >/dev/null 2>&1 &
+    # Membuat image firmware dan menampilkan progress bar
+    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files" >/dev/null 2>&1 &  
     make_pid=$!
 
     # Menampilkan progress bar
@@ -778,7 +778,7 @@ build_mod_sdcard() {
 
         # Extract and apply boot modifications
         echo -e "${INFO} Extracting and applying boot modifications..."
-        sudo tar -xzvf mod-boot-sdcard.tar.gz -C boot
+        sudo tar -xzvf mod-boot-sdcard.tar.gz -C boot >/dev/null 2>&1
         echo -e "${SUCCESS} Boot modifications successfully applied."
 
         # Get the current uEnv.txt and extlinux.conf root settings
@@ -819,12 +819,27 @@ build_mod_sdcard() {
 
         # Compress the image again
         echo -e "${INFO} Compressing the image..."
-        sudo gzip openwrt-23.05.5-armsr-s905x-${image_suffix}-k6.1.66-DBAI.img
+        sudo gzip ${file_name}.gz >/dev/null 2>&1
+        for file in ${file_name}.gz; do
+            if [[ -f "$file" ]]; then
+                local kernel=""
+                if [[ "$file" =~ k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)? ]]; then
+                    kernel="${BASH_REMATCH[0]}"
+                fi
+                local new_name
+                new_name="RTA-WRT${op_source}-${op_branch}-Amlogic_s905x-${image_suffix}-${kernel}.img.gz"
+                echo -e "${INFO} Renaming: $file → $new_name"
+                mv "$file" "$new_name" || {
+                    echo -e "${ERROR} Failed to rename $file"
+                    return 1
+                }
+            fi
+        done
         echo -e "${SUCCESS} Image successfully compressed."
     }
 
     # Modify boot files for each device
-    modify_boot_files "meson-gxl-s905x-b860h.dtb" "B860H"
+    modify_boot_files "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
     modify_boot_files "meson-gxl-s905x-p212.dtb" "HG680P"
 
     echo -e "${SUCCESS} Boot files successfully modified."
@@ -869,7 +884,7 @@ rename_firmware() {
         "-rk3588s-orangepi-5-|Rockchip_OrangePi_5"
         
         # Amlogic
-        "-s905x-|Amlogic_s905x"
+        #"-s905x-|Amlogic_s905x"
         "-s905x2-|Amlogic_s905x2"
         "-s905x3-|Amlogic_s905x3"
         "-s905x4-|Amlogic_s905x4"
@@ -936,7 +951,9 @@ rebuild_firmware
 case "${op_devices}" in
     h5-*|h616-*|h618-*|h6-*|s905*|rk*)
         ulobuilder
-        build_mod_sdcard
+        if [[ "${op_devices}" == "s905x" ]]; then
+            build_mod_sdcard
+        fi
         ;;
     *)
         ;;
