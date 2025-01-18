@@ -717,92 +717,96 @@ ulobuilder() {
 }
 
 build_mod_sdcard() {
-    if [[ "${op_devices}" == "s905x" ]]; then
-        echo -e "${STEPS} Start building SD Card image for S905X devices..."
-        cd "${imagebuilder_path}/out_firmware" || { error_msg "Failed to change directory to ${imagebuilder_path}/out_firmware"; return 1; }
-
-        local image_path="${imagebuilder_path}/out_firmware/*-s905x-*.img.gz"
-        for file in ${image_path}; do
-            [[ -e "$file" ]] || { echo -e "${INFO} No file matches ${image_path}. Skipping."; continue; }
-            echo -e "${INFO} Creating SD Card image for S905X devices..."
-
-            # Unduh dan siapkan mod boot SD Card
-            echo -e "${INFO} Downloading mod-boot-sdcard..."
-            curl -fsSOL https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip || { error_msg "Failed to download mod-boot-sdcard"; return 1; }
-
-            echo -e "${INFO} Extracting mod-boot-sdcard..."
-            unzip -q main.zip && rm -f main.zip || { error_msg "Failed to extract mod-boot-sdcard"; return 1; }
-            
-            echo -e "${INFO} Preparing SD Card image..."
-            cd mod-boot-sdcard-main || { error_msg "Failed to change directory to mod-boot-sdcard-main"; return 1; }
-            mkdir -p openwrt/boot
-            mv "../$(basename "$file")" openwrt/ || { error_msg "Failed to move $file to openwrt"; return 1; }
-            cp BootCardMaker/u-boot.bin openwrt/ || { error_msg "Failed to copy u-boot.bin to openwrt"; return 1; }
-            cp files/mod-boot-sdcard.tar.gz openwrt/ || { error_msg "Failed to copy mod-boot-sdcard.tar.gz to openwrt"; return 1; }
-            cd openwrt || { error_msg "Failed to change directory to openwrt"; return 1; }
-
-            # Ekstrak file gambar
-            echo -e "${INFO} Extracting image file..."
-            gunzip -f "$(basename "$file")" || { error_msg "Failed to extract $file"; return 1; }
-            image_file="${file%.gz}"
-
-            # Validasi file hasil ekstraksi
-            echo -e "${INFO} Validating extracted image file..."
-            if [[ ! -f "$image_file" ]]; then
-                error_msg "Extracted image file not found: $image_file"
-                return 1
-            fi
-
-            # Buat loop device
-            echo -e "${INFO} Creating loop device for $image_file..."
-            device=$(sudo losetup -fP --show "$image_file")
-            if [[ -z "$device" ]]; then
-                error_msg "Failed to create loop device for $image_file"
-                return 1
-            fi
-
-            # Mount dan update boot konfigurasi
-            echo -e "${INFO} Mounting boot partition and updating configuration..."
-            sudo mount "${device}p1" /boot || { error_msg "Failed to mount ${device}p1"; sudo losetup -d "$device"; return 1; }
-            sudo tar -xzvf mod-boot-sdcard.tar.gz -C /boot || { error_msg "Failed to extract mod-boot-sdcard.tar.gz"; return 1; }
-
-            # Update root path di konfigurasi
-            echo -e "${INFO} Updating root path in configuration..."
-            uenv=$(sudo grep APPEND /boot/uEnv.txt | awk -F "root=" '{print $2}')
-            extlinux=$(sudo grep append /boot/extlinux/extlinux.conf | awk -F "root=" '{print $2}')
-            sudo sed -i "s|$extlinux|$uenv|g" /boot/extlinux/extlinux.conf
-
-            # Buat gambar untuk B860H
-            echo -e "${INFO} Creating image for B860H..."
-            dtb_b860h="meson-gxl-s905x-b860h.dtb"
-            sudo sed -i "s|meson-gxl.*.dtb|$dtb_b860h|g" /boot/boot.ini
-            sudo sed -i "s|meson-gxl.*.dtb|$dtb_b860h|g" /boot/extlinux/extlinux.conf
-            sudo sed -i "s|meson-gxl.*.dtb|$dtb_b860h|g" /boot/uEnv.txt
-
-            sudo umount /boot
-            sudo dd if=u-boot.bin of="$image_file" bs=1 count=444 conv=fsync 2>/dev/null
-            sudo dd if=u-boot.bin of="$image_file" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null
-            gzip -c "$image_file" > "${image_file%-s905x-*}-b860h.img.gz"
-
-            # Siapkan gambar untuk HG680P
-            echo -e "${INFO} Creating image for HG680P..."
-            sudo mount "${device}p1" /boot
-            dtb_hg680p="meson-gxl-s905x-p212.dtb"
-            sudo sed -i "s|meson-gxl.*.dtb|$dtb_hg680p|g" /boot/boot.ini
-            sudo sed -i "s|meson-gxl.*.dtb|$dtb_hg680p|g" /boot/extlinux/extlinux.conf
-            sudo sed -i "s|meson-gxl.*.dtb|$dtb_hg680p|g" /boot/uEnv.txt
-
-            sudo umount /boot
-            sudo dd if=u-boot.bin of="$image_file" bs=1 count=444 conv=fsync 2>/dev/null
-            sudo dd if=u-boot.bin of="$image_file" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null
-            gzip -c "$image_file" > "${image_file%-s905x-*}-hg680p.img.gz"
-
-            # Hapus loop device
-            echo -e "${INFO} Cleaning up..."
-            sudo losetup -d "$device"
-        done
-        echo -e "${SUCCESS} SD Card images for B860H and HG680P have been successfully created."
+    if [[ "${op_devices}" != "s905x" ]]; then
+        echo -e "${INFO} Device not supported. Skipping SD Card image creation."
+        return 0
     fi
+
+    echo -e "${STEPS} Start building SD Card image for S905X devices..."
+    cd "${imagebuilder_path}/out_firmware" || { error_msg "Failed to change directory to ${imagebuilder_path}/out_firmware"; return 1; }
+
+    local image_file="*-s905x-*.img.gz"
+    for file in ${image_file}; do
+        if [[ ! -e "$file" ]]; then
+            echo -e "${INFO} No file matches ${image_file}. Skipping."
+            continue
+        fi
+
+        echo -e "${INFO} Found file: $file"
+        echo -e "${INFO} Preparing to create SD Card image for S905X devices..."
+
+        # Download and extract mod-boot-sdcard
+        if ! curl -fsSOL https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip; then
+            error_msg "Failed to download mod-boot-sdcard"
+            return 1
+        fi
+
+        if ! unzip -q main.zip && rm -f main.zip; then
+            error_msg "Failed to extract mod-boot-sdcard"
+            return 1
+        fi
+
+        cd mod-boot-sdcard-main || { error_msg "Failed to change directory to mod-boot-sdcard-main"; return 1; }
+        mkdir -p openwrt/boot
+        mv "../${file}" openwrt/ || { error_msg "Failed to move $file to openwrt"; return 1; }
+        cp BootCardMaker/u-boot.bin openwrt/ || { error_msg "Failed to copy u-boot.bin to openwrt"; return 1; }
+        cp files/mod-boot-sdcard.tar.gz openwrt/ || { error_msg "Failed to copy mod-boot-sdcard.tar.gz to openwrt"; return 1; }
+        cd openwrt || { error_msg "Failed to change directory to openwrt"; return 1; }
+
+        # Extract the image file
+        echo -e "${INFO} Extracting image file..."
+        if ! gunzip "$file"; then
+            error_msg "Failed to extract $file"
+            return 1
+        fi
+
+        # Create loop device
+        echo -e "${INFO} Creating loop device for $file..."
+        device=$(sudo losetup -fP --show "$file")
+        if [[ -z "$device" ]]; then
+            error_msg "Failed to create loop device for $file"
+            return 1
+        fi
+
+        # Helper function to update boot configuration
+        update_boot_config() {
+            local dtb_file="$1"
+            echo -e "${INFO} Updating boot configuration for ${dtb_file}..."
+            sudo sed -i "s|meson-gxl.*.dtb|$dtb_file|g" /boot/boot.ini
+            sudo sed -i "s|meson-gxl.*.dtb|$dtb_file|g" /boot/extlinux/extlinux.conf
+            sudo sed -i "s|meson-gxl.*.dtb|$dtb_file|g" /boot/uEnv.txt
+        }
+
+        # Mount and update boot configuration for B860H
+        sudo mount "${device}p1" /boot || { error_msg "Failed to mount ${device}p1"; sudo losetup -d "$device"; return 1; }
+        sudo tar -xzvf mod-boot-sdcard.tar.gz -C /boot || { error_msg "Failed to extract mod-boot-sdcard.tar.gz"; return 1; }
+        update_boot_config "meson-gxl-s905x-b860h.dtb"
+        sudo umount /boot
+
+        # Finalize the image
+        echo -e "${INFO} Finalizing image for B860H..."
+        sudo dd if=u-boot.bin of="$file" bs=1 count=444 conv=fsync 2>/dev/null
+        sudo dd if=u-boot.bin of="$file" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null
+        gzip -c "$file" > "${file%-s905x-*}-b860h.img.gz"
+
+        # Prepare for HG680P
+        echo -e "${INFO} Preparing image for HG680P..."
+        sudo mount "${device}p1" /boot || { error_msg "Failed to remount ${device}p1"; sudo losetup -d "$device"; return 1; }
+        update_boot_config "meson-gxl-s905x-p212.dtb"
+        sudo umount /boot
+
+        # Finalize the image for HG680P
+        echo -e "${INFO} Finalizing image for HG680P..."
+        sudo dd if=u-boot.bin of="$file" bs=1 count=444 conv=fsync 2>/dev/null
+        sudo dd if=u-boot.bin of="$file" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null
+        gzip -c "$file" > "${file%-s905x-*}-hg680p.img.gz"
+
+        # Cleanup
+        echo -e "${INFO} Cleaning up..."
+        sudo losetup -d "$device"
+    done
+
+    echo -e "${SUCCESS} SD Card images for B860H and HG680P have been successfully created."
 }
 
 rename_firmware() {
