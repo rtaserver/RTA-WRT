@@ -597,6 +597,7 @@ rebuild_firmware() {
         sleep 1
     done
     if wait $make_pid; then
+        echo -e "\n${INFO} Firmware build completed."
         for file in ${imagebuilder_path}/bin/targets/*/*/*.img.gz; do
             [[ -e "$file" ]] || continue
             mv -f "$file" "${imagebuilder_path}/out_firmware"
