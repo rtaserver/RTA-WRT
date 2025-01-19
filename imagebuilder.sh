@@ -737,7 +737,6 @@ build_mod_sdcard() {
         error_msg "Failed to download mod-boot-sdcard"
         return 1
     fi
-    rm -rf mod-boot-sdcard-main 2>/dev/null
     echo -e "${SUCCESS} mod-boot-sdcard successfully downloaded."
 
     # Extract with error handling
@@ -761,16 +760,6 @@ build_mod_sdcard() {
     local file_name=$(basename "${filename%.gz}")
     echo -e "${SUCCESS} OpenWRT image file found: ${file_name}.${file_type}"
 
-    # Move files with error handling
-    echo -e "${INFO} Moving bootloader and image files..."
-    if ! sudo mv mod-boot-sdcard-main/BootCardMaker/u-boot.bin "${imgpath}/" || \
-       ! sudo mv mod-boot-sdcard-main/files/mod-boot-sdcard.tar.gz "${imgpath}/"; then
-        error_msg "Failed to move bootloader or image files"
-        return 1
-    fi
-    rm -rf mod-boot-sdcard-main
-    echo -e "${SUCCESS} Bootloader and image files successfully moved."
-
     # Improved modify_boot_files function with better error handling
     modify_boot_files() {
         local dtb=$1
@@ -780,6 +769,15 @@ build_mod_sdcard() {
         mkdir -p ${image_suffix}/boot
 
         cp "${imgpath}/${file_name}.gz" "${image_suffix}/"
+
+        # Move files with error handling
+        echo -e "${INFO} Moving bootloader and image files..."
+        if ! sudo cp mod-boot-sdcard-main/BootCardMaker/u-boot.bin "${image_suffix}/" || \
+        ! sudo cp mod-boot-sdcard-main/files/mod-boot-sdcard.tar.gz "${image_suffix}/"; then
+            error_msg "Failed to move bootloader or image files"
+            return 1
+        fi
+        echo -e "${SUCCESS} Bootloader and image files successfully moved."
 
         cd ${image_suffix} || {
             error_msg "Failed to change directory to ${image_suffix}"
