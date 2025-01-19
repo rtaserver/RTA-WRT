@@ -39,7 +39,7 @@ Custom Script By FriWrt
 ## Device yang Didukung
 
 ### Amlogic
-     s905x (HG680P, B860Hv1/v2)
+     s905x (HG680P, B860Hv1/v2) | Mod Boot SDCARD
      s905x2 (HG680FJ, B860Hv5, MNC CYBORG001)
      s905x3 
      s905x4 (AKARI AX810, dll)
