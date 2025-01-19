@@ -890,12 +890,7 @@ build_mod_sdcard() {
         fi
     done
 
-    if ls "${imgpath}/${file_name}.gz" 1> /dev/null 2>&1; then
-        sudo rm -rf "${imgpath}/${file_name}.gz"
-        echo -e "${SUCCESS} All boot files successfully modified."
-    else
-        echo -e "${ERROR} No firmware files found for Amlogic devices"
-    fi
+    echo -e "${SUCCESS} All boot files successfully modified."
     return 0
 }
 
