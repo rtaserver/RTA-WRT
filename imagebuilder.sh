@@ -890,8 +890,12 @@ build_mod_sdcard() {
         fi
     done
 
-    rm -rf "${imagebuilder_path}/out_firmware/${op_source}-${op_branch}*-s905x-*.img.gz"
-    echo -e "${SUCCESS} All boot files successfully modified."
+    if ls "${imgpath}/${file_name}.gz" 1> /dev/null 2>&1; then
+        sudo rm -rf "${imgpath}/${file_name}.gz"
+        echo -e "${SUCCESS} All boot files successfully modified."
+    else
+        echo -e "${ERROR} No firmware files found for Amlogic devices"
+    fi
     return 0
 }
 
@@ -918,7 +922,7 @@ rename_firmware() {
         "-bcm27xx-bcm2710-rpi-3-ext4-sysupgrade|Broadcom_RaspberryPi_3B-Ext4_Sysupgrade"
         "-bcm27xx-bcm2710-rpi-3-squashfs-factory|Broadcom_RaspberryPi_3B-Squashfs_Factory"
         "-bcm27xx-bcm2710-rpi-3-squashfs-sysupgrade|Broadcom_RaspberryPi_3B-Squashfs_Sysupgrade"
-        
+
         "-bcm27xx-bcm2711-rpi-4-ext4-factory|Broadcom_RaspberryPi_4B-Ext4_Factory"
         "-bcm27xx-bcm2711-rpi-4-ext4-sysupgrade|Broadcom_RaspberryPi_4B-Ext4_Sysupgrade"
         "-bcm27xx-bcm2711-rpi-4-squashfs-factory|Broadcom_RaspberryPi_4B-Squashfs_Factory"
