@@ -880,7 +880,7 @@ build_mod_sdcard() {
         fi
     done
 
-    rm -rf ${imagebuilder_path}/out_firmware/${file_name}.gz
+    rm -rf "${imagebuilder_path}/out_firmware/${op_source}-${op_branch}*-s905x-*.img.gz"
     echo -e "${SUCCESS} All boot files successfully modified."
     return 0
 }
