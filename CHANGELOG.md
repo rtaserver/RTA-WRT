@@ -1,5 +1,16 @@
 # What's New!
 
+**Changelog** (19-01-2025)
+
+- Minor Bug Fixes
+- Fixed Theme Argon
+- Add Build : Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit)
+- Add Build : Raspberry Pi 4B/400/CM4 (64bit)
+- Add Mod SDCard : s905x-hg680p
+- Add Mod SDCard : s905x-b860h-v1
+- Add Mod SDCard : s905x-b860h-v2
+- Update Mihomo TProxy
+
 **Changelog** (06-01-2025):
 
 - Test Build OpenWrt 24.10
