@@ -62,7 +62,7 @@
              <td><a href='/cgi-bin/luci/admin/services/passwall'><img src="{{ media }}/navbar/passwall.png" width="35" height="35"></a></td>
 			 <td><a href='/cgi-bin/luci/admin/services/mihomo'><img src="{{ media }}/navbar/mihomo.png" width="35" height="35"></a></td>
 			 <td><a href='/cgi-bin/luci/admin/system/tinyfm'><img src="{{ media }}/navbar/tinyfm.png" width="35" height="35"></a></td>
-             <td><a href='/cgi-bin/luci/admin/services/ttyd'><img src="{{ media }}/navbar/terminal.png" width="35" height="35"></a></td>
+             <td><a href='/cgi-bin/luci/admin/services/ttyd/ttyd'><img src="{{ media }}/navbar/terminal.png" width="35" height="35"></a></td>
 			 <td><a href='/cgi-bin/luci/admin/status/netmon'><img src="{{ media }}/navbar/netmon.png" width="35" height="35"></a></td>
              <td><a href='/cgi-bin/luci/admin/network/network'><img src="{{ media }}/navbar/interface.png" width="35" height="35"></a></td>
             </tr>
@@ -207,7 +207,7 @@ function updatemenu(){1==document.getElementById("responsive-menu").checked?(doc
   <ul>
 	<li><a href='https://github.com/rizkikotet-dev/RTA-WRT'>About</a></li>
     <li><a href='http://192.168.8.1/' target='_blank'>Modem</a></li>    
-    <li><a href='/cgi-bin/luci/admin/services/ttyd'>Terminal</a></li>
+    <li><a href='/cgi-bin/luci/admin/services/ttyd/ttyd'>Terminal</a></li>
 	<li><a id="yacd" target='_blank'><p>Yacd</p></a></li>
 	<script type="text/javascript">document.getElementById("yacd").setAttribute("href", "http://" + window.location.hostname + ":9090/ui/yacd/?hostname=" + window.location.hostname + "&port=9090&secret=rizkikotet",);</script>
   </ul>
