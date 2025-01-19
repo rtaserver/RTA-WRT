@@ -873,7 +873,7 @@ build_mod_sdcard() {
                     kernel="${BASH_REMATCH[0]}"
                 fi
                 local new_name
-                new_name="RTA-WRT${op_source}-${op_branch}-${replace}-${kernel}.img.gz"
+                new_name="RTA-WRT${op_source}-${op_branch}-Amlogic_s905x-${image_suffix}-${kernel}.img.gz"
                 echo -e "${INFO} Renaming: $file → $new_name"
                 if ! mv "$file" "../${new_name}"; then
                     error_msg "Failed to rename $file"
