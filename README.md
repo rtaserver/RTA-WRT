@@ -44,39 +44,45 @@ Custom Script By FriWrt
      s905x3 
      s905x4 (AKARI AX810, dll)
 
- ### Allwinner
+### Allwinner
      H5 (Orange Pi Zero Plus 2, Orange Pi Zero Plus, Orange Pi Prime, Orange Pi PC2)
      H6 (Orange Pi 1 Plus, Orange Pi Lite 2, Orange Pi 3 LTS, Orange Pi 3)
      H616 (Orange Pi Zero 2)
      H618 (Orange Pi Zero 3, Orange Pi Zero 2W)
 
- ### Rockchip
+### Rockchip
      RK3566 (Orange Pi 3B)
      RK3588S (Orange Pi 5)
      RK3588 (Orange Pi 5 Plus)
 
- ### Broadcom
+### Broadcom
      BCM2710 (Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit))
+     BCM2711 (Raspberry Pi 4B/400/CM4 (64bit))
 
- ### Generic
+### Generic
      x86-64
 
 
 ## Informasi
 
-```
-- 192.168.1.1 | pengguna: root | kata sandi: rtawrt
+### Informasi Sistem
+
+- Alamat IP: 192.168.1.1
+- Pengguna: root
+- Kata Sandi: rtawrt
 - SSID: RTA-WRT_2g / RTA-WRT_5g
-- Modemmanager dengan koneksi ulang otomatis,
-- Openclash dengan rilis beta terbaru dan inti MetaCubeX Mihomo terbaru,
-- Passwall sebagai aplikasi *Tunneling* alternatif,
-- TinyFm file manager,
-- Internet Detector Dan Lite Watchdog,
-- Tema Argon dengan beberapa gambar login kustom yang keren,
-- 3ginfo lite dan Modeminfo, sms-tool, dan aplikasi dukungan modem lainnya,
-- Dukungan Layar OLED (hanya Raspberrry Pi 4B yang diuji),
-- dll.~
-```
+
+### Fitur Utama
+
+- Modemmanager dengan koneksi ulang otomatis
+- Openclash dengan inti MetaCubeX Mihomo terbaru
+- Passwall *Tunneling* alternatif
+- MihomoTProxy *Tunneling* alternatif
+- TinyFm file manager
+- Internet Detector Dan Lite Watchdog
+- Tema Argon Dan Material dengan beberapa gambar login kustom yang keren
+- 3ginfo lite dan Modeminfo, sms-tool, dan aplikasi dukungan modem lainnya
+- Dukungan Layar OLED (hanya Raspberrry Pi 4B yang diuji)
 
 ---
 

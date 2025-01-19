@@ -19,9 +19,9 @@ on:
         type: choice
         options:
           - openwrt:24.10.0-rc5
+          - openwrt:23.05.5
           - immortalwrt:24.10.0-rc3
           - immortalwrt:23.05.4
-          - openwrt:23.05.5
       devices:
         description: "Select device target:"
         required: true
@@ -53,7 +53,8 @@ on:
           - rk3588-orangepi-5plus
           - rk3588s-orangepi-5
           # Broadcom
-          - bcm2710-rpi-3
+          - bcm2710-rpi-3b
+          - bcm2711-rpi-4b
           # x86
           - x86-64
       prerelease:
@@ -202,6 +203,7 @@ jobs:
 
             ### Broadcom
                 BCM2710 (Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit))
+                BCM2711 (Raspberry Pi 4B/400/CM4 (64bit))
 
             ### Generic
                 x86-64
@@ -209,19 +211,24 @@ jobs:
 
             ## Informasi
 
-            ```
-            - 192.168.1.1 | pengguna: root | kata sandi: rtawrt
+            ### Informasi Sistem
+
+            - Alamat IP: 192.168.1.1
+            - Pengguna: root
+            - Kata Sandi: rtawrt
             - SSID: RTA-WRT_2g / RTA-WRT_5g
-            - Modemmanager dengan koneksi ulang otomatis,
-            - Openclash dengan rilis beta terbaru dan inti MetaCubeX Mihomo terbaru,
-            - Passwall sebagai aplikasi *Tunneling* alternatif,
-            - TinyFm file manager,
-            - Internet Detector Dan Lite Watchdog,
-            - Tema Argon dengan beberapa gambar login kustom yang keren,
-            - 3ginfo lite dan Modeminfo, sms-tool, dan aplikasi dukungan modem lainnya,
-            - Dukungan Layar OLED (hanya Raspberrry Pi 4B yang diuji),
-            - dll.~
-            ```
+
+            ### Fitur Utama
+
+            - Modemmanager dengan koneksi ulang otomatis
+            - Openclash dengan inti MetaCubeX Mihomo terbaru
+            - Passwall *Tunneling* alternatif
+            - MihomoTProxy *Tunneling* alternatif
+            - TinyFm file manager
+            - Internet Detector Dan Lite Watchdog
+            - Tema Argon Dan Material dengan beberapa gambar login kustom yang keren
+            - 3ginfo lite dan Modeminfo, sms-tool, dan aplikasi dukungan modem lainnya
+            - Dukungan Layar OLED (hanya Raspberrry Pi 4B yang diuji)
 
   notify:
     needs: build

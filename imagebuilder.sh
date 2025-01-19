@@ -30,6 +30,7 @@
 #- rk3588-orangepi-5plus | Rockchip RK3588 Orange Pi 5 Plus
 #- rk3588s-orangepi-5 | Rockchip RK3588S Orange Pi 5
 #- bcm2710 | Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit)
+#- bcm2711 | Raspberry Pi 4B/400 (64bit)
 #- x86-64 | x86 64bit
 #================================================================================================
 
@@ -145,7 +146,7 @@ download_imagebuilder() {
 
     # Determine target and architecture based on device
     case "${op_devices}" in
-        h5-*|h616-*|h618-*|h6-*)
+        h5-*|h616-*|h618-*|h6-*) # Allwinner (H5/H616/H618/H6)
             op_target="allwinner"
             target_profile="generic"
             target_system="armsr/armv8"
@@ -155,7 +156,7 @@ download_imagebuilder() {
             ARCH_3="aarch64_generic"
             KERNEL="6.6.6-AW64-DBAI"
             ;;
-        s905*)
+        s905*) # Amlogic (S905*)
             op_target="amlogic"
             target_profile="generic"
             target_system="armsr/armv8"
@@ -165,7 +166,7 @@ download_imagebuilder() {
             ARCH_3="aarch64_generic"
             KERNEL="6.1.66-DBAI"
             ;;
-        rk*)
+        rk*) # Rockchip (RK*)
             op_target="rockchip"
             target_profile="generic"
             target_system="armsr/armv8"
@@ -184,7 +185,16 @@ download_imagebuilder() {
             ARCH_2="aarch64"
             ARCH_3="aarch64_cortex-a53"
             ;;
-        x86-64|x86_64)
+        bcm2711*) # Raspberry Pi 4B/400 (64bit)
+            op_target="bcm2711"
+            target_profile="rpi-4"
+            target_system="bcm27xx/bcm2711"
+            target_name="bcm27xx-bcm2711"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_cortex-a72"
+            ;;
+        x86-64|x86_64) # (x86_64)
             op_target="x86-64"
             target_profile="generic"
             target_system="x86/64"
@@ -575,8 +585,8 @@ rebuild_firmware() {
         MISC+=" luci-app-amlogic ath9k-htc-firmware btrfs-progs hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-cfg80211 kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs kmod-mac80211 wireless-tools wpa-cli wpa-supplicant"
         EXCLUDED+=" -procd-ujail"
         ;;
-    allwinner|rockchip)
-        #MISC+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio"
+    bcm27*)
+        MISC+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio"
         ;;
     x86_64)
         MISC+=" kmod-iwlwifi iw-full pciutils"
@@ -904,7 +914,8 @@ rename_firmware() {
         # Format: "search|replace"
 
         # bcm27xx
-        "-bcm27xx-bcm2710-rpi-3|Broadcom_RaspberryPi_3"
+        "-bcm27xx-bcm2710-rpi-3|Broadcom_RaspberryPi_3B"
+        "-bcm27xx-bcm2711-rpi-4|Broadcom_RaspberryPi_4B"
         
         # Allwinner
         "-h5-orangepi-pc2-|Allwinner_OrangePi_PC2"
