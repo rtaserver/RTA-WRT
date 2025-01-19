@@ -824,13 +824,14 @@ build_mod_sdcard() {
 
         # Update configuration files
         echo -e "${INFO} Updating configuration files..."
-        local uenv extlinux boot
-        uenv=$(grep -oP "root=\K[^ ]+" boot/uEnv.txt)
-        extlinux=$(grep -oP "root=\K[^ ]+" boot/extlinux/extlinux.conf)
-        boot=$(grep -oP 'dtb=.+?/(?<name>[^"]+)' boot/boot.ini | cut -d'"' -f1)
+        local uenv=$(sudo cat boot/uEnv.txt | grep APPEND | awk -F "root=" '{print $2}')
+        local extlinux=$(sudo cat boot/extlinux/extlinux.conf | grep append | awk -F "root=" '{print $2}')
+        local boot=$(sudo cat boot/boot.ini | grep dtb | awk -F "/" '{print $4}' | cut -d'"' -f1)
 
         sudo sed -i "s|$extlinux|$uenv|g" boot/extlinux/extlinux.conf
-        sudo sed -i "s|$boot|$dtb|g" boot/boot.ini boot/extlinux/extlinux.conf boot/uEnv.txt
+        sudo sed -i "s|$boot|$dtb|g" boot/boot.ini
+        sudo sed -i "s|$boot|$dtb|g" boot/extlinux/extlinux.conf
+        sudo sed -i "s|$boot|$dtb|g" boot/uEnv.txt
 
         sync
         sudo umount boot
