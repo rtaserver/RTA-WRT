@@ -726,18 +726,10 @@ build_mod_sdcard() {
         echo -e "${INFO} Cleaning up temporary files..."
         sudo umount boot 2>/dev/null
         sudo losetup -D 2>/dev/null
-        rm -rf boot main.zip mod-boot-sdcard-main 2>/dev/null
     }
     
     # Ensure cleanup runs on script exit
     trap cleanup EXIT
-    
-    # Create necessary directories with error handling
-    echo -e "${INFO} Creating directories..."
-    if ! sudo mkdir -p "${imgpath}/boot"; then
-        error_msg "Failed to create boot directory"
-        return 1
-    fi
 
     # Download and verify modification files
     echo -e "${INFO} Downloading mod-boot-sdcard..."
@@ -745,6 +737,7 @@ build_mod_sdcard() {
         error_msg "Failed to download mod-boot-sdcard"
         return 1
     fi
+    rm -rf mod-boot-sdcard-main 2>/dev/null
     echo -e "${SUCCESS} mod-boot-sdcard successfully downloaded."
 
     # Extract with error handling
@@ -753,7 +746,7 @@ build_mod_sdcard() {
         error_msg "Failed to extract mod-boot-sdcard"
         return 1
     fi
-    rm -f main.zip
+    rm -f main.zip 2>/dev/null
     echo -e "${SUCCESS} mod-boot-sdcard successfully extracted."
 
     # Find and validate OpenWRT image file
@@ -784,7 +777,7 @@ build_mod_sdcard() {
         local image_suffix=$2
         local device=""
 
-        mkdir -p ${image_suffix}
+        mkdir -p ${image_suffix}/boot
 
         cp "${imgpath}/${file_name}.gz" "${image_suffix}/"
 
@@ -876,12 +869,14 @@ build_mod_sdcard() {
 
         # Rename with version information
         local new_name="RTA-WRT${op_source}-${op_branch}-Amlogic_s905x-${image_suffix}-k${kernel_version}-DBAI.img.gz"
-        if ! mv "${file_name}.gz" "$new_name"; then
-            error_msg "Failed to rename compressed image"
+        if ! mv "${file_name}.gz" "../${new_name}"; then
+            error_msg "Failed to rename compressed image: ${file_name}.gz → ${new_name}"
             return 1
         fi
+        echo -e "${SUCCESS} renamed compressed image: ${file_name}.gz → ${new_name}"
 
         cd ../
+        rm -rf "${image_suffix}"
         
         echo -e "${SUCCESS} Successfully processed ${image_suffix}"
         return 0
