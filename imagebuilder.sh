@@ -865,7 +865,7 @@ build_mod_sdcard() {
         echo -e "${INFO} Renaming image file..."
         local kernel new_name
         kernel=$(grep -oP 'k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)?' <<<"${file_name}")
-        new_name="RTA-WRT${op_source}-${op_branch}-Amlogic_s905x-${image_suffix}-MOD_SDCARD-${kernel}.img.gz"
+        new_name="RTA-WRT${op_source}-${op_branch}-Amlogic_s905x-MOD_SDCARD-${image_suffix}-${kernel}.img.gz"
 
         mv "${file_name}.gz" "../${new_name}" || {
             error_msg "Failed to rename image file"
