@@ -673,11 +673,13 @@ ulobuilder() {
     echo -e "${INFO} Applying UloBuilder patches..."
     if [[ -f "./.github/workflows/ULO_Workflow.patch" ]]; then
         mv ./.github/workflows/ULO_Workflow.patch ./ULO_Workflow.patch
-        if ! patch -p1 < ./ULO_Workflow.patch; then
-            error_msg "Failed to apply UloBuilder patch"
+        if ! patch -p1 < ./ULO_Workflow.patch >/dev/null 2>&1; then
+            echo -e "${WARN} Failed to apply UloBuilder patch"
+        else
+            echo -e "${SUCCESS} UloBuilder patch applied successfully"
         fi
     else
-        error_msg "UloBuilder patch file not found"
+        echo -e "${WARN} UloBuilder patch not found"
     fi
 
     # Run UloBuilder
@@ -762,8 +764,8 @@ build_mod_sdcard() {
         return 1
     fi
     
-    local file_type=$(basename "$filename" | sed -E 's/.*\.(img\.(gz|xz))$/\1/')
-    local file_name=$(basename "$filename" | sed -E 's/\.(gz|xz)$//')
+    local file_type="gz"
+    local file_name=$(basename "${filename%.gz}")
     echo -e "${SUCCESS} OpenWRT image file found: ${file_name}.${file_type}"
 
     # Move files with error handling
@@ -781,6 +783,15 @@ build_mod_sdcard() {
         local dtb=$1
         local image_suffix=$2
         local device=""
+
+        mkdir -p ${image_suffix}
+
+        cp "${imgpath}/${file_name}.gz" "${image_suffix}/"
+
+        cd ${image_suffix} || {
+            error_msg "Failed to change directory to ${image_suffix}"
+            return 1
+        }
 
         # Decompress the OpenWRT image
         echo -e "${INFO} Decompressing the OpenWRT image..."
@@ -869,6 +880,8 @@ build_mod_sdcard() {
             error_msg "Failed to rename compressed image"
             return 1
         fi
+
+        cd ../
         
         echo -e "${SUCCESS} Successfully processed ${image_suffix}"
         return 0
