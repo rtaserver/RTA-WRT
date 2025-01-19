@@ -174,17 +174,54 @@ jobs:
           prerelease: ${{ inputs.prerelease }}
           body: |
             ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASE_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
-            ### RTA-WRT ${{ env.BASE }}-${{ env.BRANCH }} Image Information
 
-            ${{ steps.changelog.outputs.CHANGELOG }}
+            ## RTA-WRT - Image Information
 
-            See [here](https://github.com/rizkikotet-dev/RTA-WRT?tab=readme-ov-file#detail-firmware) for detailed features and information.
-            
-            Default Settings:
-            - IP Address: 192.168.1.1
-            - Username: root
-            - Password: rtawrt
-            - WIFI SSID: RTAWRT_2g | RTAWRT_5g (if supported)
+            ### Peringatan untuk Instalasi Pertama
+
+            `Booting awal memerlukan waktu agak lama karena Penyimpanan Partisi Ulang dan konfigurasi tambahan`
+
+            ## Device yang Didukung
+
+            ### Amlogic
+                s905x (HG680P, B860Hv1/v2) | Mod Boot SDCARD
+                s905x2 (HG680FJ, B860Hv5, MNC CYBORG001)
+                s905x3 
+                s905x4 (AKARI AX810, dll)
+
+            ### Allwinner
+                H5 (Orange Pi Zero Plus 2, Orange Pi Zero Plus, Orange Pi Prime, Orange Pi PC2)
+                H6 (Orange Pi 1 Plus, Orange Pi Lite 2, Orange Pi 3 LTS, Orange Pi 3)
+                H616 (Orange Pi Zero 2)
+                H618 (Orange Pi Zero 3, Orange Pi Zero 2W)
+
+            ### Rockchip
+                RK3566 (Orange Pi 3B)
+                RK3588S (Orange Pi 5)
+                RK3588 (Orange Pi 5 Plus)
+
+            ### Broadcom
+                BCM2710 (Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit))
+
+            ### Generic
+                x86-64
+
+
+            ## Informasi
+
+            ```
+            - 192.168.1.1 | pengguna: root | kata sandi: rtawrt
+            - SSID: RTA-WRT_2g / RTA-WRT_5g
+            - Modemmanager dengan koneksi ulang otomatis,
+            - Openclash dengan rilis beta terbaru dan inti MetaCubeX Mihomo terbaru,
+            - Passwall sebagai aplikasi *Tunneling* alternatif,
+            - TinyFm file manager,
+            - Internet Detector Dan Lite Watchdog,
+            - Tema Argon dengan beberapa gambar login kustom yang keren,
+            - 3ginfo lite dan Modeminfo, sms-tool, dan aplikasi dukungan modem lainnya,
+            - Dukungan Layar OLED (hanya Raspberrry Pi 4B yang diuji),
+            - dll.~
+            ```
 
   notify:
     needs: build
