@@ -868,12 +868,20 @@ build_mod_sdcard() {
         fi
 
         # Rename with version information
-        local new_name="RTA-WRT${op_source}-${op_branch}-Amlogic_s905x-${image_suffix}-k${kernel_version}-DBAI.img.gz"
-        if ! mv "${file_name}.gz" "../${new_name}"; then
-            error_msg "Failed to rename compressed image: ${file_name}.gz → ${new_name}"
-            return 1
-        fi
-        echo -e "${SUCCESS} renamed compressed image: ${file_name}.gz → ${new_name}"
+        for file in "${file_name}.gz"; do
+            if [[ -f "$file" ]]; then
+                local kernel=""
+                if [[ "$file" =~ k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)? ]]; then
+                    kernel="${BASH_REMATCH[0]}"
+                fi
+                local new_name
+                new_name="RTA-WRT${op_source}-${op_branch}-${replace}-${kernel}.img.gz"
+                echo -e "${INFO} Renaming: $file → $new_name"
+                if ! mv "$file" "../${new_name}"; then
+                    error_msg "Failed to rename $file"
+                fi
+            fi
+        done
 
         cd ../
         rm -rf "${image_suffix}"
