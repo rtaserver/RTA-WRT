@@ -812,7 +812,7 @@ build_mod_sdcard() {
 
         # Compress the image again
         echo -e "${INFO} Compressing the image..."
-        sudo gzip ${file_name}.gz >/dev/null 2>&1
+        sudo gzip ${file_name} >/dev/null 2>&1
         for file in ${file_name}.gz; do
             if [[ -f "$file" ]]; then
                 local kernel=""
