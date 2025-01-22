@@ -346,6 +346,8 @@ custom_packages() {
     # Handle other custom package downloads
     CURVER=$(echo "$op_branch" | awk -F. '{print $1"."$2}')
     declare -a other_packages=(
+        "libuci20130104|https://downloads.openwrt.org/releases/packages-23.05/$ARCH_3/base"
+        
         "modemmanager-rpcd|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "luci-proto-modemmanager|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/luci"
         "libqmi|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
