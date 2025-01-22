@@ -346,7 +346,7 @@ custom_packages() {
     # Handle other custom package downloads
     CURVER=$(echo "$op_branch" | awk -F. '{print $1"."$2}')
     declare -a other_packages=(
-        "libuci20130104|https://downloads.openwrt.org/releases/packages-23.05/$ARCH_3/base"
+        #"libuci20130104|https://downloads.openwrt.org/releases/packages-23.05/$ARCH_3/base"
 
         "modemmanager-rpcd|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "luci-proto-modemmanager|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/luci"
@@ -608,7 +608,7 @@ rebuild_firmware() {
         ;;
     esac
 
-    PACKAGES+=" $MISC zram-swap adb parted losetup resize2fs luci luci-ssl luci-app-poweroff luci-app-log-viewer luci-app-ramfree htop bash curl wget wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
+    PACKAGES+=" $MISC zram-swap adb parted losetup resize2fs luci luci-ssl luci-app-poweroff luci-app-log-viewer luci-app-ramfree htop bash curl wget-nossl wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
 
     # Membuat image firmware dan menampilkan progress bar
     make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files"
