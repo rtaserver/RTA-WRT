@@ -599,6 +599,8 @@ rebuild_firmware() {
         ;;
     24.10)
         PACKAGES+=" owut"
+        #TEST
+        PACKAGES+=" luci-app-amlogic block-mount"
         ;;
     esac
 
@@ -615,6 +617,11 @@ rebuild_firmware() {
         done
         for file in ${imagebuilder_path}/bin/targets/*/*/*rootfs.tar.gz; do
             [[ -e "$file" ]] || continue
+            if [[ "${op_target}" == "x86_64" ]]; then
+                if [[ -f "$file" ]]; then
+                    mv -f "$file" "${imagebuilder_path}/out_firmware"
+                fi
+            fi
             mv -f "$file" "${imagebuilder_path}/out_rootfs"
             echo -e "${SUCCESS} Rootfs successfully created: $file"
         done
@@ -1087,6 +1094,7 @@ rename_firmware() {
         "x86-64-generic-squashfs-combined-efi|X86_64_Generic_Squashfs_Combined_EFI"
         "x86-64-generic-squashfs-combined|X86_64_Generic_Squashfs_Combined"
         "x86-64-generic-squashfs-rootfs|X86_64_Generic_Squashfs_Rootfs"
+        "x86-64-generic-rootfs|X86_64_Generic_Rootfs"
     )
 
    for pattern in "${search_replace_patterns[@]}"; do
