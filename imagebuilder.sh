@@ -661,8 +661,8 @@ ophub-builder() {
 
     # Download and extract OphubBuilder
     echo -e "${INFO} Downloading OphubBuilder..."
-    if ! curl -fsSL "${ULO_REPO}" -o main.zip; then
-        error_msg "Failed to download OphubBuilder from ${ULO_REPO}"
+    if ! curl -fsSL "${OPHUB_REPO}" -o main.zip; then
+        error_msg "Failed to download OphubBuilder from ${OPHUB_REPO}"
     fi
 
     if ! unzip -q main.zip; then
