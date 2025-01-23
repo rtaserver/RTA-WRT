@@ -973,30 +973,41 @@ build_mod_sdcard() {
     }
 
     # Find OpenWRT image file
-    echo -e "${INFO} Finding OpenWRT image file..."
-    local filename filename1 filename2 
-    filename=$(find . -name "*-s905x-*" | head -n 1) # File ULO
-    filename1=$(find . -name "*_amlogic_s905x_*" | head -n 1) # File OPHUB
-    filename2=$(find . -name "*_amlogic_s905x-b860h_*" | head -n 1) # File OPHUB
-    # if [ -z "$filename" || "$filename1" || "$filename2"]; then
-    #     error_msg "No OpenWRT image file found"
-    #     return 1
-    # fi
+    echo -e "${INFO} Finding OpenWRT image files..."
+    local files_ulo=$(find . -name "*-s905x-*" -name "*.img.gz")
+    local files_ophub_p212=$(find . -name "*_amlogic_s905x_*" -name "*.img.gz")
+    local files_ophub_b860h=$(find . -name "*_amlogic_s905x-b860h_*" -name "*.img.gz")
 
-    # Process devices
+    # Process devices with improved naming convention
     local devices=(
-        "${filename}:ULO:meson-gxl-s905x-p212.dtb:HG680P"
-        "${filename}:ULO:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
-        "${filename1}:OPHUB:meson-gxl-s905x-p212.dtb:HG680P"
-        "${filename2}:OPHUB:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
+        "ULO:HG680P:meson-gxl-s905x-p212.dtb"
+        "ULO:B860H_v1-v2:meson-gxl-s905x-b860h.dtb"
+        "OPHUB:HG680P:meson-gxl-s905x-p212.dtb"
+        "OPHUB:B860H_v1-v2:meson-gxl-s905x-b860h.dtb"
     )
-    for device_pair in "${devices[@]}"; do
-        IFS=: read -r image_path pack_name dtb suffix <<< "$device_pair"
-        echo -e "${STEPS} Processing device: ${suffix}"
-        if ! modify_boot_files "$image_path" "$pack_name" "$dtb" "$suffix"; then
-            error_msg "Failed to process ${suffix}"
-            return 1
+
+    for device_config in "${devices[@]}"; do
+        IFS=: read -r pack_name suffix dtb <<< "$device_config"
+        
+        # Select appropriate files based on pack_name and suffix
+        local files_to_process
+        if [ "$pack_name" = "ULO" ]; then
+            files_to_process=$(echo "$files_ulo" | grep -E "${suffix,,}")
+        elif [ "$pack_name" = "OPHUB" ]; then
+            if [ "$suffix" = "HG680P" ]; then
+                files_to_process="$files_ophub_p212"
+            elif [ "$suffix" = "B860H_v1-v2" ]; then
+                files_to_process="$files_ophub_b860h"
+            fi
         fi
+
+        # Process each matching file
+        for file in $files_to_process; do
+            if ! modify_boot_files "$file" "$pack_name" "$dtb" "$suffix"; then
+                error_msg "Failed to process ${suffix}"
+                return 1
+            fi
+        done
     done
 
     echo -e "${SUCCESS} All boot files successfully modified."
