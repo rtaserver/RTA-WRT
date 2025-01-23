@@ -18,7 +18,7 @@ on:
         default: "openwrt:23.05.5"
         type: choice
         options:
-          - openwrt:24.10.0-rc5
+          - openwrt:24.10.0-rc6
           - openwrt:23.05.5
           - immortalwrt:24.10.0-rc3
           - immortalwrt:23.05.4

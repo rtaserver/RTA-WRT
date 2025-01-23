@@ -212,6 +212,7 @@ download_imagebuilder() {
     # Determine file extension and download URL
     CURVER=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
     archive_ext="tar.$([[ "${CURVER}" == "23.05" ]] && echo "xz" || echo "zst")"
+    archive_ext="tar.$([[ "${CURVER}" == "23.05" ]] && echo "xz" || [[ "${CURVER}" == "24.10" ]] && echo "zst")"
     download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
 
     echo -e "${INFO} Downloading ImageBuilder from: ${download_file}"
@@ -248,7 +249,7 @@ adjust_settings() {
 
     # Variables
     DTM=$(date '+%d-%m-%Y')
-    CURVER=$(echo "$op_branch" | awk -F. '{print $1"."$2}')
+    CURVER=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
 
     # Update 99-first-setup
     FIRST_SETUP_FILE="${custom_files_path}/etc/uci-defaults/99-first-setup"
@@ -344,7 +345,7 @@ custom_packages() {
     download_packages "github" github_packages[@]
 
     # Handle other custom package downloads
-    CURVER=$(echo "$op_branch" | awk -F. '{print $1"."$2}')
+    CURVER=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
     declare -a other_packages=(
         #"libuci20130104|https://downloads.openwrt.org/releases/packages-23.05/$ARCH_3/base"
 
@@ -360,6 +361,8 @@ custom_packages() {
         "dns2tcp|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/packages"
         "luci-app-argon-config|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
         "luci-theme-argon|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
+        "luci-app-openclash|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
+        "luci-app-passwall|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
         
         "luci-app-tailscale|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
         "luci-app-diskman|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
@@ -390,11 +393,6 @@ custom_packages() {
 
     download_packages "custom" other_packages[@]
 
-    # OpenClash
-    openclash_api="https://api.github.com/repos/vernesong/OpenClash/releases"
-    openclash_file_ipk="luci-app-openclash"
-    openclash_file_ipk_down=$(curl -s "${openclash_api}" | grep "browser_download_url" | grep -oE "https.*${openclash_file_ipk}.*.ipk" | head -n 1)
-
     echo -e "${STEPS} Start Clash Core Download !"
     core_dir="${custom_files_path}/etc/openclash/core"
     mkdir -p "$core_dir"
@@ -406,14 +404,12 @@ custom_packages() {
 
     # Mihomo
     mihomo_api="https://api.github.com/repos/rizkikotet-dev/OpenWrt-mihomo-Mod/releases"
-    mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-${CURVER}" #$op_branch | cut -d '.' -f 1-2
+    mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-${CURVER}"
     mihomo_file_ipk_down=$(curl -s "${mihomo_api}" | grep "browser_download_url" | grep -oE "https.*${mihomo_file_ipk}.*.tar.gz" | head -n 1)
 
     #passwall
     passwall_api="https://api.github.com/repos/xiaorouji/openwrt-passwall/releases"
-    passwall_file_ipk="luci-23.05_luci-app-passwall"
     passwall_file_zip="passwall_packages_ipk_${ARCH_3}"
-    passwall_file_ipk_down=$(curl -s "${passwall_api}" | grep "browser_download_url" | grep -oE "https.*${passwall_file_ipk}.*.ipk" | head -n 1)
     passwall_file_zip_down=$(curl -s "${passwall_api}" | grep "browser_download_url" | grep -oE "https.*${passwall_file_zip}.*.zip" | head -n 1)
 
 
@@ -421,7 +417,6 @@ custom_packages() {
     echo -e "${STEPS} Installing OpenClash, Mihomo And Passwall"
 
     echo -e "${INFO} Downloading OpenClash package"
-    curl -fsSOL "${openclash_file_ipk_down}" || error_msg "Error: Failed to download OpenClash package."
     curl -fsSL -o "${core_dir}/clash_meta.gz" "${clash_meta}" || error_msg "Error: Failed to download Clash Meta package."
     gzip -d "$core_dir/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
     echo -e "${SUCCESS} OpenClash Packages downloaded successfully."
@@ -432,7 +427,6 @@ custom_packages() {
     echo -e "${SUCCESS} Mihomo Packages downloaded successfully."
 
     echo -e "${INFO} Downloading Passwall package"
-    curl -fsSOL "${passwall_file_ipk_down}" || error_msg "Error: Failed to download Passwall package."
     curl -fsSOL "${passwall_file_zip_down}" || error_msg "Error: Failed to download Passwall Zip package."
     unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip" || error_msg "Error: Failed to extract Passwall package."
     echo -e "${SUCCESS} Passwall Packages downloaded successfully."
@@ -595,7 +589,7 @@ rebuild_firmware() {
         ;;
     esac
 
-    CURVER=$(echo "$op_branch" | awk -F. '{print $1"."$2}')
+    CURVER=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
     case "${CURVER}" in
     23.05)
         if [ "$op_target" == "amlogic" ]; then
@@ -632,7 +626,98 @@ rebuild_firmware() {
     fi
 }
 
-ulobuilder() {
+ophub-builder() {
+    local readonly OPHUB_REPO="https://github.com/ophub/amlogic-s9xxx-openwrt/archive/refs/heads/main.zip"
+    local readonly REQUIRED_SPACE_MB=2048
+    local readonly TARGET_BOARD="s905x_s905x-b860h"
+    local readonly TARGET_KERNEL="5.15.y_5.10.y"
+
+    echo -e "${STEPS} Starting firmware repackaging with Ophub..."
+
+    # Validate required variables
+    local readonly REQUIRED_VARS=("imagebuilder_path" "op_sourse" "op_branch" "op_devices")
+    for var in "${REQUIRED_VARS[@]}"; do
+        if [[ -z "${!var}" ]]; then
+            error_msg "Required variable '${var}' is not set"
+        fi
+    done
+
+    # Check available disk space
+    local available_space
+    available_space=$(df -m "${imagebuilder_path}" | awk 'NR==2 {print $4}')
+    if [[ ${available_space} -lt ${REQUIRED_SPACE_MB} ]]; then
+        error_msg "Insufficient disk space. Required: ${REQUIRED_SPACE_MB}MB, Available: ${available_space}MB"
+    fi
+
+    # Create working directory structure
+    local readonly work_dir="${imagebuilder_path}"
+    local readonly ophub_dir="${work_dir}/amlogic-s9xxx-openwrt-main"
+    local readonly output_dir="${work_dir}/out_firmware"
+
+    # Navigate to working directory
+    if ! cd "${work_dir}"; then
+        error_msg "Failed to access working directory: ${work_dir}"
+    fi
+
+    # Download and extract OphubBuilder
+    echo -e "${INFO} Downloading OphubBuilder..."
+    if ! curl -fsSL "${ULO_REPO}" -o main.zip; then
+        error_msg "Failed to download OphubBuilder from ${ULO_REPO}"
+    fi
+
+    if ! unzip -q main.zip; then
+        error_msg "Failed to extract OphubBuilder archive"
+        rm -f main.zip
+    fi
+    rm -f main.zip
+
+    # Prepare OphubBuilder directory
+    mkdir -p "${ophub_dir}/openwrt-armvirt"
+
+    # Validate and copy rootfs
+    local readonly rootfs_file="${work_dir}/out_rootfs/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz"
+    if [[ ! -f "${rootfs_file}" ]]; then
+        error_msg "Rootfs file not found: ${rootfs_file}"
+    fi
+
+    echo -e "${INFO} Copying rootfs file..."
+    if ! cp -f "${rootfs_file}" "${ophub_dir}/openwrt-armvirt/"; then
+        error_msg "Failed to copy rootfs file"
+    fi
+
+    # Change to OphubBuilder directory
+    if ! cd "${ophub_dir}"; then
+        error_msg "Failed to access OphubBuilder directory: ${ophub_dir}"
+    fi
+
+    # Run OphubBuilder
+    echo -e "${INFO} Running OphubBuilder..."
+    local readonly rootfs_basename=$(basename "${rootfs_file}")
+    if ! sudo ./remake -b ${TARGET_BOARD} -k ${TARGET_KERNEL} -s 1024 >/dev/null 2>&1; then
+        error_msg "OphubBuilder execution failed"
+    fi
+
+    # Verify and copy output files
+    local readonly device_output_dir="./openwrt/out"
+    if [[ ! -d "${device_output_dir}" ]]; then
+        error_msg "OphubBuilder output directory not found: ${device_output_dir}"
+    fi
+
+    echo -e "${INFO} Copying firmware files to output directory..."
+    if ! cp -rf "${device_output_dir}"/* "${output_dir}/"; then
+        error_msg "Failed to copy firmware files to output directory"
+    fi
+
+    # Verify output files exist
+    if ! ls "${output_dir}"/* >/dev/null 2>&1; then
+        error_msg "No firmware files found in output directory"
+    fi
+
+    sync && sleep 3
+    echo -e "${SUCCESS} Firmware repacking completed successfully!"
+}
+
+ulo-builder() {
     local readonly ULO_REPO="https://github.com/armarchindo/ULO-Builder/archive/refs/heads/main.zip"
     local readonly REQUIRED_SPACE_MB=2048  # 2GB minimum required space
 
@@ -770,23 +855,16 @@ build_mod_sdcard() {
     rm -f main.zip
     echo -e "${SUCCESS} mod-boot-sdcard successfully extracted."
 
-    # Find OpenWRT image file
-    echo -e "${INFO} Finding OpenWRT image file..."
-    local filename
-    filename=$(find . -name "*-s905x-*" | head -n 1)
-    if [ -z "$filename" ]; then
-        error_msg "No OpenWRT image file found"
-        return 1
-    fi
-
-    local file_name file_type="gz"
-    file_name=$(basename "${filename%.gz}")
-    echo -e "${SUCCESS} OpenWRT image file found: ${file_name}.${file_type}"
-
     # Modify boot files
     modify_boot_files() {
-        local dtb=$1
-        local image_suffix=$2
+        local image_path=$1
+        local pack_name=$2
+        local dtb=$3
+        local image_suffix=$4
+        local file_name file_type="gz"
+
+        file_name=$(basename "${image_path%.gz}")
+        echo -e "${SUCCESS} OpenWRT image file found: ${file_name}.${file_type}"
 
         mkdir -p "${image_suffix}/boot"
 
@@ -880,7 +958,7 @@ build_mod_sdcard() {
         echo -e "${INFO} Renaming image file..."
         local kernel new_name
         kernel=$(grep -oP 'k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)?' <<<"${file_name}")
-        new_name="RTA-WRT${op_source}-${op_branch}-Amlogic_s905x-MOD_SDCARD-${image_suffix}-${kernel}.img.gz"
+        new_name="RTA-WRT${op_source}-${op_branch}-${pack_name}-Amlogic_s905x-MOD_SDCARD-${image_suffix}-${kernel}.img.gz"
 
         mv "${file_name}.gz" "../${new_name}" || {
             error_msg "Failed to rename image file"
@@ -894,12 +972,28 @@ build_mod_sdcard() {
         return 0
     }
 
+    # Find OpenWRT image file
+    echo -e "${INFO} Finding OpenWRT image file..."
+    local filename filename1 filename2 
+    filename=$(find . -name "*-s905x-*" | head -n 1) # File ULO
+    filename1=$(find . -name "*_amlogic_s905x_*" | head -n 1) # File OPHUB
+    filename2=$(find . -name "*_amlogic_s905x-b860h_*" | head -n 1) # File OPHUB
+    # if [ -z "$filename" || "$filename1" || "$filename2"]; then
+    #     error_msg "No OpenWRT image file found"
+    #     return 1
+    # fi
+
     # Process devices
-    local devices=("meson-gxl-s905x-b860h.dtb:B860H_v1-v2" "meson-gxl-s905x-p212.dtb:HG680P")
+    local devices=(
+        "${filename}:ULO:meson-gxl-s905x-p212.dtb:HG680P"
+        "${filename}:ULO:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
+        "${filename1}:OPHUB:meson-gxl-s905x-p212.dtb:HG680P"
+        "${filename2}:OPHUB:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
+    )
     for device_pair in "${devices[@]}"; do
-        IFS=: read -r dtb suffix <<< "$device_pair"
+        IFS=: read -r image_path pack_name dtb suffix <<< "$device_pair"
         echo -e "${STEPS} Processing device: ${suffix}"
-        if ! modify_boot_files "$dtb" "$suffix"; then
+        if ! modify_boot_files "$image_path" "$pack_name" "$dtb" "$suffix"; then
             error_msg "Failed to process ${suffix}"
             return 1
         fi
@@ -956,7 +1050,9 @@ rename_firmware() {
         "-rk3588s-orangepi-5-|Rockchip_OrangePi_5"
         
         # Amlogic
-        "-s905x-|Amlogic_s905x-NON_MOD_SDCARD"
+        "-s905x-|ULO-Amlogic_s905x-NON_MOD_SDCARD"
+        "_amlogic_s905x_|OPHUB-Amlogic_s905x-NON_MOD_SDCARD-HG680P"
+        "_amlogic_s905x-b860h_|OPHUB-Amlogic_s905x-NON_MOD_SDCARD-B860H_v1-v2"
         "-s905x2-|Amlogic_s905x2"
         "-s905x3-|Amlogic_s905x3"
         "-s905x4-|Amlogic_s905x4"
@@ -1021,7 +1117,8 @@ custom_files
 rebuild_firmware
 case "${op_devices}" in
     h5-*|h616-*|h618-*|h6-*|s905*|rk*)
-        ulobuilder
+        ophub-builder
+        ulo-builder
         if [[ "${op_devices}" == "s905x" ]]; then
             build_mod_sdcard
         fi
