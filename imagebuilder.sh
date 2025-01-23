@@ -693,7 +693,7 @@ ophub-builder() {
     # Run OphubBuilder
     echo -e "${INFO} Running OphubBuilder..."
     local readonly rootfs_basename=$(basename "${rootfs_file}")
-    if ! sudo ./remake -b ${TARGET_BOARD} -k ${TARGET_KERNEL} -s 1024 >/dev/null 2>&1; then
+    if ! sudo ./remake -b ${TARGET_BOARD} -k ${TARGET_KERNEL} -s 1024; then
         error_msg "OphubBuilder execution failed"
     fi
 
@@ -795,7 +795,7 @@ ulo-builder() {
     # Run UloBuilder
     echo -e "${INFO} Running UloBuilder..."
     local readonly rootfs_basename=$(basename "${rootfs_file}")
-    if ! sudo ./ulo -y -m "${op_devices}" -r "${rootfs_basename}" -k "${KERNEL}" -s 1024 >/dev/null 2>&1; then
+    if ! sudo ./ulo -y -m "${op_devices}" -r "${rootfs_basename}" -k "${KERNEL}" -s 1024; then
         error_msg "UloBuilder execution failed"
     fi
 
@@ -821,7 +821,7 @@ ulo-builder() {
 
 # Modify boot files for Amlogic devices
 build_mod_sdcard() {
-    echo -e "${STEPS} Modifying boot files for Amlogic devices..."
+    echo -e "${STEPS} Modifying boot files for Amlogic s905x devices..."
     
     # Validate and set paths
     if ! cd "${imagebuilder_path}/out_firmware"; then
@@ -854,6 +854,7 @@ build_mod_sdcard() {
     fi
     rm -f main.zip
     echo -e "${SUCCESS} mod-boot-sdcard successfully extracted."
+    sleep 3
 
     # Modify boot files
     modify_boot_files() {
@@ -1106,7 +1107,8 @@ rename_firmware() {
                 fi
                 echo -e "${INFO} Renaming: $file → $new_name"
                 mv "$file" "$new_name" || {
-                    error_msg "Failed to rename $file"
+                    echo -e "${WARN} Failed to rename $file"
+                    continue
                 }
             fi
         done
