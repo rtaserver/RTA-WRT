@@ -990,19 +990,30 @@ build_mod_sdcard() {
         IFS=: read -r pack_name suffix dtb <<< "$device_config"
         
         # Select appropriate files based on pack_name and suffix
-        local files_to_process
+        local files_to_process=()
+        
         if [ "$pack_name" = "ULO" ]; then
-            files_to_process=$(echo "$files_ulo" | grep -E "${suffix,,}")
+            while IFS= read -r file; do
+                if [[ "$file" =~ "${suffix,,}" ]]; then
+                    files_to_process+=("$file")
+                fi
+            done <<< "$files_ulo"
         elif [ "$pack_name" = "OPHUB" ]; then
             if [ "$suffix" = "HG680P" ]; then
-                files_to_process="$files_ophub_p212"
+                files_to_process+=($files_ophub_p212)
             elif [ "$suffix" = "B860H_v1-v2" ]; then
-                files_to_process="$files_ophub_b860h"
+                files_to_process+=($files_ophub_b860h)
             fi
         fi
 
         # Process each matching file
-        for file in $files_to_process; do
+        for file in "${files_to_process[@]}"; do
+            # Validate file exists and is not empty
+            if [ -z "$file" ] || [ ! -f "$file" ]; then
+                echo -e "${WARN} Skipping invalid file: ${file}"
+                continue
+            fi
+
             if ! modify_boot_files "$file" "$pack_name" "$dtb" "$suffix"; then
                 error_msg "Failed to process ${suffix}"
                 return 1
