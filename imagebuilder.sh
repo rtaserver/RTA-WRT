@@ -1119,6 +1119,17 @@ rename_firmware() {
                 }
             fi
         done
+        for file in *"${search}"*rootfs.tar.gz; do
+            if [[ -f "$file" ]]; then
+                local new_name
+                new_name="RTA-WRT${op_source}-${op_branch}-${replace}.tar.gz"
+                echo -e "${INFO} Renaming: $file → $new_name"
+                mv "$file" "$new_name" || {
+                    echo -e "${WARN} Failed to rename $file"
+                    continue
+                }
+            fi
+        done
     done
 
     sync && sleep 3

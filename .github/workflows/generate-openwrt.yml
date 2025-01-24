@@ -168,7 +168,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ env.DEVICES }}
-          path: imagebuilder/out_firmware/*.img.gz
+          path: imagebuilder/out_firmware/*
           retention-days: 7
 
       - name: Upload to Release
@@ -178,7 +178,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
-          file: imagebuilder/out_firmware/*.img.gz
+          file: imagebuilder/out_firmware/*
           tag: ${{ env.RELEASE_TAG }}-${{ env.DATE }}
           release_name: RTA-WRT - ${{ env.RELEASE_TAG }}-${{ env.DATE }}
           overwrite: true
