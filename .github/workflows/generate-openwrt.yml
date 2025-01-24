@@ -186,6 +186,8 @@ jobs:
           body: |
             ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASE_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
 
+            ![Static Badge](https://img.shields.io/badge/Telegram-1?style=for-the-badge&logo=Telegram&label=Channel&color=%23059dfa&link=https%3A%2F%2Ft.me%2Frtawrt) ![Static Badge](https://img.shields.io/badge/Telegram-1?style=for-the-badge&logo=Telegram&label=Group&color=%23059dfa&link=https%3A%2F%2Ft.me%2Fbackup_rtawrt)  ![Static Badge](https://img.shields.io/badge/Telegram-1?style=for-the-badge&logo=Telegram&label=Personal&color=%23059dfa&link=https%3A%2F%2Ft.me%2FRizkiKotet)
+            
             ## RTA-WRT - Image Information
 
             ### Changelog

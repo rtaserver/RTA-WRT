@@ -6,10 +6,12 @@
 
 <h3 align="center">OpenWrt - 23.05.5 | ImmortalWrt - 23.05.4</h3>
 
-<!-- <h4 align="center">Join Telegram Untuk Mendapatkan Notifikasi Update Dan Tutorial</h4>
+<h4 align="center">Join Telegram Untuk Mendapatkan Notifikasi Update Dan Tutorial</h4>
 <p align="center">
-<a href="https://t.me/rta_wrt"><img src="https://img.shields.io/badge/Chanel_Telegram-Klik_Disini-bg?style=for-the-badge&logo=telegram"></a>
-</p> -->
+<a href="https://t.me/rtawrt"><img alt="Static Badge" src="https://img.shields.io/badge/Telegram-1?style=for-the-badge&logo=Telegram&label=Channel&color=%23059dfa"></a>
+<a href="https://t.me/backup_rtawrt"><img alt="Static Badge" src="https://img.shields.io/badge/Telegram-1?style=for-the-badge&logo=Telegram&label=Group&color=%23059dfa"></a>
+<a href="https://t.me/RizkiKotet"><img alt="Static Badge" src="https://img.shields.io/badge/Telegram-1?style=for-the-badge&logo=Telegram&label=Personal&color=%23059dfa"></a>
+</p>
 
 <p align="center">
 Builder With ImageBuilder
