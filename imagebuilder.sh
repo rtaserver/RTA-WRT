@@ -347,7 +347,6 @@ custom_packages() {
     # Handle other custom package downloads
     CURVER=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
     declare -a other_packages=(
-        #"libuci20130104|https://downloads.openwrt.org/releases/packages-23.05/$ARCH_3/base"
 
         "modemmanager-rpcd|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "luci-proto-modemmanager|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/luci"
@@ -364,14 +363,16 @@ custom_packages() {
         "luci-app-openclash|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
         "luci-app-passwall|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
         
-        "luci-app-tailscale|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
-        "luci-app-diskman|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
-        "modeminfo|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
-        "luci-app-modeminfo|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
-        "atinout|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
-        "luci-app-poweroff|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
-        "xmm-modem|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
-        "luci-app-lite-watchdog|https://dl.openwrt.ai/packages-$CURVER/$ARCH_3/kiddin9"
+        "luci-app-tailscale|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
+        "luci-app-diskman|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
+        "modeminfo|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
+        "luci-app-modeminfo|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
+        "atinout|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
+        "luci-app-poweroff|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
+        "xmm-modem|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
+        "luci-app-lite-watchdog|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
+        "luci-theme-alpha|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
+        "luci-app-alpha-config|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
         
         "luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
@@ -525,7 +526,7 @@ rebuild_firmware() {
     modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi usbutils luci-proto-mbim luci-proto-ncm \
     kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial-sierrawireless \
     kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem \
-    kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty"
+    kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty block-mount"
 
     # Modem Tools
     PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"
@@ -578,7 +579,7 @@ rebuild_firmware() {
 
     case "${op_target}" in
     amlogic)
-        MISC+=" ath9k-htc-firmware btrfs-progs hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-cfg80211 kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs kmod-mac80211 wireless-tools wpa-cli wpa-supplicant"
+        MISC+=" luci-app-amlogic ath9k-htc-firmware btrfs-progs hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-cfg80211 kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs kmod-mac80211 wireless-tools wpa-cli wpa-supplicant"
         EXCLUDED+=" -procd-ujail"
         ;;
     bcm27*)
@@ -592,15 +593,10 @@ rebuild_firmware() {
     CURVER=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
     case "${CURVER}" in
     23.05)
-        if [ "$op_target" == "amlogic" ]; then
-            PACKAGES+=" luci-app-amlogic"
-        fi
-        PACKAGES+=" block-mount"
+        PACKAGES+=""
         ;;
     24.10)
         PACKAGES+=" owut"
-        #TEST
-        PACKAGES+=" luci-app-amlogic block-mount"
         ;;
     esac
 

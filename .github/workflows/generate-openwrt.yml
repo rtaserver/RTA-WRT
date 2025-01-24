@@ -115,6 +115,16 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Add changelog info to new release description
+        id: changelog
+        shell: bash
+        run: |
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
+          r="${r//'%'/'%25'}"
+          r="${r//$'\n'/'%0A'}"
+          r="${r//$'\r'/'%0D'}"  
+          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
+
       - name: Install Required Packages
         run: |
           sudo apt-get -qq update
@@ -177,6 +187,9 @@ jobs:
             ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASE_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
 
             ## RTA-WRT - Image Information
+
+            ### Changelog
+            ${{ steps.changelog.outputs.CHANGELOG }}
 
             ### Peringatan untuk Instalasi Pertama
 
