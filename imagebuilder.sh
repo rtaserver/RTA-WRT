@@ -1159,9 +1159,9 @@ custom_files
 rebuild_firmware
 case "${op_devices}" in
     h5-*|h616-*|h618-*|h6-*|s905*|rk*)
-        ophub-builder
         ulo-builder
         if [[ "${op_devices}" == "s905x" ]]; then
+            ophub-builder
             build_mod_sdcard
         fi
         ;;
