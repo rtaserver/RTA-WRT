@@ -7,7 +7,6 @@
 - Add Repack s905x By Ophub
 - Fixed Terminal
 - Add Source Packages By kiddin9
-- Add Rakitan Manager
 
 **Changelog** (19-01-2025)
 

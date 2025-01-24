@@ -381,7 +381,7 @@ custom_packages() {
         "luci-app-disks-info|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "luci-app-log-viewer|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "luci-app-temp-status|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
-        "luci-app-rakitanmanager|https://github.com/rtaserver/RakitanManager/raw/refs/heads/package/main"
+        #"luci-app-rakitanmanager|https://github.com/rtaserver/RakitanManager/raw/refs/heads/package/main"
 
         "luci-app-zerotier|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
         "luci-app-ramfree|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
@@ -601,7 +601,7 @@ rebuild_firmware() {
         ;;
     esac
 
-    MISC+=" luci-app-rakitanmanager"
+    #MISC+=" luci-app-rakitanmanager"
 
     PACKAGES+=" $MISC zram-swap adb parted losetup resize2fs luci luci-ssl luci-app-poweroff luci-app-log-viewer luci-app-ramfree htop bash curl wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
 
