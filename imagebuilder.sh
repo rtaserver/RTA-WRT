@@ -586,7 +586,7 @@ rebuild_firmware() {
     bcm27*)
         MISC+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio"
         ;;
-    x86_64)
+    x86-64)
         MISC+=" kmod-iwlwifi iw-full pciutils"
         ;;
     esac
@@ -616,10 +616,11 @@ rebuild_firmware() {
         done
         for file in ${imagebuilder_path}/bin/targets/*/*/*rootfs.tar.gz; do
             [[ -e "$file" ]] || continue
-            if [[ "${op_target}" == "x86_64" ]]; then
+            if [[ "${op_target}" == "x86-64" ]]; then
                 mv -f "$file" "${imagebuilder_path}/out_firmware"
+            else
+                mv -f "$file" "${imagebuilder_path}/out_rootfs"
             fi
-            mv -f "$file" "${imagebuilder_path}/out_rootfs"
             echo -e "${SUCCESS} Rootfs successfully created: $file"
         done
 
