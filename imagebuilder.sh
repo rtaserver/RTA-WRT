@@ -617,9 +617,7 @@ rebuild_firmware() {
         for file in ${imagebuilder_path}/bin/targets/*/*/*rootfs.tar.gz; do
             [[ -e "$file" ]] || continue
             if [[ "${op_target}" == "x86_64" ]]; then
-                if [[ -f "$file" ]]; then
-                    mv -f "$file" "${imagebuilder_path}/out_firmware"
-                fi
+                mv -f "$file" "${imagebuilder_path}/out_firmware"
             fi
             mv -f "$file" "${imagebuilder_path}/out_rootfs"
             echo -e "${SUCCESS} Rootfs successfully created: $file"
@@ -1119,7 +1117,7 @@ rename_firmware() {
                 }
             fi
         done
-        for file in *"${search}"*rootfs.tar.gz; do
+        for file in *"${search}"*.tar.gz; do
             if [[ -f "$file" ]]; then
                 local new_name
                 new_name="RTA-WRT${op_source}-${op_branch}-${replace}.tar.gz"
