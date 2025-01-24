@@ -601,7 +601,7 @@ rebuild_firmware() {
         ;;
     esac
 
-    MISC+="luci-app-rakitanmanager"
+    MISC+=" luci-app-rakitanmanager"
 
     PACKAGES+=" $MISC zram-swap adb parted losetup resize2fs luci luci-ssl luci-app-poweroff luci-app-log-viewer luci-app-ramfree htop bash curl wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
 
