@@ -54,7 +54,7 @@ ERROR="[\033[91m ERROR \033[0m]"
 # Handle errors and exit
 error_msg() {
     echo -e "${ERROR} $1"
-    return 1 || exit 1
+    exit 1
 }
 
 # Download external packages
@@ -327,10 +327,10 @@ custom_packages() {
         if [[ $? -eq 0 ]]; then
             echo -e "${SUCCESS} Custom packages successfully copied to the [ packages ] directory."
         else
-            echo -e "${WARN} Failed to copy packages from ${custom_packages_path} to the [ packages ] directory."
+            echo -e "${WARNING} Failed to copy packages from ${custom_packages_path} to the [ packages ] directory."
         fi
     else
-        echo -e "${WARN} No customized packages found in ${custom_packages_path}."
+        echo -e "${WARNING} No customized packages found in ${custom_packages_path}."
     fi
 
     cd "packages" || { error_msg "Failed to access [packages] directory."; }
@@ -520,8 +520,8 @@ rebuild_firmware() {
     mkdir -p ${imagebuilder_path}/out_firmware ${imagebuilder_path}/out_rootfs
 
     # Selecting default packages, lib, theme, app and i18n, etc.
-    PACKAGES+=" file lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
-    PACKAGES+=" kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi \
+    PACKAGES+=" file zsh lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179 \
+    kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi \
     kmod-usb-net-cdc-ether kmod-usb-serial-option kmod-usb-serial kmod-usb-serial-wwan qmi-utils \
     kmod-usb-serial-qualcomm kmod-usb-acm kmod-usb-net-cdc-ncm kmod-usb-net-cdc-mbim umbim \
     modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi usbutils luci-proto-mbim luci-proto-ncm \
@@ -534,12 +534,12 @@ rebuild_firmware() {
     exfat-mkfs f2fs-tools f2fsck fdisk gawk getopt git gzip hostapd-common iconv iw iwinfo jq \
     jshn kmod-brcmfmac kmod-brcmutil kmod-cfg80211 kmod-mac80211 libjson-script liblucihttp \
     liblucihttp-lua losetup lsattr lsblk lscpu mkf2fs mount-utils openssl-util parted \
-    pigz ppp ppp-mod-pppoe proto-bonding pv rename resize2fs runc tar tini ttyd tune2fs \
+    pigz ppp ppp-mod-pppoe pv rename resize2fs runc tar tini ttyd tune2fs \
     uclient-fetch uhttpd uhttpd-mod-ubus unzip uqmi usb-modeswitch uuidgen wget-ssl whereis \
     which wpad-basic wwan xfs-fsck xfs-mkfs xz xz-utils ziptool zoneinfo-asia zoneinfo-core zstd \
     luci luci-base luci-compat luci-lib-base \
     luci-lib-ip luci-lib-ipkg luci-lib-jsonc luci-lib-nixio luci-mod-admin-full luci-mod-network \
-    luci-mod-status luci-mod-system luci-proto-3g luci-proto-bonding luci-proto-ipip luci-proto-ipv6 \
+    luci-mod-status luci-mod-system luci-proto-3g luci-proto-ipip luci-proto-ipv6 \
     luci-proto-ncm luci-proto-openconnect luci-proto-ppp luci-proto-qmi luci-proto-relay"
 
     # Modem Tools
