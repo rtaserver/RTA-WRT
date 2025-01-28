@@ -790,7 +790,6 @@ repackwrt() {
 
 # Modify boot files for Amlogic devices
 build_mod_sdcard() {
-
     # Device configurations
     local -A DEVICE_CONFIGS=(
         ["ULO:HG680P"]="meson-gxl-s905x-p212.dtb"
@@ -799,8 +798,8 @@ build_mod_sdcard() {
         ["OPHUB:B860H_v1-v2"]="meson-gxl-s905x-b860h.dtb"
     )
 
-    # Cleanup function
-    local cleanup() {
+    # Cleanup function - removed 'local' keyword
+    cleanup() {
         echo -e "${INFO} Cleaning up temporary files..."
         sudo umount boot 2>/dev/null || true
         sudo losetup -D 2>/dev/null || true
@@ -835,8 +834,8 @@ build_mod_sdcard() {
     local files_ophub_p212=$(find . -name "*_amlogic_s905x_*" -name "*.img.gz")
     local files_ophub_b860h=$(find . -name "*_amlogic_s905x-b860h_*" -name "*.img.gz")
 
-    # Inner function for modifying single image
-    local modify_single_image() {
+    # Inner function for modifying single image - removed 'local' keyword
+    modify_single_image() {
         local image_path="$1" pack_name="$2" dtb="$3" image_suffix="$4"
         local base_name device attempts
 
