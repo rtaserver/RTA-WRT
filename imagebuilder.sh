@@ -644,13 +644,18 @@ rebuild_firmware() {
     fi
 }
 
-ophub-builder() {
+repackwrt() {
+    local builder_type="$1"
     local readonly OPHUB_REPO="https://github.com/ophub/amlogic-s9xxx-openwrt/archive/refs/heads/main.zip"
+    local readonly ULO_REPO="https://github.com/armarchindo/ULO-Builder/archive/refs/heads/main.zip"
     local readonly REQUIRED_SPACE_MB=2048
     local readonly TARGET_BOARD="s905x_s905x-b860h"
     local readonly TARGET_KERNEL="5.15.y_5.10.y"
 
-    echo -e "${STEPS} Starting firmware repackaging with Ophub..."
+    # Validate builder type
+    if [[ "$builder_type" != "--ophub" && "$builder_type" != "--ulo" ]]; then
+        error_msg "Invalid builder type. Use --ophub or --ulo"
+    fi
 
     # Validate required variables
     local readonly REQUIRED_VARS=("imagebuilder_path" "op_sourse" "op_branch" "op_devices")
@@ -660,94 +665,10 @@ ophub-builder() {
         fi
     done
 
-    # Check available disk space
-    local available_space
-    available_space=$(df -m "${imagebuilder_path}" | awk 'NR==2 {print $4}')
-    if [[ ${available_space} -lt ${REQUIRED_SPACE_MB} ]]; then
-        error_msg "Insufficient disk space. Required: ${REQUIRED_SPACE_MB}MB, Available: ${available_space}MB"
+    # Additional check for ULO builder
+    if [[ "$builder_type" == "--ulo" && -z "${KERNEL}" ]]; then
+        error_msg "KERNEL variable is required for ULO builder"
     fi
-
-    # Create working directory structure
-    local readonly work_dir="${imagebuilder_path}"
-    local readonly ophub_dir="${work_dir}/amlogic-s9xxx-openwrt-main"
-    local readonly output_dir="${work_dir}/out_firmware"
-
-    # Navigate to working directory
-    if ! cd "${work_dir}"; then
-        error_msg "Failed to access working directory: ${work_dir}"
-    fi
-
-    # Download and extract OphubBuilder
-    echo -e "${INFO} Downloading OphubBuilder..."
-    if ! curl -fsSL "${OPHUB_REPO}" -o main.zip; then
-        error_msg "Failed to download OphubBuilder from ${OPHUB_REPO}"
-    fi
-
-    if ! unzip -q main.zip; then
-        error_msg "Failed to extract OphubBuilder archive"
-        rm -f main.zip
-    fi
-    rm -f main.zip
-
-    # Prepare OphubBuilder directory
-    mkdir -p "${ophub_dir}/openwrt-armvirt"
-
-    # Validate and copy rootfs
-    local readonly rootfs_file="${work_dir}/out_rootfs/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz"
-    if [[ ! -f "${rootfs_file}" ]]; then
-        error_msg "Rootfs file not found: ${rootfs_file}"
-    fi
-
-    echo -e "${INFO} Copying rootfs file..."
-    if ! cp -f "${rootfs_file}" "${ophub_dir}/openwrt-armvirt/"; then
-        error_msg "Failed to copy rootfs file"
-    fi
-
-    # Change to OphubBuilder directory
-    if ! cd "${ophub_dir}"; then
-        error_msg "Failed to access OphubBuilder directory: ${ophub_dir}"
-    fi
-
-    # Run OphubBuilder
-    echo -e "${INFO} Running OphubBuilder..."
-    local readonly rootfs_basename=$(basename "${rootfs_file}")
-    if ! sudo ./remake -b ${TARGET_BOARD} -k ${TARGET_KERNEL} -s 1024; then
-        error_msg "OphubBuilder execution failed"
-    fi
-
-    # Verify and copy output files
-    local readonly device_output_dir="./openwrt/out"
-    if [[ ! -d "${device_output_dir}" ]]; then
-        error_msg "OphubBuilder output directory not found: ${device_output_dir}"
-    fi
-
-    echo -e "${INFO} Copying firmware files to output directory..."
-    if ! cp -rf "${device_output_dir}"/* "${output_dir}/"; then
-        error_msg "Failed to copy firmware files to output directory"
-    fi
-
-    # Verify output files exist
-    if ! ls "${output_dir}"/* >/dev/null 2>&1; then
-        error_msg "No firmware files found in output directory"
-    fi
-
-    sync && sleep 3
-    echo -e "${SUCCESS} Firmware repacking completed successfully!"
-}
-
-ulo-builder() {
-    local readonly ULO_REPO="https://github.com/armarchindo/ULO-Builder/archive/refs/heads/main.zip"
-    local readonly REQUIRED_SPACE_MB=2048  # 2GB minimum required space
-
-    echo -e "${STEPS} Starting firmware repackaging with UloBuilder..."
-
-    # Validate required variables
-    local readonly REQUIRED_VARS=("imagebuilder_path" "op_sourse" "op_branch" "op_devices" "KERNEL")
-    for var in "${REQUIRED_VARS[@]}"; do
-        if [[ -z "${!var}" ]]; then
-            error_msg "Required variable '${var}' is not set"
-        fi
-    done
 
     # Check available disk space
     local available_space
@@ -758,28 +679,43 @@ ulo-builder() {
 
     # Create working directory structure
     local readonly work_dir="${imagebuilder_path}"
-    local readonly ulo_dir="${work_dir}/ULO-Builder-main"
-    local readonly output_dir="${work_dir}/out_firmware"
+    local builder_dir output_dir repo_url
+
+    if [[ "$builder_type" == "--ophub" ]]; then
+        builder_dir="${work_dir}/amlogic-s9xxx-openwrt-main"
+        repo_url="${OPHUB_REPO}"
+        echo -e "${STEPS} Starting firmware repackaging with Ophub..."
+    else
+        builder_dir="${work_dir}/ULO-Builder-main"
+        repo_url="${ULO_REPO}"
+        echo -e "${STEPS} Starting firmware repackaging with UloBuilder..."
+    fi
+
+    output_dir="${work_dir}/out_firmware"
 
     # Navigate to working directory
     if ! cd "${work_dir}"; then
         error_msg "Failed to access working directory: ${work_dir}"
     fi
 
-    # Download and extract UloBuilder
-    echo -e "${INFO} Downloading UloBuilder..."
-    if ! curl -fsSL "${ULO_REPO}" -o main.zip; then
-        error_msg "Failed to download UloBuilder from ${ULO_REPO}"
+    # Download and extract builder
+    echo -e "${INFO} Downloading builder..."
+    if ! curl -fsSL "${repo_url}" -o main.zip; then
+        error_msg "Failed to download builder from ${repo_url}"
     fi
 
     if ! unzip -q main.zip; then
-        error_msg "Failed to extract UloBuilder archive"
+        error_msg "Failed to extract builder archive"
         rm -f main.zip
     fi
     rm -f main.zip
 
-    # Prepare UloBuilder directory
-    mkdir -p "${ulo_dir}/rootfs"
+    # Prepare builder directory
+    if [[ "$builder_type" == "--ophub" ]]; then
+        mkdir -p "${builder_dir}/openwrt-armvirt"
+    else
+        mkdir -p "${builder_dir}/rootfs"
+    fi
 
     # Validate and copy rootfs
     local readonly rootfs_file="${work_dir}/out_rootfs/${op_sourse}-${op_branch}-armsr-armv8-generic-rootfs.tar.gz"
@@ -788,39 +724,54 @@ ulo-builder() {
     fi
 
     echo -e "${INFO} Copying rootfs file..."
-    if ! cp -f "${rootfs_file}" "${ulo_dir}/rootfs/"; then
-        error_msg "Failed to copy rootfs file"
-    fi
-
-    # Change to UloBuilder directory
-    if ! cd "${ulo_dir}"; then
-        error_msg "Failed to access UloBuilder directory: ${ulo_dir}"
-    fi
-
-    # Apply patches
-    echo -e "${INFO} Applying UloBuilder patches..."
-    if [[ -f "./.github/workflows/ULO_Workflow.patch" ]]; then
-        mv ./.github/workflows/ULO_Workflow.patch ./ULO_Workflow.patch
-        if ! patch -p1 < ./ULO_Workflow.patch >/dev/null 2>&1; then
-            echo -e "${WARN} Failed to apply UloBuilder patch"
-        else
-            echo -e "${SUCCESS} UloBuilder patch applied successfully"
+    if [[ "$builder_type" == "--ophub" ]]; then
+        if ! cp -f "${rootfs_file}" "${builder_dir}/openwrt-armvirt/"; then
+            error_msg "Failed to copy rootfs file"
         fi
     else
-        echo -e "${WARN} UloBuilder patch not found"
+        if ! cp -f "${rootfs_file}" "${builder_dir}/rootfs/"; then
+            error_msg "Failed to copy rootfs file"
+        fi
     fi
 
-    # Run UloBuilder
-    echo -e "${INFO} Running UloBuilder..."
-    local readonly rootfs_basename=$(basename "${rootfs_file}")
-    if ! sudo ./ulo -y -m "${op_devices}" -r "${rootfs_basename}" -k "${KERNEL}" -s 1024; then
-        error_msg "UloBuilder execution failed"
+    # Change to builder directory
+    if ! cd "${builder_dir}"; then
+        error_msg "Failed to access builder directory: ${builder_dir}"
+    fi
+
+    # Run builder-specific operations
+    if [[ "$builder_type" == "--ophub" ]]; then
+        echo -e "${INFO} Running OphubBuilder..."
+        if ! sudo ./remake -b ${TARGET_BOARD} -k ${TARGET_KERNEL} -s 1024; then
+            error_msg "OphubBuilder execution failed"
+        fi
+        device_output_dir="./openwrt/out"
+    else
+        # Apply ULO patches
+        echo -e "${INFO} Applying UloBuilder patches..."
+        if [[ -f "./.github/workflows/ULO_Workflow.patch" ]]; then
+            mv ./.github/workflows/ULO_Workflow.patch ./ULO_Workflow.patch
+            if ! patch -p1 < ./ULO_Workflow.patch >/dev/null 2>&1; then
+                echo -e "${WARN} Failed to apply UloBuilder patch"
+            else
+                echo -e "${SUCCESS} UloBuilder patch applied successfully"
+            fi
+        else
+            echo -e "${WARN} UloBuilder patch not found"
+        fi
+
+        # Run UloBuilder
+        echo -e "${INFO} Running UloBuilder..."
+        local readonly rootfs_basename=$(basename "${rootfs_file}")
+        if ! sudo ./ulo -y -m "${op_devices}" -r "${rootfs_basename}" -k "${KERNEL}" -s 1024; then
+            error_msg "UloBuilder execution failed"
+        fi
+        device_output_dir="./out/${op_devices}"
     fi
 
     # Verify and copy output files
-    local readonly device_output_dir="./out/${op_devices}"
     if [[ ! -d "${device_output_dir}" ]]; then
-        error_msg "UloBuilder output directory not found: ${device_output_dir}"
+        error_msg "Builder output directory not found: ${device_output_dir}"
     fi
 
     echo -e "${INFO} Copying firmware files to output directory..."
@@ -1115,12 +1066,13 @@ custom_config
 custom_files
 rebuild_firmware
 case "${op_devices}" in
-    h5-*|h616-*|h618-*|h6-*|s905*|rk*)
-        ulo-builder
-        if [[ "${op_devices}" == "s905x" ]]; then
-            ophub-builder
-            build_mod_sdcard
-        fi
+    s905x)
+        repackwrt --ulo
+        repackwrt --ophub
+        build_mod_sdcard
+        ;;
+    h5-*|h616-*|h618-*|h6-*|s905x[0-9]*|rk*)
+        repackwrt --ulo
         ;;
     *)
         ;;
