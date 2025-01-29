@@ -610,7 +610,9 @@ rebuild_firmware() {
         ;;
     bcm27*)
         MISC+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio"
+        EXCLUDED+=" -hostapd -hostapd-common -hostapd-utils"
         ;;
+    
     x86-64)
         MISC+=" kmod-iwlwifi iw-full pciutils"
         ;;
