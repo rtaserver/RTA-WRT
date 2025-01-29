@@ -804,138 +804,197 @@ repackwrt() {
 
 # Modify boot files for Amlogic devices
 build_mod_sdcard() {
+    # Define error codes
+    readonly E_CHDIR=1
+    readonly E_DOWNLOAD=2
+    readonly E_EXTRACT=3
+    readonly E_MOUNT=4
+    readonly E_MODIFY=5
+
     # Device configurations
-    local -A DEVICE_CONFIGS=(
+    declare -A DEVICE_CONFIGS=(
         ["ULO:HG680P"]="meson-gxl-s905x-p212.dtb"
         ["ULO:B860H_v1-v2"]="meson-gxl-s905x-b860h.dtb"
         ["OPHUB:HG680P"]="meson-gxl-s905x-p212.dtb"
         ["OPHUB:B860H_v1-v2"]="meson-gxl-s905x-b860h.dtb"
     )
 
-    # Cleanup function - removed 'local' keyword
+    # Cleanup function with better error handling
     cleanup() {
         echo -e "${INFO} Cleaning up temporary files..."
-        sudo umount boot 2>/dev/null || true
-        sudo losetup -D 2>/dev/null || true
-        rm -rf mod-boot-sdcard-main main.zip 2>/dev/null || true
+        if mountpoint -q boot 2>/dev/null; then
+            sudo umount boot || echo -e "${WARNING} Failed to unmount boot partition"
+        fi
+        sudo losetup -D || echo -e "${WARNING} Failed to detach all loop devices"
+        rm -rf mod-boot-sdcard-main main.zip 2>/dev/null || echo -e "${WARNING} Failed to remove temporary files"
     }
 
     # Set trap for cleanup
-    trap cleanup EXIT
+    trap cleanup EXIT INT TERM
 
     echo -e "${STEPS} Modifying boot files for Amlogic s905x devices..."
     
-    # Validate and change directory
-    cd "${imagebuilder_path}/out_firmware" || {
+    # Validate and change directory with error handling
+    if ! cd "${imagebuilder_path}/out_firmware"; then
         error_msg "Failed to change directory to ${imagebuilder_path}/out_firmware"
-    }
+        return ${E_CHDIR}
+    fi
 
-    # Download modification files
+    # Download and extract with better error handling
     echo -e "${INFO} Downloading mod-boot-sdcard..."
-    curl -fsSLO https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip || {
+    if ! curl -fsSLO https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip; then
         error_msg "Failed to download mod-boot-sdcard"
-    }
+        return ${E_DOWNLOAD}
+    fi
 
     echo -e "${INFO} Extracting mod-boot-sdcard..."
-    unzip -q main.zip || {
+    if ! unzip -q main.zip; then
         error_msg "Failed to extract mod-boot-sdcard"
-    }
+        rm -f main.zip
+        return ${E_EXTRACT}
+    fi
     rm -f main.zip
     echo -e "${SUCCESS} Mod-boot-sdcard successfully downloaded and extracted."
 
-    # Find OpenWRT image files
-    local files_ulo=$(find . -name "*-s905x-*" -name "*.img.gz")
-    local files_ophub_p212=$(find . -name "*_amlogic_s905x_*" -name "*.img.gz")
-    local files_ophub_b860h=$(find . -name "*_amlogic_s905x-b860h_*" -name "*.img.gz")
+    # Find OpenWRT image files with nullglob to handle no matches
+    shopt -s nullglob
+    local files_ulo=($(find . -name "*-s905x-*" -name "*.img.gz"))
+    local files_ophub_p212=($(find . -name "*_amlogic_s905x_*" -name "*.img.gz"))
+    local files_ophub_b860h=($(find . -name "*_amlogic_s905x-b860h_*" -name "*.img.gz"))
+    shopt -u nullglob
 
-    # Inner function for modifying single image - removed 'local' keyword
+    # Improved modify_single_image function with better error handling
     modify_single_image() {
         local image_path="$1" pack_name="$2" dtb="$3" image_suffix="$4"
-        local base_name device attempts
+        local base_name device mount_success=false
 
-        echo -e "${STEPS} Start Create Mod SDCARD ${pack_name} ${image_suffix}"
+        echo -e "${STEPS} Starting to create Mod SDCARD ${pack_name} ${image_suffix}"
 
         base_name=$(basename "${image_path%.gz}")
-        mkdir -p "${image_suffix}/boot"
-        cp "${image_path}" "${image_suffix}/"
+        mkdir -p "${image_suffix}/boot" || return ${E_MODIFY}
         
+        # Copy required files
+        cp "${image_path}" "${image_suffix}/" || return ${E_MODIFY}
         cp mod-boot-sdcard-main/BootCardMaker/u-boot.bin \
-           mod-boot-sdcard-main/files/mod-boot-sdcard.tar.gz "${image_suffix}/" || 
-            return 1
+           mod-boot-sdcard-main/files/mod-boot-sdcard.tar.gz "${image_suffix}/" || return ${E_MODIFY}
 
-        cd "${image_suffix}" || return 1
-        gunzip "${base_name}.gz" || return 1
+        # Change directory with error handling
+        if ! cd "${image_suffix}"; then
+            echo -e "${ERROR} Failed to change directory to ${image_suffix}"
+            return ${E_MODIFY}
+        fi
 
-        # Setup loop device
-        for _ in {1..3}; do
+        # Decompress image
+        if ! gunzip "${base_name}.gz"; then
+            echo -e "${ERROR} Failed to decompress image"
+            return ${E_MODIFY}
+        fi
+
+        # Setup loop device with retries
+        local retry_count=0
+        while ((retry_count < 3)); do
             device=$(sudo losetup -fP --show "${base_name}" 2>/dev/null) && break
+            ((retry_count++))
             sleep 1
         done
-        [[ -z "$device" ]] && return 1
 
-        # Mount image
-        attempts=0
-        while ((attempts < 3)); do
-            sudo mount "${device}p1" boot && break
-            ((attempts++))
+        if [[ -z "$device" ]]; then
+            echo -e "${ERROR} Failed to setup loop device"
+            return ${E_MODIFY}
+        fi
+
+        # Mount with retries
+        retry_count=0
+        while ((retry_count < 3)); do
+            if sudo mount "${device}p1" boot; then
+                mount_success=true
+                break
+            fi
+            ((retry_count++))
             sleep 1
         done
-        ((attempts == 3)) && return 1
 
-        # Apply modifications
-        sudo tar -xzf mod-boot-sdcard.tar.gz -C boot || return 1
+        if ! $mount_success; then
+            echo -e "${ERROR} Failed to mount boot partition"
+            sudo losetup -d "$device"
+            return ${E_MOUNT}
+        fi
 
-        # Update configurations
+        # Extract boot files
+        if ! sudo tar -xzf mod-boot-sdcard.tar.gz -C boot; then
+            echo -e "${ERROR} Failed to extract boot files"
+            sudo umount boot
+            sudo losetup -d "$device"
+            return ${E_MODIFY}
+        fi
+
+        # Update configurations with error checking
         local uenv dtb_current extlinux
-        uenv=$(sudo grep -oP 'APPEND.*root=\K[^ ]+' boot/uEnv.txt)
-        extlinux=$(sudo grep -oP 'append.*root=\K[^ ]+' boot/extlinux/extlinux.conf)
-        dtb_current=$(sudo grep -oP 'dtb\s+/\K[^"]+' boot/boot.ini | cut -d'/' -f4)
+        uenv=$(sudo grep -oP 'APPEND.*root=\K[^ ]+' boot/uEnv.txt) || true
+        extlinux=$(sudo grep -oP 'append.*root=\K[^ ]+' boot/extlinux/extlinux.conf) || true
+        dtb_current=$(sudo grep -oP 'dtb\s+/\K[^"]+' boot/boot.ini | cut -d'/' -f4) || true
 
-        sudo sed -i "s|$extlinux|$uenv|g" boot/extlinux/extlinux.conf
-        sudo sed -i "s|$dtb_current|$dtb|g" boot/boot.ini boot/extlinux/extlinux.conf boot/uEnv.txt
+        # Only update if values were found
+        if [[ -n "$extlinux" && -n "$uenv" ]]; then
+            sudo sed -i "s|$extlinux|$uenv|g" boot/extlinux/extlinux.conf
+        fi
+        if [[ -n "$dtb_current" ]]; then
+            sudo sed -i "s|$dtb_current|$dtb|g" boot/boot.ini boot/extlinux/extlinux.conf boot/uEnv.txt
+        fi
 
         sync
         sudo umount boot
-        
-        # Write bootloader
-        sudo dd if=u-boot.bin of="$device" bs=1 count=444 conv=fsync 2>/dev/null &&
-        sudo dd if=u-boot.bin of="$device" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null ||
-            return 1
+
+        # Write bootloader with error checking
+        if ! { sudo dd if=u-boot.bin of="$device" bs=1 count=444 conv=fsync 2>/dev/null &&
+               sudo dd if=u-boot.bin of="$device" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null; }; then
+            echo -e "${ERROR} Failed to write bootloader"
+            sudo losetup -d "$device"
+            return ${E_MODIFY}
+        fi
 
         sudo losetup -d "$device"
-        
+
         # Compress and rename
-        gzip "${base_name}" || return 1
+        if ! gzip "${base_name}"; then
+            echo -e "${ERROR} Failed to compress image"
+            return ${E_MODIFY}
+        fi
 
-        local kernel new_name
-        kernel=$(grep -oP 'k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)?' <<< "${base_name}")
-        new_name="RTA-WRT${op_source}-${op_branch}-${pack_name}-Amlogic_s905x-MOD_SDCARD-${image_suffix}-${kernel}.img.gz"
+        local kernel
+        kernel=$(grep -oP 'k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)?' <<< "${base_name}") || true
+        local new_name="RTA-WRT${op_source}-${op_branch}-${pack_name}-Amlogic_s905x-MOD_SDCARD-${image_suffix}-${kernel}.img.gz"
 
-        mv "${base_name}.gz" "../$new_name" || return 1
-        
+        if ! mv "${base_name}.gz" "../$new_name"; then
+            echo -e "${ERROR} Failed to rename final image"
+            return ${E_MODIFY}
+        fi
+
         cd ..
         rm -rf "${image_suffix}"
-        echo -e "${SUCCESS} Mod For ${pack_name} ${image_suffix}-${kernel}"
+        echo -e "${SUCCESS} Mod completed for ${pack_name} ${image_suffix}-${kernel}"
         return 0
     }
 
-    # Process each device configuration
+    # Process each device configuration with improved error handling
+    local overall_success=true
     for device_config in "${!DEVICE_CONFIGS[@]}"; do
         IFS=: read -r pack_name suffix <<< "$device_config"
         local dtb="${DEVICE_CONFIGS[$device_config]}"
-        local files_to_process=()
+        declare -a files_to_process=()
         
         # Select files based on pack_name and suffix
         case "$pack_name" in
             ULO)
-                while IFS= read -r file; do
-                    [[ "$file" =~ "${suffix,,}" ]] && files_to_process+=("$file")
-                done <<< "$files_ulo"
+                case "$suffix" in
+                    HG680P) files_to_process+=("${files_ulo[@]}") ;;
+                    B860H_v1-v2) files_to_process+=(${files_ulo[@]}) ;;
+                esac
                 ;;
             OPHUB)
                 case "$suffix" in
-                    HG680P) files_to_process+=($files_ophub_p212) ;;
-                    B860H_v1-v2) files_to_process+=($files_ophub_b860h) ;;
+                    HG680P) files_to_process+=("${files_ophub_p212[@]}") ;;
+                    B860H_v1-v2) files_to_process+=("${files_ophub_b860h[@]}") ;;
                 esac
                 ;;
         esac
@@ -944,13 +1003,20 @@ build_mod_sdcard() {
         for file in "${files_to_process[@]}"; do
             [[ -z "$file" || ! -f "$file" ]] && continue
             
-            modify_single_image "$file" "$pack_name" "$dtb" "$suffix" || 
+            if ! modify_single_image "$file" "$pack_name" "$dtb" "$suffix"; then
                 echo -e "${WARNING} Failed to process ${suffix}"
+                overall_success=false
+            fi
         done
     done
 
-    echo -e "${SUCCESS} All boot files successfully modified."
-    return 0
+    if $overall_success; then
+        echo -e "${SUCCESS} All boot files successfully modified."
+        return 0
+    else
+        echo -e "${WARNING} Some modifications failed. Check the logs above for details."
+        return 1
+    fi
 }
 
 rename_firmware() {
