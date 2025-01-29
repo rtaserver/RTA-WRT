@@ -471,14 +471,11 @@ custom_config() {
     done
 
     # Add Oh My Zsh
-    echo -e "${INFO} Installing Oh My Zsh..."
-    git clone https://github.com/ohmyzsh/ohmyzsh.git ${custom_files_path}/usr/share/ohmyzsh
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${custom_files_path}/usr/share/ohmyzsh/custom/plugins/zsh-autosuggestions
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${custom_files_path}/usr/share/ohmyzsh/custom/plugins/zsh-syntax-highlighting
-    cp ${custom_files_path}/usr/share/ohmyzsh/templates/zshrc.zsh-template ${custom_files_path}/usr/share/ohmyzsh/.zshrc
-    sed -i 's|^export ZSH="$HOME/.oh-my-zsh"|export ZSH=/usr/share/ohmyzsh|g' ${custom_files_path}/usr/share/ohmyzsh/.zshrc
-    sed -i 's|^ZSH_THEME="robbyrussell"|ZSH_THEME="agnoster"|g' ${custom_files_path}/usr/share/ohmyzsh/.zshrc
-    sed -i 's|^plugins=(git)|plugins=(git zsh-autosuggestions zsh-syntax-highlighting)|g' ${custom_files_path}/usr/share/ohmyzsh/.zshrc
+    echo -e "${INFO} Installing Oh My Bash..."
+    git clone https://github.com/ohmybash/oh-my-bash.git ${custom_files_path}/usr/share/oh-my-bash
+    cp ${custom_files_path}/usr/share/oh-my-bash/templates/bashrc.osh-template ${custom_files_path}/usr/share/oh-my-bash/.bashrc
+    sed -i 's|^export OSH=~/.oh-my-bash|export OSH=/usr/share/oh-my-bash|g' ${custom_files_path}/usr/share/oh-my-bash/.bashrc
+    sed -i 's|^OSH_THEME="font"|OSH_THEME="zork"|g' ${custom_files_path}/usr/share/oh-my-bash/.bashrc
     echo -e "${SUCCESS} Oh My Zsh installed successfully."
 
     # Sync and provide directory status
@@ -531,22 +528,14 @@ rebuild_firmware() {
     mkdir -p ${imagebuilder_path}/out_firmware ${imagebuilder_path}/out_rootfs
 
     # Selecting default packages, lib, theme, app and i18n, etc.
-    PACKAGES+=" zsh fontconfig coreutils-whoami file lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179 \
-    kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi kmod-usb-net-cdc-ether kmod-usb-serial-option kmod-usb-serial \
-    kmod-usb-serial-wwan qmi-utils kmod-usb-serial-qualcomm kmod-usb-acm kmod-usb-net-cdc-ncm kmod-usb-net-cdc-mbim umbim modemmanager \
-    modemmanager-rpcd luci-proto-modemmanager libmbim libqmi usbutils luci-proto-mbim luci-proto-ncm kmod-usb-net-huawei-cdc-ncm kmod-usb-net-rndis \
-    kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial-sierrawireless kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd \
-    libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 \
-    iptables-nft coreutils-stty block-mount perl-http-date perlbase-file perlbase-getopt perlbase-time perlbase-unicode perlbase-utf8 acpid attr \
-    base-files bash bc blkid block-mount blockd bsdtar btrfs-progs busybox bzip2 cgi-io chattr comgt comgt-ncm containerd coremark coreutils \
-    coreutils-base64 coreutils-nohup coreutils-truncate curl dosfstools dumpe2fs e2freefrag e2fsprogs exfat-mkfs f2fs-tools f2fsck fdisk gawk getopt \
-    git gzip iconv iw iwinfo jq jshn kmod-brcmfmac kmod-brcmutil kmod-cfg80211 kmod-mac80211 libjson-script liblucihttp liblucihttp-lua losetup \
-    lsattr lsblk lscpu mkf2fs mount-utils openssl-util parted pigz ppp ppp-mod-pppoe pv rename resize2fs runc tar tini ttyd tune2fs uclient-fetch \
-    uhttpd uhttpd-mod-ubus unzip uqmi usb-modeswitch uuidgen wget-ssl whereis which wwan xfs-fsck xfs-mkfs xz xz-utils ziptool zoneinfo-asia zoneinfo-core \
-    zstd luci luci-base luci-compat luci-lib-base luci-lib-ip luci-lib-ipkg luci-lib-jsonc luci-lib-nixio luci-mod-admin-full luci-mod-network luci-mod-status \
-    luci-mod-system luci-proto-3g luci-proto-ipip luci-proto-ipv6 luci-proto-ncm luci-proto-openconnect luci-proto-ppp luci-proto-qmi luci-proto-relay \
-    kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs kmod-mac80211 wireless-tools \
-    wpa-cli"
+    PACKAGES+=" zsh fontconfig coreutils-whoami file lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
+    PACKAGES+=" kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi \
+    kmod-usb-net-cdc-ether kmod-usb-serial-option kmod-usb-serial kmod-usb-serial-wwan qmi-utils \
+    kmod-usb-serial-qualcomm kmod-usb-acm kmod-usb-net-cdc-ncm kmod-usb-net-cdc-mbim umbim \
+    modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi usbutils luci-proto-mbim luci-proto-ncm \
+    kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial-sierrawireless \
+    kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem \
+    kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty"
 
     # Modem Tools
     PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"
@@ -619,7 +608,7 @@ rebuild_firmware() {
 
     #MISC+=" luci-app-rakitanmanager"
 
-    PACKAGES+=" $MISC zram-swap adb parted losetup resize2fs luci luci-ssl luci-app-poweroff luci-app-log-viewer luci-app-ramfree htop bash curl wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
+    PACKAGES+=" $misc zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-poweroff luci-app-log-viewer luci-app-ramfree htop bash curl wget wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
 
     # Membuat image firmware dan menampilkan progress bar
     make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files"
