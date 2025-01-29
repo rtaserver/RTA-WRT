@@ -799,6 +799,7 @@ repackwrt() {
     fi
 
     sync && sleep 3
+    ls -lh "${output_dir}"/*
     echo -e "${SUCCESS} Firmware repacking completed successfully!"
 }
 
