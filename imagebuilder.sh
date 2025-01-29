@@ -341,6 +341,7 @@ custom_packages() {
         echo -e "${INFO} Adding luci-app-amlogic for target Amlogic."
         github_packages+=("luci-app-amlogic|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest")
     fi
+    github_packages+=("luci-app-alpha-config|https://api.github.com/repos/animegasan/luci-app-alpha-config/releases/latest")
 
     download_packages "github" github_packages[@]
 
@@ -363,16 +364,15 @@ custom_packages() {
         "luci-app-openclash|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
         "luci-app-passwall|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
         
-        "luci-app-tailscale|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
-        "luci-app-diskman|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
-        "modeminfo|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
-        "luci-app-modeminfo|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
-        "atinout|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
-        "luci-app-poweroff|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
-        "xmm-modem|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
-        "luci-app-lite-watchdog|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
-        "luci-theme-alpha|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
-        "luci-app-alpha-config|https://dl.openwrt.ai/latest/packages/$ARCH_3/kiddin9"
+        "luci-app-tailscale|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "luci-app-diskman|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "luci-app-modeminfo|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "atinout|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "luci-app-poweroff|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "xmm-modem|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "luci-app-lite-watchdog|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "luci-theme-alpha|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         
         "luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
