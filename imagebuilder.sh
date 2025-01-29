@@ -806,31 +806,37 @@ repackwrt() {
 # Usage :
 # build_mod_sdcard <image_path> <pack_name> <fw_dtb> <image_suffix>
 build_mod_sdcard() {
-    echo -e "${STEPS} Modifying boot files for Amlogic s905x devices..."
-
-    # Validate and change directory
-    if ! cd "${imagebuilder_path}/out_firmware"; then
-        error_msg "Failed to change directory to ${imagebuilder_path}/out_firmware"
-    fi
-
-    # Download and extract mod-boot-sdcard
-    echo -e "${INFO} Downloading mod-boot-sdcard..."
-    if ! sudo curl -fsSLO https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip; then
-        error_msg "Failed to download mod-boot-sdcard"
-    fi
-
-    echo -e "${INFO} Extracting mod-boot-sdcard..."
-    if ! sudo unzip -q main.zip; then
-        error_msg "Failed to extract mod-boot-sdcard"
-    fi
-    sudo rm -f main.zip
-    echo -e "${SUCCESS} Mod-boot-sdcard successfully downloaded and extracted."
-
-    # Local variables
     local image_path="$1"
     local pack_name="$2"
     local fw_dtb="$3"
     local image_suffix="$4"
+
+    # Skip if no firmware found
+    if [ -z "$image_path" ]; then
+        echo -e "${WARNING} No firmware found for ${pack_name} ${image_suffix}, skipping..."
+        return
+    fi
+
+    echo -e "${STEPS} Modifying boot files for ${pack_name} ${image_suffix}..."
+
+    # Ensure we're in the firmware directory
+    cd "${imagebuilder_path}/out_firmware" || error_msg "Failed to change directory to ${imagebuilder_path}/out_firmware"
+
+    # Download and extract mod-boot-sdcard if not already present
+    if [ ! -d "mod-boot-sdcard-main" ]; then
+        echo -e "${INFO} Downloading mod-boot-sdcard..."
+        if ! sudo curl -fsSLO https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip; then
+            error_msg "Failed to download mod-boot-sdcard"
+        fi
+
+        echo -e "${INFO} Extracting mod-boot-sdcard..."
+        if ! sudo unzip -q main.zip; then
+            error_msg "Failed to extract mod-boot-sdcard"
+        fi
+        sudo rm -f main.zip
+        echo -e "${SUCCESS} Mod-boot-sdcard successfully downloaded and extracted."
+    fi
+
     local base_name
     base_name=$(basename "${image_path%.gz}")
 
@@ -907,6 +913,7 @@ build_mod_sdcard() {
     sudo rm -rf mod-boot-sdcard-main
     sudo rm -rf "${image_suffix}"
 
+    sync && sleep 3
     echo -e "${SUCCESS} Mod completed for ${pack_name} ${image_suffix}-${kernel}"
 }
 
@@ -1044,9 +1051,9 @@ case "${op_devices}" in
         # Process B860H with ULO firmware
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*-s905x-*.img.gz")" "ULO" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         # Process HG680P with OPHUB firmware
-        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_amlogic_s905x_*.img.gz")" "OPHUB" "meson-gxl-s905x-p212.dtb" "HG680P"
+        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x_*.img.gz")" "OPHUB" "meson-gxl-s905x-p212.dtb" "HG680P"
         # Process B860H with OPHUB firmware
-        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_amlogic_s905x-b860h_*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
+        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         ;;
     h5-*|h616-*|h618-*|h6-*|s905x[0-9]*|rk*)
         repackwrt --ulo
