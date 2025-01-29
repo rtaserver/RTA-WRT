@@ -470,6 +470,17 @@ custom_config() {
         fi
     done
 
+    # Add Oh My Zsh
+    echo -e "${INFO} Installing Oh My Zsh..."
+    git clone https://github.com/ohmyzsh/ohmyzsh.git ${custom_files_path}/usr/share/ohmyzsh
+    git clone https://github.com/zsh-users/zsh-autosuggestions ${custom_files_path}/usr/share/ohmyzsh/custom/plugins/zsh-autosuggestions
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${custom_files_path}/usr/share/ohmyzsh/custom/plugins/zsh-syntax-highlighting
+    cp ${custom_files_path}/usr/share/ohmyzsh/templates/zshrc.zsh-template ${custom_files_path}/usr/share/ohmyzsh/.zshrc
+    sed -i 's|^export ZSH="$HOME/.oh-my-zsh"|export ZSH=/usr/share/ohmyzsh|g' ${custom_files_path}/usr/share/ohmyzsh/.zshrc
+    sed -i 's|^ZSH_THEME="robbyrussell"|ZSH_THEME="agnoster"|g' ${custom_files_path}/usr/share/ohmyzsh/.zshrc
+    sed -i 's|^plugins=(git)|plugins=(git zsh-autosuggestions zsh-syntax-highlighting)|g' ${custom_files_path}/usr/share/ohmyzsh/.zshrc
+    echo -e "${SUCCESS} Oh My Zsh installed successfully."
+
     # Sync and provide directory status
     sync && sleep 3
     echo -e "${SUCCESS} All custom configuration setup completed!"
@@ -520,7 +531,7 @@ rebuild_firmware() {
     mkdir -p ${imagebuilder_path}/out_firmware ${imagebuilder_path}/out_rootfs
 
     # Selecting default packages, lib, theme, app and i18n, etc.
-    PACKAGES+=" file zsh lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179 \
+    PACKAGES+=" fontconfig coreutils-whoami file zsh lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179 \
     kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi \
     kmod-usb-net-cdc-ether kmod-usb-serial-option kmod-usb-serial kmod-usb-serial-wwan qmi-utils \
     kmod-usb-serial-qualcomm kmod-usb-acm kmod-usb-net-cdc-ncm kmod-usb-net-cdc-mbim umbim \

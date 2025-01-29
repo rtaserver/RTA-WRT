@@ -19,6 +19,7 @@ sed -i "s#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release
 sed -i -E "s|icons/port_%s.png|icons/port_%s.gif|g" /www/luci-static/resources/view/status/include/29_ports.js
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
 sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/#&/' /etc/profile
+sed -i '$ a ZDOTDIR=/usr/share/ohmyzsh zsh' /etc/profile
 if grep -q "ImmortalWrt" /etc/openwrt_release; then
   sed -i "s/\(DISTRIB_DESCRIPTION='ImmortalWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
   sed -i -E "s|services/ttyd|system/ttyd|g" /usr/share/ucode/luci/template/themes/material/header.ut
@@ -121,6 +122,8 @@ sed -i 's/option check_signature/# option check_signature/g' /etc/opkg.conf
 # Step 3: Remove login password required when accessing terminal
 msg "Step 3: Remove login password required when accessing terminal"
 uci set ttyd.@ttyd[0].command='/bin/bash --login'
+uci add_list ttyd.@ttyd[0].client_option='fontFamily=FiraCode Nerd Font'
+uci add_list ttyd.@ttyd[0].client_option='fontSize=12'
 uci commit ttyd
 
 
