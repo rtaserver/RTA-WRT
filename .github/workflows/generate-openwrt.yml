@@ -65,14 +65,6 @@ on:
         options:
           - "true"
           - "false"
-      notiftele:
-        description: "Notif To Telegram:"
-        required: true
-        default: "false"
-        type: choice
-        options:
-          - "true"
-          - "false"
 
 env:
   TZ: Asia/Jakarta
@@ -163,14 +155,6 @@ jobs:
           sudo find . -mindepth 1 -not -path './out_firmware*' -delete
           df -hT ${PWD}
 
-      - name: Upload to Artifacts
-        if: ${{ steps.imagebuilder.outputs.status == 'success' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: firmware-${{ env.DEVICES }}
-          path: imagebuilder/out_firmware/*
-          retention-days: 7
-
       - name: Upload to Release
         if: ${{ steps.imagebuilder.outputs.status == 'success' }}
         uses: svenstaro/upload-release-action@v2
@@ -244,88 +228,3 @@ jobs:
             - Tema Argon Dan Material dengan beberapa gambar login kustom yang keren
             - 3ginfo lite dan Modeminfo, sms-tool, dan aplikasi dukungan modem lainnya
             - Dukungan Layar OLED (hanya Raspberrry Pi 4B yang diuji)
-
-  notify:
-    needs: build
-    runs-on: ubuntu-latest
-    if: ${{ inputs.notiftele == 'true' }}
-    name: Notify Telegram
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: downloaded-firmware
-
-      - name: Setup Environment
-        run: |
-          sudo apt-get -qq update
-          sudo apt-get -qq install ${{ env.APT_PACKAGES }}
-          pip install ${{ env.PYTHON_PACKAGES }}
-          sudo timedatectl set-timezone "$TZ"
-
-      - name: Generate Changelog
-        id: changelog
-        run: |
-          changelog=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' CHANGELOG.md)
-          changelog="${changelog//'%'/'%25'}"
-          changelog="${changelog//$'\n'/'%0A'}"
-          changelog="${changelog//$'\r'/'%0D'}"
-          echo "CHANGELOG=$changelog" >> $GITHUB_OUTPUT
-
-      - name: Send Telegram Notification
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          GROUP_ID: ${{ secrets.CHAT_ID }}
-          MESSAGE_THREAD_ID: 36
-        run: |
-          DATE=$(date +'%d%m%Y')
-          DATE2=$(date +'%d-%m-%Y')
-          TAG="${{ env.RELEASES_TAG }}-${DATE}"
-          NEWTAG=$(echo "$TAG" | sed -E 's/([_\-\.\[\]()])/\\\1/g')
-          
-          MESSAGE="▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n                          NEW UPDATE\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬\nNAME   : 🔔 RTA-WRT OpenWRT\nTAG       : ${NEWTAG}\nDATE     : ${DATE2}\nREPO    : rizkikotet-dev/RTA-WRT\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
-          
-          BUTTONS='{
-              "inline_keyboard": [
-                  [{"text": "KLIK DISINI", "url": "https://github.com/rizkikotet-dev/RTA-WRT"}]
-              ]
-          }'
-          
-          curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-            -d "chat_id=${GROUP_ID}" \
-            -d "text=${MESSAGE}" \
-            -d "parse_mode=MarkdownV2" \
-            -d "reply_markup=$(echo $BUTTONS | jq -c .)" \
-            -d "message_thread_id=${MESSAGE_THREAD_ID}" \
-            -d "disable_web_page_preview=true" \
-            -d "disable_notification=false"
-
-
-      # - name: Upload To Telegram
-      #   env:
-      #     API_ID: ${{ secrets.API_ID }}
-      #     API_HASH: ${{ secrets.API_HASH }}
-      #     BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-      #     GROUP_ID: ${{ secrets.CHAT_ID }}
-      #     MESSAGE_THREAD_ID: 124
-      #   run: |
-      #     cd ${PWD}
-      #     ls -l downloaded-firmware
-      #     chmod +x telebot.py
-      #     DATE=$(date +'%d%m%Y')
-      #     MESSAGE=$(cat <<-END
-      #     <blockquote>🟢 NEW UPDATE AVAILABLE 🟢</blockquote>
-
-      #     <blockquote>➣ Name: RTA-WRT</blockquote>
-      #     <blockquote>➣ Tag: ${OPENWRT_BASE}_${OPENWRT_BRANCH}-$DATE</blockquote>
-      #     <blockquote>➣ Date : $DATE</blockquote>
-
-      #     <pre>${{ steps.changelog.outputs.CHANGELOG }}</pre>
-      #     END
-      #     )
-      #     if [ "${{ inputs.notiftele }}" == "true" ]; then
-      #       python3 telebot.py "$API_ID" "$API_HASH" "$BOT_TOKEN" "$MESSAGE" "$GROUP_ID" "$MESSAGE_THREAD_ID" "downloaded-firmware/*/*.img.gz"
-      #     fi
