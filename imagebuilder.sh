@@ -531,7 +531,7 @@ rebuild_firmware() {
     mkdir -p ${imagebuilder_path}/out_firmware ${imagebuilder_path}/out_rootfs
 
     # Selecting default packages, lib, theme, app and i18n, etc.
-    PACKAGES+=" fontconfig coreutils-whoami file zsh lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179 \
+    PACKAGES+=" zsh fontconfig coreutils-whoami file zsh lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179 \
     kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi \
     kmod-usb-net-cdc-ether kmod-usb-serial-option kmod-usb-serial kmod-usb-serial-wwan qmi-utils \
     kmod-usb-serial-qualcomm kmod-usb-acm kmod-usb-net-cdc-ncm kmod-usb-net-cdc-mbim umbim \
