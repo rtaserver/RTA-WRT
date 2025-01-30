@@ -785,115 +785,154 @@ repackwrt() {
 # Usage :
 # build_mod_sdcard <image_path> <pack_name> <fw_dtb> <image_suffix>
 build_mod_sdcard() {
-    local image_path="$1"
-    local pack_name="$2"
-    local fw_dtb="$3"
-    local image_suffix="$4"
-
-    # Skip if no firmware found
-    if [ -z "$image_path" ]; then
-        echo -e "${WARNING} No firmware found for ${pack_name} ${image_suffix}, skipping..."
-        return
+    # Parameter validation
+    if [ $# -ne 3 ]; then
+        echo -e "${ERROR} Usage: mod_sdcard <image_file> <pack_name> <dtb_name> <suffix>"
+        echo -e "${ERROR} Example: mod_sdcard image.img.gz ophub amlogic.dtb Suffix"
+        exit 1
     fi
 
-    echo -e "${STEPS} Modifying boot files for ${pack_name} ${image_suffix}..."
+    cleanup() {
+        local device=$1
+        local mount_point=$2
+        
+        if mountpoint -q "$mount_point"; then
+            sudo umount "$mount_point" || echo -e "${WARNING} Failed to unmount $mount_point"
+        fi
+        
+        if [ -n "$device" ]; then
+            sudo losetup -d "$device" || echo -e "${WARNING} Failed to detach loop device $device"
+        fi
+    }
 
-    # Ensure we're in the firmware directory
+    local filename=$1
+    local pack_name=$2
+    local dtb_name=$3
+    local image_suffix=$4
+    
+    # Validate input file exists
+    if [ ! -f "$filename" ]; then
+        error_msg "Error: Input file '$filename' not found"
+    fi
+
+    echo -e "${INFO} Modifying boot files for ${pack_name} ${image_suffix}..."
     cd "${imagebuilder_path}/out_firmware" || error_msg "Failed to change directory to ${imagebuilder_path}/out_firmware"
 
-    # Download and extract mod-boot-sdcard if not already present
-    if [ ! -d "mod-boot-sdcard-main" ]; then
-        echo -e "${INFO} Downloading mod-boot-sdcard..."
-        if ! sudo curl -fsSLO https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip; then
-            error_msg "Failed to download mod-boot-sdcard"
-        fi
+    # Extract file information
+    local file_type=$(basename "$filename" | sed -E 's/.*\.(img\.(gz|xz))$/\1/')
+    local file_name=$(basename "$filename" | sed -E 's/\.(gz|xz)$//')
 
-        echo -e "${INFO} Extracting mod-boot-sdcard..."
-        if ! sudo unzip -q main.zip; then
-            error_msg "Failed to extract mod-boot-sdcard"
-        fi
-        sudo rm -f main.zip
-        echo -e "${SUCCESS} Mod-boot-sdcard successfully downloaded and extracted."
-    fi
+    # Create working directory
+    echo -e "${STEPS} Creating working directory..."
+    sudo mkdir -p "$image_suffix/boot" || {
+        error_msg "Error: Failed to create directory structure"
+    }
 
-    local base_name
-    base_name=$(basename "${image_path%.gz}")
-
-    echo -e "${STEPS} Creating Mod SDCARD ${pack_name} ${image_suffix}"
-
-    # Create directories and copy files with sudo
-    sudo mkdir -p "${image_suffix}/boot"
-    sudo cp "${image_path}" "${image_suffix}/"
-    sudo cp mod-boot-sdcard-main/BootCardMaker/u-boot.bin "${image_suffix}/"
-    sudo cp mod-boot-sdcard-main/files/mod-boot-sdcard.tar.gz "${image_suffix}/"
-
-    cd "${image_suffix}" || error_msg "Failed to change directory to ${image_suffix}"
-
-    # Decompress with sudo
-    sudo gzip -d "${base_name}.gz"
+    # Download and extract required files
+    echo -e "${STEPS} Downloading required files..."
+    wget "https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip" -O main.zip || {
+        error_msg "Error: Failed to download required files"
+    }
     
-    # Setup loop device
-    device=$(sudo losetup -fP --show "${base_name}")
-    if [[ -z "$device" ]]; then
-        error_msg "Failed to create loop device"
+    unzip main.zip && rm -rf main.zip
+    
+    # Move required files to working directory
+    sudo mv mod-boot-sdcard-main/BootCardMaker/u-boot.bin "$image_suffix/" || {
+        error_msg "Error: Failed to move u-boot.bin"
+    }
+    sudo mv mod-boot-sdcard-main/files/mod-boot-sdcard.tar.gz "$image_suffix/" || {
+        error_msg "Error: Failed to move mod-boot-sdcard.tar.gz"
+    }
+    sudo cp "$filename" "$image_suffix/"
+    sudo rm -rf mod-boot-sdcard-main
+
+    # Change to working directory
+    cd "$image_suffix" || {
+        error_msg "Error: Failed to change directory"
+    }
+
+    # Decompress image file
+    echo -e "${STEPS} Decompressing image file..."
+    if [ "$file_type" = "img.gz" ]; then
+        sudo gunzip "${file_name}.gz" || {
+            error_msg "Error: Failed to decompress gz file"
+        }
+    else
+        sudo unxz "${file_name}.xz" || {
+            error_msg "Error: Failed to decompress xz file"
+        }
     fi
+    
+    # Set up loop device
+    echo -e "${STEPS} Setting up loop device..."
+    local device
+    device=$(sudo losetup -fP --show "${file_name}") || {
+        error_msg "Error: Failed to set up loop device"
+    }
 
-    # Cleanup on exit with error handling
-    trap 'sudo umount boot 2>/dev/null || true; sudo losetup -d "$device" 2>/dev/null || true' EXIT
+    # Mount partition
+    echo -e "${STEPS} Mounting partition..."
+    sudo mount "${device}p1" boot || {
+        cleanup "$device" "boot"
+        error_msg "Error: Failed to mount partition"
+    }
 
-    # Mount with proper permissions
-    sudo mount "${device}p1" boot || error_msg "Failed to mount boot partition"
+    # Extract and modify boot files
+    echo -e "${STEPS} Modifying boot configuration..."
+    sudo tar -xzvf mod-boot-sdcard.tar.gz -C boot || {
+        cleanup "$device" "boot"
+        error_msg "Error: Failed to extract boot files"
+    }
 
-    # Extract files with sudo
-    sudo tar -xzf mod-boot-sdcard.tar.gz -C boot || error_msg "Failed to extract mod-boot-sdcard.tar.gz"
+    # Update boot configurations
+    local uenv
+    local extlinux
+    uenv=$(sudo cat boot/uEnv.txt | grep APPEND | awk -F "root=" '{print $2}')
+    extlinux=$(sudo cat boot/extlinux/extlinux.conf | grep append | awk -F "root=" '{print $2}')
+    local boot
+    boot=$(sudo cat boot/boot.ini | grep dtb | awk -F "/" '{print $4}' | cut -d'"' -f1)
 
-    # Extract UUID with sudo
-    uenv=$(sudo awk -F 'root=' '/^[ \t]*[Aa][Pp][Pp][Ee][Nn][Dd]( |=)/ {print $2; exit}' boot/uEnv.txt | awk '{print $1}')
-    extlinux=$(sudo awk -F 'root=' '/^[ \t]*[Aa][Pp][Pp][Ee][Nn][Dd]( |=)/ {print $2; exit}' boot/extlinux/extlinux.conf | awk '{print $1}')
+    # Apply modifications
+    sudo sed -i "s/$extlinux/$uenv/g" boot/extlinux/extlinux.conf
+    sudo sed -i "s/$boot/$dtb_name/g" boot/boot.ini
+    sudo sed -i "s/$boot/$dtb_name/g" boot/extlinux/extlinux.conf
+    sudo sed -i "s/$boot/$dtb_name/g" boot/uEnv.txt
 
-    if [[ -z "$uenv" || -z "$extlinux" ]]; then
-        error_msg "Failed to extract root partition info from uEnv.txt or extlinux.conf"
+    # Clean unmount
+    echo -e "${STEPS} Cleaning up..."
+    cleanup "$device" "boot"
+
+    # Write u-boot
+    echo -e "${STEPS} Writing u-boot..."
+    sudo dd if=u-boot.bin of="${device}" bs=1 count=444 conv=fsync 2>/dev/null || {
+        error_msg "Error: Failed to write first part of u-boot"
+    }
+    sudo dd if=u-boot.bin of="${device}" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null || {
+        error_msg "Error: Failed to write second part of u-boot"
+    }
+
+    # Recompress image
+    echo -e "${STEPS} Recompressing image..."
+    if [ "$file_type" = "img.gz" ]; then
+        sudo gzip "${file_name}" || {
+            error_msg "Error: Failed to compress with gzip"
+        }
+    else
+        sudo xz "${file_name}" || {
+            error_msg "Error: Failed to compress with xz"
+        }
     fi
-
-    # Modify configuration files with sudo
-    sudo sed -i "s|$extlinux|$uenv|g" boot/extlinux/extlinux.conf
-
-    dtb="$fw_dtb"
-    sleep 1
-    boot_dtb=$(sudo grep -oP '(?<=fdt /dtb/amlogic/)[^"]+' boot/extlinux/extlinux.conf)
-
-    if [[ -z "$boot_dtb" ]]; then
-        error_msg "Failed to extract dtb from extlinux.conf"
-    fi
-
-    sudo sed -i "s|$boot_dtb|$dtb|g" boot/extlinux/extlinux.conf
-
-    # Unmount and cleanup
-    sudo umount boot || error_msg "Failed to unmount boot partition"
-    sleep 1
-
-    # Write boot sector with sudo
-    sudo dd if=u-boot.bin of="${device}" bs=1 count=444 conv=fsync 2>/dev/null || error_msg "Failed to write first part of u-boot"
-    sudo dd if=u-boot.bin of="${device}" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null || error_msg "Failed to write second part of u-boot"
-    sudo losetup -d "${device}"
-
-    echo -e "${SUCCESS} Patching Success"
-
-    sleep 1
-    sudo gzip "${base_name}"
 
     local kernel
-    kernel=$(sudo grep -oP 'k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)?' <<< "${base_name}")
+    kernel=$(sudo grep -oP 'k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)?' <<< "${file_name}")
+    local new_name="RTA-WRT${op_source}-${op_branch}-${pack_name}-Amlogic_s905x-MOD_SDCARD-${image_suffix}-${kernel}.${file_type}"
+    mv "${file_name}.${file_type}" "../${new_name}"
 
-    local new_name="RTA-WRT${op_source}-${op_branch}-${pack_name}-Amlogic_s905x-MOD_SDCARD-${image_suffix}-${kernel}.img.gz"
-    sudo mv "${base_name}.gz" "../${new_name}"
+    cd ../
+    sudo rm -rf "$image_suffix"
 
-    cd ..
-    sudo rm -rf mod-boot-sdcard-main
-    sudo rm -rf "${image_suffix}"
-
-    sync && sleep 3
-    echo -e "${SUCCESS} Mod completed for ${pack_name} ${image_suffix}-${kernel}"
+    echo -e "${SUCCESS} SD card modification completed successfully!"
+    return 0
 }
 
 rename_firmware() {
