@@ -472,7 +472,11 @@ custom_config() {
 
     # Add Oh My Zsh
     echo -e "${INFO} Installing Oh My Bash..."
-    git clone https://github.com/ohmybash/oh-my-bash.git ${custom_files_path}/usr/share/oh-my-bash
+    mkdir -p ${custom_files_path}/usr/share/oh-my-bash
+    if ! git clone https://github.com/ohmybash/oh-my-bash.git ${custom_files_path}/usr/share/oh-my-bash; then
+        echo -e "${ERROR} Failed to clone Oh My Bash repository."
+        exit 1
+    fi
     cp ${custom_files_path}/usr/share/oh-my-bash/templates/bashrc.osh-template ${custom_files_path}/usr/share/oh-my-bash/.bashrc
     sed -i 's|^export OSH=~/.oh-my-bash|export OSH=/usr/share/oh-my-bash|g' ${custom_files_path}/usr/share/oh-my-bash/.bashrc
     sed -i 's|^OSH_THEME="font"|OSH_THEME="zork"|g' ${custom_files_path}/usr/share/oh-my-bash/.bashrc
@@ -528,14 +532,24 @@ rebuild_firmware() {
     mkdir -p ${imagebuilder_path}/out_firmware ${imagebuilder_path}/out_rootfs
 
     # Selecting default packages, lib, theme, app and i18n, etc.
-    PACKAGES+=" zsh fontconfig coreutils-whoami file lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
-    PACKAGES+=" kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi \
-    kmod-usb-net-cdc-ether kmod-usb-serial-option kmod-usb-serial kmod-usb-serial-wwan qmi-utils \
-    kmod-usb-serial-qualcomm kmod-usb-acm kmod-usb-net-cdc-ncm kmod-usb-net-cdc-mbim umbim \
-    modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi usbutils luci-proto-mbim luci-proto-ncm \
-    kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial-sierrawireless \
-    kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem \
-    kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty"
+    PACKAGES+=" -dnsmasq dnsmasq-full zsh fontconfig coreutils-whoami file lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
+    PACKAGES+=" kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi kmod-usb-net-cdc-ether kmod-usb-serial-option kmod-usb-serial kmod-usb-serial-wwan qmi-utils"
+    PACKAGES+=" kmod-usb-serial-qualcomm kmod-usb-acm kmod-usb-net-cdc-ncm kmod-usb-net-cdc-mbim umbim modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi usbutils luci-proto-mbim luci-proto-ncm"
+    PACKAGES+=" kmod-usb-net-huawei-cdc-ncm kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial-sierrawireless kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem"
+    PACKAGES+=" kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty"
+    PACKAGES+=" libiwinfo libiwinfo-data libiwinfo-lua liblua liblucihttp liblucihttp-lua libubus-lua lua luci luci-app-firewall luci-app-opkg luci-base luci-lib-base luci-lib-ip luci-lib-jsonc luci-lib-nixio luci-mod-admin-full"
+    PACKAGES+=" luci-mod-network luci-mod-status luci-mod-system luci-proto-ipv6 luci-proto-ppp luci-theme-bootstrap rpcd rpcd-mod-file rpcd-mod-iwinfo rpcd-mod-luci rpcd-mod-rrdns uhttpd uhttpd-mod-ubus htop"
+    PACKAGES+=" kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-acm kmod-usb-net-qmi-wwan kmod-usb-net-rndis kmod-usb-serial-qualcomm kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial"
+    PACKAGES+=" kmod-nls-utf8 kmod-usb-serial-option kmod-usb-serial-sierrawireless kmod-usb-uhci kmod-usb2 kmod-usb-net-ipheth kmod-usb-net-cdc-mbim usbmuxd libusbmuxd-utils libimobiledevice-utils mbim-utils qmi-utils uqmi umbim luci-proto-3g luci-proto-ncm"
+    PACKAGES+=" luci-proto-ncm usb-modeswitch nano wget curl libusb-1.0-0"
+    PACKAGES+=" kmod-usb-net-asix kmod-usb-net-asix-ax88179 kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 hostapd wpa-cli wpa-supplicant kmod-cfg80211 kmod-mac80211 wireless-tools iw-full hostapd-utils"
+    PACKAGES+=" libqmi libqrtr-glib qmi-utils luci-proto-qmi mbim-utils libmbim luci-proto-mbim umbim php8 php8-cgi php8-fastcgi php8-fpm php8-mod-ctype php8-mod-curl php8-mod-fileinfo php8-mod-iconv php8-mod-mbstring php8-mod-session php8-mod-zip"
+    PACKAGES+=" perl perlbase-base perlbase-bytes perlbase-class perlbase-config perlbase-cwd perlbase-dynaloader perlbase-errno perlbase-essential perlbase-fcntl perlbase-file perlbase-filehandle perlbase-i18n perlbase-integer perlbase-io perlbase-list perlbase-locale perlbase-params perlbase-posix perlbase-re perlbase-scalar perlbase-selectsaver perlbase-socket perlbase-symbol perlbase-tie perlbase-time perlbase-unicore perlbase-utf8 perlbase-xsloader iperf3"
+    PACKAGES+=" ruby ruby-bigdecimal ruby-date ruby-digest ruby-enc ruby-forwardable ruby-pstore ruby-psych ruby-stringio ruby-yaml"
+    PACKAGES+=" luci-mod-admin-full luci-mod-network luci-mod-status luci-mod-system luci-lua-runtime zoneinfo-asia zoneinfo-core"
+    PACKAGES+=" kmod-usb-serial kmod-usb-serial-option unzip tar gzip openssh-sftp-server sms-tool luci-app-temp-status cpusage adb ttyd luci-app-ttyd bash dmesg screen kmod-tun jq luci-lib-ipkg"
+    PACKAGES+=" ipset ipt2socks iptables iptables-legacy iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat coreutils coreutils-base64 coreutils-nohup curl dns2socks ip-full libuci-lua lua luci-compat luci-lib-jsonc microsocks resolveip tcping"
+
 
     # Modem Tools
     PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"

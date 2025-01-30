@@ -108,14 +108,16 @@ _wdev_wrapper() {
 }
 
 _wdev_notify_init() {
-	local command="$1"
-	local name="$2"
-	local value="$3"
+	local command="$1"; shift;
 
 	json_init
 	json_add_int "command" "$command"
 	json_add_string "device" "$__netifd_device"
-	[ -n "$name" -a -n "$value" ] && json_add_string "$name" "$value"
+	while [ -n "$1" ]; do
+		local name="$1"; shift
+		local value="$1"; shift
+		json_add_string "$name" "$value"
+	done
 	json_add_object "data"
 }
 
@@ -151,7 +153,7 @@ _wireless_add_vlan() {
 	local name="$1"; shift
 	local ifname="$1"; shift
 
-	_wdev_notify_init $CMD_SET_DATA "vlan" "$name"
+	_wdev_notify_init $CMD_SET_DATA interface "$__cur_interface" "vlan" "$name"
 	json_add_string "ifname" "$ifname"
 	_wdev_add_variables "$@"
 	_wdev_notify
@@ -216,13 +218,6 @@ wireless_vif_parse_encryption() {
 		wpa_cipher="CCMP"
 	fi
 
-	# WPA3 enterprise requires the GCMP-256 cipher (technically also CCMP and GCMP are possible
-	# but many clients/devices do not support that)
-	case "$encryption" in
-		wpa3-mixed*) wpa_cipher="${wpa_cipher} GCMP-256";;
-		wpa3*) wpa_cipher="GCMP-256";;
-	esac
-
 	case "$encryption" in
 		*tkip+aes|*tkip+ccmp|*aes+tkip|*ccmp+tkip) wpa_cipher="CCMP TKIP";;
 		*ccmp256) wpa_cipher="CCMP-256";;
@@ -230,6 +225,7 @@ wireless_vif_parse_encryption() {
 		*tkip) wpa_cipher="TKIP";;
 		*gcmp256) wpa_cipher="GCMP-256";;
 		*gcmp) wpa_cipher="GCMP";;
+		wpa3-192*) wpa_cipher="GCMP-256";;
 	esac
 
 	# 802.11n requires CCMP for WPA
@@ -261,11 +257,14 @@ wireless_vif_parse_encryption() {
 		owe*)
 			auth_type=owe
 		;;
+		wpa3-192*)
+			auth_type=eap192
+		;;
 		wpa3-mixed*)
-			auth_type=eap-eap192
+			auth_type=eap-eap2
 		;;
 		wpa3*)
-			auth_type=eap192
+			auth_type=eap2
 		;;
 		psk3-mixed*|sae-mixed*)
 			auth_type=psk-sae
@@ -336,6 +335,7 @@ for_each_interface() {
 				continue
 			}
 		fi
+		__cur_interface="$_w_iface"
 		"$@" "$_w_iface"
 		json_select ..
 	done

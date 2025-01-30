@@ -19,7 +19,7 @@ sed -i "s#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release
 sed -i -E "s|icons/port_%s.png|icons/port_%s.gif|g" /www/luci-static/resources/view/status/include/29_ports.js
 sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
 sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/#&/' /etc/profile
-sed -i '1i source /usr/share/oh-my-bash/.bashrc' /etc/profile
+#sed -i '1i source /usr/share/oh-my-bash/.bashrc' /etc/profile
 if grep -q "ImmortalWrt" /etc/openwrt_release; then
   sed -i "s/\(DISTRIB_DESCRIPTION='ImmortalWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
   sed -i -E "s|services/ttyd|system/ttyd|g" /usr/share/ucode/luci/template/themes/material/header.ut
@@ -328,3 +328,5 @@ msg "First Setup settings successfully applied..."
 
 # Remove this script after successful execution
 rm -f /etc/uci-defaults/$(basename $0)
+/etc/init.d/system restart
+exit 0
