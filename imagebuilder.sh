@@ -943,6 +943,7 @@ build_mod_sdcard() {
 
     cd ..
     rm -rf "${suffix}"
+    rm -rf mod-boot-sdcard-main
     cleanup
     echo -e "${SUCCESS} Successfully processed ${suffix}"
     return 0
