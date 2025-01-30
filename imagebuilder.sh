@@ -785,13 +785,6 @@ repackwrt() {
 # Usage :
 # build_mod_sdcard <image_path> <pack_name> <fw_dtb> <image_suffix>
 build_mod_sdcard() {
-    # Parameter validation
-    if [ $# -ne 3 ]; then
-        echo -e "${ERROR} Usage: mod_sdcard <image_file> <pack_name> <dtb_name> <suffix>"
-        echo -e "${ERROR} Example: mod_sdcard image.img.gz ophub amlogic.dtb Suffix"
-        exit 1
-    fi
-
     cleanup() {
         local device=$1
         local mount_point=$2
