@@ -139,7 +139,7 @@ jobs:
         run: |
           echo -e "[\033[95m STEPS \033[0m] Starting firmware and rootfs build"
           chmod +x ${IMAGEBUILDER_SH}
-          if bash ${IMAGEBUILDER_SH} ${{ env.RELEASE_BRANCH }} "${{ env.DEVICES }}"; then
+          if sudo bash ${IMAGEBUILDER_SH} ${{ env.RELEASE_BRANCH }} "${{ env.DEVICES }}"; then
             echo "status=success" >> $GITHUB_OUTPUT
             echo -e "[\033[92m SUCCESS \033[0m] Build completed successfully"
           else

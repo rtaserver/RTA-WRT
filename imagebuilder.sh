@@ -467,7 +467,12 @@ custom_packages() {
     echo -e "${STEPS} Installing OpenClash, Mihomo And Passwall"
 
     echo -e "${INFO} Downloading OpenClash package"
+    mkdir -p "${custom_files_path}/etc/openclash/core"
+    #chmod -R 755 "${custom_files_path}/etc/openclash/core" || error_msg "Error: Failed to change permissions for OpenClash directory."
     aria2c -q -o "${custom_files_path}/etc/openclash/core/clash_meta.gz" "${clash_meta}" || error_msg "Error: Failed to download Clash Meta package."
+    if [ ! -f "${custom_files_path}/etc/openclash/core/clash_meta.gz" ]; then
+        error_msg "Error: Download failed, file not found"
+    fi
     gzip -d "${custom_files_path}/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
     echo -e "${SUCCESS} OpenClash Packages downloaded successfully."
 
