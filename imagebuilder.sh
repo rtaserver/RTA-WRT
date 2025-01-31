@@ -119,7 +119,7 @@ download_packages() {
                 if [ -n "$file_url" ]; then
                     echo -e "${INFO} Downloading $(basename "$file_url")"
                     echo -e "${INFO} From $file_url"
-                    aria2c -o "$(basename "$file_url")" "$file_url"
+                    aria2c -q -o "$(basename "$file_url")" "$file_url"
                     if [ $? -eq 0 ]; then
                         echo -e "${SUCCESS} Package [$filename] downloaded successfully."
                     else
@@ -168,7 +168,7 @@ download_packages() {
                 
                 while [ $attempt -le $max_attempts ]; do
                     echo -e "${INFO} Attempt $attempt to download $filename"
-                    if aria2c -o "${filename}.ipk" "$full_url"; then
+                    if aria2c -q -o "${filename}.ipk" "$full_url"; then
                         download_success=true
                         echo -e "${SUCCESS} Package [$filename] downloaded successfully."
                         break
@@ -266,7 +266,7 @@ download_imagebuilder() {
     download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
 
     echo -e "${INFO} Downloading ImageBuilder from: ${download_file}"
-    aria2c "${download_file}" || error_msg "Failed to download ${download_file}"
+    aria2c -q "${download_file}" || error_msg "Failed to download ${download_file}"
 
     # Extract downloaded archive
     echo -e "${INFO} Extracting archive..."
@@ -446,8 +446,6 @@ custom_packages() {
     download_packages "custom" other_packages[@]
 
     echo -e "${STEPS} Start Clash Core Download !"
-    core_dir="${custom_files_path}/etc/openclash/core"
-    mkdir -p "$core_dir"
     if [[ "$ARCH_3" == "x86_64" ]]; then
         clash_meta=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-$ARCH_1-compatible" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
     else
@@ -469,17 +467,17 @@ custom_packages() {
     echo -e "${STEPS} Installing OpenClash, Mihomo And Passwall"
 
     echo -e "${INFO} Downloading OpenClash package"
-    aria2c -o "${core_dir}/clash_meta.gz" "${clash_meta}" || error_msg "Error: Failed to download Clash Meta package."
-    gzip -d "$core_dir/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
+    aria2c -q -o "${custom_files_path}/etc/openclash/core/clash_meta.gz" "${clash_meta}" || error_msg "Error: Failed to download Clash Meta package."
+    gzip -d "${custom_files_path}/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
     echo -e "${SUCCESS} OpenClash Packages downloaded successfully."
 
     echo -e "${INFO} Downloading Mihomo package"
-    aria2c "${mihomo_file_ipk_down}" || error_msg "Error: Failed to download Mihomo package."
+    aria2c -q "${mihomo_file_ipk_down}" || error_msg "Error: Failed to download Mihomo package."
     tar -xzvf "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" > /dev/null 2>&1 && rm "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" || error_msg "Error: Failed to extract Mihomo package."
     echo -e "${SUCCESS} Mihomo Packages downloaded successfully."
 
     echo -e "${INFO} Downloading Passwall package"
-    aria2c "${passwall_file_zip_down}" || error_msg "Error: Failed to download Passwall Zip package."
+    aria2c -q "${passwall_file_zip_down}" || error_msg "Error: Failed to download Passwall Zip package."
     unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip" || error_msg "Error: Failed to extract Passwall package."
     echo -e "${SUCCESS} Passwall Packages downloaded successfully."
 
@@ -511,7 +509,7 @@ custom_config() {
         mkdir -p "$target_dir" || { echo -e "${ERROR} Failed to create directory $target_dir"; continue; }
         
         # Download the script
-        aria2c -o "$file_path" "$file_url"
+        aria2c -q -o "$file_path" "$file_url"
         if [ "$?" -ne 0 ]; then
             echo -e "${WARN} Failed to download $file_url to $file_path."
         else
@@ -756,7 +754,7 @@ repackwrt() {
 
     # Download and extract builder
     echo -e "${INFO} Downloading builder..."
-    if ! aria2c "${repo_url}" -o main.zip; then
+    if ! aria2c -q -o "main.zip" "${repo_url}"; then
         error_msg "Failed to download builder from ${repo_url}"
     fi
 
@@ -886,7 +884,7 @@ build_mod_sdcard() {
 
     # Download modification files
     echo -e "${INFO} Downloading mod-boot-sdcard..."
-    if ! aria2c https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip; then
+    if ! aria2c -q https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip; then
         error_msg "Failed to download mod-boot-sdcard"
         return 1
     fi
