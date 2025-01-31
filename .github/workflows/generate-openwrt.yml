@@ -20,7 +20,7 @@ on:
         options:
           - openwrt:24.10.0-rc7
           - openwrt:23.05.5
-          - immortalwrt:24.10.0-rc3
+          - immortalwrt:24.10.0-rc4
           - immortalwrt:23.05.4
       devices:
         description: "Select device target:"
