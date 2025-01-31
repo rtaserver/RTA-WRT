@@ -107,6 +107,41 @@ check_dependencies() {
     echo -e "${SUCCESS} Dependencies installation complete!"
 }
 
+# Aria2 Download Function
+ariadl() {
+    if [ "$#" -lt 1 ]; then
+        echo -e "${ERROR} Usage: ariadl <URL> [OUTPUT_FILE]"
+        return 1
+    fi
+
+    echo -e "${STEPS} Aria2 Downloader"
+
+    local URL OUTPUT_FILE OUTPUT_DIR OUTPUT
+    URL=$1
+
+    if [ "$#" -eq 1 ]; then
+        OUTPUT_FILE=$(basename "$URL")
+        OUTPUT_DIR="."
+    else
+        OUTPUT=$2
+        OUTPUT_DIR=$(dirname "$OUTPUT")
+        OUTPUT_FILE=$(basename "$OUTPUT")
+    fi
+
+    if [ ! -d "$OUTPUT_DIR" ]; then
+        mkdir -p "$OUTPUT_DIR"
+    fi
+
+    echo -e "${INFO} Downloading $(basename "$URL")"
+    aria2c -q -d "$OUTPUT_DIR" -o "$OUTPUT_FILE" "$URL"
+    if [ $? -eq 0 ]; then
+        echo -e "${SUCCESS} Package [$(basename "$URL")] downloaded successfully."
+    else
+        echo -e "${ERROR} Failed to download package [$(basename "$URL")]."
+        exit 1
+    fi
+}
+
 # Download external packages
 download_packages() {
     local list=("${!2}") # Capture array argument
@@ -119,7 +154,7 @@ download_packages() {
                 if [ -n "$file_url" ]; then
                     echo -e "${INFO} Downloading $(basename "$file_url")"
                     echo -e "${INFO} From $file_url"
-                    aria2c -q -o "$(basename "$file_url")" "$file_url"
+                    ariadl "$file_url" "$(basename "$file_url")"
                     if [ $? -eq 0 ]; then
                         echo -e "${SUCCESS} Package [$filename] downloaded successfully."
                     else
@@ -168,7 +203,7 @@ download_packages() {
                 
                 while [ $attempt -le $max_attempts ]; do
                     echo -e "${INFO} Attempt $attempt to download $filename"
-                    if aria2c -q -o "${filename}.ipk" "$full_url"; then
+                    if ariadl "$full_url" "${filename}.ipk"; then
                         download_success=true
                         echo -e "${SUCCESS} Package [$filename] downloaded successfully."
                         break
@@ -266,7 +301,7 @@ download_imagebuilder() {
     download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
 
     echo -e "${INFO} Downloading ImageBuilder from: ${download_file}"
-    aria2c -q "${download_file}" || error_msg "Failed to download ${download_file}"
+    ariadl "${download_file}" "${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
 
     # Extract downloaded archive
     echo -e "${INFO} Extracting archive..."
@@ -468,17 +503,17 @@ custom_packages() {
 
     echo -e "${INFO} Downloading OpenClash package"
     mkdir -p "${custom_files_path}/etc/openclash/core"
-    aria2c -q -d "${custom_files_path}/etc/openclash/core" -o "clash_meta.gz" "${clash_meta}" || error_msg "Error: Failed to download Clash Meta package."
+    ariadl "${clash_meta}" "${custom_files_path}/etc/openclash/core/clash_meta.gz"
     gzip -d "${custom_files_path}/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
     echo -e "${SUCCESS} OpenClash Packages downloaded successfully."
 
     echo -e "${INFO} Downloading Mihomo package"
-    aria2c -q "${mihomo_file_ipk_down}" || error_msg "Error: Failed to download Mihomo package."
+    ariadl "${mihomo_file_ipk_down}" "${mihomo_file_ipk}.tar.gz"
     tar -xzvf "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" > /dev/null 2>&1 && rm "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" || error_msg "Error: Failed to extract Mihomo package."
     echo -e "${SUCCESS} Mihomo Packages downloaded successfully."
 
     echo -e "${INFO} Downloading Passwall package"
-    aria2c -q "${passwall_file_zip_down}" || error_msg "Error: Failed to download Passwall Zip package."
+    ariadl "${passwall_file_zip_down}" "passwall_packages_ipk_${ARCH_3}.zip"
     unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip" || error_msg "Error: Failed to extract Passwall package."
     echo -e "${SUCCESS} Passwall Packages downloaded successfully."
 
@@ -510,13 +545,7 @@ custom_config() {
         mkdir -p "$target_dir" || { echo -e "${ERROR} Failed to create directory $target_dir"; continue; }
         
         # Download the script
-        aria2c -q -d "$target_dir" -o "$(basename "$file_path")" "$file_url"
-        if [ "$?" -ne 0 ]; then
-            echo -e "${WARN} Failed to download $file_url to $file_path."
-        else
-            echo -e "${SUCCESS} Successfully downloaded $file_url to $file_path."
-            chmod +x "$file_path" # Make the script executable
-        fi
+        ariadl "$file_url" "$file_path"
     done
 
     # Add Oh My Zsh
@@ -754,10 +783,7 @@ repackwrt() {
     fi
 
     # Download and extract builder
-    echo -e "${INFO} Downloading builder..."
-    if ! aria2c -q -o "main.zip" "${repo_url}"; then
-        error_msg "Failed to download builder from ${repo_url}"
-    fi
+    ariadl "${repo_url}" "main.zip"
 
     if ! unzip -q main.zip; then
         error_msg "Failed to extract builder archive"
@@ -884,12 +910,7 @@ build_mod_sdcard() {
     fi
 
     # Download modification files
-    echo -e "${INFO} Downloading mod-boot-sdcard..."
-    if ! aria2c -q https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip; then
-        error_msg "Failed to download mod-boot-sdcard"
-        return 1
-    fi
-    echo -e "${SUCCESS} mod-boot-sdcard successfully downloaded."
+    ariadl "https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip" "main.zip"
 
     # Extract files
     echo -e "${INFO} Extracting mod-boot-sdcard..."
