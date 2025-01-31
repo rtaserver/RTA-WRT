@@ -1,5 +1,19 @@
 # What's New!
 
+**Changelog** (31-01-2025)
+
+- Minor bug fixes and improvements.
+- Updated dependencies.
+- Improved documentation.
+- Enhanced user experience.
+- Added new features.
+- Fixed issues.
+- Improved performance.
+- Improved stability.
+- Improved compatibility.
+- Improved maintainability.
+- Fix boot strapping issue.
+
 **Changelog** (24-01-2025)
 
 - Minor Bug Fixes
