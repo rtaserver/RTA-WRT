@@ -42,19 +42,69 @@ custom_files_path="${make_path}/files"
 custom_packages_path="${make_path}/packages"
 custom_scripts_file="${make_path}/scripts"
 
-# Output log prefixes
-STEPS="[\033[95m STEPS \033[0m]"
-INFO="[\033[94m INFO \033[0m]"
-SUCCESS="[\033[92m SUCCESS \033[0m]"
-WARNING="[\033[93m WARNING \033[0m]"
-ERROR="[\033[91m ERROR \033[0m]"
+# Output log prefixes with better color handling and backup if tput fails
+setup_colors() {
+    if command -v tput > /dev/null && tput setaf 1 &> /dev/null; then
+        PURPLE=$(tput setaf 5)
+        BLUE=$(tput setaf 4)
+        GREEN=$(tput setaf 2)
+        YELLOW=$(tput setaf 3)
+        RED=$(tput setaf 1)
+        RESET=$(tput sgr0)
+    else
+        PURPLE="\033[95m"
+        BLUE="\033[94m"
+        GREEN="\033[92m"
+        YELLOW="\033[93m"
+        RED="\033[91m"
+        RESET="\033[0m"
+    fi
+
+    STEPS="[${PURPLE} STEPS ${RESET}]"
+    INFO="[${BLUE} INFO ${RESET}]"
+    SUCCESS="[${GREEN} SUCCESS ${RESET}]"
+    WARNING="[${YELLOW} WARNING ${RESET}]"
+    ERROR="[${RED} ERROR ${RESET}]"
+}
 
 #================================================================================================
 
 # Handle errors and exit
 error_msg() {
-    echo -e "${ERROR} $1"
+    local line_number=${2:-${BASH_LINENO[0]}}
+    echo -e "${ERROR} ${1} (Line: ${line_number})" >&2
+    echo "Call stack:" >&2
+    local frame=0
+    while caller $frame; do
+        ((frame++))
+    done >&2
     exit 1
+}
+# Check And Install Required Dependencies
+check_dependencies() {
+    local dependencies=("aria2" "curl" "tar" "gzip" "unzip" "git" "wget" "sed" "grep")
+
+    echo -e "${STEPS} Checking and installing required dependencies..."
+    
+    echo -e "${INFO} Updating package lists..."
+    sudo apt update -qq &> /dev/null 2>&1
+
+    for pkg in "${dependencies[@]}"; do
+        if sudo dpkg -s "$pkg" &> /dev/null 2>&1; then
+            echo -e "${SUCCESS} ✓ $pkg is already installed"
+        else
+            echo -e "${INFO} Installing $pkg..."
+            
+            if sudo apt-get install -y "$pkg" &> /dev/null 2>&1; then
+                echo -e "${SUCCESS} ✓ $pkg installed successfully"
+            else
+                echo -e "${ERROR} ✗ Failed to install $pkg"
+                exit 1
+            fi
+        fi
+    done
+
+    echo -e "${SUCCESS} Dependencies installation complete!"
 }
 
 # Download external packages
@@ -69,7 +119,7 @@ download_packages() {
                 if [ -n "$file_url" ]; then
                     echo -e "${INFO} Downloading $(basename "$file_url")"
                     echo -e "${INFO} From $file_url"
-                    curl -fsSL -o "$(basename "$file_url")" "$file_url"
+                    aria2c -o "$(basename "$file_url")" "$file_url"
                     if [ $? -eq 0 ]; then
                         echo -e "${SUCCESS} Package [$filename] downloaded successfully."
                     else
@@ -118,7 +168,7 @@ download_packages() {
                 
                 while [ $attempt -le $max_attempts ]; do
                     echo -e "${INFO} Attempt $attempt to download $filename"
-                    if curl -fsSL --max-time 60 --retry 2 -o "${filename}.ipk" "$full_url"; then
+                    if aria2c -o "${filename}.ipk" "$full_url"; then
                         download_success=true
                         echo -e "${SUCCESS} Package [$filename] downloaded successfully."
                         break
@@ -216,7 +266,7 @@ download_imagebuilder() {
     download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
 
     echo -e "${INFO} Downloading ImageBuilder from: ${download_file}"
-    curl -fsSOL "${download_file}" || error_msg "Failed to download ${download_file}"
+    aria2c "${download_file}" || error_msg "Failed to download ${download_file}"
 
     # Extract downloaded archive
     echo -e "${INFO} Extracting archive..."
@@ -419,17 +469,17 @@ custom_packages() {
     echo -e "${STEPS} Installing OpenClash, Mihomo And Passwall"
 
     echo -e "${INFO} Downloading OpenClash package"
-    curl -fsSL -o "${core_dir}/clash_meta.gz" "${clash_meta}" || error_msg "Error: Failed to download Clash Meta package."
+    aria2c -o "${core_dir}/clash_meta.gz" "${clash_meta}" || error_msg "Error: Failed to download Clash Meta package."
     gzip -d "$core_dir/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
     echo -e "${SUCCESS} OpenClash Packages downloaded successfully."
 
     echo -e "${INFO} Downloading Mihomo package"
-    curl -fsSOL "${mihomo_file_ipk_down}" || error_msg "Error: Failed to download Mihomo package."
+    aria2c "${mihomo_file_ipk_down}" || error_msg "Error: Failed to download Mihomo package."
     tar -xzvf "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" > /dev/null 2>&1 && rm "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" || error_msg "Error: Failed to extract Mihomo package."
     echo -e "${SUCCESS} Mihomo Packages downloaded successfully."
 
     echo -e "${INFO} Downloading Passwall package"
-    curl -fsSOL "${passwall_file_zip_down}" || error_msg "Error: Failed to download Passwall Zip package."
+    aria2c "${passwall_file_zip_down}" || error_msg "Error: Failed to download Passwall Zip package."
     unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip" || error_msg "Error: Failed to extract Passwall package."
     echo -e "${SUCCESS} Passwall Packages downloaded successfully."
 
@@ -461,7 +511,7 @@ custom_config() {
         mkdir -p "$target_dir" || { echo -e "${ERROR} Failed to create directory $target_dir"; continue; }
         
         # Download the script
-        curl -fsSL -o "$file_path" "$file_url"
+        aria2c -o "$file_path" "$file_url"
         if [ "$?" -ne 0 ]; then
             echo -e "${WARN} Failed to download $file_url to $file_path."
         else
@@ -706,7 +756,7 @@ repackwrt() {
 
     # Download and extract builder
     echo -e "${INFO} Downloading builder..."
-    if ! curl -fsSL "${repo_url}" -o main.zip; then
+    if ! aria2c "${repo_url}" -o main.zip; then
         error_msg "Failed to download builder from ${repo_url}"
     fi
 
@@ -836,7 +886,7 @@ build_mod_sdcard() {
 
     # Download modification files
     echo -e "${INFO} Downloading mod-boot-sdcard..."
-    if ! curl -fsSOL https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip; then
+    if ! aria2c https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip; then
         error_msg "Failed to download mod-boot-sdcard"
         return 1
     fi
@@ -1082,6 +1132,8 @@ echo -e "${INFO} Rebuild Source: [ ${op_sourse} ], Branch: [ ${op_branch} ], Dev
 echo -e "${INFO} Server space usage before starting to compile: \n$(df -hT ${make_path}) \n"
 
 # Perform related operations
+setup_colors
+check_dependencies
 download_imagebuilder
 adjust_settings
 custom_packages
