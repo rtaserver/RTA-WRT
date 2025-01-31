@@ -468,11 +468,7 @@ custom_packages() {
 
     echo -e "${INFO} Downloading OpenClash package"
     mkdir -p "${custom_files_path}/etc/openclash/core"
-    #chmod -R 755 "${custom_files_path}/etc/openclash/core" || error_msg "Error: Failed to change permissions for OpenClash directory."
-    aria2c -q -o "${custom_files_path}/etc/openclash/core/clash_meta.gz" "${clash_meta}" || error_msg "Error: Failed to download Clash Meta package."
-    if [ ! -f "${custom_files_path}/etc/openclash/core/clash_meta.gz" ]; then
-        error_msg "Error: Download failed, file not found"
-    fi
+    aria2c -q -d "${custom_files_path}/etc/openclash/core" -o "clash_meta.gz" "${clash_meta}" || error_msg "Error: Failed to download Clash Meta package."
     gzip -d "${custom_files_path}/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
     echo -e "${SUCCESS} OpenClash Packages downloaded successfully."
 
@@ -514,7 +510,7 @@ custom_config() {
         mkdir -p "$target_dir" || { echo -e "${ERROR} Failed to create directory $target_dir"; continue; }
         
         # Download the script
-        aria2c -q -o "$file_path" "$file_url"
+        aria2c -q -d "$target_dir" -o "$(basename "$file_path")" "$file_url"
         if [ "$?" -ne 0 ]; then
             echo -e "${WARN} Failed to download $file_url to $file_path."
         else
