@@ -148,18 +148,10 @@ download_packages() {
     if [[ $1 == "github" ]]; then
         for entry in "${list[@]}"; do
             IFS="|" read -r filename base_url <<< "$entry"
-            echo -e "${INFO} Processing file: $filename"
             file_urls=$(curl -s "$base_url" | grep "browser_download_url" | grep -oE "https.*/${filename}_[_0-9a-zA-Z\._~-]*\.ipk" | sort -V | tail -n 1)
             for file_url in $file_urls; do
                 if [ -n "$file_url" ]; then
-                    echo -e "${INFO} Downloading $(basename "$file_url")"
-                    echo -e "${INFO} From $file_url"
                     ariadl "$file_url" "$(basename "$file_url")"
-                    if [ $? -eq 0 ]; then
-                        echo -e "${SUCCESS} Package [$filename] downloaded successfully."
-                    else
-                        error_msg "Failed to download package [$filename]."
-                    fi
                 else
                     error_msg "Failed to retrieve packages [$filename]. Retrying before exit..."
                 fi
@@ -168,7 +160,6 @@ download_packages() {
     elif [[ $1 == "custom" ]]; then
         for entry in "${list[@]}"; do
             IFS="|" read -r filename base_url <<< "$entry"
-            echo -e "${INFO} Processing file: $filename"
             
             # Array untuk menyimpan pola pencarian
             local search_patterns=(
@@ -194,29 +185,7 @@ download_packages() {
             
             # Percobaan download dengan mekanisme fallback
             if [ -n "$full_url" ]; then
-                echo -e "${INFO} Downloading ${file_urls%%\"*}"
-                echo -e "${INFO} From $full_url"
-                
-                local max_attempts=3
-                local attempt=1
-                local download_success=false
-                
-                while [ $attempt -le $max_attempts ]; do
-                    echo -e "${INFO} Attempt $attempt to download $filename"
-                    if ariadl "$full_url" "${filename}.ipk"; then
-                        download_success=true
-                        echo -e "${SUCCESS} Package [$filename] downloaded successfully."
-                        break
-                    else
-                        echo -e "${WARNING} Download failed for $filename (Attempt $attempt)"
-                        ((attempt++))
-                        sleep 5
-                    fi
-                done
-                
-                if [ "$download_success" = false ]; then
-                    error_msg "FAILED: Could not download $filename after $max_attempts attempts"
-                fi
+                ariadl "$full_url" "${filename}.ipk"
             else
                 error_msg "No matching file found for [$filename] at $base_url."
             fi
@@ -300,7 +269,6 @@ download_imagebuilder() {
     archive_ext="tar.$([[ "${CURVER}" == "23.05" ]] && echo "xz" || [[ "${CURVER}" == "24.10" ]] && echo "zst")"
     download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
 
-    echo -e "${INFO} Downloading ImageBuilder from: ${download_file}"
     ariadl "${download_file}" "${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
 
     # Extract downloaded archive
@@ -501,21 +469,15 @@ custom_packages() {
     # Output download information
     echo -e "${STEPS} Installing OpenClash, Mihomo And Passwall"
 
-    echo -e "${INFO} Downloading OpenClash package"
     mkdir -p "${custom_files_path}/etc/openclash/core"
     ariadl "${clash_meta}" "${custom_files_path}/etc/openclash/core/clash_meta.gz"
     gzip -d "${custom_files_path}/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
-    echo -e "${SUCCESS} OpenClash Packages downloaded successfully."
 
-    echo -e "${INFO} Downloading Mihomo package"
     ariadl "${mihomo_file_ipk_down}" "${mihomo_file_ipk}.tar.gz"
     tar -xzvf "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" > /dev/null 2>&1 && rm "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" || error_msg "Error: Failed to extract Mihomo package."
-    echo -e "${SUCCESS} Mihomo Packages downloaded successfully."
 
-    echo -e "${INFO} Downloading Passwall package"
     ariadl "${passwall_file_zip_down}" "passwall_packages_ipk_${ARCH_3}.zip"
     unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip" || error_msg "Error: Failed to extract Passwall package."
-    echo -e "${SUCCESS} Passwall Packages downloaded successfully."
 
     # Sync and provide directory status
     sync && sleep 3
