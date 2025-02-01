@@ -1,98 +1,22 @@
-#!/bin/sh
-
-# Script untuk memperbesar root filesystem OpenWrt
-# Membutuhkan package losetup dan resize2fs
-# Harus dijalankan setelah root partition resize (rootpt-resize)
-
-# Fungsi untuk logging
-log_msg() {
-    logger -t "rootfs-resize" "$1"
-    echo "$1"
-}
-
-# Periksa prasyarat
-if [ -e /etc/rootfs-resize ]; then
-    log_msg "Root filesystem sudah di-resize sebelumnya"
-    exit 0
-fi
-
-if [ ! -e /etc/rootpt-resize ]; then
-    log_msg "Error: Root partition belum di-resize. Jalankan script rootpt-resize terlebih dahulu"
-    exit 1
-fi
-
-# Periksa keberadaan tools yang diperlukan
-for cmd in losetup resize2fs; do
-    if ! type "$cmd" > /dev/null 2>&1; then
-        log_msg "Error: Command $cmd tidak ditemukan. Install package yang diperlukan"
-        exit 1
-    fi
-done
-
-# Coba mendapatkan lock
-if ! lock -n /var/lock/root-resize; then
-    log_msg "Error: Tidak bisa mendapatkan lock. Mungkin proses lain sedang berjalan"
-    exit 1
-fi
-
-# Fungsi cleanup
-cleanup() {
-    lock -u /var/lock/root-resize
-    log_msg "Membersihkan lock file"
-}
-
-# Register cleanup function
-trap cleanup EXIT
-
-# Dapatkan informasi block device
-ROOT_BLK="$(readlink -f /sys/dev/block/"$(awk -e '$9=="/dev/root"{print $3}' /proc/self/mountinfo)")"
-if [ -z "$ROOT_BLK" ]; then
-    log_msg "Error: Tidak bisa menentukan root block device"
-    exit 1
-fi
-
+if [ ! -e /etc/rootfs-resize ] \
+&& [ -e /etc/rootpt-resize ] \
+&& type losetup > /dev/null \
+&& type resize2fs > /dev/null \
+&& lock -n /var/lock/root-resize
+then
+ROOT_BLK="$(readlink -f /sys/dev/block/"$(awk -e \
+'$9=="/dev/root"{print $3}' /proc/self/mountinfo)")"
 ROOT_DEV="/dev/${ROOT_BLK##*/}"
-log_msg "Root device terdeteksi: $ROOT_DEV"
-
-# Cari atau buat loop device
-LOOP_DEV="$(awk -e '$5=="/overlay"{print $9}' /proc/self/mountinfo)"
-if [ -z "${LOOP_DEV}" ]; then
-    log_msg "Loop device tidak ditemukan, mencoba membuat baru"
-    LOOP_DEV="$(losetup -f)"
-    if [ -z "${LOOP_DEV}" ]; then
-        log_msg "Error: Gagal mendapatkan free loop device"
-        exit 1
-    fi
-    
-    if ! losetup "${LOOP_DEV}" "${ROOT_DEV}"; then
-        log_msg "Error: Gagal setup loop device"
-        exit 1
-    fi
-    log_msg "Berhasil membuat loop device: $LOOP_DEV"
+LOOP_DEV="$(awk -e '$5=="/overlay"{print $9}' \
+/proc/self/mountinfo)"
+if [ -z "${LOOP_DEV}" ]
+then
+LOOP_DEV="$(losetup -f)"
+losetup "${LOOP_DEV}" "${ROOT_DEV}"
 fi
-
-# Resize filesystem
-log_msg "Memulai resize filesystem pada $LOOP_DEV"
-if ! resize2fs -f "${LOOP_DEV}"; then
-    log_msg "Error: Gagal melakukan resize filesystem"
-    exit 1
-fi
-log_msg "Resize filesystem berhasil"
-
-# Remount root
-if ! mount_root done; then
-    log_msg "Error: Gagal me-remount root filesystem"
-    exit 1
-fi
-
-# Tandai bahwa resize sudah dilakukan
+resize2fs -f "${LOOP_DEV}"
+mount_root done
 touch /etc/rootfs-resize
-log_msg "Menandai resize filesystem selesai"
-
-# Restart system service
-if ! /etc/init.d/system restart; then
-    log_msg "Warning: Gagal me-restart system service"
+/etc/init.d/system restart
 fi
-
-log_msg "Proses resize filesystem selesai"
-exit 0
+exit 1

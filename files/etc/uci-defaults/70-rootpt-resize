@@ -1,73 +1,15 @@
-#!/bin/sh
-
-# Script untuk memperbesar partisi root secara otomatis
-# Membutuhkan package 'parted' untuk berfungsi
-
-# Fungsi untuk logging
-log_msg() {
-    logger -t "root-resize" "$1"
-    echo "$1"
-}
-
-# Periksa apakah script sudah pernah dijalankan
-if [ -e /etc/rootpt-resize ]; then
-    log_msg "Partisi root sudah di-resize sebelumnya"
-    exit 0
-fi
-
-# Periksa keberadaan parted
-if ! type parted > /dev/null 2>&1; then
-    log_msg "Error: Package parted tidak ditemukan. Silakan install dengan 'opkg update && opkg install parted'"
-    exit 1
-fi
-
-# Coba mendapatkan lock
-if ! lock -n /var/lock/root-resize; then
-    log_msg "Error: Tidak bisa mendapatkan lock. Mungkin proses lain sedang berjalan"
-    exit 1
-fi
-
-# Fungsi cleanup
-cleanup() {
-    lock -u /var/lock/root-resize
-    log_msg "Membersihkan lock file"
-}
-
-# Register cleanup function
-trap cleanup EXIT
-
-# Dapatkan informasi block device
-ROOT_BLK="$(readlink -f /sys/dev/block/"$(awk -e '$9=="/dev/root"{print $3}' /proc/self/mountinfo)")"
-if [ -z "$ROOT_BLK" ]; then
-    log_msg "Error: Tidak bisa menentukan root block device"
-    exit 1
-fi
-
+if [ ! -e /etc/rootpt-resize ] \
+&& type parted > /dev/null \
+&& lock -n /var/lock/root-resize
+then
+ROOT_BLK="$(readlink -f /sys/dev/block/"$(awk -e \
+'$9=="/dev/root"{print $3}' /proc/self/mountinfo)")"
 ROOT_DISK="/dev/$(basename "${ROOT_BLK%/*}")"
 ROOT_PART="${ROOT_BLK##*[^0-9]}"
-
-log_msg "Mencoba resize partisi root pada disk $ROOT_DISK partisi $ROOT_PART"
-
-# Coba resize partisi
-if ! parted -f -s "${ROOT_DISK}" resizepart "${ROOT_PART}" 100%; then
-    log_msg "Error: Gagal melakukan resize partisi"
-    exit 1
-fi
-
-# Remount root dan resize filesystem
-if ! mount_root done; then
-    log_msg "Error: Gagal me-remount root filesystem"
-    exit 1
-fi
-
-# Tandai bahwa resize sudah dilakukan
+parted -f -s "${ROOT_DISK}" \
+resizepart "${ROOT_PART}" 100%
+mount_root done
 touch /etc/rootpt-resize
-log_msg "Resize partisi root berhasil"
-
-# Restart system service
-if ! /etc/init.d/system restart; then
-    log_msg "Warning: Gagal me-restart system service"
+/etc/init.d/system restart
 fi
-
-log_msg "Proses resize selesai"
-exit 0
+exit 1
