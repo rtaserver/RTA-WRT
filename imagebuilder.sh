@@ -419,6 +419,24 @@ custom_packages() {
         
         "luci-app-tailscale|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         "luci-app-diskman|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-telegram|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-zte|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-gosun|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-qmi|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-yuge|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-thales|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-tw|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-meig|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-styx|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-mikrotik|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-dell|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-sierra|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-quectel|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-huawei|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-xmm|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-telit|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-fibocom|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-simcom|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         "modeminfo|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         "luci-app-modeminfo|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         "atinout|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
@@ -592,7 +610,8 @@ rebuild_firmware() {
 
 
     # Modem Tools
-    PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"
+    PACKAGES+=" modeminfo-telegram modeminfo-serial-zte modeminfo-serial-gosun modeminfo-qmi modeminfo-serial-yuge modeminfo-serial-thales modeminfo-serial-tw modeminfo-serial-meig modeminfo-serial-styx modeminfo-serial-mikrotik modeminfo-serial-dell modeminfo-serial-sierra modeminfo-serial-quectel modeminfo-serial-huawei modeminfo-serial-xmm modeminfo-serial-telit modeminfo-serial-fibocom modeminfo-serial-simcom modeminfo luci-app-modeminfo"
+    PACKAGES+=" atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"
 
     # Tunnel option
     OPENCLASH="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"

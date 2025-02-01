@@ -1,0 +1,80 @@
+#!/bin/bash
+
+echo "==================================="
+echo "   SCRIPT PENGATURAN TTL OPENWRT   "
+echo "==================================="
+
+# Fungsi untuk memvalidasi input numerik
+validasi_angka() {
+    if [[ "$1" =~ ^[0-9]+$ ]] && [ "$1" -ge 1 ] && [ "$1" -le 255 ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Tanya nilai TTL yang diinginkan
+while true; do
+    read -p "Masukkan nilai TTL (1-255) [default: 65]: " nilai_ttl
+    
+    # Jika input kosong, gunakan default 65
+    if [ -z "$nilai_ttl" ]; then
+        nilai_ttl=65
+        break
+    fi
+    
+    # Validasi input
+    if validasi_angka "$nilai_ttl"; then
+        break
+    else
+        echo "Error: Masukkan angka antara 1-255"
+    fi
+done
+
+# Konfirmasi sebelum melanjutkan
+echo -e "\nAkan mengatur TTL dengan nilai: $nilai_ttl"
+read -p "Lanjutkan? (y/n): " konfirmasi
+if [ "$konfirmasi" != "y" ] && [ "$konfirmasi" != "Y" ]; then
+    echo "Dibatalkan oleh pengguna"
+    exit 1
+fi
+
+# Cek akses root
+if [ "$(id -u)" != "0" ]; then
+   echo "Script ini harus dijalankan sebagai root" 1>&2
+   exit 1
+fi
+
+# Buat direktori jika belum ada
+mkdir -p /etc/nftables.d
+
+# Buat file rules baru
+cat > /etc/nftables.d/99-ttl-fix.nft << EOF
+#!/usr/sbin/nft -f
+
+flush table ip mangle
+add table ip mangle
+add chain ip mangle mangle_prerouting { type filter hook prerouting priority 300; policy accept; }
+add chain ip mangle mangle_postrouting { type filter hook postrouting priority 300; policy accept; }
+add rule ip mangle mangle_prerouting counter ip ttl set $nilai_ttl
+add rule ip mangle mangle_postrouting counter ip ttl set $nilai_ttl
+EOF
+
+# Set permissions
+chmod 644 /etc/nftables.d/99-ttl-fix.nft
+
+# Terapkan rules
+echo "Menerapkan konfigurasi TTL..."
+nft -f /etc/nftables.d/99-ttl-fix.nft
+
+echo -e "\n=== KONFIGURASI BERHASIL ==="
+echo "TTL telah diatur ke nilai: $nilai_ttl"
+echo "File konfigurasi: /etc/nftables.d/99-ttl-fix.nft"
+echo -e "\nUntuk memeriksa rules yang aktif, jalankan: nft list ruleset"
+echo "Untuk memeriksa TTL, ping ke 8.8.8.8 dan periksa nilai TTL-nya"
+
+# Tambahkan ke rc.local untuk mempertahankan setting setelah reboot
+if ! grep -q "/etc/nftables.d/99-ttl-fix.nft" /etc/rc.local; then
+    sed -i '/exit 0/i nft -f /etc/nftables.d/99-ttl-fix.nft' /etc/rc.local
+    echo "Konfigurasi telah ditambahkan ke rc.local untuk bertahan setelah reboot"
+fi
