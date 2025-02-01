@@ -321,6 +321,12 @@ fi
 msg "Step 19: set argon as default theme"
 uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
 
+if [ -f "/etc/profile.d/30-sysinfo.sh" ]; then
+  rm -rf /etc/profile.d/30-sysinfo.sh
+  mv /etc/profile.d/30-sysinfo.sh-bak /etc/profile.d/30-sysinfo.sh
+else
+  mv /etc/profile.d/30-sysinfo.sh-bak /etc/profile.d/30-sysinfo.sh
+fi
 
 # Log success
 msg "First Setup settings successfully applied..."
