@@ -1,8 +1,17 @@
 #!/bin/bash
 
-echo "==================================="
-echo "   SCRIPT PENGATURAN TTL OPENWRT   "
-echo "==================================="
+# Definisikan warna
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m' # Tanpa warna
+
+echo -e "${CYAN}===================================${NC}"
+echo -e "${GREEN}   SCRIPT PENGATURAN TTL OPENWRT   ${NC}"
+echo -e "${CYAN}            By RTA-WRT             ${NC}"
+echo -e "${CYAN}===================================${NC}"
 
 # Fungsi untuk memvalidasi input numerik
 validasi_angka() {
@@ -27,21 +36,21 @@ while true; do
     if validasi_angka "$nilai_ttl"; then
         break
     else
-        echo "Error: Masukkan angka antara 1-255"
+        echo -e "${RED}Error: Masukkan angka antara 1-255${NC}"
     fi
 done
 
 # Konfirmasi sebelum melanjutkan
-echo -e "\nAkan mengatur TTL dengan nilai: $nilai_ttl"
+echo -e "\nAkan mengatur TTL dengan nilai: ${YELLOW}$nilai_ttl${NC}"
 read -p "Lanjutkan? (y/n): " konfirmasi
-if [ "$konfirmasi" != "y" ] && [ "$konfirmasi" != "Y" ]; then
-    echo "Dibatalkan oleh pengguna"
+if [[ "$konfirmasi" != "y" && "$konfirmasi" != "Y" ]]; then
+    echo -e "${RED}Dibatalkan oleh pengguna${NC}"
     exit 1
 fi
 
 # Cek akses root
 if [ "$(id -u)" != "0" ]; then
-   echo "Script ini harus dijalankan sebagai root" 1>&2
+   echo -e "${RED}Script ini harus dijalankan sebagai root${NC}" 1>&2
    exit 1
 fi
 
@@ -64,17 +73,17 @@ EOF
 chmod 644 /etc/nftables.d/99-ttl-fix.nft
 
 # Terapkan rules
-echo "Menerapkan konfigurasi TTL..."
+echo -e "${BLUE}Menerapkan konfigurasi TTL...${NC}"
 nft -f /etc/nftables.d/99-ttl-fix.nft
 
-echo -e "\n=== KONFIGURASI BERHASIL ==="
-echo "TTL telah diatur ke nilai: $nilai_ttl"
-echo "File konfigurasi: /etc/nftables.d/99-ttl-fix.nft"
-echo -e "\nUntuk memeriksa rules yang aktif, jalankan: nft list ruleset"
-echo "Untuk memeriksa TTL, ping ke 8.8.8.8 dan periksa nilai TTL-nya"
+echo -e "\n=== ${GREEN}KONFIGURASI BERHASIL${NC} ==="
+echo -e "TTL telah diatur ke nilai: ${YELLOW}$nilai_ttl${NC}"
+echo -e "File konfigurasi: /etc/nftables.d/99-ttl-fix.nft"
+echo -e "\nUntuk memeriksa rules yang aktif, jalankan: ${CYAN}nft list ruleset${NC}"
+echo -e "Untuk memeriksa TTL, ping ke 8.8.8.8 dan periksa nilai TTL-nya"
 
 # Tambahkan ke rc.local untuk mempertahankan setting setelah reboot
 if ! grep -q "/etc/nftables.d/99-ttl-fix.nft" /etc/rc.local; then
     sed -i '/exit 0/i nft -f /etc/nftables.d/99-ttl-fix.nft' /etc/rc.local
-    echo "Konfigurasi telah ditambahkan ke rc.local untuk bertahan setelah reboot"
+    echo -e "${GREEN}Konfigurasi telah ditambahkan ke rc.local untuk bertahan setelah reboot${NC}"
 fi
