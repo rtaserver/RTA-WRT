@@ -1,5 +1,9 @@
 # What's New!
 
+**Changelog** (01-02-2025)
+
+- Automatically expand root partition and filesystem to available free space!
+
 **Changelog** (31-01-2025)
 
 - Minor bug fixes and improvements.
