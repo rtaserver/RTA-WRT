@@ -1,89 +1,253 @@
 #!/bin/bash
 
-# Definisikan warna
+# Color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
 CYAN='\033[0;36m'
-NC='\033[0m' # Tanpa warna
+WHITE='\033[1;37m'
+NC='\033[0m' # No Color
 
-echo -e "${CYAN}===================================${NC}"
-echo -e "${GREEN}   SCRIPT PENGATURAN TTL OPENWRT   ${NC}"
-echo -e "${CYAN}            By RTA-WRT             ${NC}"
-echo -e "${CYAN}===================================${NC}"
+# Banner
+show_banner() {
+    echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
+    echo -e "${CYAN}"
+    echo '██████╗ ████████╗ █████╗ ██╗    ██╗██████╗ ████████╗'
+    echo '██╔══██╗╚══██╔══╝██╔══██╗██║    ██║██╔══██╗╚══██╔══╝'
+    echo '██████╔╝   ██║   ███████║██║ █╗ ██║██████╔╝   ██║   '
+    echo '██╔══██╗   ██║   ██╔══██║██║███╗██║██╔══██╗   ██║   '
+    echo '██║  ██║   ██║   ██║  ██║╚███╔███╔╝██║  ██║   ██║   '
+    echo '╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝   '
+    echo -e "${NC}"
+    echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
+}
 
-# Fungsi untuk memvalidasi input numerik
-validasi_angka() {
-    if [[ "$1" =~ ^[0-9]+$ ]] && [ "$1" -ge 1 ] && [ "$1" -le 255 ]; then
-        return 0
-    else
-        return 1
+# Fungsi untuk menampilkan semua interface yang tersedia
+show_interfaces() {
+    echo -e "${YELLOW}Daftar Interface yang tersedia:${NC}"
+    echo -e "${BLUE}--------------------------------${NC}"
+    ip link show | grep -E '^[0-9]+:' | cut -d: -f2 | sed 's/^ //' | while read -r interface; do
+        echo -e "${GREEN}$interface${NC}"
+    done
+    echo -e "${BLUE}--------------------------------${NC}"
+}
+
+# Fungsi untuk memvalidasi interface
+validate_interface() {
+    local interface="$1"
+    ip link show "$interface" >/dev/null 2>&1
+    return $?
+}
+
+# Fungsi untuk set TTL rules
+set_ttl() {
+    local INTERFACE="$1"
+    local TTL_VALUE="$2"
+
+    echo -e "${YELLOW}Menerapkan TTL rules untuk interface ${GREEN}$INTERFACE${YELLOW} dengan nilai TTL ${GREEN}$TTL_VALUE${NC}"
+    nft add rule inet fw4 mangle_prerouting iifname "$INTERFACE" ip ttl set "$TTL_VALUE"
+    nft add rule inet fw4 mangle_postrouting oifname "$INTERFACE" ip ttl set "$TTL_VALUE"
+    /etc/init.d/firewall restart >/dev/null 2>&1
+    echo -e "${GREEN}Rules berhasil diterapkan!${NC}"
+}
+
+# Fungsi untuk delete TTL rules
+delete_ttl() {
+    local INTERFACE="$1"
+    
+    echo -e "${YELLOW}Mencari dan menghapus rules TTL untuk interface ${GREEN}$INTERFACE${YELLOW}...${NC}"
+    
+    # Hapus rules di prerouting
+    nft -a list chain inet fw4 mangle_prerouting | grep "ttl set" | grep "$INTERFACE" | while read -r line; do
+        handle=$(echo "$line" | grep -o 'handle [0-9]*' | cut -d' ' -f2)
+        if [ ! -z "$handle" ]; then
+            echo -e "${CYAN}Menghapus prerouting rule dengan handle ${GREEN}$handle${NC}"
+            nft delete rule inet fw4 mangle_prerouting handle "$handle"
+        fi
+    done
+
+    # Hapus rules di postrouting
+    nft -a list chain inet fw4 mangle_postrouting | grep "ttl set" | grep "$INTERFACE" | while read -r line; do
+        handle=$(echo "$line" | grep -o 'handle [0-9]*' | cut -d' ' -f2)
+        if [ ! -z "$handle" ]; then
+            echo -e "${CYAN}Menghapus postrouting rule dengan handle ${GREEN}$handle${NC}"
+            nft delete rule inet fw4 mangle_postrouting handle "$handle"
+        fi
+    done
+    
+    /etc/init.d/firewall restart >/dev/null 2>&1
+    echo -e "${GREEN}Proses penghapusan selesai!${NC}"
+}
+
+# Lokasi file rc.local
+RC_LOCAL="/etc/rc.local"
+
+# Fungsi untuk menambahkan rules ke rc.local
+add_to_startup() {
+    local INTERFACE="$1"
+    local TTL_VALUE="$2"
+    
+    # Cek apakah file rc.local ada
+    if [ ! -f "$RC_LOCAL" ]; then
+        echo "#!/bin/sh -e" > "$RC_LOCAL"
+        echo "exit 0" >> "$RC_LOCAL"
+        chmod +x "$RC_LOCAL"
+    fi
+    
+    # Hapus rules TTL yang sudah ada untuk interface ini
+    sed -i "/nft add rule inet fw4 mangle_prerouting iifname \"$INTERFACE\"/d" "$RC_LOCAL"
+    sed -i "/nft add rule inet fw4 mangle_postrouting oifname \"$INTERFACE\"/d" "$RC_LOCAL"
+    
+    # Tambahkan rules baru sebelum exit 0
+    sed -i "/exit 0/i nft add rule inet fw4 mangle_prerouting iifname \"$INTERFACE\" ip ttl set $TTL_VALUE\nnft add rule inet fw4 mangle_postrouting oifname \"$INTERFACE\" ip ttl set $TTL_VALUE" "$RC_LOCAL"
+    
+    echo -e "${GREEN}Rules TTL telah ditambahkan ke startup (rc.local)${NC}"
+}
+
+# Fungsi untuk menghapus rules dari rc.local
+remove_from_startup() {
+    local INTERFACE="$1"
+    
+    if [ -f "$RC_LOCAL" ]; then
+        sed -i "/nft add rule inet fw4 mangle_prerouting iifname \"$INTERFACE\"/d" "$RC_LOCAL"
+        sed -i "/nft add rule inet fw4 mangle_postrouting oifname \"$INTERFACE\"/d" "$RC_LOCAL"
+        echo -e "${GREEN}Rules TTL untuk interface $INTERFACE telah dihapus dari startup (rc.local)${NC}"
     fi
 }
 
-# Tanya nilai TTL yang diinginkan
+[Previous code remains the same until the case statement in the main menu]
+
+# Main menu
 while true; do
-    read -p "Masukkan nilai TTL (1-255) [default: 65]: " nilai_ttl
-    
-    # Jika input kosong, gunakan default 65
-    if [ -z "$nilai_ttl" ]; then
-        nilai_ttl=65
-        break
-    fi
-    
-    # Validasi input
-    if validasi_angka "$nilai_ttl"; then
-        break
-    else
-        echo -e "${RED}Error: Masukkan angka antara 1-255${NC}"
-    fi
+    clear
+    show_banner
+    echo -e "${MAGENTA}    OpenWrt TTL Manager Script     ${NC}"
+    echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
+    echo -e "${CYAN}1. Set TTL Rules${NC}"
+    echo -e "${CYAN}2. Delete TTL Rules${NC}"
+    echo -e "${CYAN}3. Lihat rc.local${NC}"
+    echo -e "${CYAN}4. Keluar${NC}"
+    echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
+    echo -e -n "${YELLOW}Pilih menu (1-4): ${NC}"
+    read choice
+
+    case $choice in
+        1)
+            clear
+            show_banner
+            echo -e "${MAGENTA}=== Set TTL Rules ===${NC}"
+            show_interfaces
+            
+            # Input dan validasi interface
+            while true; do
+                echo -e -n "${YELLOW}Masukkan nama interface: ${NC}"
+                read interface
+                if validate_interface "$interface"; then
+                    break
+                else
+                    echo -e "${RED}Interface tidak valid! Silakan coba lagi.${NC}"
+                fi
+            done
+            
+            # Input dan validasi TTL dengan default 65
+            echo -e -n "${YELLOW}Masukkan nilai TTL (1-255) [default: 65]: ${NC}"
+            read ttl_value
+            if [ -z "$ttl_value" ]; then
+                ttl_value=65
+            fi
+            
+            while ! [[ "$ttl_value" =~ ^[0-9]+$ ]] || [ "$ttl_value" -lt 1 ] || [ "$ttl_value" -gt 255 ]; do
+                echo -e "${RED}Nilai TTL tidak valid! Masukkan angka antara 1-255.${NC}"
+                echo -e -n "${YELLOW}Masukkan nilai TTL (1-255) [default: 65]: ${NC}"
+                read ttl_value
+                if [ -z "$ttl_value" ]; then
+                    ttl_value=65
+                fi
+            done
+            
+            # Konfirmasi
+            echo ""
+            echo -e "${CYAN}Anda akan menerapkan:${NC}"
+            echo -e "${WHITE}Interface: ${GREEN}$interface${NC}"
+            echo -e "${WHITE}TTL Value: ${GREEN}$ttl_value${NC}"
+            echo -e -n "${YELLOW}Lanjutkan? (y/n): ${NC}"
+            read confirm
+            if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                set_ttl "$interface" "$ttl_value"
+                
+                # Tanya apakah ingin menambahkan ke startup
+                echo -e -n "${YELLOW}Tambahkan rules ini ke startup (rc.local)? (y/n): ${NC}"
+                read add_startup
+                if [[ "$add_startup" =~ ^[Yy]$ ]]; then
+                    add_to_startup "$interface" "$ttl_value"
+                fi
+            fi
+            echo -e -n "${MAGENTA}Tekan Enter untuk kembali ke menu...${NC}"
+            read
+            ;;
+            
+        2)
+            clear
+            show_banner
+            echo -e "${MAGENTA}=== Delete TTL Rules ===${NC}"
+            show_interfaces
+            
+            # Input dan validasi interface
+            while true; do
+                echo -e -n "${YELLOW}Masukkan nama interface yang akan dihapus rules-nya: ${NC}"
+                read interface
+                if validate_interface "$interface"; then
+                    break
+                else
+                    echo -e "${RED}Interface tidak valid! Silakan coba lagi.${NC}"
+                fi
+            done
+            
+            # Konfirmasi
+            echo -e -n "${YELLOW}Anda yakin ingin menghapus TTL rules untuk interface ${GREEN}$interface${YELLOW}? (y/n): ${NC}"
+            read confirm
+            if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                delete_ttl "$interface"
+                
+                # Tanya apakah ingin menghapus dari startup
+                echo -e -n "${YELLOW}Hapus rules ini dari startup (rc.local)? (y/n): ${NC}"
+                read remove_startup
+                if [[ "$remove_startup" =~ ^[Yy]$ ]]; then
+                    remove_from_startup "$interface"
+                fi
+            fi
+            echo -e -n "${MAGENTA}Tekan Enter untuk kembali ke menu...${NC}"
+            read
+            ;;
+            
+        3)
+            clear
+            show_banner
+            echo -e "${MAGENTA}=== Isi rc.local ===${NC}"
+            echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
+            if [ -f "$RC_LOCAL" ]; then
+                echo -e "${GREEN}"
+                cat "$RC_LOCAL"
+                echo -e "${NC}"
+            else
+                echo -e "${RED}File rc.local tidak ditemukan${NC}"
+            fi
+            echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
+            echo -e -n "${MAGENTA}Tekan Enter untuk kembali ke menu...${NC}"
+            read
+            ;;
+            
+        4)
+            echo -e "${GREEN}Terima kasih telah menggunakan script ini!${NC}"
+            exit 0
+            ;;
+            
+        *)
+            echo -e "${RED}Pilihan tidak valid!${NC}"
+            echo -e -n "${MAGENTA}Tekan Enter untuk melanjutkan...${NC}"
+            read
+            ;;
+    esac
 done
-
-# Konfirmasi sebelum melanjutkan
-echo -e "\nAkan mengatur TTL dengan nilai: ${YELLOW}$nilai_ttl${NC}"
-read -p "Lanjutkan? (y/n): " konfirmasi
-if [[ "$konfirmasi" != "y" && "$konfirmasi" != "Y" ]]; then
-    echo -e "${RED}Dibatalkan oleh pengguna${NC}"
-    exit 1
-fi
-
-# Cek akses root
-if [ "$(id -u)" != "0" ]; then
-   echo -e "${RED}Script ini harus dijalankan sebagai root${NC}" 1>&2
-   exit 1
-fi
-
-# Buat direktori jika belum ada
-mkdir -p /etc/nftables.d
-
-# Buat file rules baru
-cat > /etc/nftables.d/99-ttl-fix.nft << EOF
-#!/usr/sbin/nft -f
-
-flush table ip mangle
-add table ip mangle
-add chain ip mangle mangle_prerouting { type filter hook prerouting priority 300; policy accept; }
-add chain ip mangle mangle_postrouting { type filter hook postrouting priority 300; policy accept; }
-add rule ip mangle mangle_prerouting counter ip ttl set $nilai_ttl
-add rule ip mangle mangle_postrouting counter ip ttl set $nilai_ttl
-EOF
-
-# Set permissions
-chmod 644 /etc/nftables.d/99-ttl-fix.nft
-
-# Terapkan rules
-echo -e "${BLUE}Menerapkan konfigurasi TTL...${NC}"
-nft -f /etc/nftables.d/99-ttl-fix.nft
-
-echo -e "\n=== ${GREEN}KONFIGURASI BERHASIL${NC} ==="
-echo -e "TTL telah diatur ke nilai: ${YELLOW}$nilai_ttl${NC}"
-echo -e "File konfigurasi: /etc/nftables.d/99-ttl-fix.nft"
-echo -e "\nUntuk memeriksa rules yang aktif, jalankan: ${CYAN}nft list ruleset${NC}"
-echo -e "Untuk memeriksa TTL, ping ke 8.8.8.8 dan periksa nilai TTL-nya"
-
-# Tambahkan ke rc.local untuk mempertahankan setting setelah reboot
-if ! grep -q "/etc/nftables.d/99-ttl-fix.nft" /etc/rc.local; then
-    sed -i '/exit 0/i nft -f /etc/nftables.d/99-ttl-fix.nft' /etc/rc.local
-    echo -e "${GREEN}Konfigurasi telah ditambahkan ke rc.local untuk bertahan setelah reboot${NC}"
-fi

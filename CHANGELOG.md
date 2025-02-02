@@ -3,6 +3,8 @@
 **Changelog** (01-02-2025)
 
 - Automatically expand root partition and filesystem to available free space!
+- Fix Modeminfo
+- Add Script Fix And Change TTL
 
 **Changelog** (31-01-2025)
 
