@@ -99,7 +99,7 @@
     }
 
     async function checkForUpdates() {
-        const currentVersion = "v02022005";
+        const currentVersion = "openwrt_24.10.0-rc7-01022025";
         const lastShownUpdate = localStorage.getItem('mdl_update');
 
         if (lastShownUpdate !== today) {
