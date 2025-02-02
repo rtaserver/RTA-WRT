@@ -190,14 +190,7 @@ ariadl() {
         mkdir -p "$OUTPUT_DIR"
     fi
 
-    echo -e "${INFO} Downloading $(basename "$URL")"
-    aria2c -q -d "$OUTPUT_DIR" -o "$OUTPUT_FILE" "$URL"
-    if [ $? -eq 0 ]; then
-        echo -e "${SUCCESS} Package [$(basename "$URL")] downloaded successfully."
-    else
-        echo -e "${ERROR} Failed to download package [$(basename "$URL")]."
-        exit 1
-    fi
+    cmdinstall "aria2c -q -d "$OUTPUT_DIR" -o "$OUTPUT_FILE" "$URL"" "Aria2 Downloading $(basename "$URL")"
 }
 
 # Download external packages
