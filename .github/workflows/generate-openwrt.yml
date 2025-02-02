@@ -99,7 +99,7 @@ jobs:
       - name: Update Version
         run: |
           sudo timedatectl set-timezone "$TZ"
-          DATE=$(date +'%d%m%Y')"
+          DATE=$(date +'%d%m%Y')
           RELEASE_BRANCH="${{ inputs.releases_branch }}"
           RELEASE_TAG="${RELEASE_BRANCH/:/_}-${DATE}"
           sed -i "s|.*|${RELEASE_TAG}|g" latestversion.txt
