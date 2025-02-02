@@ -1,5 +1,12 @@
 # What's New!
 
+**Changelog** (02-02-2025)
+
+- Remove Expand root partition and filesystem
+  Because Some Firmware Not Boot To OpenWrt
+- Fix Missing Packages ModemInfo
+- Update FixTTL
+
 **Changelog** (01-02-2025)
 
 - Automatically expand root partition and filesystem to available free space!
