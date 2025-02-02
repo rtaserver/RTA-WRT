@@ -1,11 +1,12 @@
 # What's New!
 
-**Changelog** (02-02-2025)
+**Changelog** (03-02-2025)
 
 - Remove Expand root partition and filesystem
   Because Some Firmware Not Boot To OpenWrt
 - Fix Missing Packages ModemInfo
 - Update FixTTL
+- Add SweetAlert2
 
 **Changelog** (01-02-2025)
 
