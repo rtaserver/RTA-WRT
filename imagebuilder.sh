@@ -190,7 +190,14 @@ ariadl() {
         mkdir -p "$OUTPUT_DIR"
     fi
 
-    cmdinstall "aria2c -q -d "$OUTPUT_DIR" -o "$OUTPUT_FILE" "$URL"" "Aria2 Downloading $(basename "$URL")"
+    echo -e "${INFO} Downloading: $URL"
+    aria2c -q -d "$OUTPUT_DIR" -o "$OUTPUT_FILE" "$URL"
+    if [ $? -eq 0 ]; then
+        echo -e "${SUCCESS} Downloaded: $OUTPUT_FILE"
+    else
+        echo -e "${ERROR} Failed to download: $OUTPUT_FILE"
+        exit 1
+    fi
 }
 
 # Download external packages
@@ -326,10 +333,10 @@ download_imagebuilder() {
     echo -e "${INFO} Extracting archive..."
     case "${archive_ext}" in
         tar.xz)
-            cmdinstall "tar -xJf *-imagebuilder-*" "Extracting ${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
+            tar -xJf *-imagebuilder-* > /dev/null 2>&1 || error_msg "Failed to extract tar.xz archive."
             ;;
         tar.zst)
-            cmdinstall "tar -xvf *-imagebuilder-*" "Extracting ${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
+            tar -xvf *-imagebuilder-* > /dev/null 2>&1 || error_msg "Failed to extract tar.zst archive."
             ;;
         *)
             error_msg "Unknown archive extension: ${archive_ext}"
@@ -540,13 +547,13 @@ custom_packages() {
 
     mkdir -p "${custom_files_path}/etc/openclash/core"
     ariadl "${clash_meta}" "${custom_files_path}/etc/openclash/core/clash_meta.gz"
-    cmdinstall "gzip -d "${custom_files_path}/etc/openclash/core/clash_meta.gz"" "Extracting OpenClash package"
+    gzip -d "${custom_files_path}/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
 
     ariadl "${mihomo_file_ipk_down}" "${mihomo_file_ipk}.tar.gz"
-    cmdinstall "tar -xzvf "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz"" "Extracting Mihomo package"
+    tar -xzvf "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" > /dev/null 2>&1 && rm "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" || error_msg "Error: Failed to extract Mihomo package."
 
     ariadl "${passwall_file_zip_down}" "passwall_packages_ipk_${ARCH_3}.zip"
-    cmdinstall "unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip"" "Extracting Passwall package"
+    unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip" || error_msg "Error: Failed to extract Passwall package."
 
     # Sync and provide directory status
     sync && sleep 3
@@ -637,7 +644,7 @@ rebuild_firmware() {
     cd "${imagebuilder_path}" || { error_msg "Error: Unable to access ${imagebuilder_path}"; }
 
     # Membersihkan build lama
-    cmdinstall "make clean" "Cleaning previous build"
+    make clean > /dev/null 2>&1 || { error_msg "Error: Failed to clean previous build"; }
     mkdir -p ${imagebuilder_path}/out_firmware ${imagebuilder_path}/out_rootfs
 
     # Selecting default packages, lib, theme, app and i18n, etc.
@@ -817,7 +824,10 @@ repackwrt() {
     # Download and extract builder
     ariadl "${repo_url}" "main.zip"
 
-    cmdinstall "unzip -q main.zip" "Extracting builder files"
+    if ! unzip -q main.zip; then
+        error_msg "Failed to extract builder archive"
+        rm -f main.zip
+    fi
     rm -f main.zip
 
     # Prepare builder directory
@@ -852,8 +862,9 @@ repackwrt() {
     # Run builder-specific operations
     if [[ "$builder_type" == "--ophub" ]]; then
         echo -e "${INFO} Running OphubBuilder..."
-        cmdinstall "chmod +x remake" "Setting execute permission"
-        cmdinstall "sudo ./remake -b ${TARGET_BOARD} -k ${TARGET_KERNEL} -s 1024" "Running OphubBuilder"
+        if ! sudo ./remake -b ${TARGET_BOARD} -k ${TARGET_KERNEL} -s 1024; then
+            error_msg "OphubBuilder execution failed"
+        fi
         device_output_dir="./openwrt/out"
     else
         # Apply ULO patches
@@ -872,8 +883,9 @@ repackwrt() {
         # Run UloBuilder
         echo -e "${INFO} Running UloBuilder..."
         local readonly rootfs_basename=$(basename "${rootfs_file}")
-        cmdinstall "chmod +x ulo" "Setting execute permission"
-        cmdinstall "sudo ./ulo -y -m ${op_devices} -r ${rootfs_basename} -k ${KERNEL} -s 1024" "Running UloBuilder"
+        if ! sudo ./ulo -y -m "${op_devices}" -r "${rootfs_basename}" -k "${KERNEL}" -s 1024; then
+            error_msg "UloBuilder execution failed"
+        fi
         device_output_dir="./out/${op_devices}"
     fi
 
@@ -941,7 +953,10 @@ build_mod_sdcard() {
 
     # Extract files
     echo -e "${INFO} Extracting mod-boot-sdcard..."
-    cmdinstall "unzip -q main.zip" "Extracting mod-boot-sdcard"
+    if ! unzip -q main.zip; then
+        error_msg "Failed to extract mod-boot-sdcard"
+        return 1
+    fi
     rm -f main.zip
     echo -e "${SUCCESS} mod-boot-sdcard successfully extracted."
     sleep 3
@@ -952,7 +967,11 @@ build_mod_sdcard() {
     # Copy required files
     echo -e "${INFO} Preparing image for ${suffix}..."
     cp "$file_to_process" "${suffix}/"
-    cmdinstall "sudo cp mod-boot-sdcard-main/BootCardMaker/u-boot.bin mod-boot-sdcard-main/files/mod-boot-sdcard.tar.gz "${suffix}/"" "Copying bootloader and modification files"
+    if ! sudo cp mod-boot-sdcard-main/BootCardMaker/u-boot.bin \
+        mod-boot-sdcard-main/files/mod-boot-sdcard.tar.gz "${suffix}/"; then
+        error_msg "Failed to copy bootloader or modification files"
+        return 1
+    fi
 
     # Process the image
     cd "${suffix}" || {
@@ -963,7 +982,10 @@ build_mod_sdcard() {
     local file_name=$(basename "${file_to_process%.gz}")
 
     # Decompress the OpenWRT image
-    cmdinstall "sudo gunzip ${file_name}.gz" "Decompressing image"
+    if ! sudo gunzip "${file_name}.gz"; then
+        error_msg "Failed to decompress image"
+        return 1
+    fi
 
     # Set up loop device
     local device
@@ -997,7 +1019,10 @@ build_mod_sdcard() {
 
     # Apply modifications
     echo -e "${INFO} Applying boot modifications..."
-    cmdinstall "sudo tar -xzf mod-boot-sdcard.tar.gz -C boot" "Extracting boot modifications"
+    if ! sudo tar -xzf mod-boot-sdcard.tar.gz -C boot; then
+        error_msg "Failed to extract boot modifications"
+        return 1
+    fi
 
     # Update configuration files
     echo -e "${INFO} Updating configuration files..."
@@ -1015,8 +1040,11 @@ build_mod_sdcard() {
 
     # Write bootloader
     echo -e "${INFO} Writing bootloader..."
-    cmdinstall "sudo dd if=u-boot.bin of="${device}" bs=1 count=444 conv=fsync" "Writing bootloader"
-    cmdinstall "sudo dd if=u-boot.bin of="${device}" bs=512 skip=1 seek=1 conv=fsync" "Writing bootloader"
+    if ! sudo dd if=u-boot.bin of="${device}" bs=1 count=444 conv=fsync 2>/dev/null || \
+       ! sudo dd if=u-boot.bin of="${device}" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null; then
+        error_msg "Failed to write bootloader"
+        return 1
+    fi
 
     # Detach loop device and compress
     sudo losetup -d "${device}"
