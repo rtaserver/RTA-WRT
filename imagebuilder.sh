@@ -44,27 +44,85 @@ custom_scripts_file="${make_path}/scripts"
 
 # Output log prefixes with better color handling and backup if tput fails
 setup_colors() {
-    if command -v tput > /dev/null && tput setaf 1 &> /dev/null; then
-        PURPLE=$(tput setaf 5)
-        BLUE=$(tput setaf 4)
-        GREEN=$(tput setaf 2)
-        YELLOW=$(tput setaf 3)
-        RED=$(tput setaf 1)
-        RESET=$(tput sgr0)
-    else
-        PURPLE="\033[95m"
-        BLUE="\033[94m"
-        GREEN="\033[92m"
-        YELLOW="\033[93m"
-        RED="\033[91m"
-        RESET="\033[0m"
-    fi
+    PURPLE="\033[95m"
+    BLUE="\033[94m"
+    GREEN="\033[92m"
+    YELLOW="\033[93m"
+    RED="\033[91m"
+    MAGENTA='\033[0;35m'
+    CYAN='\033[0;36m'
+    RESET="\033[0m"
 
     STEPS="[${PURPLE} STEPS ${RESET}]"
     INFO="[${BLUE} INFO ${RESET}]"
     SUCCESS="[${GREEN} SUCCESS ${RESET}]"
     WARNING="[${YELLOW} WARNING ${RESET}]"
     ERROR="[${RED} ERROR ${RESET}]"
+
+    # Formatting
+    CL=$(echo "\033[m")
+    UL=$(echo "\033[4m")
+    BOLD=$(echo "\033[1m")
+    BFR="\\r\\033[K"
+    HOLD=" "
+    TAB="  "
+}
+
+spinner() {
+  local frames=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
+  local colors=("\033[31m" "\033[33m" "\033[32m" "\033[36m" "\033[34m" "\033[35m" "\033[91m" "\033[92m" "\033[93m" "\033[94m")
+  local spin_i=0
+  local color_i=0
+  local interval=0.1
+
+  printf "\e[?25l"
+
+  while true; do
+    local color="${colors[color_i]}"
+    printf "\r ${color}%s${CL}" "${frames[spin_i]}"
+
+    spin_i=$(( (spin_i + 1) % ${#frames[@]} ))
+    color_i=$(( (color_i + 1) % ${#colors[@]} ))
+
+    sleep "$interval"
+  done
+}
+
+setup_colors
+
+format_time() {
+  local total_seconds=$1
+  local hours=$((total_seconds / 3600))
+  local minutes=$(( (total_seconds % 3600) / 60 ))
+  local seconds=$((total_seconds % 60))
+  printf "%02d:%02d:%02d" $hours $minutes $seconds
+}
+
+cmdinstall() {
+    local cmd="$1"
+    local desc="${2:-$cmd}"
+
+    echo -ne "${TAB}${HOLD}${INFO} ${desc}${HOLD}"
+    spinner &
+    SPINNER_PID=$!
+    local start_time=$(date +%s)
+    local output=$($cmd 2>&1)
+    local exit_code=$?
+    local end_time=$(date +%s)
+    local elapsed_time=$((end_time - start_time))
+    local formatted_time=$(format_time $elapsed_time)
+
+    if [ $exit_code -eq 0 ]; then
+        if [ -n "$SPINNER_PID" ] && ps | grep $SPINNER_PID > /dev/null; then kill $SPINNER_PID > /dev/null; fi
+        printf "\e[?25h"
+        echo -e "${BFR}${SUCCESS} ${desc} ${BLUE}[$formatted_time]${RESET}"
+    else
+        if [ -n "$SPINNER_PID" ] && ps | grep $SPINNER_PID > /dev/null; then kill $SPINNER_PID > /dev/null; fi
+        printf "\e[?25h"
+        echo -e "${BFR}${ERROR} ${desc} ${BLUE}[$formatted_time]${RESET}"
+        echo "$output"
+        exit 1
+    fi
 }
 
 #================================================================================================
@@ -590,7 +648,7 @@ rebuild_firmware() {
     mkdir -p ${imagebuilder_path}/out_firmware ${imagebuilder_path}/out_rootfs
 
     # Selecting default packages, lib, theme, app and i18n, etc.
-    PACKAGES+=" -dnsmasq dnsmasq-full zsh fontconfig coreutils-whoami file lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
+    PACKAGES+=" -dnsmasq dnsmasq-full zsh coreutils-sleep fontconfig coreutils-whoami file lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
     PACKAGES+=" kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi kmod-usb-net-cdc-ether kmod-usb-serial-option kmod-usb-serial kmod-usb-serial-wwan qmi-utils"
     PACKAGES+=" kmod-usb-serial-qualcomm kmod-usb-acm kmod-usb-net-cdc-ncm kmod-usb-net-cdc-mbim umbim modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi usbutils luci-proto-mbim luci-proto-ncm"
     PACKAGES+=" kmod-usb-net-huawei-cdc-ncm kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial-sierrawireless kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem"
