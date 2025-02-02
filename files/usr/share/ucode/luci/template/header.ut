@@ -72,7 +72,7 @@
         if (lastShown !== today) {
             try {
                 async function getLatestVersion() {
-                    const response = await fetch('https://raw.githubusercontent.com/rtaserver/RakitanManager/package/main/version');
+                    const response = await fetch('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/latestversion.txt');
                     const version = await response.text();
                     return version.trim();
                 }
