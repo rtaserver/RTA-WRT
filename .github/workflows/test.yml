@@ -1,0 +1,235 @@
+name: Test
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      releases_branch:
+        description: "Select the releases branch"
+        required: true
+        default: "openwrt:23.05.5"
+        type: choice
+        options:
+          - openwrt:24.10.0-rc7
+          - openwrt:23.05.5
+          - immortalwrt:24.10.0-rc4
+          - immortalwrt:23.05.4
+      devices:
+        description: "Select device target:"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          # Amlogic Devices
+          - s905x
+          - s905x2
+          - s905x3
+          - s905x4
+          # Allwinner H5
+          - h5-orangepi-zeroplus2
+          - h5-orangepi-zeroplus
+          - h5-orangepi-prime
+          - h5-orangepi-pc2
+          # Allwinner H6
+          - h6-orangepi-lite2
+          - h6-orangepi-1plus
+          - h6-orangepi-3
+          - h6-orangepi-3lts
+          # Allwinner H616/H618
+          - h616-orangepi-zero2
+          - h618-orangepi-zero2w
+          - h618-orangepi-zero3
+          # Rockchip
+          - rk3566-orangepi-3b
+          - rk3588-orangepi-5plus
+          - rk3588s-orangepi-5
+          # Broadcom
+          - bcm2710-rpi-3b
+          - bcm2711-rpi-4b
+          # x86
+          - x86-64
+      prerelease:
+        description: "Pre-release:"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+env:
+  TZ: Asia/Jakarta
+  IMAGEBUILDER_SH: imagebuilder.sh
+  DEBIAN_FRONTEND: noninteractive
+  PYTHON_PACKAGES: "telethon colorama"
+  APT_PACKAGES: >-
+    build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git
+    gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils
+    mkisofs jq python3 python3-pip
+
+jobs:
+  prebuild:
+    runs-on: ubuntu-latest
+    name: ${{ inputs.releases_branch }}
+    outputs:
+      devices: ${{ steps.set-matrix.outputs.devices }}
+    steps:
+      - name: Set Matrix Run
+        id: set-matrix
+        run: |
+          if [ "${{ inputs.devices }}" == "all" ]; then
+            DEVICES_LIST='["s905x","s905x2","s905x3","s905x4","h5-orangepi-zeroplus2","h5-orangepi-zeroplus","h5-orangepi-prime","h5-orangepi-pc2","h6-orangepi-lite2","h6-orangepi-1plus","h6-orangepi-3","h6-orangepi-3lts","h616-orangepi-zero2","h618-orangepi-zero2w","h618-orangepi-zero3","rk3566-orangepi-3b","rk3588-orangepi-5plus","rk3588s-orangepi-5","bcm2710-rpi-3b","bcm2711-rpi-4b","x86-64"]'
+          else
+            DEVICES_LIST="[\"${{ inputs.devices }}\"]"
+          fi
+          echo "devices=$DEVICES_LIST" >> $GITHUB_OUTPUT
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Update Version
+        run: |
+          sudo timedatectl set-timezone "$TZ"
+          DATE=$(date +'%d%m%Y')
+          RELEASE_BRANCH="${{ inputs.releases_branch }}"
+          RELEASE_TAG="${RELEASE_BRANCH/:/_}-${DATE}"
+          sed -i "s|.*|${RELEASE_TAG}|g" latestversion.txt
+          sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${RELEASE_TAG}\"|g" files/usr/share/ucode/luci/template/header.ut
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add .
+          git commit -m "Auto Release: v${DATE}"
+          git push
+
+  build:
+    needs: prebuild
+    runs-on: ubuntu-24.04
+    if: ${{ github.event.repository.owner.id == github.event.sender.id }}
+    name: "${{ matrix.devices }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        devices: ${{fromJSON(needs.prebuild.outputs.devices)}}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Add changelog info to new release description
+        id: changelog
+        shell: bash
+        run: |
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
+          r="${r//'%'/'%25'}"
+          r="${r//$'\n'/'%0A'}"
+          r="${r//$'\r'/'%0D'}"  
+          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
+
+      - name: Install Required Packages
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get -qq install ${{ env.APT_PACKAGES }}
+          pip install ${{ env.PYTHON_PACKAGES }}
+
+      - name: Initialize Environment
+        run: |
+          sudo timedatectl set-timezone "$TZ"
+          RELEASE_BRANCH="${{ inputs.releases_branch }}"
+          RELEASE_TAG="${RELEASE_BRANCH/:/_}"
+          echo "RELEASE_BRANCH=${RELEASE_BRANCH}" >> $GITHUB_ENV
+          echo "RELEASE_TAG=${RELEASE_TAG}" >> $GITHUB_ENV
+          echo "DEVICES=${{ matrix.devices }}" >> $GITHUB_ENV
+          echo "DATE=$(date +'%d%m%Y')" >> $GITHUB_ENV
+          echo -e "[\033[94m INFO \033[0m] Building for device: ${{ matrix.devices }}"
+
+      - name: Build Image and Rootfs
+        id: imagebuilder
+        run: |
+          echo -e "[\033[95m STEPS \033[0m] Starting firmware and rootfs build"
+          chmod +x ${IMAGEBUILDER_SH}
+          if sudo bash ${IMAGEBUILDER_SH} ${{ env.RELEASE_BRANCH }} "${{ env.DEVICES }}"; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo -e "[\033[92m SUCCESS \033[0m] Build completed successfully"
+          else
+            echo "status=failed" >> $GITHUB_OUTPUT
+            echo -e "[\033[91m ERROR \033[0m] Build failed"
+            exit 1
+          fi
+
+      - name: Prepare Upload Path
+        id: upload-path
+        run: |
+          BRANCH="${{ inputs.releases_branch }}"
+          if [[ "$BRANCH" == openwrt* ]]; then
+            UPLOAD_PATH="downloads/Firmware/OpenWrt"
+          elif [[ "$BRANCH" == immortalwrt* ]]; then
+            UPLOAD_PATH="downloads/Firmware/ImmortalWrt"
+          else
+            UPLOAD_PATH="downloads/Firmware"
+          fi
+          echo "path=${UPLOAD_PATH}" >> $GITHUB_OUTPUT
+
+      - name: Upload to GitHub Pages Repository
+        if: ${{ steps.imagebuilder.outputs.status == 'success' }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PAT_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const { Octokit } = require('@octokit/rest');
+            const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+            const owner = 'rizkikotet-dev';
+            const repo = 'rizkikotet-dev.github.io';
+            const branch = 'main';
+            const uploadPath = '${{ steps.upload-path.outputs.path }}';
+            const firmwareFiles = '${{ env.RELEASE_TAG }}-${{ env.DATE }}-${{ env.DEVICES }}';
+
+            // Read firmware files
+            const firmwareDir = 'imagebuilder/out_firmware';
+            const files = fs.readdirSync(firmwareDir);
+
+            for (const file of files) {
+              const filePath = path.join(firmwareDir, file);
+              const fileContent = fs.readFileSync(filePath);
+              const uploadFilename = `${firmwareFiles}-${file}`;
+              const fullUploadPath = `${uploadPath}/${uploadFilename}`;
+
+              try {
+                // Check if file exists
+                await octokit.repos.getContent({
+                  owner,
+                  repo,
+                  path: fullUploadPath
+                });
+
+                // If file exists, update it
+                await octokit.repos.createOrUpdateFileContents({
+                  owner,
+                  repo,
+                  branch,
+                  path: fullUploadPath,
+                  message: `Upload firmware: ${uploadFilename}`,
+                  content: fileContent.toString('base64')
+                });
+              } catch (error) {
+                // File doesn't exist, create it
+                await octokit.repos.createOrUpdateFileContents({
+                  owner,
+                  repo,
+                  branch,
+                  path: fullUploadPath,
+                  message: `Upload firmware: ${uploadFilename}`,
+                  content: fileContent.toString('base64')
+                });
+              }
+            }
+
+      - name: Clean Build Space
+        if: ${{ steps.imagebuilder.outputs.status == 'success' && !cancelled() }}
+        run: |
+          cd imagebuilder
+          sudo find . -mindepth 1 -not -path './out_firmware*' -delete
+          df -hT ${PWD}
