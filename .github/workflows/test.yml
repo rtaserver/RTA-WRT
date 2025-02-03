@@ -94,13 +94,18 @@ jobs:
           DATE=$(date +'%d%m%Y')
           RELEASE_BRANCH="${{ inputs.releases_branch }}"
           RELEASE_TAG="${RELEASE_BRANCH/:/_}-${DATE}"
-          sed -i "s|.*|${RELEASE_TAG}|g" latestversion.txt
-          sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${RELEASE_TAG}\"|g" files/usr/share/ucode/luci/template/header.ut
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add .
-          git commit -m "Auto Release: v${DATE}"
-          git push
+          if [ "${{ inputs.prerelease }}" == "true" ]; then
+            RELEASE_TAG="${RELEASE_TAG}-prerelease"
+          else
+            RELEASE_TAG="${RELEASE_TAG}"
+            sed -i "s|.*|${RELEASE_TAG}|g" latestversion.txt
+            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${RELEASE_TAG}\"|g" files/usr/share/ucode/luci/template/header.ut
+            git config user.name 'github-actions[bot]'
+            git config user.email 'github-actions[bot]@users.noreply.github.com'
+            git add . || true
+            git commit -m "Auto Release: v${DATE}" || true
+            git push || true
+          fi
 
   build:
     needs: prebuild
