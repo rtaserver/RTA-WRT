@@ -457,7 +457,10 @@ custom_packages() {
         echo -e "${INFO} Adding luci-app-amlogic for target Amlogic."
         github_packages+=("luci-app-amlogic|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest")
     fi
-    github_packages+=("luci-app-alpha-config|https://api.github.com/repos/animegasan/luci-app-alpha-config/releases/latest")
+    github_packages+=(
+        "luci-app-alpha-config|https://api.github.com/repos/animegasan/luci-app-alpha-config/releases/latest"
+        "luci-theme-material3|https://api.github.com/repos/AngelaCooljx/luci-theme-material3/releases/latest"
+    )
 
     download_packages "github" github_packages[@]
 
@@ -694,7 +697,7 @@ rebuild_firmware() {
     PACKAGES+=" librespeed-go python3-speedtest-cli iperf3 luci-app-netspeedtest"
 
     # Theme
-    PACKAGES+=" luci-theme-material luci-theme-argon luci-app-argon-config"
+    PACKAGES+=" luci-theme-material luci-theme-argon luci-app-argon-config luci-theme-material3"
 
     # PHP8
     PACKAGES+=" libc php8 php8-fastcgi php8-fpm coreutils-stat zoneinfo-asia php8-cgi php8-cli php8-mod-bcmath php8-mod-calendar php8-mod-ctype php8-mod-curl php8-mod-dom php8-mod-exif php8-mod-fileinfo php8-mod-filter php8-mod-gd php8-mod-iconv php8-mod-intl php8-mod-mbstring php8-mod-mysqli php8-mod-mysqlnd php8-mod-opcache php8-mod-pdo php8-mod-pdo-mysql php8-mod-phar php8-mod-session php8-mod-xml php8-mod-xmlreader php8-mod-xmlwriter php8-mod-zip libopenssl-legacy"
