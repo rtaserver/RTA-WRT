@@ -31,7 +31,6 @@
 	} }`, '/', '\\/') }});
 </script>
 
-<!-- styles.css -->
 <style>
     .update-info {
         text-align: left;
@@ -43,10 +42,13 @@
         margin: 8px 0;
         color: #333;
     }
-
+    
     .changelog {
-        margin-top: 15px;
-        background: #f9f9f9;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        color: #333;
+        line-height: 1.6;
+        margin-top: 20px;
         padding: 10px;
         border-left: 4px solid #007BFF;
         max-height: 250px;
@@ -62,7 +64,6 @@
         line-height: 1.5;
     }
 
-    /* SweetAlert2 Custom Styles */
     .swal2-popup {
         font-family: Arial, sans-serif;
         max-width: 600px;
@@ -98,77 +99,206 @@
         }
     }
 
-    async function checkForUpdates() {
-        const currentVersion = "openwrt_23.05.5-03022025";
-        const lastShownUpdate = localStorage.getItem('mdl_update');
+    async function fetchText(url) {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Failed to fetch ${url}`);
+        return await response.text();
+    }
 
-        if (lastShownUpdate !== today) {
+async function checkForUpdates() {
+    const currentVersion = "openwrt_24.10.0_rc7-01022025";
+    const today = new Date().toISOString().slice(0, 10);
+    const lastShownUpdate = localStorage.getItem('mdl_update');
+
+    if (lastShownUpdate !== today) {
+        try {
             const latestVersion = await fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/latestversion.txt');
-            const changelog = await fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/CHANGELOG.md');
+            const changelogRaw = await fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/CHANGELOG.md');
+
+            const match = changelogRaw.match(/\*\*Changelog\*\* \((.*?)\)\n([\s\S]*?)(?=\*\*Changelog\*\*|$)/);
+            let newChangelog = match ? `<p dir="auto"><strong>Changelog (${match[1]})</strong></p><p>${match[2].trim().replace(/-\s/g, '<p>• ').replace(/\n/g, '</p>')}</p>` : 'Tidak ada catatan perubahan.';
 
             if (latestVersion && latestVersion.trim() !== currentVersion) {
                 Swal.fire({
-                    title: 'Update Tersedia!',
+                    title: '🚀 Update Tersedia!',
                     html: `
-                        <div class="update-info">
-                            <p><strong>Versi Terbaru:</strong> ${latestVersion}</p>
-                            <p><strong>Versi Anda:</strong> ${currentVersion}</p>
-                            <div class="changelog">
-                                <h4>Changelog:</h4>
-                                <pre>${changelog || 'Tidak ada catatan perubahan.'}</pre>
+                        <div class="update-info" style="text-align: center;">
+                            <img alt="Current Version" width="155" height="30" src="https://img.shields.io/badge/${currentVersion}-x?style=for-the-badge&logo=openwrt&color=blue">
+                            <img alt="Latest Version" width="155" height="30" src="https://img.shields.io/badge/${latestVersion}-x?style=for-the-badge&logo=openwrt&color=green">
+                            <div class="changelog" style="margin-top: 15px; text-align: left;">
+                                <h4 style="color: #007BFF;">📋 Changelog:</h4>
+                                <div>${newChangelog}</div>
                             </div>
                         </div>
                     `,
                     icon: 'info',
-                    confirmButtonText: 'Update Sekarang',
+                    width: 450,
+                    confirmButtonText: '🔄 Update Sekarang',
                     showDenyButton: true,
-                    denyButtonText: 'Nanti',
+                    denyButtonText: '⏳ Nanti',
                     showCancelButton: true,
-                    cancelButtonText: 'Cancel',
+                    cancelButtonText: '❌ Batal',
+                    backdrop: `
+                        rgba(0,0,123,0.4)
+                        no-repeat
+                    `,
+                    customClass: {
+                        popup: 'animated fadeInDown'
+                    }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         window.location.href = 'https://github.com/rizkikotet-dev/RTA-WRT/releases/latest';
                     } else if (result.isDenied) {
-                        localStorage.setItem('mdl_update', today); // Modal will show again tomorrow
+                        localStorage.setItem('mdl_update', today);
                     }
                 });
             }
+        } catch (error) {
+            console.error('Error checking for updates:', error);
         }
     }
+}
 
-    async function showDailyModal() {
-        const lastShownSaweria = localStorage.getItem('mdl_Saweria');
+async function showDailyModal() {
+    const today = new Date().toISOString().slice(0, 10);
+    const lastShownSaweria = localStorage.getItem('mdl_Saweria');
 
-        if (lastShownSaweria !== today) {
-            const result = await Swal.fire({
-                title: "Welcome To RTA-WRT",
-                imageUrl: "{{ resource }}/Saweria.png",
-                imageWidth: 290,
-                imageHeight: 290,
-                imageAlt: "Saweria",
-                html: `
-                    <h4 style="text-align: center;">Join Telegram untuk Update & Tutorial!</h4>
-                    <p style="text-align: center;">
-                        <a href="https://t.me/rtawrt"><img alt="Channel" src="{{ resource }}/Channel.svg"></a>
-                        <a href="https://t.me/backup_rtawrt"><img alt="Group" src="{{ resource }}/Group.svg"></a>
-                        <a href="https://t.me/RizkiKotet"><img alt="Personal" src="{{ resource }}/Personal.svg"></a>
-                    </p>
-                `,
-                input: 'checkbox',
-                inputValue: 0,
-                inputPlaceholder: 'Jangan tampilkan lagi hari ini',
-                confirmButtonText: 'OK',
-                allowOutsideClick: false,
-            });
-
-            if (result.value === 1) {
-                localStorage.setItem('mdl_Saweria', today);
+    if (lastShownSaweria !== today) {
+        const result = await Swal.fire({
+            title: "🎉 Welcome To RTA-WRT!",
+            imageUrl: "{{ resource }}/Saweria.png",
+            imageWidth: 200,
+            imageHeight: 200,
+            imageAlt: "Saweria",
+            html: `
+                <h4 style="text-align: center; color: #007BFF;">Join Telegram untuk Update & Tutorial!</h4>
+                <p style="text-align: center;">
+                    <a href="https://t.me/rtawrt" target="_blank"><img alt="Channel" src="{{ resource }}/Channel.svg" width="110" height="20"></a>
+                    <a href="https://t.me/backup_rtawrt" target="_blank"><img alt="Group" src="{{ resource }}/Group.svg" width="110" height="20"></a>
+                    <a href="https://t.me/RizkiKotet" target="_blank"><img alt="Personal" src="{{ resource }}/Personal.svg" width="110" height="20"></a>
+                </p>
+            `,
+            width: 400,
+            input: 'checkbox',
+            inputValue: 0,
+            inputPlaceholder: 'Jangan tampilkan lagi hari ini',
+            confirmButtonText: '👍 OK',
+            allowOutsideClick: false,
+            customClass: {
+                popup: 'animated fadeIn',
             }
+        });
+
+        if (result.value === 1) {
+            localStorage.setItem('mdl_Saweria', today);
         }
     }
+}
 
     document.addEventListener('DOMContentLoaded', async () => {
         await showDailyModal();
         await checkForUpdates();
     });
 </script>
+
+<style>
+    .square-wrapper {
+        position: fixed;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1000;
+    }
+    .square {
+        border: 1px solid #5e42a6;
+        height: 26px;
+        width: 26px;
+        display: block;
+        transform: rotate(45deg);
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 500ms cubic-bezier(0.97, 0, 0.395, 0.995);
+    }
+    .square .burgerwrap {
+        height: 18px;
+        width: 21px;
+        transform: rotate(-45deg);
+        padding-left: 2px;
+        padding-top: 8px;
+        transition: all 500ms cubic-bezier(0.97, 0, 0.395, 0.995);
+    }
+    .square:hover {
+        transform: rotate(135deg);
+        border: 1px solid rgb(61, 14, 230);
+    }
+    .square:hover .burgerwrap {
+        transform: rotate(-135deg);
+    }
+    .square span {
+        height: 2px;
+        width: 14px;
+        background: linear-gradient(145deg, #5e42a6, #b46be4);
+        display: block;
+        margin-bottom: 2px;
+        transition: all 500ms cubic-bezier(0.97, 0, 0.395, 0.995);
+    }
+    .square span:after {
+        content: "";
+        height: 2px;
+        width: 14px;
+        position: absolute;
+        background: rgb(61, 14, 230);
+        left: -22px;
+        margin-top: -4px;
+        transition: all 500ms cubic-bezier(0.97, 0, 0.395, 0.995);
+    }
+    .square:hover span {
+        margin-left: 26px;
+    }
+    .square:hover span:after {
+        left: 0.2px;
+    }
+    .square span:nth-of-type(1),
+    .square span:nth-of-type(1):after {
+        transition-delay: 0.1s;
+    }
+    .square span:nth-of-type(2),
+    .square span:nth-of-type(2):after {
+        transition-delay: 0.2s;
+    }
+    .square span:nth-of-type(3),
+    .square span:nth-of-type(3):after {
+        transition-delay: 0.3s;
+    }
+</style>
+
+<script>
+    function showProfile() {
+        Swal.fire({
+          width: 400,
+          title: "About Me!",
+          text: "Halo! Saya Rizki Kotet, seorang programmer pemula yang belajar C# dan PHP. Saya memiliki pemahaman dasar tentang front-end dan back-end. Saat ini, saya sedang mengerjakan proyek Custom OpenWrt dan ImmortalWrt. Saya selalu bersemangat untuk belajar hal baru di dunia teknologi!",
+          imageUrl: "{{ resource }}/Profile.jpeg",
+          imageWidth: 200,
+          imageHeight: 200,
+          imageAlt: "Custom image",
+          footer: `
+            <p style="text-align: center;">
+                <a href="https://t.me/rtawrt"><img alt="Channel" src="{{ resource }}/Channel.svg" width="110" height="30"></a>
+                <a href="https://t.me/backup_rtawrt"><img alt="Group" src="{{ resource }}/Group.svg" width="110" height="30"></a>
+                <a href="https://t.me/RizkiKotet"><img alt="Personal" src="{{ resource }}/Personal.svg" width="110" height="30"></a>
+            </p>
+          `
+        });
+    }
+</script>
+
+<div class="square-wrapper">
+    <div class="square" onclick="showProfile()">
+        <div class="burgerwrap">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+</div>

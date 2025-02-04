@@ -129,7 +129,7 @@
 	<div class="main">
 		<div class="main-left" id="mainmenu" style="display:none">
 			<div class="sidenav-header d-flex align-items-center">
-			<a id="logo" href="{{ ctx.authsession ? dispatcher.build_url('admin/status/overview') : '#' }}"><img src="<%=media%>/brand.png" width="200" height="50" alt="OpenWrt"></a>
+			<a id="logo" href="<%=url("admin/status/overview")%>"><img src="<%=media%>/brand.png" width="200" height="50" alt="OpenWrt"></a>
 				
 				<div class="ml-auto">
 					<!-- Sidenav toggler -->

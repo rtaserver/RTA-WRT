@@ -1,5 +1,13 @@
 # What's New!
 
+**Changelog** (05-02-2025)
+
+- Add Theme Material3
+- Fix Logo Theme Argon
+- Update OpenWrt Stable Build
+- Minor Update
+- Change Kernel Alwiner To 6.1.31
+
 **Changelog** (03-02-2025)
 
 - Remove Expand root partition and filesystem
