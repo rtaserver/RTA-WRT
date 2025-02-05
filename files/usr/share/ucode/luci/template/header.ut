@@ -258,7 +258,7 @@ async function checkInformation(retryCount = 0) {
     try {
         const githubContent = await fetchText(GITHUB_URL);
         if (githubContent && githubContent !== cache.content) {
-            const title = '🚀 Informasi Baru';
+            const title = '🚀 Informasi';
             showAlert({
                 title,
                 html: `
