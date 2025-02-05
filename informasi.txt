@@ -1,7 +1,10 @@
-**Changelog** (05-02-2025)
-
-- Add Theme Material3
-- Fix Logo Theme Argon
-- Update OpenWrt Stable Build
-- Minor Update
-- Change Kernel Alwiner To 6.1.31
+<p><strong>Update Baru: 05-02-2025</strong></p>
+<ul>
+<li>Penambahan Firmware
+<ul>
+<li>s912</li>
+</ul>
+</li>
+</ul>
+<p><strong>NOTE:</strong></p>
+<p>Jika Ada Error Atau Kendala. Jangan Lupa Laporannya</p>

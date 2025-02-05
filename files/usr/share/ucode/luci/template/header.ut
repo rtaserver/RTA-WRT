@@ -261,7 +261,11 @@ async function checkInformation(retryCount = 0) {
             const title = '🚀 Informasi Baru';
             showAlert({
                 title,
-                html: githubContent,
+                html: `
+                <div class="changelog" style="margin-top: 15px; text-align: left; white-space: pre-line;">
+                    <div>${githubContent}</div>
+                </div>
+                `,
                 icon: cache.content ? 'info' : 'success',
                 confirmText: 'Mengerti',
                 cancelText: '❌ Tutup',
