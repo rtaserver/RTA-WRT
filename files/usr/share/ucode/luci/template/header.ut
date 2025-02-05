@@ -302,3 +302,65 @@ async function showDailyModal() {
         </div>
     </div>
 </div>
+
+<script>
+const GITHUB_URL = 'https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/informasi.txt';
+let localContent = localStorage.getItem('lastInformation') || '';
+async function downloadFile(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.text();
+    } catch (error) {
+        console.error('Download error:', error);
+        throw error;
+    }
+}
+async function saveLocalInformation(content) {
+    try {
+        localStorage.setItem('lastInformation', content);
+        localStorage.setItem('lastUpdate', new Date().toISOString());
+        return true;
+    } catch (error) {
+        console.error('Save error:', error);
+        return false;
+    }
+}
+async function checkInformation() {
+    try {
+        const githubContent = await downloadFile(GITHUB_URL);
+        
+        if (!localContent) {
+            if (await saveLocalInformation(githubContent)) {
+                localContent = githubContent;
+                Swal.fire({
+                    title: 'Informasi Baru',
+                    text: githubContent,
+                    icon: 'success'
+                });
+            }
+        } else if (localContent !== githubContent) {
+            Swal.fire({
+                title: 'Pembaruan Informasi',
+                text: githubContent,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Update',
+                cancelButtonText: 'Tutup'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    if (await saveLocalInformation(githubContent)) {
+                        localContent = githubContent;
+                        console.log('Informasi telah diperbarui.');
+                    } else {
+                        console.log('Gagal menyimpan pembaruan.');
+                    }
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+document.addEventListener('DOMContentLoaded', checkInformation);
+</script>
