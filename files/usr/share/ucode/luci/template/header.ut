@@ -83,125 +83,7 @@
     .swal2-html-container a:hover {
         text-decoration: underline;
     }
-</style>
 
-<script>
-    const today = new Date().toDateString();
-
-    async function fetchText(url) {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`Failed to fetch: ${url}`);
-            return await response.text();
-        } catch (error) {
-            console.error(`Error fetching ${url}:`, error);
-            return null;
-        }
-    }
-
-    async function fetchText(url) {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Failed to fetch ${url}`);
-        return await response.text();
-    }
-
-async function checkForUpdates() {
-    const currentVersion = "openwrt_24.10.0-05022025";
-    const today = new Date().toISOString().slice(0, 10);
-    const lastShownUpdate = localStorage.getItem('mdl_update');
-
-    if (lastShownUpdate !== today) {
-        try {
-            const latestVersion = await fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/latestversion.txt');
-            const changelogRaw = await fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/CHANGELOG.md');
-
-            const match = changelogRaw.match(/\*\*Changelog\*\* \((.*?)\)\n([\s\S]*?)(?=\*\*Changelog\*\*|$)/);
-            let newChangelog = match ? `<p dir="auto"><strong>Changelog (${match[1]})</strong></p><p>${match[2].trim().replace(/-\s/g, '<p>• ').replace(/\n/g, '</p>')}</p>` : 'Tidak ada catatan perubahan.';
-
-            if (latestVersion && latestVersion.trim() !== currentVersion) {
-                Swal.fire({
-                    title: '🚀 Update Tersedia!',
-                    html: `
-                        <div class="update-info" style="text-align: center;">
-                            <img alt="Current Version" width="155" height="30" src="https://img.shields.io/badge/${currentVersion}-x?style=for-the-badge&logo=openwrt&color=blue">
-                            <img alt="Latest Version" width="155" height="30" src="https://img.shields.io/badge/${latestVersion}-x?style=for-the-badge&logo=openwrt&color=green">
-                            <div class="changelog" style="margin-top: 15px; text-align: left;">
-                                <h4 style="color: #007BFF;">📋 Changelog:</h4>
-                                <div>${newChangelog}</div>
-                            </div>
-                        </div>
-                    `,
-                    icon: 'info',
-                    width: 450,
-                    confirmButtonText: '🔄 Update Sekarang',
-                    showDenyButton: true,
-                    denyButtonText: '⏳ Nanti',
-                    showCancelButton: true,
-                    cancelButtonText: '❌ Batal',
-                    backdrop: `
-                        rgba(0,0,123,0.4)
-                        no-repeat
-                    `,
-                    customClass: {
-                        popup: 'animated fadeInDown'
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = 'https://github.com/rizkikotet-dev/RTA-WRT/releases/latest';
-                    } else if (result.isDenied) {
-                        localStorage.setItem('mdl_update', today);
-                    }
-                });
-            }
-        } catch (error) {
-            console.error('Error checking for updates:', error);
-        }
-    }
-}
-
-async function showDailyModal() {
-    const today = new Date().toISOString().slice(0, 10);
-    const lastShownSaweria = localStorage.getItem('mdl_Saweria');
-
-    if (lastShownSaweria !== today) {
-        const result = await Swal.fire({
-            title: "🎉 Welcome To RTA-WRT!",
-            imageUrl: "{{ resource }}/Saweria.png",
-            imageWidth: 200,
-            imageHeight: 200,
-            imageAlt: "Saweria",
-            html: `
-                <h4 style="text-align: center; color: #007BFF;">Join Telegram untuk Update & Tutorial!</h4>
-                <p style="text-align: center;">
-                    <a href="https://t.me/rtawrt" target="_blank"><img alt="Channel" src="{{ resource }}/Channel.svg" width="110" height="20"></a>
-                    <a href="https://t.me/backup_rtawrt" target="_blank"><img alt="Group" src="{{ resource }}/Group.svg" width="110" height="20"></a>
-                    <a href="https://t.me/RizkiKotet" target="_blank"><img alt="Personal" src="{{ resource }}/Personal.svg" width="110" height="20"></a>
-                </p>
-            `,
-            width: 400,
-            input: 'checkbox',
-            inputValue: 0,
-            inputPlaceholder: 'Jangan tampilkan lagi hari ini',
-            confirmButtonText: '👍 OK',
-            allowOutsideClick: false,
-            customClass: {
-                popup: 'animated fadeIn',
-            }
-        });
-
-        if (result.value === 1) {
-            localStorage.setItem('mdl_Saweria', today);
-        }
-    }
-}
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        await showDailyModal();
-        await checkForUpdates();
-    });
-</script>
-
-<style>
     .square-wrapper {
         position: fixed;
         right: 20px;
@@ -273,24 +155,180 @@ async function showDailyModal() {
 </style>
 
 <script>
-    function showProfile() {
-        Swal.fire({
-          width: 400,
-          title: "About Me!",
-          text: "Halo! Saya Rizki Kotet, seorang programmer pemula yang belajar C# dan PHP. Saya memiliki pemahaman dasar tentang front-end dan back-end. Saat ini, saya sedang mengerjakan proyek Custom OpenWrt dan ImmortalWrt. Saya selalu bersemangat untuk belajar hal baru di dunia teknologi!",
-          imageUrl: "{{ resource }}/Profile.jpeg",
-          imageWidth: 200,
-          imageHeight: 200,
-          imageAlt: "Custom image",
-          footer: `
-            <p style="text-align: center;">
-                <a href="https://t.me/rtawrt"><img alt="Channel" src="{{ resource }}/Channel.svg" width="110" height="30"></a>
-                <a href="https://t.me/backup_rtawrt"><img alt="Group" src="{{ resource }}/Group.svg" width="110" height="30"></a>
-                <a href="https://t.me/RizkiKotet"><img alt="Personal" src="{{ resource }}/Personal.svg" width="110" height="30"></a>
-            </p>
-          `
-        });
+// ====== Constants ======
+const GITHUB_URL = 'https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/informasi.txt';
+const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
+let checkTimer;
+
+const cache = {
+    content: localStorage.getItem('lastInformation') || '',
+    lastUpdate: localStorage.getItem('lastUpdate') || ''
+};
+
+// ====== Utility Functions ======
+async function fetchText(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Failed to fetch: ${url} (Status: ${response.status})`);
+        return await response.text();
+    } catch (error) {
+        console.error(`Error fetching ${url}:`, error);
+        return null;
     }
+}
+
+function saveToLocal(key, value) {
+    try {
+        localStorage.setItem(key, value);
+        return true;
+    } catch (error) {
+        console.error(`Error saving to localStorage: ${error}`);
+        return false;
+    }
+}
+
+function showAlert({ title, html, icon = 'info', confirmText = 'OK', denyText = 'Nanti', cancelText = 'Tutup', onConfirm, onDeny }) {
+    Swal.fire({
+        title,
+        html,
+        icon,
+        width: 400,
+        confirmButtonText: confirmText,
+        showDenyButton: !!onDeny,
+        denyButtonText: denyText,
+        showCancelButton: !!cancelText,
+        cancelButtonText: cancelText,
+        customClass: { popup: 'animated fadeInDown' },
+        draggable: true,
+        allowOutsideClick: false,
+        backdrop: 'rgba(0,0,123,0.4)'
+    }).then(result => {
+        if (result.isConfirmed && onConfirm) onConfirm();
+        if (result.isDenied && onDeny) onDeny();
+    });
+}
+
+// ====== Update & Information Check ======
+async function checkForUpdates() {
+    const currentVersion = "openwrt_24.10.0-05022025";
+    const today = new Date().toISOString().slice(0, 10);
+    const lastShownUpdate = localStorage.getItem('mdl_update');
+
+    if (lastShownUpdate === today) return;
+
+    try {
+        const [latestVersion, changelogRaw] = await Promise.all([
+            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/latestversion.txt'),
+            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/CHANGELOG.md')
+        ]);
+
+        if (latestVersion && latestVersion.trim() !== currentVersion) {
+            const changelogMatch = changelogRaw.match(/\*\*Changelog\*\* \((.*?)\)\n([\s\S]*?)(?=\*\*Changelog\*\*|$)/);
+            const changelogFormatted = changelogMatch 
+                ? `<strong>Changelog (${changelogMatch[1]})</strong><p>${changelogMatch[2].trim().replace(/-\s/g, '• ').replace(/\n/g, '<br>')}</p>`
+                : 'Tidak ada catatan perubahan.';
+
+            showAlert({
+                title: '🚀 Update Tersedia!',
+                html: `
+                        <div class="update-info" style="text-align: center;">
+                            <img alt="Current Version" width="155" height="30" src="https://img.shields.io/badge/${currentVersion}-x?style=for-the-badge&logo=openwrt&color=blue">
+                            <img alt="Latest Version" width="155" height="30" src="https://img.shields.io/badge/${latestVersion}-x?style=for-the-badge&logo=openwrt&color=green">
+                            <div class="changelog" style="margin-top: 15px; text-align: left;">
+                                <h4 style="color: #007BFF;">📋 Changelog:</h4>
+                                <div>${changelogFormatted}</div>
+                            </div>
+                        </div>
+                `,
+                confirmText: '🔄 Update',
+                denyText: '⏳ Nanti',
+                cancelText: '❌ Batal',
+                onConfirm: () => window.location.href = 'https://github.com/rizkikotet-dev/RTA-WRT/releases/latest',
+                onDeny: () => saveToLocal('mdl_update', today)
+            });
+        }
+    } catch (error) {
+        console.error('Error checking for updates:', error);
+    }
+}
+
+async function checkInformation(retryCount = 0) {
+    const MAX_RETRIES = 3;
+
+    try {
+        const githubContent = await fetchText(GITHUB_URL);
+        if (githubContent && githubContent !== cache.content) {
+            const title = '🚀 Informasi Baru';
+            showAlert({
+                title,
+                html: githubContent,
+                icon: cache.content ? 'info' : 'success',
+                confirmText: 'Mengerti',
+                cancelText: '❌ Tutup',
+                onConfirm: () => {
+                    if (saveToLocal('lastInformation', githubContent)) {
+                        cache.content = githubContent;
+                        cache.lastUpdate = new Date().toISOString();
+                        console.log('Informasi diperbarui.');
+                    }
+                }
+            });
+        }
+    } catch (error) {
+        console.warn(`Check error: ${error}`);
+        if (retryCount < MAX_RETRIES) {
+            const retryDelay = Math.pow(2, retryCount) * 1000;
+            console.log(`Mencoba kembali dalam ${retryDelay / 1000} detik...`);
+            setTimeout(() => checkInformation(retryCount + 1), retryDelay);
+        }
+    }
+}
+
+// ====== Event About ======
+function showProfile() {
+    Swal.fire({
+      width: 400,
+      title: "About Me!",
+      text: "Halo! Saya Rizki Kotet, seorang programmer pemula yang belajar C# dan PHP. Saya memiliki pemahaman dasar tentang front-end dan back-end. Saat ini, saya sedang mengerjakan proyek Custom OpenWrt dan ImmortalWrt. Saya selalu bersemangat untuk belajar hal baru di dunia teknologi!",
+      imageUrl: "{{ resource }}/Profile.jpeg",
+      imageWidth: 200,
+      imageHeight: 200,
+      imageAlt: "Custom image",
+      draggable: true,
+      allowOutsideClick: false,
+      footer: `
+        <p style="text-align: center;">
+            <a href="https://t.me/rtawrt"><img alt="Channel" src="{{ resource }}/Channel.svg" width="110" height="30"></a>
+            <a href="https://t.me/backup_rtawrt"><img alt="Group" src="{{ resource }}/Group.svg" width="110" height="30"></a>
+            <a href="https://t.me/RizkiKotet"><img alt="Personal" src="{{ resource }}/Personal.svg" width="110" height="30"></a>
+        </p>
+      `
+    });
+}
+
+// ====== Periodic Checker Initialization ======
+function initializeChecker() {
+    checkInformation();
+    if (checkTimer) clearInterval(checkTimer);
+    checkTimer = setInterval(checkInformation, CHECK_INTERVAL);
+}
+
+// ====== Event Listeners ======
+document.addEventListener('DOMContentLoaded', () => {
+    checkForUpdates();
+    initializeChecker();
+});
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        initializeChecker();
+    } else {
+        clearInterval(checkTimer);
+    }
+});
+
+window.addEventListener('online', initializeChecker);
+window.addEventListener('offline', () => clearInterval(checkTimer));
 </script>
 
 <div class="square-wrapper">
@@ -302,65 +340,3 @@ async function showDailyModal() {
         </div>
     </div>
 </div>
-
-<script>
-const GITHUB_URL = 'https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/informasi.txt';
-let localContent = localStorage.getItem('lastInformation') || '';
-async function downloadFile(url) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.text();
-    } catch (error) {
-        console.error('Download error:', error);
-        throw error;
-    }
-}
-async function saveLocalInformation(content) {
-    try {
-        localStorage.setItem('lastInformation', content);
-        localStorage.setItem('lastUpdate', new Date().toISOString());
-        return true;
-    } catch (error) {
-        console.error('Save error:', error);
-        return false;
-    }
-}
-async function checkInformation() {
-    try {
-        const githubContent = await downloadFile(GITHUB_URL);
-        
-        if (!localContent) {
-            if (await saveLocalInformation(githubContent)) {
-                localContent = githubContent;
-                Swal.fire({
-                    title: 'Informasi Baru',
-                    text: githubContent,
-                    icon: 'success'
-                });
-            }
-        } else if (localContent !== githubContent) {
-            Swal.fire({
-                title: 'Pembaruan Informasi',
-                text: githubContent,
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonText: 'Update',
-                cancelButtonText: 'Tutup'
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    if (await saveLocalInformation(githubContent)) {
-                        localContent = githubContent;
-                        console.log('Informasi telah diperbarui.');
-                    } else {
-                        console.log('Gagal menyimpan pembaruan.');
-                    }
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-document.addEventListener('DOMContentLoaded', checkInformation);
-</script>

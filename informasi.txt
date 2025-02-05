@@ -1,2 +1,7 @@
-test
-test
+**Changelog** (05-02-2025)
+
+- Add Theme Material3
+- Fix Logo Theme Argon
+- Update OpenWrt Stable Build
+- Minor Update
+- Change Kernel Alwiner To 6.1.31
