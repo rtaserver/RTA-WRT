@@ -1,10 +1,6 @@
 <p><strong>Update Baru: 05-02-2025</strong></p>
-<ul>
-<li>Penambahan Firmware
-<ul>
-<li>s912</li>
-</ul>
-</li>
-</ul>
+Penambahan Firmware:
+  • s912
+
 <p><strong>NOTE:</strong></p>
-<p>Jika Ada Error Atau Kendala. Jangan Lupa Laporannya</p>
+Jika Ada Error Atau Kendala. Jangan Lupa Laporannya
