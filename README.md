@@ -41,28 +41,29 @@
 ## 📱 Device yang Didukung
 
 ### Amlogic
-- s905x (HG680P, B860Hv1/v2) | Mod Boot SDCARD
-- s905x2 (HG680FJ, B860Hv5, MNC CYBORG001)
-- s905x3
-- s905x4 (AKARI AX810, dll)
+- **s905x** (HG680P, B860Hv1/v2) | Mod Boot SDCARD
+- **s905x2** (HG680FJ, B860Hv5, MNC CYBORG001, X96Max-4G, X96Max-2G, MECOOL-KM3-4G, Tanix-Tx5-Max, A95X-F2)
+- **s905x3** (X96-Max+, HK1-Box, Vontar-X3, H96-Max-X3, Ugoos-X3, TX3(QZ), TX3(BZ), X96-Air, X96-Max+_A100, A95X-F3-Air, Tencent-Aurora-3Pro(s905x3-b), X96-Max+Q1, X96-Max+100W, X96-Max+_2101, Infinity-B32, Whale, X88-Pro-X3, X99-Max-Plus, Transpeed-X3-Plus)
+- **s905x4** (AKARI AX810, dll)
+- **s912** (Tanix-TX8-Max, Tanix-TX9-Pro(3G), Tanix-TX9-Pro(2G), Tanix-TX92, Nexbox-A1, Nexbox-A95X-A2, A95X, H96-Pro-Plus, VORKE-Z6-Plus, Mecool-M8S-PRO-L, Vontar-X92, T95Z-Plus, Octopus-Planet, Phicomm-T1, TX3-Mini, OneCloudPro-V1.1_V1.2)
 
 ### Allwinner
-- H5 (Orange Pi Zero Plus 2, Orange Pi Zero Plus, Orange Pi Prime, Orange Pi PC2)
-- H6 (Orange Pi 1 Plus, Orange Pi Lite 2, Orange Pi 3 LTS, Orange Pi 3)
-- H616 (Orange Pi Zero 2)
-- H618 (Orange Pi Zero 3, Orange Pi Zero 2W)
+- **H5** (Orange Pi Zero Plus 2, Orange Pi Zero Plus, Orange Pi Prime, Orange Pi PC2)
+- **H6** (Orange Pi 1 Plus, Orange Pi Lite 2, Orange Pi 3 LTS, Orange Pi 3)
+- **H616** (Orange Pi Zero 2)
+- **H618** (Orange Pi Zero 3, Orange Pi Zero 2W)
 
 ### Rockchip
-- RK3566 (Orange Pi 3B)
-- RK3588S (Orange Pi 5)
-- RK3588 (Orange Pi 5 Plus)
+- **RK3566** (Orange Pi 3B)
+- **RK3588S** (Orange Pi 5)
+- **RK3588** (Orange Pi 5 Plus)
 
 ### Broadcom
-- BCM2710 (Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W - 64bit)
-- BCM2711 (Raspberry Pi 4B/400/CM4 - 64bit)
+- **BCM2710** (Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W - 64bit)
+- **BCM2711** (Raspberry Pi 4B/400/CM4 - 64bit)
 
 ### Generic
-- x86-64
+- **x86-64**
 
 ---
 

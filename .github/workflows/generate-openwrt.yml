@@ -34,6 +34,7 @@ on:
           - s905x2
           - s905x3
           - s905x4
+          - s912
           # Allwinner H5
           - h5-orangepi-zeroplus2
           - h5-orangepi-zeroplus
@@ -87,7 +88,7 @@ jobs:
         id: set-matrix
         run: |
           if [ "${{ inputs.devices }}" == "all" ]; then
-            DEVICES_LIST='["s905x","s905x2","s905x3","s905x4","h5-orangepi-zeroplus2","h5-orangepi-zeroplus","h5-orangepi-prime","h5-orangepi-pc2","h6-orangepi-lite2","h6-orangepi-1plus","h6-orangepi-3","h6-orangepi-3lts","h616-orangepi-zero2","h618-orangepi-zero2w","h618-orangepi-zero3","rk3566-orangepi-3b","rk3588-orangepi-5plus","rk3588s-orangepi-5","bcm2710-rpi-3b","bcm2711-rpi-4b","x86-64"]'
+            DEVICES_LIST='["s905x","s905x2","s905x3","s905x4","s912","h5-orangepi-zeroplus2","h5-orangepi-zeroplus","h5-orangepi-prime","h5-orangepi-pc2","h6-orangepi-lite2","h6-orangepi-1plus","h6-orangepi-3","h6-orangepi-3lts","h616-orangepi-zero2","h618-orangepi-zero2w","h618-orangepi-zero3","rk3566-orangepi-3b","rk3588-orangepi-5plus","rk3588s-orangepi-5","bcm2710-rpi-3b","bcm2711-rpi-4b","x86-64"]'
           else
             DEVICES_LIST="[\"${{ inputs.devices }}\"]"
           fi
@@ -211,60 +212,57 @@ jobs:
               
               ---
               
-              ### ⚠️ **Peringatan untuk Instalasi Pertama**
-              
-              > **Booting awal memerlukan waktu agak lama karena proses partisi ulang penyimpanan dan konfigurasi tambahan.**
-              
+              ## ⚠️ Peringatan untuk Instalasi Pertama
+              > **Catatan:** Booting awal memerlukan waktu agak lama karena proses partisi ulang dan konfigurasi tambahan.
+
               ---
-              
-              ### 📡 **Device yang Didukung**
-              
-              #### **Amlogic**
-              - S905X: *HG680P, B860Hv1/v2* (Mod Boot SDCARD)
-              - S905X2: *HG680FJ, B860Hv5, MNC CYBORG001*
-              - S905X3
-              - S905X4: *AKARI AX810, dll*
-              
-              #### **Allwinner**
-              - **H5:** *Orange Pi Zero Plus 2, Zero Plus, Prime, PC2*
-              - **H6:** *Orange Pi 1 Plus, Lite 2, 3 LTS, 3*
-              - **H616:** *Orange Pi Zero 2*
-              - **H618:** *Orange Pi Zero 3, Zero 2W*
-              
-              #### **Rockchip**
-              - RK3566: *Orange Pi 3B*
-              - RK3588S: *Orange Pi 5*
-              - RK3588: *Orange Pi 5 Plus*
-              
-              #### **Broadcom**
-              - BCM2710: *Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit)*
-              - BCM2711: *Raspberry Pi 4B/400/CM4 (64bit)*
-              
-              #### **Generic**
+
+              ## 📱 Device yang Didukung
+
+              ### Amlogic
+              - **s905x** (HG680P, B860Hv1/v2) | Mod Boot SDCARD
+              - **s905x2** (HG680FJ, B860Hv5, MNC CYBORG001, X96Max-4G, X96Max-2G, MECOOL-KM3-4G, Tanix-Tx5-Max, A95X-F2)
+              - **s905x3** (X96-Max+, HK1-Box, Vontar-X3, H96-Max-X3, Ugoos-X3, TX3(QZ), TX3(BZ), X96-Air, X96-Max+_A100, A95X-F3-Air, Tencent-Aurora-3Pro(s905x3-b), X96-Max+Q1, X96-Max+100W, X96-Max+_2101, Infinity-B32, Whale, X88-Pro-X3, X99-Max-Plus, Transpeed-X3-Plus)
+              - **s905x4** (AKARI AX810, dll)
+              - **s912** (Tanix-TX8-Max, Tanix-TX9-Pro(3G), Tanix-TX9-Pro(2G), Tanix-TX92, Nexbox-A1, Nexbox-A95X-A2, A95X, H96-Pro-Plus, VORKE-Z6-Plus, Mecool-M8S-PRO-L, Vontar-X92, T95Z-Plus, Octopus-Planet, Phicomm-T1, TX3-Mini, OneCloudPro-V1.1_V1.2)
+
+              ### Allwinner
+              - **H5** (Orange Pi Zero Plus 2, Orange Pi Zero Plus, Orange Pi Prime, Orange Pi PC2)
+              - **H6** (Orange Pi 1 Plus, Orange Pi Lite 2, Orange Pi 3 LTS, Orange Pi 3)
+              - **H616** (Orange Pi Zero 2)
+              - **H618** (Orange Pi Zero 3, Orange Pi Zero 2W)
+
+              ### Rockchip
+              - **RK3566** (Orange Pi 3B)
+              - **RK3588S** (Orange Pi 5)
+              - **RK3588** (Orange Pi 5 Plus)
+
+              ### Broadcom
+              - **BCM2710** (Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W - 64bit)
+              - **BCM2711** (Raspberry Pi 4B/400/CM4 - 64bit)
+
+              ### Generic
               - **x86-64**
-              
+
               ---
-              
-              ### ⚙️ **Informasi Sistem**
-              
-              - **IP Address:** `192.168.1.1`
-              - **Username:** `root`
-              - **Password:** `rtawrt`
-              - **SSID:** `RTA-WRT_2g / RTA-WRT_5g`
-              
-              ---
-              
-              ### 🌟 **Fitur Utama**
-              
-              - 📡 **ModemManager:** Koneksi ulang otomatis
-              - 🌀 **OpenClash:** Inti MetaCubeX Mihomo terbaru
-              - 🔀 **Passwall & MihomoTProxy:** Alternatif tunneling
-              - 🗂️ **TinyFM:** File Manager ringan
-              - 🌐 **Internet Detector & Lite Watchdog**
-              - 🎨 **Tema:** Argon & Material dengan gambar login kustom
-              - 📊 **Modem Tools:** 3ginfo lite, ModemInfo, SMS-Tool, dll
-              - 📺 **Dukungan Layar OLED:** *(teruji pada Raspberry Pi 4B)*
-              
+
+              ## ℹ️ Informasi Sistem
+              - **IP Default:** 192.168.1.1
+              - **Username:** root
+              - **Password:** rtawrt
+              - **SSID:** RTA-WRT_2g / RTA-WRT_5g
+
+              ### ⭐ Fitur Utama
+              - Modemmanager dengan koneksi ulang otomatis
+              - OpenClash dengan MetaCubeX Mihomo terbaru
+              - Passwall *Tunneling* alternatif
+              - MihomoTProxy *Tunneling* alternatif
+              - TinyFm file manager
+              - Internet Detector dan Lite Watchdog
+              - Tema Argon & Material dengan tampilan login kustom
+              - 3ginfo lite, Modeminfo, sms-tool, dan aplikasi modem lainnya
+              - Dukungan Layar OLED (teruji di Raspberry Pi 4B)
+
               ---
               
               **🚀 Tetap terhubung, nikmati performa maksimal dengan RTA-WRT! 🚀**

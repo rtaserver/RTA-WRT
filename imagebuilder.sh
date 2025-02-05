@@ -15,6 +15,7 @@
 #- s905x2 | HG680FJ, B860Hv5, MNC CYBORG001
 #- s905x3 | 
 #- s905x4 | AKARI AX810, dll
+#- s912
 #- h5-orangepi-zeroplus2 | Alwiner H5 Orange Pi Zero Plus 2
 #- h5-orangepi-zeroplus | Alwiner H5 Orange Pi Zero Plus
 #- h5-orangepi-prime | Alwiner H5 Orange Pi Prime
@@ -267,6 +268,7 @@ download_imagebuilder() {
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
             KERNEL="6.1.31-AW64-DBAI"
+            KERNEL2=""
             ;;
         s905*) # Amlogic (S905*)
             op_target="amlogic"
@@ -277,6 +279,18 @@ download_imagebuilder() {
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
             KERNEL="6.1.66-DBAI"
+            KERNEL2="5.15.y_5.10.y"
+            ;;
+        s912) # Amlogic (S912)
+            op_target="amlogic"
+            target_profile="generic"
+            target_system="armsr/armv8"
+            target_name="armsr-armv8"
+            ARCH_1="arm64"
+            ARCH_2="aarch64"
+            ARCH_3="aarch64_generic"
+            KERNEL=""
+            KERNEL2="5.15.y_5.10.y"
             ;;
         rk*) # Rockchip (RK*)
             op_target="rockchip"
@@ -287,6 +301,7 @@ download_imagebuilder() {
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
             KERNEL="5.10.160-rk35v-dbai"
+            KERNEL2="5.15.y_5.10.y"
             ;;
         bcm2710*) # Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit)
             op_target="bcm2710"
@@ -775,17 +790,47 @@ rebuild_firmware() {
 }
 
 repackwrt() {
-    local builder_type="$1"
+    # Parse arguments
+    local builder_type=""
+    local target_board=""
+    local target_kernel=""
+    
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --ophub|--ulo)
+                builder_type="$1"
+                shift
+                ;;
+            -t|--target)
+                target_board="$2"
+                shift 2
+                ;;
+            -k|--kernel)
+                target_kernel="$2"
+                shift 2
+                ;;
+            *)
+                error_msg "Unknown option: $1"
+                ;;
+        esac
+    done
+
+    # Validate required parameters
+    if [[ -z "$builder_type" ]]; then
+        error_msg "Builder type (--ophub or --ulo) is required"
+    fi
+    
+    if [[ -z "$target_board" ]]; then
+        error_msg "Target board (-t) is required"
+    fi
+    
+    if [[ -z "$target_kernel" ]]; then
+        error_msg "Target kernel (-k) is required"
+    fi
+
     local readonly OPHUB_REPO="https://github.com/ophub/amlogic-s9xxx-openwrt/archive/refs/heads/main.zip"
     local readonly ULO_REPO="https://github.com/armarchindo/ULO-Builder/archive/refs/heads/main.zip"
     local readonly REQUIRED_SPACE_MB=2048
-    local readonly TARGET_BOARD="s905x_s905x-b860h"
-    local readonly TARGET_KERNEL="5.15.y_5.10.y"
-
-    # Validate builder type
-    if [[ "$builder_type" != "--ophub" && "$builder_type" != "--ulo" ]]; then
-        error_msg "Invalid builder type. Use --ophub or --ulo"
-    fi
 
     # Validate required variables
     local readonly REQUIRED_VARS=("imagebuilder_path" "op_sourse" "op_branch" "op_devices")
@@ -794,11 +839,6 @@ repackwrt() {
             error_msg "Required variable '${var}' is not set"
         fi
     done
-
-    # Additional check for ULO builder
-    if [[ "$builder_type" == "--ulo" && -z "${KERNEL}" ]]; then
-        error_msg "KERNEL variable is required for ULO builder"
-    fi
 
     # Check available disk space
     local available_space
@@ -869,7 +909,7 @@ repackwrt() {
     # Run builder-specific operations
     if [[ "$builder_type" == "--ophub" ]]; then
         echo -e "${INFO} Running OphubBuilder..."
-        if ! sudo ./remake -b ${TARGET_BOARD} -k ${TARGET_KERNEL} -s 1024; then
+        if ! sudo ./remake -b "${target_board}" -k "${target_kernel}" -s 1024; then
             error_msg "OphubBuilder execution failed"
         fi
         device_output_dir="./openwrt/out"
@@ -890,10 +930,10 @@ repackwrt() {
         # Run UloBuilder
         echo -e "${INFO} Running UloBuilder..."
         local readonly rootfs_basename=$(basename "${rootfs_file}")
-        if ! sudo ./ulo -y -m "${op_devices}" -r "${rootfs_basename}" -k "${KERNEL}" -s 1024; then
+        if ! sudo ./ulo -y -m "${target_board}" -r "${rootfs_basename}" -k "${target_kernel}" -s 1024; then
             error_msg "UloBuilder execution failed"
         fi
-        device_output_dir="./out/${op_devices}"
+        device_output_dir="./out/${target_board}"
     fi
 
     # Verify and copy output files
@@ -1208,8 +1248,8 @@ custom_files
 rebuild_firmware
 case "${op_devices}" in
     s905x)
-        repackwrt --ulo
-        repackwrt --ophub
+        repackwrt --ulo -t "$op_devices" -k "$KERNEL"
+        repackwrt --ophub -t "s905x_s905x-b860h" -k "$KERNEL2"
         # Process HG680P with ULO firmware
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*-s905x-*.img.gz")" "ULO" "meson-gxl-s905x-p212.dtb" "HG680P"
         # Process B860H with ULO firmware
@@ -1221,8 +1261,11 @@ case "${op_devices}" in
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k5.10*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k5.15*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         ;;
+    s912)
+        repackwrt --ophub -t "s912" -k "$KERNEL2"
+        ;;
     h5-*|h616-*|h618-*|h6-*|s905x[0-9]*|rk*)
-        repackwrt --ulo
+        repackwrt --ulo -t "$op_devices" -k "$KERNEL"
         ;;
     *)
         ;;
