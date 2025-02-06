@@ -134,7 +134,7 @@ jobs:
           echo "OPENWRT_VERSION=${OPENWRT_VERSION}" >> $GITHUB_ENV
           OPENWRT_TAG=${OPENWRT_VERSION/:/_}
           echo "OPENWRT_TAG=${OPENWRT_TAG}" >> $GITHUB_ENV
-          DEVICE=${{ matrix.devices }}
+          DEVICES=${{ matrix.devices }}
           echo "DEVICES=${DEVICES}" >> $GITHUB_ENV
           #===============================================================
           echo -e "[\033[94m INFO \033[0m] Building for device: ${{ matrix.devices }}"
