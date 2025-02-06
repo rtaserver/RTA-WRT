@@ -57,6 +57,11 @@ on:
           - bcm2711-rpi-4b
           # x86
           - x86-64
+      notify:
+        description: "Notify to Telegram"
+        required: true
+        default: "false"
+        type: boolean
 
 env:
   TZ: Asia/Jakarta
@@ -263,6 +268,7 @@ jobs:
               ---
 
       - name: Upload to Telegram
+        if: ${{ inputs.notify == 'true' }}
         uses: Ofceab-Studio/telegram-action@1.0.1
         with:
           to: ${{ secrets.CHAT_ID }}
@@ -283,6 +289,11 @@ jobs:
             ================================
 
 
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: info
+
       - name: Update Branch
         timeout-minutes: 5
         env:
@@ -290,31 +301,26 @@ jobs:
         run: |
           sudo timedatectl set-timezone "$TZ"
           DATE=$(date +'%d%m%Y')
-          RELEASE_BRANCH="${{ inputs.releases_branch }}"
-          RELEASE_TAG="${RELEASE_BRANCH/:/_}-${DATE}"
-          BRANCH_NAME="${{ github.ref_name }}"
 
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions@github.com"
+
+          # Fetch all branches and check if 'info' branch exists
+          git fetch --all
+
+          git checkout info || git checkout -b info || echo "Failed to checkout info branch"
           
-          git checkout info || {
-            echo "Failed to checkout info branch"
-            exit 1
-          }
+          mkdir -p info/${{ GITHUB_BRANCH }}
           
-          mkdir -p info/${{ github.ref_name }}
-          
-          echo "${{ steps.changelog.outputs.CHANGELOG }}" >> info/${{ github.ref_name }}/changelog.txt
+          echo "${{ steps.changelog.outputs.CHANGELOG }}" >> info/${{ env.GITHUB_BRANCH }}/changelog.txt
           echo "${{ env.RELEASE_TAG }}" >> info/${{ github.ref_name }}/version.txt
           
           if git diff --quiet; then
             echo "No changes to commit"
-            exit 0
           fi
           
           git add . && \
           git commit -m "Auto Release: v${DATE}" && \
-          git push || {
+          git push origin info || {
             echo "Failed to push changes"
-            exit 1
           }
