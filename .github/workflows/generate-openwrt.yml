@@ -58,14 +58,6 @@ on:
           - bcm2711-rpi-4b
           # x86
           - x86-64
-      prerelease:
-        description: "Pre-release:"
-        required: true
-        default: "false"
-        type: choice
-        options:
-          - "true"
-          - "false"
 
 env:
   TZ: Asia/Jakarta
@@ -96,6 +88,8 @@ jobs:
 
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - name: Update Version
         run: |
@@ -103,14 +97,21 @@ jobs:
           DATE=$(date +'%d%m%Y')
           RELEASE_BRANCH="${{ inputs.releases_branch }}"
           RELEASE_TAG="${RELEASE_BRANCH/:/_}-${DATE}"
+          BRANCH_NAME="${{ github.ref_name }}"
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
           git config user.name 'github-actions[bot]' || echo 'Failed to set git user name'
           git config user.email 'github-actions[bot]@users.noreply.github.com' || echo 'Failed to set git user email'
-          if [ {{ inputs.prerelease }} == true ]; then
-            echo "Prerelease: $RELEASE_TAG"
+          
+          if [ "${BRANCH_NAME}" == "dev" ]; then
+            sed -i "s|.*|${RELEASE_TAG}--dev|g" devversion.txt
+            sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${BRANCH_NAME}\"|g" files/usr/share/ucode/luci/template/header.ut
+            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${RELEASE_TAG}--dev\"|g" files/usr/share/ucode/luci/template/header.ut
           else
             sed -i "s|.*|${RELEASE_TAG}|g" latestversion.txt
+            sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${BRANCH_NAME}\"|g" files/usr/share/ucode/luci/template/header.ut
             sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${RELEASE_TAG}\"|g" files/usr/share/ucode/luci/template/header.ut
           fi
+          
           git add . || echo 'Failed to add changes'
           git commit -m "Auto Release: v${DATE}" || echo 'Failed to commit changes'
           git push || echo 'Failed to push changes'
@@ -128,6 +129,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - name: Add changelog info to new release description
         id: changelog
@@ -188,7 +191,8 @@ jobs:
           tag: ${{ env.RELEASE_TAG }}-${{ env.DATE }}
           release_name: RTA-WRT - ${{ env.RELEASE_TAG }}-${{ env.DATE }}
           overwrite: true
-          prerelease: ${{ inputs.prerelease }}
+          prerelease: ${{ github.ref_name == 'dev' }}
+          promote: ${{ github.ref_name != 'dev' }}
           body: |
               ---
 

@@ -163,7 +163,7 @@
 
 <script>
 // ====== Constants ======
-const GITHUB_URL = 'https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/informasi.txt';
+const INFO_URL = 'https://pastebin.com/raw/jZvfS740';
 const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const TODAY = new Date().toDateString();
 let checkTimer;
@@ -221,6 +221,7 @@ function saveToLocal(key, value) {
 
 // ====== Update & Information Check ======
 async function checkForUpdates() {
+    const currentBranch = "dev"
     const currentVersion = "openwrt_24.10.0-05022025";
     const lastShownUpdate = localStorage.getItem('mdl_update');
 
@@ -228,8 +229,8 @@ async function checkForUpdates() {
 
     try {
         const [latestVersion, changelogRaw] = await Promise.all([
-            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/latestversion.txt'),
-            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/CHANGELOG.md')
+            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/${currentBranch}/latestversion.txt'),
+            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/${currentBranch}/CHANGELOG.md')
         ]);
 
         if (latestVersion && latestVersion.trim() !== currentVersion) {
@@ -269,20 +270,20 @@ async function checkForUpdates() {
 }
 
 async function checkInformation() {
-    const githubContent = await fetchText(GITHUB_URL);
-    if (githubContent && githubContent !== cache.content) {
+    const infoContent = await fetchText(INFO_URL);
+    if (infoContent && infoContent !== cache.content) {
         enqueueAlert({
             title: '🚀 Informasi',
             width: 400,
             html: `<div class="changelog" style="margin-top: 15px; text-align: left; white-space: pre-line;">
-                    <div>${githubContent}</div>
+                    <div>${infoContent}</div>
                 </div>`,
             icon: 'info',
             confirmButtonText: 'Mengerti',
             cancelButtonText: '❌ Tutup',
             onConfirm: () => {
-                saveToLocal('lastInformation', githubContent);
-                cache.content = githubContent;
+                saveToLocal('lastInformation', infoContent);
+                cache.content = infoContent;
                 cache.lastUpdate = new Date().toISOString();
             }
         });
