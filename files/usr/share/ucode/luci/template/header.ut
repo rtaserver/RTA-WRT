@@ -73,6 +73,13 @@
         font-size: 1.6em;
         margin-bottom: 15px;
         color: #007BFF;
+        background-color: #FFFFFF;
+        background: #FFFFFF;
+    }
+    
+    .swal2-html-container {
+        background-color: #FFFFFF;
+        background: #FFFFFF;
     }
 
     .swal2-html-container a {
@@ -158,12 +165,37 @@
 // ====== Constants ======
 const GITHUB_URL = 'https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/main/informasi.txt';
 const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const TODAY = new Date().toDateString();
 let checkTimer;
 
 const cache = {
     content: localStorage.getItem('lastInformation') || '',
     lastUpdate: localStorage.getItem('lastUpdate') || ''
 };
+
+// ====== Alert Queue System ======
+let alertQueue = [];
+let isAlertShowing = false;
+
+function enqueueAlert(alertConfig) {
+    alertQueue.push(alertConfig);
+    processQueue();
+}
+
+async function processQueue() {
+    if (isAlertShowing || alertQueue.length === 0) return;
+
+    isAlertShowing = true;
+    const alertConfig = alertQueue.shift();
+
+    const result = await Swal.fire(alertConfig);
+
+    if (result.isConfirmed && alertConfig.onConfirm) alertConfig.onConfirm(result);
+    if (result.isDenied && alertConfig.onDenied) alertConfig.onDenied(result);
+
+    isAlertShowing = false;
+    processQueue();
+}
 
 // ====== Utility Functions ======
 async function fetchText(url) {
@@ -187,34 +219,12 @@ function saveToLocal(key, value) {
     }
 }
 
-function showAlert({ title, html, icon = 'info', confirmText = 'OK', denyText = 'Nanti', cancelText = 'Tutup', onConfirm, onDeny }) {
-    Swal.fire({
-        title,
-        html,
-        icon,
-        width: 400,
-        confirmButtonText: confirmText,
-        showDenyButton: !!onDeny,
-        denyButtonText: denyText,
-        showCancelButton: !!cancelText,
-        cancelButtonText: cancelText,
-        customClass: { popup: 'animated fadeInDown' },
-        draggable: true,
-        allowOutsideClick: false,
-        backdrop: 'rgba(0,0,123,0.4)'
-    }).then(result => {
-        if (result.isConfirmed && onConfirm) onConfirm();
-        if (result.isDenied && onDeny) onDeny();
-    });
-}
-
 // ====== Update & Information Check ======
 async function checkForUpdates() {
     const currentVersion = "openwrt_24.10.0-05022025";
-    const today = new Date().toISOString().slice(0, 10);
     const lastShownUpdate = localStorage.getItem('mdl_update');
 
-    if (lastShownUpdate === today) return;
+    if (lastShownUpdate === TODAY) return;
 
     try {
         const [latestVersion, changelogRaw] = await Promise.all([
@@ -228,23 +238,26 @@ async function checkForUpdates() {
                 ? `<strong>Changelog (${changelogMatch[1]})</strong><p>${changelogMatch[2].trim().replace(/-\s/g, '• ').replace(/\n/g, '<br>')}</p>`
                 : 'Tidak ada catatan perubahan.';
 
-            showAlert({
+            enqueueAlert({
                 title: '🚀 Update Tersedia!',
+                width: 400,
                 html: `
-                        <div class="update-info" style="text-align: center;">
-                            <img alt="Current Version" width="155" height="30" src="https://img.shields.io/badge/${currentVersion}-x?style=for-the-badge&logo=openwrt&color=blue">
-                            <img alt="Latest Version" width="155" height="30" src="https://img.shields.io/badge/${latestVersion}-x?style=for-the-badge&logo=openwrt&color=green">
-                            <div class="changelog" style="margin-top: 15px; text-align: left;">
-                                <h4 style="color: #007BFF;">📋 Changelog:</h4>
-                                <div>${changelogFormatted}</div>
-                            </div>
+                    <div class="update-info" style="text-align: center;">
+                        <img alt="Current Version" width="155" height="30" src="https://img.shields.io/badge/${currentVersion}-x?style=for-the-badge&logo=openwrt&color=blue">
+                        <img alt="Latest Version" width="155" height="30" src="https://img.shields.io/badge/${latestVersion}-x?style=for-the-badge&logo=openwrt&color=green">
+                        <div class="changelog" style="margin-top: 15px; text-align: left;">
+                            <h4 style="color: #007BFF;">📋 Changelog:</h4>
+                            <div>${changelogFormatted}</div>
                         </div>
+                    </div>
                 `,
-                confirmText: '🔄 Update',
-                denyText: '⏳ Nanti',
-                cancelText: '❌ Batal',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: '🔄 Update',
+                denyButtonText: '⏳ Nanti',
+                cancelButtonText: '❌ Batal',
                 onConfirm: () => window.location.href = 'https://github.com/rizkikotet-dev/RTA-WRT/releases/latest',
-                onDeny: () => saveToLocal('mdl_update', today)
+                onDenied: () => saveToLocal('mdl_update', TODAY)
             });
         }
     } catch (error) {
@@ -252,87 +265,110 @@ async function checkForUpdates() {
     }
 }
 
-async function checkInformation(retryCount = 0) {
-    const MAX_RETRIES = 3;
-
-    try {
-        const githubContent = await fetchText(GITHUB_URL);
-        if (githubContent && githubContent !== cache.content) {
-            const title = '🚀 Informasi';
-            showAlert({
-                title,
-                html: `
-                <div class="changelog" style="margin-top: 15px; text-align: left; white-space: pre-line;">
+async function checkInformation() {
+    const githubContent = await fetchText(GITHUB_URL);
+    if (githubContent && githubContent !== cache.content) {
+        enqueueAlert({
+            title: '🚀 Informasi',
+            width: 400,
+            html: `<div class="changelog" style="margin-top: 15px; text-align: left; white-space: pre-line;">
                     <div>${githubContent}</div>
-                </div>
-                `,
-                icon: cache.content ? 'info' : 'success',
-                confirmText: 'Mengerti',
-                cancelText: '❌ Tutup',
-                onConfirm: () => {
-                    if (saveToLocal('lastInformation', githubContent)) {
-                        cache.content = githubContent;
-                        cache.lastUpdate = new Date().toISOString();
-                        console.log('Informasi diperbarui.');
-                    }
-                }
-            });
-        }
-    } catch (error) {
-        console.warn(`Check error: ${error}`);
-        if (retryCount < MAX_RETRIES) {
-            const retryDelay = Math.pow(2, retryCount) * 1000;
-            console.log(`Mencoba kembali dalam ${retryDelay / 1000} detik...`);
-            setTimeout(() => checkInformation(retryCount + 1), retryDelay);
-        }
+                </div>`,
+            icon: 'info',
+            confirmButtonText: 'Mengerti',
+            cancelButtonText: '❌ Tutup',
+            onConfirm: () => {
+                saveToLocal('lastInformation', githubContent);
+                cache.content = githubContent;
+                cache.lastUpdate = new Date().toISOString();
+            }
+        });
     }
 }
 
 // ====== Event About ======
 function showProfile() {
-    Swal.fire({
-      width: 400,
-      title: "About Me!",
-      text: "Halo! Saya Rizki Kotet, seorang programmer pemula yang belajar C# dan PHP. Saya memiliki pemahaman dasar tentang front-end dan back-end. Saat ini, saya sedang mengerjakan proyek Custom OpenWrt dan ImmortalWrt. Saya selalu bersemangat untuk belajar hal baru di dunia teknologi!",
-      imageUrl: "{{ resource }}/Profile.jpeg",
-      imageWidth: 200,
-      imageHeight: 200,
-      imageAlt: "Custom image",
-      draggable: true,
-      allowOutsideClick: false,
-      footer: `
-        <p style="text-align: center;">
-            <a href="https://t.me/rtawrt"><img alt="Channel" src="{{ resource }}/Channel.svg" width="110" height="30"></a>
-            <a href="https://t.me/backup_rtawrt"><img alt="Group" src="{{ resource }}/Group.svg" width="110" height="30"></a>
-            <a href="https://t.me/RizkiKotet"><img alt="Personal" src="{{ resource }}/Personal.svg" width="110" height="30"></a>
-        </p>
-      `
+    enqueueAlert({
+        width: 400,
+        title: "About Me!",
+        text: "Halo! Saya Rizki Kotet, seorang programmer pemula yang belajar C# dan PHP. Saya memiliki pemahaman dasar tentang front-end dan back-end. Saat ini, saya sedang mengerjakan proyek Custom OpenWrt dan ImmortalWrt. Saya selalu bersemangat untuk belajar hal baru di dunia teknologi!",
+        imageUrl: "{{ resource }}/Profile.jpeg",
+        imageWidth: 200,
+        imageHeight: 200,
+        imageAlt: "Profile",
+        allowOutsideClick: false,
+        footer: `
+            <p style="text-align: center;">
+                <a href="https://t.me/rtawrt"><img alt="Channel" src="{{ resource }}/Channel.svg" width="110" height="30"></a>
+                <a href="https://t.me/backup_rtawrt"><img alt="Group" src="{{ resource }}/Group.svg" width="110" height="30"></a>
+                <a href="https://t.me/RizkiKotet"><img alt="Personal" src="{{ resource }}/Personal.svg" width="110" height="30"></a>
+            </p>
+        `
     });
+}
+
+// ====== Show Daily Modal ======
+function showDailyModal() {
+    const lastShownSaweria = localStorage.getItem('mdl_Saweria');
+
+    if (lastShownSaweria !== TODAY) {
+        enqueueAlert({
+            title: "🚀 Welcome To RTA-WRT",
+            imageUrl: "{{ resource }}/Saweria.png",
+            imageWidth: 200,
+            imageHeight: 200,
+            imageAlt: "Saweria",
+            html: `
+                <p style="text-align: center;">
+                    <a href="https://t.me/rtawrt" target="_blank"><img alt="Channel" src="{{ resource }}/Channel.svg" width="110" height="20"></a>
+                    <a href="https://t.me/backup_rtawrt" target="_blank"><img alt="Group" src="{{ resource }}/Group.svg" width="110" height="20"></a>
+                    <a href="https://t.me/RizkiKotet" target="_blank"><img alt="Personal" src="{{ resource }}/Personal.svg" width="110" height="20"></a>
+                </p>
+                <div style="margin-top: 10px; text-align: center;">
+                    <input type="checkbox" id="noShowToday">
+                    <style>
+                    #noShowToday:checked {
+                        background-color: #5e72e4 !important;
+                    }
+                    </style>
+                    <label for="noShowToday">Jangan tampilkan lagi hari ini</label>
+                </div>
+            `,
+            confirmButtonText: 'OK',
+            allowOutsideClick: false,
+            didOpen: () => {
+                document.getElementById('noShowToday').addEventListener('change', event => {
+                    if (event.target.checked) {
+                        saveToLocal('mdl_Saweria', TODAY);
+                    } else {
+                        localStorage.removeItem('mdl_Saweria');
+                    }
+                });
+            }
+        });
+    }
 }
 
 // ====== Periodic Checker Initialization ======
 function initializeChecker() {
     checkInformation();
-    if (checkTimer) clearInterval(checkTimer);
     checkTimer = setInterval(checkInformation, CHECK_INTERVAL);
 }
 
 // ====== Event Listeners ======
 document.addEventListener('DOMContentLoaded', () => {
+    showDailyModal();
     checkForUpdates();
     initializeChecker();
 });
 
 document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-        initializeChecker();
-    } else {
-        clearInterval(checkTimer);
-    }
+    document.visibilityState === 'visible' ? initializeChecker() : clearInterval(checkTimer);
 });
 
 window.addEventListener('online', initializeChecker);
 window.addEventListener('offline', () => clearInterval(checkTimer));
+
 </script>
 
 <div class="square-wrapper">
