@@ -128,7 +128,7 @@ jobs:
         run: |
           sudo timedatectl set-timezone "$TZ"
           echo "DATETIME=$(date +'%Y%m%d')" >> $GITHUB_ENV
-          echo "OPENWRT_VERSION=${{ env.OPENWRT_VERSION }}" >> $GITHUB_ENV
+          echo "OPENWRT_VERSION=${{ inputs.releases_branch }}" >> $GITHUB_ENV
           echo "OPENWRT_TAG=${OPENWRT_VERSION/:/_}" >> $GITHUB_ENV
           echo "DEVICES=${{ matrix.devices }}" >> $GITHUB_ENV
           echo -e "[\033[94m INFO \033[0m] Building for device: ${{ matrix.devices }}"
