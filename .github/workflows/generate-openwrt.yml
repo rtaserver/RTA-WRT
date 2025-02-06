@@ -72,6 +72,10 @@ env:
     build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git
     gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils
     mkisofs jq python3 python3-pip
+  CURRENT_BRANCH: ${{ github.ref_name }}
+  OPENWRT_VERSION: ${{ github.event.inputs.releases_branch }}
+  OPENWRT_TAG: ${{ github.event.inputs.releases_branch.replace(':', '_') }}
+  DATETIME: ${{ steps.set-datetime.outputs.datetime }}
 
 jobs:
   prebuild:
@@ -81,6 +85,12 @@ jobs:
     outputs:
       devices: ${{ steps.set-matrix.outputs.devices }}
     steps:
+      - name: Set DateTime
+        id: set-datetime
+        run: |
+          sudo timedatectl set-timezone "$TZ"
+          echo "datetime=$(date +'%d%m%Y')" >> $GITHUB_OUTPUT
+
       - name: Set Matrix Run
         id: set-matrix
         run: |
@@ -115,7 +125,7 @@ jobs:
           r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
           r="${r//'%'/'%25'}"
           r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"  
+          r="${r//$'\r'/'%0D'}"
           echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
 
       - name: Install Required Packages
@@ -126,39 +136,32 @@ jobs:
 
       - name: Initialize Environment
         run: |
-          sudo timedatectl set-timezone "$TZ"
-          RELEASE_BRANCH="${{ inputs.releases_branch }}"
-          RELEASE_TAG="${RELEASE_BRANCH/:/_}"
-          GITHUB_BRANCH="${{ github.ref_name }}"
-          echo "RELEASE_BRANCH=${RELEASE_BRANCH}" >> $GITHUB_ENV
-          echo "RELEASE_TAG=${RELEASE_TAG}" >> $GITHUB_ENV
-          echo "GITHUB_BRANCH=${GITHUB_BRANCH}" >> $GITHUB_ENV
           echo "DEVICES=${{ matrix.devices }}" >> $GITHUB_ENV
-          echo "DATE=$(date +'%d%m%Y')" >> $GITHUB_ENV
           echo -e "[\033[94m INFO \033[0m] Building for device: ${{ matrix.devices }}"
-          if [ "${GITHUB_BRANCH}" == "dev" ]; then
-            sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${GITHUB_BRANCH}\"|g" files/usr/share/ucode/luci/template/header.ut
-            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${RELEASE_TAG}--dev\"|g" files/usr/share/ucode/luci/template/header.ut
+          if [ "${{ env.CURRENT_BRANCH }}" == "dev" ]; then
+            sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${{ env.CURRENT_BRANCH }}\"|g" files/usr/share/ucode/luci/template/header.ut
+            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${{ env.OPENWRT_TAG }}--dev\"|g" files/usr/share/ucode/luci/template/header.ut
           else
-            sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${GITHUB_BRANCH}\"|g" files/usr/share/ucode/luci/template/header.ut
-            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${RELEASE_TAG}\"|g" files/usr/share/ucode/luci/template/header.ut
+            sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${{ env.CURRENT_BRANCH }}\"|g" files/usr/share/ucode/luci/template/header.ut
+            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${{ env.OPENWRT_TAG }}\"|g" files/usr/share/ucode/luci/template/header.ut
           fi
 
       - name: Build Image and Rootfs
         id: imagebuilder
+        continue-on-error: true
         run: |
           echo -e "[\033[95m STEPS \033[0m] Starting firmware and rootfs build"
           chmod +x ${IMAGEBUILDER_SH}
-          if sudo bash ${IMAGEBUILDER_SH} ${{ env.RELEASE_BRANCH }} "${{ env.DEVICES }}"; then
+          if sudo bash ${IMAGEBUILDER_SH} ${{ env.OPENWRT_VERSION }} "${{ env.DEVICES }}"; then
             echo "status=success" >> $GITHUB_OUTPUT
             echo "date=$(date +'%d-%m-%Y')" >> $GITHUB_OUTPUT
-            echo "version=${{ env.RELEASE_BRANCH }}" >> $GITHUB_OUTPUT
+            echo "version=${{ env.OPENWRT_VERSION }}" >> $GITHUB_OUTPUT
             echo "devices=${{ matrix.devices }}" >> $GITHUB_OUTPUT
             echo -e "[\033[92m SUCCESS \033[0m] Build completed successfully"
           else
             echo "status=failed" >> $GITHUB_OUTPUT
             echo "date=$(date +'%d-%m-%Y')" >> $GITHUB_OUTPUT
-            echo "version=${{ env.RELEASE_BRANCH }}" >> $GITHUB_OUTPUT
+            echo "version=${{ env.OPENWRT_VERSION }}" >> $GITHUB_OUTPUT
             echo "devices=${{ matrix.devices }}" >> $GITHUB_OUTPUT
             echo -e "[\033[91m ERROR \033[0m] Build failed"
           fi
@@ -173,13 +176,13 @@ jobs:
       - name: Upload to Release
         if: ${{ steps.imagebuilder.outputs.status == 'success' }}
         uses: svenstaro/upload-release-action@v2
-        continue-on-error: false
+        continue-on-error: true
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: imagebuilder/out_firmware/*
-          tag: ${{ env.RELEASE_TAG }}-${{ env.DATE }}
-          release_name: RTA-WRT - ${{ env.RELEASE_TAG }}-${{ env.DATE }}
+          tag: ${{ env.OPENWRT_TAG }}-${DATETIME}
+          release_name: RTA-WRT - ${{ env.OPENWRT_TAG }}-${DATETIME}
           overwrite: true
           prerelease: ${{ github.ref_name == 'dev' }}
           promote: ${{ github.ref_name != 'dev' }}
@@ -192,7 +195,7 @@ jobs:
               
               ### 📥 **Download Statistics**
               
-              ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASE_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+              ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.OPENWRT_TAG }}-${DATETIME}/total?style=for-the-badge&logo=Openwrt)
               
               ---
               
@@ -287,40 +290,28 @@ jobs:
             📱 **Device:** `${{ steps.imagebuilder.outputs.devices }}`
             
             ================================
-
-
+  
+  switch:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           ref: info
 
       - name: Update Branch
-        timeout-minutes: 5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          sudo timedatectl set-timezone "$TZ"
-          DATE=$(date +'%d%m%Y')
-
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions@github.com"
 
-          # Fetch all branches and check if 'info' branch exists
-          git fetch --all
+          mkdir -p info/${{ env.CURRENT_BRANCH }}
 
-          git checkout info || git checkout -b info || echo "Failed to checkout info branch"
-          
-          mkdir -p info/${{ env.GITHUB_BRANCH }}
-          
-          echo "${{ steps.changelog.outputs.CHANGELOG }}" >> info/${{ env.GITHUB_BRANCH }}/changelog.txt
-          echo "${{ env.RELEASE_TAG }}" >> info/${{ github.ref_name }}/version.txt
-          
-          if git diff --quiet; then
-            echo "No changes to commit"
-          fi
-          
-          git add . && \
-          git commit -m "Auto Release: v${DATE}" && \
-          git push origin info || {
-            echo "Failed to push changes"
-          }
+          echo "${{ needs.build.outputs.CHANGELOG }}" >> info/${{ env.CURRENT_BRANCH }}/changelog.txt
+          echo "${{ env.OPENWRT_TAG }}" >> info/${{ env.CURRENT_BRANCH }}/version.txt
+
+          git add .
+          git commit -m "Auto Release: v${DATE}" || echo "No changes to commit"
+          git push origin info || echo "Failed to push changes"
