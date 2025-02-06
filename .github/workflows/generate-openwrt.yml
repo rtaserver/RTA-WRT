@@ -93,7 +93,7 @@ jobs:
       - name: Set DateTime
         id: openwrttag
         run: |
-          echo "value=${{ env.OPENWRT_VERSION//:/_ }}" >> $GITHUB_OUTPUT
+          echo "value=${OPENWRT_VERSION/:/_}" >> $GITHUB_OUTPUT
 
       - name: Configure Build Matrix
         id: matrix
