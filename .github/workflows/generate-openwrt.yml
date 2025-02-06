@@ -74,7 +74,7 @@ env:
     mkisofs jq python3 python3-pip
   CURRENT_BRANCH: ${{ github.ref_name }}
   OPENWRT_VERSION: ${{ inputs.releases_branch }}
-  OPENWRT_TAG: ${{ replace(inputs.releases_branch, ':', '_') }}
+  OPENWRT_TAG: ${{ steps.openwrttag.outputs.value }} #${{ replace(inputs.releases_branch, ':', '_') }}
   DATETIME: ${{ steps.datetime.outputs.value }}
 
 jobs:
@@ -91,6 +91,11 @@ jobs:
         run: |
           sudo timedatectl set-timezone "$TZ"
           echo "value=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
+      - name: Set DateTime
+        id: openwrttag
+        run: |
+          echo "value=${{ env.OPENWRT_VERSION/:/_ }}" >> $GITHUB_OUTPUT
 
       - name: Configure Build Matrix
         id: matrix
