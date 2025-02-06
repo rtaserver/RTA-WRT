@@ -130,7 +130,7 @@ jobs:
           #===============================================================
           echo "DATETIME=$(date +'%Y%m%d')" >> $GITHUB_ENV
           echo "OPENWRT_VERSION=${{ inputs.releases_branch }}" >> $GITHUB_ENV
-          echo "OPENWRT_TAG=${OPENWRT_VERSION/:/_}" >> $GITHUB_ENV
+          echo "OPENWRT_TAG=${{ env.OPENWRT_VERSION/:/_ }}" >> $GITHUB_ENV
           echo "DEVICES=${{ matrix.devices }}" >> $GITHUB_ENV
           #===============================================================
           echo -e "[\033[94m INFO \033[0m] Building for device: ${{ matrix.devices }}"
@@ -305,8 +305,11 @@ jobs:
           mkdir -p info/${{ env.CURRENT_BRANCH }}
 
           echo "${{ needs.build.outputs.CHANGELOG }}" >> info/${{ env.CURRENT_BRANCH }}/changelog.txt
-          echo "${{ env.OPENWRT_TAG }}" >> info/${{ env.CURRENT_BRANCH }}/version.txt
-
+          if [ "${{ env.CURRENT_BRANCH }}" == "main" ]; then
+            echo "${{ env.OPENWRT_TAG }}--main" >> info/${{ env.CURRENT_BRANCH }}/version.txt
+          else
+            echo "${{ env.OPENWRT_TAG }}--dev" >> info/${{ env.CURRENT_BRANCH }}/version.txt
+          fi
           git add .
           git commit -m "Auto Release: v${{ env.DATETIME }}" || echo "No changes to commit"
           git push origin info || echo "Failed to push changes"

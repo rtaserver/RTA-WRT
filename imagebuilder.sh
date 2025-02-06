@@ -279,7 +279,7 @@ download_imagebuilder() {
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
             KERNEL="6.1.66-DBAI"
-            KERNEL2="5.15.y_5.10.y"
+            KERNEL2="5.15.y_5.10.y_6.1.y_6.6.y"
             ;;
         s912) # Amlogic (S912)
             op_target="amlogic"
@@ -290,7 +290,7 @@ download_imagebuilder() {
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
             KERNEL=""
-            KERNEL2="5.15.y_5.10.y"
+            KERNEL2="5.15.y_5.10.y_6.1.y_6.6.y"
             ;;
         rk*) # Rockchip (RK*)
             op_target="rockchip"
@@ -301,7 +301,7 @@ download_imagebuilder() {
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
             KERNEL="5.10.160-rk35v-dbai"
-            KERNEL2="5.15.y_5.10.y"
+            KERNEL2="5.15.y_5.10.y_6.1.y_6.6.y"
             ;;
         bcm2710*) # Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit)
             op_target="bcm2710"
@@ -1166,13 +1166,13 @@ rename_firmware() {
         "-rk3588s-orangepi-5-|Rockchip_OrangePi_5"
         
         # Amlogic
-        "-s905x-|ULO-Amlogic_s905x-NON_MOD_SDCARD"
+        "_amlogic_s912_|OPHUB-Amlogic_s912"
         "_amlogic_s905x_|OPHUB-Amlogic_s905x-NON_MOD_SDCARD-HG680P"
         "_amlogic_s905x-b860h_|OPHUB-Amlogic_s905x-NON_MOD_SDCARD-B860H_v1-v2"
+        "-s905x-|ULO-Amlogic_s905x-NON_MOD_SDCARD"
         "-s905x2-|Amlogic_s905x2"
         "-s905x3-|Amlogic_s905x3"
         "-s905x4-|Amlogic_s905x4"
-        "_amlogic_s912_|Amlogic_s912"
 
         # x86_64
         "x86-64-generic-ext4-combined-efi|X86_64_Generic_Ext4_Combined_EFI"
@@ -1249,18 +1249,17 @@ custom_files
 rebuild_firmware
 case "${op_devices}" in
     s905x)
-        repackwrt --ulo -t "$op_devices" -k "$KERNEL"
         repackwrt --ophub -t "s905x_s905x-b860h" -k "$KERNEL2"
-        # Process HG680P with ULO firmware
-        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*-s905x-*.img.gz")" "ULO" "meson-gxl-s905x-p212.dtb" "HG680P"
-        # Process B860H with ULO firmware
-        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*-s905x-*.img.gz")" "ULO" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         # Process HG680P with OPHUB firmware
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x_k5.10*.img.gz")" "OPHUB" "meson-gxl-s905x-p212.dtb" "HG680P"
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x_k5.15*.img.gz")" "OPHUB" "meson-gxl-s905x-p212.dtb" "HG680P"
+        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x_k6.1*.img.gz")" "OPHUB" "meson-gxl-s905x-p212.dtb" "HG680P"
+        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x_k6.6*.img.gz")" "OPHUB" "meson-gxl-s905x-p212.dtb" "HG680P"
         # Process B860H with OPHUB firmware
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k5.10*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k5.15*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
+        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k6.1*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
+        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k6.6*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         ;;
     s912)
         repackwrt --ophub -t "s912" -k "$KERNEL2"

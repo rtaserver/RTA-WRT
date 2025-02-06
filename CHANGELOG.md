@@ -1,5 +1,9 @@
 # What's New!
 
+**Changelog** (06-02-2025)
+
+- OPHUB Add Kernel 6.x.x
+
 **Changelog** (05-02-2025)
 
 - Add Theme Material3
