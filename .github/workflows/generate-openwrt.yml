@@ -310,7 +310,7 @@ jobs:
 
           git checkout info || git checkout -b info || echo "Failed to checkout info branch"
           
-          mkdir -p info/${{ GITHUB_BRANCH }}
+          mkdir -p info/${{ env.GITHUB_BRANCH }}
           
           echo "${{ steps.changelog.outputs.CHANGELOG }}" >> info/${{ env.GITHUB_BRANCH }}/changelog.txt
           echo "${{ env.RELEASE_TAG }}" >> info/${{ github.ref_name }}/version.txt
