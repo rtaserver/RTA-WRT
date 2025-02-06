@@ -74,8 +74,6 @@ env:
     mkisofs jq python3 python3-pip
   CURRENT_BRANCH: ${{ github.ref_name }}
   OPENWRT_VERSION: ${{ inputs.releases_branch }}
-  OPENWRT_TAG: ${{ steps.openwrttag.outputs.value }} #${{ replace(inputs.releases_branch, ':', '_') }}
-  DATETIME: ${{ steps.datetime.outputs.value }}
 
 jobs:
   prebuild:
@@ -142,14 +140,15 @@ jobs:
 
       - name: Initialize Environment
         run: |
+
           echo "DEVICES=${{ matrix.devices }}" >> $GITHUB_ENV
           echo -e "[\033[94m INFO \033[0m] Building for device: ${{ matrix.devices }}"
           if [ "${{ env.CURRENT_BRANCH }}" == "dev" ]; then
-            sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${{ env.CURRENT_BRANCH }}\"|g" files/usr/share/ucode/luci/template/header.ut
-            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${{ env.OPENWRT_TAG }}--dev\"|g" files/usr/share/ucode/luci/template/header.ut
+            sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${{ needs.prebuild.outputs.openwrttag }}\"|g" files/usr/share/ucode/luci/template/header.ut
+            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${{ needs.prebuild.outputs.openwrttag }}--dev\"|g" files/usr/share/ucode/luci/template/header.ut
           else
             sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${{ env.CURRENT_BRANCH }}\"|g" files/usr/share/ucode/luci/template/header.ut
-            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${{ env.OPENWRT_TAG }}\"|g" files/usr/share/ucode/luci/template/header.ut
+            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${{ needs.prebuild.outputs.openwrttag }}\"|g" files/usr/share/ucode/luci/template/header.ut
           fi
 
       - name: Build Image and Rootfs
@@ -187,8 +186,8 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: imagebuilder/out_firmware/*
-          tag: ${{ env.OPENWRT_TAG }}-${DATETIME}
-          release_name: RTA-WRT - ${{ env.OPENWRT_TAG }}-${DATETIME}
+          tag: ${{ needs.prebuild.outputs.openwrttag }}-${{ needs.prebuild.outputs.datetime }}
+          release_name: RTA-WRT - ${{ needs.prebuild.outputs.openwrttag }}-${{ needs.prebuild.outputs.datetime }}
           overwrite: true
           prerelease: ${{ github.ref_name == 'dev' }}
           promote: ${{ github.ref_name != 'dev' }}
@@ -201,7 +200,7 @@ jobs:
               
               ### 📥 **Download Statistics**
               
-              ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.OPENWRT_TAG }}-${DATETIME}/total?style=for-the-badge&logo=Openwrt)
+              ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ needs.prebuild.outputs.openwrttag }}-${{ needs.prebuild.outputs.datetime }}/total?style=for-the-badge&logo=Openwrt)
               
               ---
               
@@ -316,7 +315,7 @@ jobs:
           mkdir -p info/${{ env.CURRENT_BRANCH }}
 
           echo "${{ needs.build.outputs.CHANGELOG }}" >> info/${{ env.CURRENT_BRANCH }}/changelog.txt
-          echo "${{ env.OPENWRT_TAG }}" >> info/${{ env.CURRENT_BRANCH }}/version.txt
+          echo "${{ needs.prebuild.outputs.openwrttag }}" >> info/${{ env.CURRENT_BRANCH }}/version.txt
 
           git add .
           git commit -m "Auto Release: v${DATE}" || echo "No changes to commit"
