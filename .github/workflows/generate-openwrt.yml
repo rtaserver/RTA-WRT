@@ -263,23 +263,23 @@ jobs:
               ---
 
       - name: Upload to Telegram
-        if: ${{ steps.imagebuilder.outputs.status == 'success' }}
         uses: Ofceab-Studio/telegram-action@1.0.1
         with:
           to: ${{ secrets.CHAT_ID }}
           token: ${{ secrets.BOT_TOKEN }}
           thread_id: 36
+          format: markdown
           message: |
             ================================
             🚀 **RTA-WRT - Update Firmware**
-            Branch: ${{ github.ref_name }}
+            *Branch:* `${{ github.ref_name }}`
             ================================
-
-            ================================
-            📦 **Versi:** ${{ steps.imagebuilder.outputs.version }}
-            📊 **Status:** ${{ steps.imagebuilder.outputs.status }}
-            📈 **Tanggal:** ${{ steps.imagebuilder.outputs.date }}
-            📱 **Device:** ${{ steps.imagebuilder.outputs.devices }}
+            
+            📦 **Versi:** `${{ steps.imagebuilder.outputs.version }}`
+            📊 **Status:** `${{ steps.imagebuilder.outputs.status }}`
+            📈 **Tanggal:** `${{ steps.imagebuilder.outputs.date }}`
+            📱 **Device:** `${{ steps.imagebuilder.outputs.devices }}`
+            
             ================================
 
 
