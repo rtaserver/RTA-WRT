@@ -74,7 +74,7 @@ env:
     mkisofs jq python3 python3-pip
   CURRENT_BRANCH: ${{ github.ref_name }}
   OPENWRT_VERSION: ${{ inputs.releases_branch }}
-  OPENWRT_TAG: ${{ inputs.releases_branch && inputs.releases_branch.replace(':', '_') }}
+  OPENWRT_TAG: ${{ replace(inputs.releases_branch, ':', '_') }}
   DATETIME: ${{ steps.datetime.outputs.value }}
 
 jobs:
