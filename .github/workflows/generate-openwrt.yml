@@ -127,10 +127,12 @@ jobs:
       - name: Initialize Environment
         run: |
           sudo timedatectl set-timezone "$TZ"
+          #===============================================================
           echo "DATETIME=$(date +'%Y%m%d')" >> $GITHUB_ENV
           echo "OPENWRT_VERSION=${{ inputs.releases_branch }}" >> $GITHUB_ENV
           echo "OPENWRT_TAG=${OPENWRT_VERSION/:/_}" >> $GITHUB_ENV
           echo "DEVICES=${{ matrix.devices }}" >> $GITHUB_ENV
+          #===============================================================
           echo -e "[\033[94m INFO \033[0m] Building for device: ${{ matrix.devices }}"
           if [ "${{ env.CURRENT_BRANCH }}" == "dev" ]; then
             sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${{ env.CURRENT_BRANCH }}\"|g" files/usr/share/ucode/luci/template/header.ut
