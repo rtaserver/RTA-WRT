@@ -23,7 +23,7 @@ on:
           - immortalwrt:24.10.0-rc4
           - immortalwrt:23.05.4
       devices:
-        description: "Select device target:"
+        description: "Select device target"
         required: true
         default: "all"
         type: choice
@@ -60,22 +60,22 @@ on:
       notify:
         description: "Notify to Telegram"
         required: true
-        default: "false"
+        default: false
         type: boolean
 
 env:
   TZ: Asia/Jakarta
   IMAGEBUILDER_SH: imagebuilder.sh
   DEBIAN_FRONTEND: noninteractive
-  PYTHON_PACKAGES: "telethon colorama"
+  PYTHON_PACKAGES: telethon colorama
   APT_PACKAGES: >-
     build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git
     gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils
     mkisofs jq python3 python3-pip
   CURRENT_BRANCH: ${{ github.ref_name }}
-  OPENWRT_VERSION: ${{ github.event.inputs.releases_branch }}
-  OPENWRT_TAG: ${{ github.event.inputs.releases_branch.replace(':', '_') }}
-  DATETIME: ${{ steps.set-datetime.outputs.datetime }}
+  OPENWRT_VERSION: ${{ inputs.releases_branch }}
+  OPENWRT_TAG: ${{ inputs.releases_branch && inputs.releases_branch.replace(':', '_') }}
+  DATETIME: ${{ steps.datetime.outputs.value }}
 
 jobs:
   prebuild:
@@ -83,23 +83,24 @@ jobs:
     continue-on-error: true
     name: ${{ inputs.releases_branch }}
     outputs:
-      devices: ${{ steps.set-matrix.outputs.devices }}
+      devices: ${{ steps.matrix.outputs.devices }}
+    
     steps:
       - name: Set DateTime
-        id: set-datetime
+        id: datetime
         run: |
           sudo timedatectl set-timezone "$TZ"
-          echo "datetime=$(date +'%d%m%Y')" >> $GITHUB_OUTPUT
+          echo "value=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
 
-      - name: Set Matrix Run
-        id: set-matrix
+      - name: Configure Build Matrix
+        id: matrix
         run: |
-          if [ "${{ inputs.devices }}" == "all" ]; then
-            DEVICES_LIST='["s905x","s905x2","s905x3","s905x4","s912","h5-orangepi-zeroplus2","h5-orangepi-zeroplus","h5-orangepi-prime","h5-orangepi-pc2","h6-orangepi-lite2","h6-orangepi-1plus","h6-orangepi-3","h6-orangepi-3lts","h616-orangepi-zero2","h618-orangepi-zero2w","h618-orangepi-zero3","rk3566-orangepi-3b","rk3588s-orangepi-5","bcm2710-rpi-3b","bcm2711-rpi-4b","x86-64"]'
+          if [ "${{ inputs.devices }}" = "all" ]; then
+            devices='["s905x","s905x2","s905x3","s905x4","s912","h5-orangepi-zeroplus2","h5-orangepi-zeroplus","h5-orangepi-prime","h5-orangepi-pc2","h6-orangepi-lite2","h6-orangepi-1plus","h6-orangepi-3","h6-orangepi-3lts","h616-orangepi-zero2","h618-orangepi-zero2w","h618-orangepi-zero3","rk3566-orangepi-3b","rk3588s-orangepi-5","bcm2710-rpi-3b","bcm2711-rpi-4b","x86-64"]'
           else
-            DEVICES_LIST="[\"${{ inputs.devices }}\"]"
+            devices="[\"${{ inputs.devices }}\"]"
           fi
-          echo "devices=$DEVICES_LIST" >> $GITHUB_OUTPUT
+          echo "devices=$devices" >> $GITHUB_OUTPUT
 
   build:
     needs: prebuild
