@@ -268,7 +268,7 @@ jobs:
         with:
           to: ${{ secrets.CHAT_ID }}
           token: ${{ secrets.BOT_TOKEN }}
-          thread_id: 46
+          thread_id: 36
           message: |
             ================================
             🚀 **RTA-WRT - Update Firmware**
