@@ -268,27 +268,6 @@ jobs:
               **🚀 Tetap terhubung, nikmati performa maksimal dengan RTA-WRT! 🚀**
               
               ---
-
-      - name: Upload to Telegram
-        if: ${{ inputs.notify == 'true' }}
-        uses: Ofceab-Studio/telegram-action@1.0.1
-        with:
-          to: ${{ secrets.CHAT_ID }}
-          token: ${{ secrets.BOT_TOKEN }}
-          thread_id: 36
-          format: markdown
-          message: |
-            ================================
-            🚀 **RTA-WRT - Update Firmware**
-            *Branch:* `${{ github.ref_name }}`
-            ================================
-            
-            📦 **Versi:** `${{ steps.imagebuilder.outputs.version }}`
-            📊 **Status:** `${{ steps.imagebuilder.outputs.status }}`
-            📈 **Tanggal:** `${{ steps.imagebuilder.outputs.date }}`
-            📱 **Device:** `${{ steps.imagebuilder.outputs.devices }}`
-            
-            ================================
   
   switch:
     runs-on: ubuntu-latest
@@ -308,12 +287,91 @@ jobs:
 
           mkdir -p info/${{ env.CURRENT_BRANCH }}
 
-          echo "${{ needs.build.outputs.CHANGELOG }}" >> info/${{ env.CURRENT_BRANCH }}/changelog.txt
+          echo "${{ needs.build.outputs.CHANGELOG }}" >> ${{ env.CURRENT_BRANCH }}/changelog.txt
           if [ "${{ env.CURRENT_BRANCH }}" == "main" ]; then
-            echo "${{ env.OPENWRT_TAG }}--main" >> info/${{ env.CURRENT_BRANCH }}/version.txt
+            echo "${{ env.OPENWRT_TAG }}--main" >> ${{ env.CURRENT_BRANCH }}/version.txt
           else
-            echo "${{ env.OPENWRT_TAG }}--dev" >> info/${{ env.CURRENT_BRANCH }}/version.txt
+            echo "${{ env.OPENWRT_TAG }}--dev" >> ${{ env.CURRENT_BRANCH }}/version.txt
           fi
           git add .
           git commit -m "Auto Release: v${{ env.DATETIME }}" || echo "No changes to commit"
           git push origin info || echo "Failed to push changes"
+
+      - name: Upload to Telegram If Main
+        if: ${{ inputs.notify == 'true' }} && ${{ github.ref_name == 'main' }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ secrets.CHAT_ID }}" \
+            -d parse_mode="MarkdownV2" \
+            -d message_thread_id="36" \
+            -d text="🎯 *RTA\-WRT Firmware Update*\n\
+✅ _Stable Release_\n\n\
+🔹 *Versi:* \`${{ steps.imagebuilder.outputs.version }}\`\n\
+🔹 *Status:* \`${{ steps.imagebuilder.outputs.status }}\`\n\
+🔹 *Tanggal:* \`${{ steps.imagebuilder.outputs.date }}\`\n\n\
+📌 *Catatan:*\n\
+🔒 Versi stabil dengan peningkatan keamanan dan performa\!\n\
+📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik\!\n\n\
+🔗 [📥 Unduh Firmware](https://github\.com/rizkikotet\-dev/RTA\-WRT/releases) | 📜 [📖 Changelog](https://raw\.githubusercontent\.com/rizkikotet\-dev/RTA\-WRT/refs/heads/info/main/changelog\.txt)"
+
+      - name: Upload to Telegram If Dev
+        if: ${{ inputs.notify == 'true' }} && ${{ github.ref_name == 'dev' }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ secrets.CHAT_ID }}" \
+            -d parse_mode="MarkdownV2" \
+            -d message_thread_id="36" \
+            -d text="🚀 *RTA\-WRT Firmware Update*\n\
+🌟 _Development Release_\n\n\
+🔹 *Versi:* \`${{ steps.imagebuilder.outputs.version }}\`\n\
+🔹 *Status:* \`${{ steps.imagebuilder.outputs.status }}\`\n\
+🔹 *Tanggal:* \`${{ steps.imagebuilder.outputs.date }}\`\n\n\
+📌 *Catatan:*\n\
+🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan\!\n\
+🔄 Selalu gunakan versi terbaru untuk performa terbaik\!\n\n\
+🔗 [📥 Unduh Firmware](https://github\.com/rizkikotet\-dev/RTA\-WRT/releases) | 📜 [📖 Changelog](https://raw\.githubusercontent\.com/rizkikotet\-dev/RTA\-WRT/refs/heads/info/dev/changelog\.txt)"
+
+
+      # - name: Upload to Telegram If Main
+      #   if: ${{ inputs.notify == 'true' }} && ${{ github.ref_name == 'main' }}
+      #   uses: Ofceab-Studio/telegram-action@1.0.1
+      #   with:
+      #     to: ${{ secrets.CHAT_ID }}
+      #     token: ${{ secrets.BOT_TOKEN }}
+      #     thread_id: 36
+      #     format: markdown
+      #     message: |
+      #       🎯 *RTA\-WRT Firmware Update*  
+      #       ✅ _Stable Release_  
+
+      #       🔹 *Versi:* `${{ steps.imagebuilder.outputs.version }}`  
+      #       🔹 *Status:* `${{ steps.imagebuilder.outputs.status }}`  
+      #       🔹 *Tanggal:* `${{ steps.imagebuilder.outputs.date }}`  
+
+      #       📌 *Catatan:*  
+      #       🔒 Versi stabil dengan peningkatan keamanan dan performa\!  
+      #       📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik\!  
+
+      #       🔗 [📥 Unduh Firmware](https://github.com/rizkikotet-dev/RTA-WRT/releases) | 📜 [📖 Changelog](https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/main/changelog.txt)
+
+      # - name: Upload to Telegram If Dev
+      #   if: ${{ inputs.notify == 'true' }} && ${{ github.ref_name == 'dev' }}
+      #   uses: Ofceab-Studio/telegram-action@1.0.1
+      #   with:
+      #     to: ${{ secrets.CHAT_ID }}
+      #     token: ${{ secrets.BOT_TOKEN }}
+      #     thread_id: 36
+      #     format: markdown
+      #     message: |
+      #       🚀 *RTA\-WRT Firmware Update*  
+      #       🌟 _Development Release_  
+
+      #       🔹 *Versi:* `${{ steps.imagebuilder.outputs.version }}`  
+      #       🔹 *Status:* `${{ steps.imagebuilder.outputs.status }}`  
+      #       🔹 *Tanggal:* `${{ steps.imagebuilder.outputs.date }}`   
+
+      #       📌 *Catatan:*  
+      #       🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan\!  
+      #       🔄 Selalu gunakan versi terbaru untuk performa terbaik\!  
+
+      #       🔗 [📥 Unduh Firmware](https://github.com/rizkikotet-dev/RTA-WRT/releases) | 📜 [📖 Changelog](https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/dev/changelog.txt)
