@@ -222,7 +222,7 @@ function saveToLocal(key, value) {
 // ====== Update & Information Check ======
 async function checkForUpdates() {
     const currentBranch = "dev"
-    const currentVersion = "openwrt_24.10.0-05022025";
+    const currentVersion = "openwrt_24.10.0-06022025--dev";
     const lastShownUpdate = localStorage.getItem('mdl_update');
 
     if (lastShownUpdate === TODAY) return;
