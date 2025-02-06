@@ -305,14 +305,14 @@ jobs:
             -d parse_mode="MarkdownV2" \
             -d message_thread_id="36" \
             -d text="🎯 *RTA\-WRT Firmware Update*\n\
-✅ _Stable Release_\n\n\
-🔹 *Versi:* \`${{ steps.imagebuilder.outputs.version }}\`\n\
-🔹 *Status:* \`${{ steps.imagebuilder.outputs.status }}\`\n\
-🔹 *Tanggal:* \`${{ steps.imagebuilder.outputs.date }}\`\n\n\
-📌 *Catatan:*\n\
-🔒 Versi stabil dengan peningkatan keamanan dan performa\!\n\
-📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik\!\n\n\
-🔗 [📥 Unduh Firmware](https://github\.com/rizkikotet\-dev/RTA\-WRT/releases) | 📜 [📖 Changelog](https://raw\.githubusercontent\.com/rizkikotet\-dev/RTA\-WRT/refs/heads/info/main/changelog\.txt)"
+            ✅ _Stable Release_\n\n\
+            🔹 *Versi:* \`${{ steps.imagebuilder.outputs.version }}\`\n\
+            🔹 *Status:* \`${{ steps.imagebuilder.outputs.status }}\`\n\
+            🔹 *Tanggal:* \`${{ steps.imagebuilder.outputs.date }}\`\n\n\
+            📌 *Catatan:*\n\
+            🔒 Versi stabil dengan peningkatan keamanan dan performa\!\n\
+            📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik\!\n\n\
+            🔗 [📥 Unduh Firmware](https://github\.com/rizkikotet\-dev/RTA\-WRT/releases) | 📜 [📖 Changelog](https://raw\.githubusercontent\.com/rizkikotet\-dev/RTA\-WRT/refs/heads/info/main/changelog\.txt)"
 
       - name: Upload to Telegram If Dev
         if: ${{ inputs.notify == 'true' }} && ${{ github.ref_name == 'dev' }}
@@ -322,14 +322,14 @@ jobs:
             -d parse_mode="MarkdownV2" \
             -d message_thread_id="36" \
             -d text="🚀 *RTA\-WRT Firmware Update*\n\
-🌟 _Development Release_\n\n\
-🔹 *Versi:* \`${{ steps.imagebuilder.outputs.version }}\`\n\
-🔹 *Status:* \`${{ steps.imagebuilder.outputs.status }}\`\n\
-🔹 *Tanggal:* \`${{ steps.imagebuilder.outputs.date }}\`\n\n\
-📌 *Catatan:*\n\
-🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan\!\n\
-🔄 Selalu gunakan versi terbaru untuk performa terbaik\!\n\n\
-🔗 [📥 Unduh Firmware](https://github\.com/rizkikotet\-dev/RTA\-WRT/releases) | 📜 [📖 Changelog](https://raw\.githubusercontent\.com/rizkikotet\-dev/RTA\-WRT/refs/heads/info/dev/changelog\.txt)"
+            🌟 _Development Release_\n\n\
+            🔹 *Versi:* \`${{ steps.imagebuilder.outputs.version }}\`\n\
+            🔹 *Status:* \`${{ steps.imagebuilder.outputs.status }}\`\n\
+            🔹 *Tanggal:* \`${{ steps.imagebuilder.outputs.date }}\`\n\n\
+            📌 *Catatan:*\n\
+            🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan\!\n\
+            🔄 Selalu gunakan versi terbaru untuk performa terbaik\!\n\n\
+            🔗 [📥 Unduh Firmware](https://github\.com/rizkikotet\-dev/RTA\-WRT/releases) | 📜 [📖 Changelog](https://raw\.githubusercontent\.com/rizkikotet\-dev/RTA\-WRT/refs/heads/info/dev/changelog\.txt)"
 
 
       # - name: Upload to Telegram If Main
