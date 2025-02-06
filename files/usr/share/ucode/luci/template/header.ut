@@ -163,7 +163,7 @@
 
 <script>
 // ====== Constants ======
-const INFO_URL = 'https://pastebin.com/raw/jZvfS740';
+const INFO_URL = 'https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/informasi.txt';
 const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const TODAY = new Date().toDateString();
 let checkTimer;
@@ -221,16 +221,16 @@ function saveToLocal(key, value) {
 
 // ====== Update & Information Check ======
 async function checkForUpdates() {
-    const currentBranch = "dev"
-    const currentVersion = "openwrt_24.10.0-06022025--dev";
+    const currentBranch = "null"
+    const currentVersion = "null";
     const lastShownUpdate = localStorage.getItem('mdl_update');
 
     if (lastShownUpdate === TODAY) return;
 
     try {
         const [latestVersion, changelogRaw] = await Promise.all([
-            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/${currentBranch}/latestversion.txt'),
-            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/${currentBranch}/CHANGELOG.md')
+            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${currentBranch}/version.txt'),
+            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${currentBranch}/changelog.txt')
         ]);
 
         if (latestVersion && latestVersion.trim() !== currentVersion) {
@@ -258,7 +258,7 @@ async function checkForUpdates() {
                 denyButtonText: '⏳ Nanti',
                 cancelButtonText: '❌ Batal',
                 onConfirm: () => {
-                    window.open('https://github.com/rizkikotet-dev/RTA-WRT/releases/latest', '_blank'),
+                    window.open('https://github.com/rizkikotet-dev/RTA-WRT/releases', '_blank'),
                     saveToLocal('mdl_update', TODAY)
                 },
                 onDenied: () => saveToLocal('mdl_update', TODAY)

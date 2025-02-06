@@ -51,7 +51,6 @@ on:
           - h618-orangepi-zero3
           # Rockchip
           - rk3566-orangepi-3b
-          - rk3588-orangepi-5plus
           - rk3588s-orangepi-5
           # Broadcom
           - bcm2710-rpi-3b
@@ -72,6 +71,7 @@ env:
 jobs:
   prebuild:
     runs-on: ubuntu-latest
+    continue-on-error: true
     name: ${{ inputs.releases_branch }}
     outputs:
       devices: ${{ steps.set-matrix.outputs.devices }}
@@ -80,45 +80,16 @@ jobs:
         id: set-matrix
         run: |
           if [ "${{ inputs.devices }}" == "all" ]; then
-            DEVICES_LIST='["s905x","s905x2","s905x3","s905x4","s912","h5-orangepi-zeroplus2","h5-orangepi-zeroplus","h5-orangepi-prime","h5-orangepi-pc2","h6-orangepi-lite2","h6-orangepi-1plus","h6-orangepi-3","h6-orangepi-3lts","h616-orangepi-zero2","h618-orangepi-zero2w","h618-orangepi-zero3","rk3566-orangepi-3b","rk3588-orangepi-5plus","rk3588s-orangepi-5","bcm2710-rpi-3b","bcm2711-rpi-4b","x86-64"]'
+            DEVICES_LIST='["s905x","s905x2","s905x3","s905x4","s912","h5-orangepi-zeroplus2","h5-orangepi-zeroplus","h5-orangepi-prime","h5-orangepi-pc2","h6-orangepi-lite2","h6-orangepi-1plus","h6-orangepi-3","h6-orangepi-3lts","h616-orangepi-zero2","h618-orangepi-zero2w","h618-orangepi-zero3","rk3566-orangepi-3b","rk3588s-orangepi-5","bcm2710-rpi-3b","bcm2711-rpi-4b","x86-64"]'
           else
             DEVICES_LIST="[\"${{ inputs.devices }}\"]"
           fi
           echo "devices=$DEVICES_LIST" >> $GITHUB_OUTPUT
 
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
-
-      - name: Update Version
-        run: |
-          sudo timedatectl set-timezone "$TZ"
-          DATE=$(date +'%d%m%Y')
-          RELEASE_BRANCH="${{ inputs.releases_branch }}"
-          RELEASE_TAG="${RELEASE_BRANCH/:/_}-${DATE}"
-          BRANCH_NAME="${{ github.ref_name }}"
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
-          git config user.name 'github-actions[bot]' || echo 'Failed to set git user name'
-          git config user.email 'github-actions[bot]@users.noreply.github.com' || echo 'Failed to set git user email'
-          
-          if [ "${BRANCH_NAME}" == "dev" ]; then
-            sed -i "s|.*|${RELEASE_TAG}--dev|g" devversion.txt
-            sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${BRANCH_NAME}\"|g" files/usr/share/ucode/luci/template/header.ut
-            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${RELEASE_TAG}--dev\"|g" files/usr/share/ucode/luci/template/header.ut
-          else
-            sed -i "s|.*|${RELEASE_TAG}|g" latestversion.txt
-            sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${BRANCH_NAME}\"|g" files/usr/share/ucode/luci/template/header.ut
-            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${RELEASE_TAG}\"|g" files/usr/share/ucode/luci/template/header.ut
-          fi
-          
-          git add . || echo 'Failed to add changes'
-          git commit -m "Auto Release: v${DATE}" || echo 'Failed to commit changes'
-          git push || echo 'Failed to push changes'
-
   build:
     needs: prebuild
     runs-on: ubuntu-24.04
+    continue-on-error: true
     if: ${{ github.event.repository.owner.id == github.event.sender.id }}
     name: "${{ matrix.devices }}"
     strategy:
@@ -153,11 +124,20 @@ jobs:
           sudo timedatectl set-timezone "$TZ"
           RELEASE_BRANCH="${{ inputs.releases_branch }}"
           RELEASE_TAG="${RELEASE_BRANCH/:/_}"
+          GITHUB_BRANCH="${{ github.ref_name }}"
           echo "RELEASE_BRANCH=${RELEASE_BRANCH}" >> $GITHUB_ENV
           echo "RELEASE_TAG=${RELEASE_TAG}" >> $GITHUB_ENV
+          echo "GITHUB_BRANCH=${GITHUB_BRANCH}" >> $GITHUB_ENV
           echo "DEVICES=${{ matrix.devices }}" >> $GITHUB_ENV
           echo "DATE=$(date +'%d%m%Y')" >> $GITHUB_ENV
           echo -e "[\033[94m INFO \033[0m] Building for device: ${{ matrix.devices }}"
+          if [ "${GITHUB_BRANCH}" == "dev" ]; then
+            sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${GITHUB_BRANCH}\"|g" files/usr/share/ucode/luci/template/header.ut
+            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${RELEASE_TAG}--dev\"|g" files/usr/share/ucode/luci/template/header.ut
+          else
+            sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${GITHUB_BRANCH}\"|g" files/usr/share/ucode/luci/template/header.ut
+            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${RELEASE_TAG}\"|g" files/usr/share/ucode/luci/template/header.ut
+          fi
 
       - name: Build Image and Rootfs
         id: imagebuilder
@@ -166,11 +146,16 @@ jobs:
           chmod +x ${IMAGEBUILDER_SH}
           if sudo bash ${IMAGEBUILDER_SH} ${{ env.RELEASE_BRANCH }} "${{ env.DEVICES }}"; then
             echo "status=success" >> $GITHUB_OUTPUT
+            echo "date=$(date +'%d-%m-%Y')" >> $GITHUB_OUTPUT
+            echo "version=${{ env.RELEASE_BRANCH }}" >> $GITHUB_OUTPUT
+            echo "devices=${{ matrix.devices }}" >> $GITHUB_OUTPUT
             echo -e "[\033[92m SUCCESS \033[0m] Build completed successfully"
           else
             echo "status=failed" >> $GITHUB_OUTPUT
+            echo "date=$(date +'%d-%m-%Y')" >> $GITHUB_OUTPUT
+            echo "version=${{ env.RELEASE_BRANCH }}" >> $GITHUB_OUTPUT
+            echo "devices=${{ matrix.devices }}" >> $GITHUB_OUTPUT
             echo -e "[\033[91m ERROR \033[0m] Build failed"
-            exit 1
           fi
 
       - name: Clean Build Space
@@ -275,4 +260,61 @@ jobs:
               
               **🚀 Tetap terhubung, nikmati performa maksimal dengan RTA-WRT! 🚀**
               
-              ---   
+              ---
+
+      - name: Upload to Telegram
+        if: ${{ steps.imagebuilder.outputs.status == 'success' }}
+        uses: Ofceab-Studio/telegram-action@1.0.1
+        with:
+          to: ${{ secrets.CHAT_ID }}
+          token: ${{ secrets.BOT_TOKEN }}
+          thread_id: 46
+          message: |
+            ================================
+            🚀 **RTA-WRT - Update Firmware**
+            Branch: ${{ github.ref_name }}
+            ================================
+
+            ================================
+            📦 **Versi:** ${{ steps.imagebuilder.outputs.version }}
+            📊 **Status:** ${{ steps.imagebuilder.outputs.status }}
+            📈 **Tanggal:** ${{ steps.imagebuilder.outputs.date }}
+            📱 **Device:** ${{ steps.imagebuilder.outputs.devices }}
+            ================================
+
+
+      - name: Update Branch
+        timeout-minutes: 5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sudo timedatectl set-timezone "$TZ"
+          DATE=$(date +'%d%m%Y')
+          RELEASE_BRANCH="${{ inputs.releases_branch }}"
+          RELEASE_TAG="${RELEASE_BRANCH/:/_}-${DATE}"
+          BRANCH_NAME="${{ github.ref_name }}"
+
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+          
+          git checkout info || {
+            echo "Failed to checkout info branch"
+            exit 1
+          }
+          
+          mkdir -p info/${{ github.ref_name }}
+          
+          echo "${{ steps.changelog.outputs.CHANGELOG }}" >> info/${{ github.ref_name }}/changelog.txt
+          echo "${{ env.RELEASE_TAG }}" >> info/${{ github.ref_name }}/version.txt
+          
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          
+          git add . && \
+          git commit -m "Auto Release: v${DATE}" && \
+          git push || {
+            echo "Failed to push changes"
+            exit 1
+          }
