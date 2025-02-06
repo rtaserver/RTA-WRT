@@ -15,7 +15,7 @@ on:
       releases_branch:
         description: "Select the releases branch"
         required: true
-        default: "openwrt:23.05.5"
+        default: "openwrt:24.10.0"
         type: choice
         options:
           - openwrt:24.10.0
@@ -103,10 +103,14 @@ jobs:
           DATE=$(date +'%d%m%Y')
           RELEASE_BRANCH="${{ inputs.releases_branch }}"
           RELEASE_TAG="${RELEASE_BRANCH/:/_}-${DATE}"
-          sed -i "s|.*|${RELEASE_TAG}|g" latestversion.txt
-          sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${RELEASE_TAG}\"|g" files/usr/share/ucode/luci/template/header.ut
           git config user.name 'github-actions[bot]' || echo 'Failed to set git user name'
           git config user.email 'github-actions[bot]@users.noreply.github.com' || echo 'Failed to set git user email'
+          if [ {{ inputs.prerelease }} == true ]; then
+            echo "Prerelease: $RELEASE_TAG"
+          else
+            sed -i "s|.*|${RELEASE_TAG}|g" latestversion.txt
+            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${RELEASE_TAG}\"|g" files/usr/share/ucode/luci/template/header.ut
+          fi
           git add . || echo 'Failed to add changes'
           git commit -m "Auto Release: v${DATE}" || echo 'Failed to commit changes'
           git push || echo 'Failed to push changes'
