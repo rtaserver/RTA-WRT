@@ -246,7 +246,7 @@ async function checkForUpdates() {
                         <img alt="Current Version" width="155" height="30" src="https://img.shields.io/badge/${currentVersion}-x?style=for-the-badge&logo=openwrt&color=blue">
                         <img alt="Latest Version" width="155" height="30" src="https://img.shields.io/badge/${latestVersion}-x?style=for-the-badge&logo=openwrt&color=green">
                         <div class="changelog" style="margin-top: 15px; text-align: left;">
-                            <h4 style="color: #007BFF;">📋 Changelog:</h4>
+                            <h4 style="color: #007BFF; background-color: #FFFFFF;">📋 Changelog:</h4>
                             <div>${changelogFormatted}</div>
                         </div>
                     </div>
@@ -256,7 +256,10 @@ async function checkForUpdates() {
                 confirmButtonText: '🔄 Update',
                 denyButtonText: '⏳ Nanti',
                 cancelButtonText: '❌ Batal',
-                onConfirm: () => window.location.href = 'https://github.com/rizkikotet-dev/RTA-WRT/releases/latest',
+                onConfirm: () => {
+                    window.open('https://github.com/rizkikotet-dev/RTA-WRT/releases/latest', '_blank'),
+                    saveToLocal('mdl_update', TODAY)
+                },
                 onDenied: () => saveToLocal('mdl_update', TODAY)
             });
         }
@@ -314,6 +317,7 @@ function showDailyModal() {
     if (lastShownSaweria !== TODAY) {
         enqueueAlert({
             title: "🚀 Welcome To RTA-WRT",
+            width: 400,
             imageUrl: "{{ resource }}/Saweria.png",
             imageWidth: 200,
             imageHeight: 200,
