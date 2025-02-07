@@ -3,6 +3,8 @@
 **Changelog** (07-02-2025)
 
 - OPHUB Add Kernel 6.x.x
+- Add Source Packages By openwrt.ai
+- Use Deafult Font Terminal
 
 **Changelog** (05-02-2025)
 
