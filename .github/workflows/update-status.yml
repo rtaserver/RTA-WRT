@@ -14,6 +14,8 @@ jobs:
           GROUP_ID: ${{ secrets.CHAT_ID }}
           TOPIC_ID: 616
         run: |
+          device_statuses=$(echo '${{ github.event.client_payload.device_statuses }}' | jq -r 'to_entries | .[] | "\(.key)|\(.value)"')
+          
           MESSAGE="=======================%0A"
           MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
           MESSAGE+="=======================%0A"
@@ -22,7 +24,11 @@ jobs:
           MESSAGE+="📅 *Tanggal*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
           MESSAGE+="-----------------------%0A"
           MESSAGE+="📋 *Device List*%0A"
-          MESSAGE+="🔹 ${{ github.event.client_payload.device }} | ${{ github.event.client_payload.status }}%0A"
+          
+          while IFS='|' read -r device status; do
+            MESSAGE+="🔹 $device | $status%0A"
+          done <<< "$device_statuses"
+          
           MESSAGE+="======================="
           
           curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
@@ -34,6 +40,7 @@ jobs:
 
       - name: Update Final Status
         if: always()
+        continue-on-error: true
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

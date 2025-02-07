@@ -133,18 +133,39 @@ jobs:
           echo "openwrt_tag=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')" >> $GITHUB_ENV
 
       - name: Update Building Status
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: update-build-status
-          client-payload: |
-            {
-              "message_id": "${{ needs.prepare.outputs.message_id }}",
-              "device": "${{ matrix.device }}",
-              "status": "🏗️ Building...",
-              "releases_branch": "${{ inputs.releases_branch }}",
-              "ref_name": "${{ github.ref_name }}"
-            }
+        run: |
+          DEVICES=${{ needs.prepare.outputs.devices }}
+          CURRENT_DEVICE=${{ matrix.device }}
+          STATUS_JSON=$(echo $DEVICES | jq -c 'reduce .[] as $item ({};
+            . + { ($item): "⏳ Pending" }
+          )' | jq -c '. + { "'$CURRENT_DEVICE'": "🏗️ Building..." }')
+          
+          curl -X POST https://api.github.com/repos/${{ github.repository }}/dispatches \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d '{
+              "event_type": "update-build-status",
+              "client_payload": {
+                "message_id": "${{ needs.prepare.outputs.message_id }}",
+                "device_statuses": '"$STATUS_JSON"',
+                "releases_branch": "${{ inputs.releases_branch }}",
+                "ref_name": "${{ github.ref_name }}"
+              }
+            }'
+
+
+      # - name: Update Building Status
+      #   uses: peter-evans/repository-dispatch@v2
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     event-type: update-build-status
+      #     client-payload: |
+      #       {
+      #         "message_id": "${{ needs.prepare.outputs.message_id }}",
+      #         "device_statuses": ${{ toJSON(fromJSON(needs.prepare.outputs.devices) | map({ "key": ., "value": "⏳ Pending" }) | from_entries | merge({ (matrix.device): "🏗️ Building..." })) }},
+      #         "releases_branch": "${{ inputs.releases_branch }}",
+      #         "ref_name": "${{ github.ref_name }}"
+      #       }
 
       - name: Build Image
         id: build
@@ -158,18 +179,40 @@ jobs:
 
       - name: Update Final Status
         if: always()
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: update-build-status
-          client-payload: |
-            {
-              "message_id": "${{ needs.prepare.outputs.message_id }}",
-              "device": "${{ matrix.device }}",
-              "status": "${{ steps.build.outputs.status }}",
-              "releases_branch": "${{ inputs.releases_branch }}",
-              "ref_name": "${{ github.ref_name }}"
-            }
+        run: |
+          DEVICES=${{ needs.prepare.outputs.devices }}
+          CURRENT_DEVICE=${{ matrix.device }}
+          BUILD_STATUS="${{ steps.build.outputs.status }}"
+          STATUS_JSON=$(echo $DEVICES | jq -c 'reduce .[] as $item ({};
+            . + { ($item): "⏳ Pending" }
+          )' | jq -c '. + { "'$CURRENT_DEVICE'": "'$BUILD_STATUS'" }')
+          
+          curl -X POST https://api.github.com/repos/${{ github.repository }}/dispatches \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d '{
+              "event_type": "update-build-status",
+              "client_payload": {
+                "message_id": "${{ needs.prepare.outputs.message_id }}",
+                "device_statuses": '"$STATUS_JSON"',
+                "releases_branch": "${{ inputs.releases_branch }}",
+                "ref_name": "${{ github.ref_name }}"
+              }
+            }'
+
+      # - name: Update Final Status
+      #   if: always()
+      #   uses: peter-evans/repository-dispatch@v2
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     event-type: update-build-status
+      #     client-payload: |
+      #       {
+      #         "message_id": "${{ needs.prepare.outputs.message_id }}",
+      #         "device_statuses": ${{ toJSON(fromJSON(needs.prepare.outputs.devices) | map({ "key": ., "value": "⏳ Pending" }) | from_entries | merge({ (matrix.device): steps.build.outputs.status })) }},
+      #         "releases_branch": "${{ inputs.releases_branch }}",
+      #         "ref_name": "${{ github.ref_name }}"
+      #       }
 
       - name: Upload to Release
         if: ${{ steps.imagebuilder.outputs.status == '✅ Sukses' }}
@@ -266,14 +309,6 @@ jobs:
             **🚀 Tetap terhubung, nikmati performa maksimal dengan RTA-WRT! 🚀**
                 
             ---
-
-      - name: Delete workflow runs
-        uses: Mattraks/delete-workflow-runs@v2.0.6
-        with:
-          token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          retain_days: 0
-          keep_minimum_runs: 0
 
   opsional:
     needs: build
@@ -390,6 +425,8 @@ jobs:
           fi
 
       - name: Delete workflow runs
+        if: always()
+        continue-on-error: true
         uses: Mattraks/delete-workflow-runs@v2.0.6
         with:
           token: ${{ github.token }}
