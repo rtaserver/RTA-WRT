@@ -34,7 +34,6 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
             -d chat_id=$GROUP_ID \
             -d message_id=${{ github.event.client_payload.message_id }} \
-            # -d message_thread_id=$TOPIC_ID \
             -d parse_mode=Markdown \
             -d text="$MESSAGE"
 
