@@ -53,8 +53,6 @@ env:
   DEBIAN_FRONTEND: noninteractive
   APT_PACKAGES: build-essential libncurses5-dev zlib1g-dev gawk git gettext libssl-dev rsync wget unzip tar gzip qemu-utils mkisofs jq python3 python3-pip
   CURRENT_BRANCH: ${{ github.ref_name }}
-  OPENWRT_VERSION_1: ${{ inputs.releases_branch }}
-  OPENWRT_VERSION_2: $(echo "${{ inputs.releases_branch }}" | tr ':' '_')
 
 jobs:
   prebuild:
