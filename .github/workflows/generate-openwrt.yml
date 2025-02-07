@@ -264,36 +264,6 @@ jobs:
             **🚀 Tetap terhubung, nikmati performa maksimal dengan RTA-WRT! 🚀**
                 
             ---
-    
-  update-status:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Update Telegram Message
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          GROUP_ID: ${{ secrets.CHAT_ID }}
-        run: |
-          on:
-            repository_dispatch:
-              types: [update-build-status]
-          
-          MESSAGE="=======================%0A"
-          MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
-          MESSAGE+="=======================%0A"
-          MESSAGE+="📌 *Versi*: ${{ github.event.client_payload.releases_branch }}%0A"
-          MESSAGE+="🌿 *Branch*: ${{ github.event.client_payload.ref_name }}%0A"
-          MESSAGE+="📅 *Tanggal*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
-          MESSAGE+="-----------------------%0A"
-          MESSAGE+="📋 *Device List*%0A"
-          MESSAGE+="🔹 ${{ github.event.client_payload.device }} | ${{ github.event.client_payload.status }}%0A"
-          MESSAGE+="======================="
-          
-          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
-            -d chat_id=$GROUP_ID \
-            -d message_id=${{ github.event.client_payload.message_id }} \
-            -d message_thread_id=616 \
-            -d parse_mode=Markdown \
-            -d text="$MESSAGE"
 
   opsional:
     needs: build
