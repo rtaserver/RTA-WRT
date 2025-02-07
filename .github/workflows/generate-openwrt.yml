@@ -256,6 +256,17 @@ jobs:
           echo "openwrt_version=${{ inputs.releases_branch }}" >> $GITHUB_ENV
           echo "openwrt_tag=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')" >> $GITHUB_ENV
 
+      - name: Update Branch Info
+        id: update
+        run: |
+          echo "${{ steps.changelog.outputs.changelog }}" > ${CURRENT_BRANCH}/changelog.txt
+          echo "${{ env.openwrt_tag }}--$( [ "$CURRENT_BRANCH" == "main" ] && echo "main" || echo "dev" )" > $CURRENT_BRANCH/version.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add . || echo "No files to commit"
+          git commit -m "Auto Release: v${{ env.openwrt_version }}" || echo "No changes to commit"
+          git push || echo "Error pushing to GitHub"
+
       - name: Notify Telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
