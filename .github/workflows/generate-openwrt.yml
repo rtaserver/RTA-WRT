@@ -230,7 +230,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          ref: info
+          ref: ${{ github.ref_name }}
 
       - name: Install Dependencies
         run: |
@@ -246,6 +246,11 @@ jobs:
           r="${r//$'\n'/'%0A'}"
           r="${r//$'\r'/'%0D'}"
           echo "changelog=$r" >> $GITHUB_OUTPUT
+
+      - name: Change Branch
+        uses: actions/checkout@v4
+        with:
+          ref: info
 
       - name: Setup Environment
         id: environment
