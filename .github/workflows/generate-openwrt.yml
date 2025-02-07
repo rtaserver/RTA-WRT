@@ -120,13 +120,31 @@ jobs:
           echo "Building for ${{ matrix.devices }}"
           chmod +x ${IMAGEBUILDER_SH}
           if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.devices }}"; then
-            echo "status=success" >> $GITHUB_OUTPUT
+            echo "status=Sukses" >> $GITHUB_OUTPUT
           else
-            echo "status=failed" >> $GITHUB_OUTPUT
+            echo "status=Gagal" >> $GITHUB_OUTPUT
           fi
 
+      - name: Notif Action Build
+        uses: Ofceab-Studio/telegram-action@1.0.1
+        id: notif
+        with:
+          to: ${{ secrets.CHAT_ID }}
+          thread_id: 616
+          token: ${{ secrets.BOT_TOKEN }}
+          message: |
+            ==========================
+                    RTA-WRT | Build Status
+            ==========================
+            Status: ${{ steps.imagebuilder.outputs.status }}
+            Versi: ${{ env.openwrt_version }}
+            Branch: ${{ github.ref_name }}
+            Device: ${{ matrix.devices }}
+            ==========================
+
+
       - name: Upload to Release
-        if: ${{ steps.imagebuilder.outputs.status == 'success' }}
+        if: ${{ steps.imagebuilder.outputs.status == 'Sukses' }}
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
