@@ -80,8 +80,14 @@ jobs:
     name: ${{ inputs.releases_branch }}
     outputs:
       devices: ${{ steps.matrix.outputs.devices }}
-    
+      changelog: ${{ steps.changelog.outputs.changelog }}
+      datetime: ${{ steps.environment.outputs.datetime }}
+      openwrt_version: ${{ steps.environment.outputs.openwrt_version }}
+      openwrt_tag: ${{ steps.environment.outputs.openwrt_tag }}
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
       - name: Configure Build Matrix
         id: matrix
         run: |
@@ -92,6 +98,26 @@ jobs:
           fi
           echo "devices=$devices" >> $GITHUB_OUTPUT
 
+      - name: Add changelog info
+        id: changelog
+        run: |
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
+          r="${r//'%'/'%25'}"
+          r="${r//$'\n'/'%0A'}"
+          r="${r//$'\r'/'%0D'}"
+          echo "changelog=$r" >> $GITHUB_OUTPUT
+
+      - name: Setup Environment
+        id: environment
+        run: |
+          sudo timedatectl set-timezone "$TZ"
+          DATETIME=$(date +'%Y%m%d')
+          echo "datetime=${DATETIME}" >> $GITHUB_OUTPUT
+          OPENWRT_VERSION=${{ inputs.releases_branch }}
+          echo "openwrt_version=${OPENWRT_VERSION}" >> $GITHUB_OUTPUT
+          OPENWRT_TAG=${OPENWRT_VERSION/:/_}
+          echo "openwrt_tag=${OPENWRT_TAG}" >> $GITHUB_OUTPUT
+
   build:
     needs: prebuild
     runs-on: ubuntu-24.04
@@ -101,22 +127,10 @@ jobs:
       fail-fast: false
       matrix:
         devices: ${{fromJSON(needs.prebuild.outputs.devices)}}
-
+    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
-
-      - name: Add changelog info to new release description
-        id: changelog
-        shell: bash
-        run: |
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
-          r="${r//'%'/'%25'}"
-          r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"
-          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
 
       - name: Install Required Packages
         run: |
@@ -125,45 +139,38 @@ jobs:
           pip install ${{ env.PYTHON_PACKAGES }}
 
       - name: Initialize Environment
+        env:
+          DEVICES: ${{ matrix.devices }}
         run: |
-          sudo timedatectl set-timezone "$TZ"
-          #===============================================================
-          DATETIME=$(date +'%Y%m%d')
-          echo "DATETIME=${DATETIME}" >> $GITHUB_ENV
-          OPENWRT_VERSION=${{ inputs.releases_branch }}
-          echo "OPENWRT_VERSION=${OPENWRT_VERSION}" >> $GITHUB_ENV
-          OPENWRT_TAG=${OPENWRT_VERSION/:/_}
-          echo "OPENWRT_TAG=${OPENWRT_TAG}" >> $GITHUB_ENV
-          DEVICES=${{ matrix.devices }}
-          echo "DEVICES=${DEVICES}" >> $GITHUB_ENV
-          #===============================================================
-          echo -e "[\033[94m INFO \033[0m] Building for device: ${{ matrix.devices }}"
+          echo -e "[\033[94m INFO \033[0m] Building for device: $DEVICES"
           if [ "${{ env.CURRENT_BRANCH }}" == "dev" ]; then
             sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${{ env.CURRENT_BRANCH }}\"|g" files/usr/share/ucode/luci/template/header.ut
-            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${{ env.OPENWRT_TAG }}--dev\"|g" files/usr/share/ucode/luci/template/header.ut
+            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${{ needs.prebuild.outputs.openwrt_tag }}--dev\"|g" files/usr/share/ucode/luci/template/header.ut
           else
             sed -i "s|const currentBranch = \".*\"|const currentBranch = \"${{ env.CURRENT_BRANCH }}\"|g" files/usr/share/ucode/luci/template/header.ut
-            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${{ env.OPENWRT_TAG }}--main\"|g" files/usr/share/ucode/luci/template/header.ut
+            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${{ needs.prebuild.outputs.openwrt_tag }}--main\"|g" files/usr/share/ucode/luci/template/header.ut
           fi
 
       - name: Build Image and Rootfs
         id: imagebuilder
-        continue-on-error: true
+        env:
+          DEVICES: ${{ matrix.devices }}
         run: |
           echo -e "[\033[95m STEPS \033[0m] Starting firmware and rootfs build"
           chmod +x ${IMAGEBUILDER_SH}
-          if sudo bash ${IMAGEBUILDER_SH} ${{ env.OPENWRT_VERSION }} "${{ env.DEVICES }}"; then
+          if sudo bash ${IMAGEBUILDER_SH} ${{ needs.prebuild.outputs.openwrt_version }} "$DEVICES"; then
             echo "status=success" >> $GITHUB_OUTPUT
             echo "date=$(date +'%d-%m-%Y')" >> $GITHUB_OUTPUT
-            echo "version=${{ env.OPENWRT_VERSION }}" >> $GITHUB_OUTPUT
-            echo "devices=${{ matrix.devices }}" >> $GITHUB_OUTPUT
+            echo "version=${{ needs.prebuild.outputs.openwrt_version }}" >> $GITHUB_OUTPUT
+            echo "devices=$DEVICES" >> $GITHUB_OUTPUT
             echo -e "[\033[92m SUCCESS \033[0m] Build completed successfully"
           else
             echo "status=failed" >> $GITHUB_OUTPUT
             echo "date=$(date +'%d-%m-%Y')" >> $GITHUB_OUTPUT
-            echo "version=${{ env.OPENWRT_VERSION }}" >> $GITHUB_OUTPUT
-            echo "devices=${{ matrix.devices }}" >> $GITHUB_OUTPUT
+            echo "version=${{ needs.prebuild.outputs.openwrt_version }}" >> $GITHUB_OUTPUT
+            echo "devices=$DEVICES" >> $GITHUB_OUTPUT
             echo -e "[\033[91m ERROR \033[0m] Build failed"
+            exit 1
           fi
 
       - name: Clean Build Space
@@ -180,8 +187,8 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: imagebuilder/out_firmware/*
-          tag: ${{ env.OPENWRT_TAG }}-${{ env.DATETIME }}
-          release_name: RTA-WRT - ${{ env.OPENWRT_TAG }}-${{ env.DATETIME }}
+          tag: ${{ needs.prebuild.outputs.openwrt_tag }}-${{ needs.prebuild.outputs.datetime }}
+          release_name: RTA-WRT - ${{ needs.prebuild.outputs.openwrt_tag }}-${{ needs.prebuild.outputs.datetime }}
           overwrite: true
           prerelease: ${{ github.ref_name == 'dev' }}
           promote: ${{ github.ref_name != 'dev' }}
@@ -194,7 +201,7 @@ jobs:
               
               ### 📥 **Download Statistics**
               
-              ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.OPENWRT_TAG }}-${{ env.DATETIME }}/total?style=for-the-badge&logo=Openwrt)
+              ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ needs.prebuild.outputs.openwrt_tag }}-${{ needs.prebuild.outputs.datetime }}/total?style=for-the-badge&logo=Openwrt)
               
               ---
               
@@ -208,7 +215,7 @@ jobs:
               
               ### 📝 **Changelog**
 
-               ${{ steps.changelog.outputs.CHANGELOG }}
+               ${{ needs.prebuild.outputs.changelog }}
               
               ---
               
@@ -268,37 +275,39 @@ jobs:
               **🚀 Tetap terhubung, nikmati performa maksimal dengan RTA-WRT! 🚀**
               
               ---
-  
+
+                
+
   switch:
     runs-on: ubuntu-latest
     needs: build
+    continue-on-error: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           ref: info
 
-      - name: Update Branch
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Environment Setup
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions@github.com"
 
+      - name: Update Branch
+        run: |
           mkdir -p info/${{ env.CURRENT_BRANCH }}
-
-          echo "${{ needs.build.outputs.CHANGELOG }}" >> ${{ env.CURRENT_BRANCH }}/changelog.txt
+          echo "${{ needs.prebuild.outputs.changelog }}" > info/${{ env.CURRENT_BRANCH }}/changelog.txt
           if [ "${{ env.CURRENT_BRANCH }}" == "main" ]; then
-            echo "${{ env.OPENWRT_TAG }}--main" >> ${{ env.CURRENT_BRANCH }}/version.txt
+            echo "${{ needs.prebuild.outputs.openwrt_tag }}--main" > info/${{ env.CURRENT_BRANCH }}/version.txt
           else
-            echo "${{ env.OPENWRT_TAG }}--dev" >> ${{ env.CURRENT_BRANCH }}/version.txt
+            echo "${{ needs.prebuild.outputs.openwrt_tag }}--dev" > info/${{ env.CURRENT_BRANCH }}/version.txt
           fi
           git add .
-          git commit -m "Auto Release: v${{ env.DATETIME }}" || echo "No changes to commit"
+          git commit -m "Auto Release: v${{ needs.prebuild.outputs.datetime }}" || echo "No changes to commit"
           git push origin info || echo "Failed to push changes"
 
       - name: Upload to Telegram If Main
-        if: ${{ inputs.notify == 'true' }} && ${{ github.ref_name == 'main' }}
+        if: ${{ inputs.notify == 'true' && env.CURRENT_BRANCH == 'main' }}
         uses: Ofceab-Studio/telegram-action@1.0.1
         with:
           to: ${{ secrets.CHAT_ID }}
@@ -309,9 +318,9 @@ jobs:
             🎯 *RTA\-WRT Firmware Update*  
             ✅ _Stable Release_  
 
-            🔹 *Versi:* \`${{ steps.imagebuilder.outputs.version }}\`  
-            🔹 *Status:* \`${{ steps.imagebuilder.outputs.status }}\`  
-            🔹 *Tanggal:* \`${{ steps.imagebuilder.outputs.date }}\`  
+            🔹 *Versi:* \`${{ needs.build.outputs.version }}\`  
+            🔹 *Status:* \`${{ needs.build.outputs.status }}\`  
+            🔹 *Tanggal:* \`${{ needs.build.outputs.date }}\`  
 
             📌 *Catatan:*  
             🔒 Versi stabil dengan peningkatan keamanan dan performa\!  
@@ -320,7 +329,7 @@ jobs:
             🔗 [📥 Unduh Firmware](https://github\.com/rizkikotet\-dev/RTA\-WRT/releases) | 📜 [📖 Changelog](https://raw\.githubusercontent\.com/rizkikotet\-dev/RTA\-WRT/refs/heads/info/main/changelog\.txt)
 
       - name: Upload to Telegram If Dev
-        if: ${{ inputs.notify == 'true' }} && ${{ github.ref_name == 'dev' }}
+        if: ${{ inputs.notify == 'true' && env.CURRENT_BRANCH == 'dev' }}
         uses: Ofceab-Studio/telegram-action@1.0.1
         with:
           to: ${{ secrets.CHAT_ID }}
@@ -331,9 +340,9 @@ jobs:
             🚀 *RTA\-WRT Firmware Update*  
             🌟 _Development Release_  
 
-            🔹 *Versi:* \`${{ steps.imagebuilder.outputs.version }}\`  
-            🔹 *Status:* \`${{ steps.imagebuilder.outputs.status }}\`  
-            🔹 *Tanggal:* \`${{ steps.imagebuilder.outputs.date }}\`  
+            🔹 *Versi:* \`${{ needs.build.outputs.version }}\`  
+            🔹 *Status:* \`${{ needs.build.outputs.status }}\`  
+            🔹 *Tanggal:* \`${{ needs.build.outputs.date }}\`  
 
             📌 *Catatan:*  
             🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan\!  

@@ -1149,30 +1149,30 @@ rename_firmware() {
         "-bcm27xx-bcm2711-rpi-4-squashfs-sysupgrade|Broadcom_RaspberryPi_4B-Squashfs_Sysupgrade"
         
         # Allwinner
-        "-h5-orangepi-pc2-|Allwinner_OrangePi_PC2"
-        "-h5-orangepi-prime-|Allwinner_OrangePi_Prime"
-        "-h5-orangepi-zeroplus-|Allwinner_OrangePi_ZeroPlus"
-        "-h5-orangepi-zeroplus2-|Allwinner_OrangePi_ZeroPlus2"
-        "-h6-orangepi-1plus-|Allwinner_OrangePi_1Plus"
-        "-h6-orangepi-3-|Allwinner_OrangePi_3"
-        "-h6-orangepi-3lts-|Allwinner_OrangePi_3LTS"
-        "-h6-orangepi-lite2-|Allwinner_OrangePi_Lite2"
-        "-h616-orangepi-zero2-|Allwinner_OrangePi_Zero2"
-        "-h618-orangepi-zero2w-|Allwinner_OrangePi_Zero2W"
-        "-h618-orangepi-zero3-|Allwinner_OrangePi_Zero3"
+        "-h5-orangepi-pc2-|ULO-Allwinner_OrangePi_PC2"
+        "-h5-orangepi-prime-|ULO-Allwinner_OrangePi_Prime"
+        "-h5-orangepi-zeroplus-|ULO-Allwinner_OrangePi_ZeroPlus"
+        "-h5-orangepi-zeroplus2-|ULO-Allwinner_OrangePi_ZeroPlus2"
+        "-h6-orangepi-1plus-|ULO-Allwinner_OrangePi_1Plus"
+        "-h6-orangepi-3-|ULO-Allwinner_OrangePi_3"
+        "-h6-orangepi-3lts-|ULO-Allwinner_OrangePi_3LTS"
+        "-h6-orangepi-lite2-|ULO-Allwinner_OrangePi_Lite2"
+        "-h616-orangepi-zero2-|ULO-Allwinner_OrangePi_Zero2"
+        "-h618-orangepi-zero2w-|ULO-Allwinner_OrangePi_Zero2W"
+        "-h618-orangepi-zero3-|ULO-Allwinner_OrangePi_Zero3"
         
         # Rockchip
-        "-rk3566-orangepi-3b-|Rockchip_OrangePi_3B"
-        "-rk3588s-orangepi-5-|Rockchip_OrangePi_5"
+        "-rk3566-orangepi-3b-|ULO-Rockchip_OrangePi_3B"
+        "-rk3588s-orangepi-5-|ULO-Rockchip_OrangePi_5"
         
         # Amlogic
         "_amlogic_s912_|OPHUB-Amlogic_s912"
         "_amlogic_s905x_|OPHUB-Amlogic_s905x-NON_MOD_SDCARD-HG680P"
         "_amlogic_s905x-b860h_|OPHUB-Amlogic_s905x-NON_MOD_SDCARD-B860H_v1-v2"
         "-s905x-|ULO-Amlogic_s905x-NON_MOD_SDCARD"
-        "-s905x2-|Amlogic_s905x2"
-        "-s905x3-|Amlogic_s905x3"
-        "-s905x4-|Amlogic_s905x4"
+        "-s905x2-|ULO-Amlogic_s905x2"
+        "-s905x3-|ULO-Amlogic_s905x3"
+        "-s905x4-|ULO-Amlogic_s905x4"
 
         # x86_64
         "x86-64-generic-ext4-combined-efi|X86_64_Generic_Ext4_Combined_EFI"
