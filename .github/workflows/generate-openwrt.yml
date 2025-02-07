@@ -77,7 +77,92 @@ jobs:
           fi
           echo "devices=$devices" >> $GITHUB_OUTPUT
 
-      - name: Send Telegram Message
+      - name: Create Status Directory
+        run: |
+          mkdir -p /tmp/build-status
+          devices=$(echo '${{ steps.matrix.outputs.devices }}' | jq -r '.[]')
+          for device in $devices; do
+            echo "⏳ Pending" > "/tmp/build-status/$device.status"
+          done
+
+      - name: Upload Initial Status
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-status
+          path: /tmp/build-status
+          retention-days: 1
+
+      - name: Send Initial Telegram Message
+        id: telegram
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GROUP_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_THREAD_ID: 616
+        run: |
+          MESSAGE="=======================%0A"
+          MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
+          MESSAGE+="=======================%0A"
+          MESSAGE+="📌 *Versi*: ${{ inputs.releases_branch }}%0A"
+          MESSAGE+="🌿 *Branch*: ${{ github.ref_name }}%0A"
+          MESSAGE+="📅 *Tanggal*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
+          MESSAGE+="-----------------------%0A"
+          MESSAGE+="📋 *Device List*%0A"
+  
+          devices=$(echo '${{ steps.matrix.outputs.devices }}' | jq -r '.[]')
+          for device in $devices; do
+            MESSAGE+="🔹 $device | ⏳ Pending%0A"
+          done
+  
+          MESSAGE+="======================="
+  
+          RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+            -d chat_id=$GROUP_ID \
+            -d message_thread_id=$MESSAGE_THREAD_ID \
+            -d parse_mode=Markdown \
+            -d text="$MESSAGE")
+  
+          MESSAGE_ID=$(echo $RESPONSE | jq -r '.result.message_id')
+          echo "message_id=$MESSAGE_ID" >> $GITHUB_OUTPUT
+
+jobs:
+  prebuild:
+    runs-on: ubuntu-latest
+    outputs:
+      devices: ${{ steps.matrix.outputs.devices }}
+      message_id: ${{ steps.telegram.outputs.message_id }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Configure Build Matrix
+        id: matrix
+        run: |
+          set -euxo pipefail
+          if [ "${{ inputs.devices }}" = "all" ]; then
+            devices=$(jq -nc '[ "s905x", "s905x2", "s905x3", "s905x4", "s912", "h5-orangepi-zeroplus2", "h5-orangepi-zeroplus", "h5-orangepi-prime", "h5-orangepi-pc2", "h6-orangepi-lite2", "h6-orangepi-1plus", "h6-orangepi-3", "h6-orangepi-3lts", "h616-orangepi-zero2", "h618-orangepi-zero2w", "h618-orangepi-zero3", "rk3566-orangepi-3b", "rk3588s-orangepi-5", "bcm2710-rpi-3b", "bcm2711-rpi-4b", "x86-64" ]')
+          else
+            devices=$(jq -nc --arg d "${{ inputs.devices }}" '[$d]')
+          fi
+          echo "devices=$devices" >> $GITHUB_OUTPUT
+
+      - name: Create Status Directory
+        run: |
+          mkdir -p /tmp/build-status
+          devices=$(echo '${{ steps.matrix.outputs.devices }}' | jq -r '.[]')
+          for device in $devices; do
+            echo "⏳ Pending" > "/tmp/build-status/$device.status"
+          done
+
+      - name: Upload Initial Status
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-status
+          path: /tmp/build-status
+          retention-days: 1
+
+      - name: Send Initial Telegram Message
         id: telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
@@ -146,6 +231,46 @@ jobs:
           echo "openwrt_version=${{ inputs.releases_branch }}" >> $GITHUB_ENV
           echo "openwrt_tag=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')" >> $GITHUB_ENV
 
+      - name: Update Status to Building
+        id: update_building
+        concurrency:
+          group: status-update-${{ github.run_id }}
+          cancel-in-progress: false
+        run: |
+          # Download current status
+          mkdir -p /tmp/build-status
+          devices=$(echo '${{ needs.prebuild.outputs.devices }}' | jq -r '.[]')
+          
+          # Update status for current device to Building
+          echo "🏗️ Building..." > "/tmp/build-status/${{ matrix.device }}.status"
+          
+          MESSAGE="=======================%0A"
+          MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
+          MESSAGE+="=======================%0A"
+          MESSAGE+="📌 *Versi*: ${{ inputs.releases_branch }}%0A"
+          MESSAGE+="🌿 *Branch*: ${{ github.ref_name }}%0A"
+          MESSAGE+="📅 *Tanggal*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
+          MESSAGE+="-----------------------%0A"
+          MESSAGE+="📋 *Device List*%0A"
+          
+          for device in $devices; do
+            if [ -f "/tmp/build-status/$device.status" ]; then
+              status=$(cat "/tmp/build-status/$device.status")
+            else
+              status="⏳ Pending"
+            fi
+            MESSAGE+="🔹 $device | $status%0A"
+          done
+          
+          MESSAGE+="======================="
+          
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/editMessageText" \
+            -d chat_id=${{ secrets.CHAT_ID }} \
+            -d message_id=${{ needs.prebuild.outputs.message_id }} \
+            -d message_thread_id=616 \
+            -d parse_mode=Markdown \
+            -d text="$MESSAGE"
+
       - name: Build Image
         id: imagebuilder
         run: |
@@ -158,17 +283,49 @@ jobs:
             echo "status=❌ Gagal" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create Status File
+      - name: Update Final Status
+        if: always()
+        concurrency:
+          group: status-update-${{ github.run_id }}
+          cancel-in-progress: false
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GROUP_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_THREAD_ID: 616
         run: |
+          # Download current status
           mkdir -p /tmp/build-status
+          
+          # Update status for current device
           echo "${{ steps.imagebuilder.outputs.status }}" > "/tmp/build-status/${{ matrix.device }}.status"
-
-      - name: Upload Status
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-status
-          path: /tmp/build-status
-          retention-days: 1
+          
+          MESSAGE="=======================%0A"
+          MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
+          MESSAGE+="=======================%0A"
+          MESSAGE+="📌 *Versi*: ${{ inputs.releases_branch }}%0A"
+          MESSAGE+="🌿 *Branch*: ${{ github.ref_name }}%0A"
+          MESSAGE+="📅 *Tanggal*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
+          MESSAGE+="-----------------------%0A"
+          MESSAGE+="📋 *Device List*%0A"
+          
+          devices=$(echo '${{ needs.prebuild.outputs.devices }}' | jq -r '.[]')
+          for device in $devices; do
+            if [ -f "/tmp/build-status/$device.status" ]; then
+              status=$(cat "/tmp/build-status/$device.status")
+            else
+              status="⏳ Pending"
+            fi
+            MESSAGE+="🔹 $device | $status%0A"
+          done
+          
+          MESSAGE+="======================="
+          
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
+            -d chat_id=$GROUP_ID \
+            -d message_id=${{ needs.prebuild.outputs.message_id }} \
+            -d message_thread_id=$MESSAGE_THREAD_ID \
+            -d parse_mode=Markdown \
+            -d text="$MESSAGE"
 
       - name: Upload to Release
         if: ${{ steps.imagebuilder.outputs.status == '✅ Sukses' }}
@@ -266,51 +423,6 @@ jobs:
                 
             ---
 
-  update-status:
-    needs: [prebuild, build]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Download Status Files
-        uses: actions/download-artifact@v4
-        with:
-          name: build-status
-          path: /tmp/build-status
-
-      - name: Update Telegram Message
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          GROUP_ID: ${{ secrets.CHAT_ID }}
-          MESSAGE_THREAD_ID: 616
-        run: |
-          MESSAGE="=======================%0A"
-          MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
-          MESSAGE+="=======================%0A"
-          MESSAGE+="📌 *Versi*: ${{ inputs.releases_branch }}%0A"
-          MESSAGE+="🌿 *Branch*: ${{ github.ref_name }}%0A"
-          MESSAGE+="📅 *Tanggal*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
-          MESSAGE+="-----------------------%0A"
-          MESSAGE+="📋 *Device List*%0A"
-          
-          devices=$(echo '${{ needs.prebuild.outputs.devices }}' | jq -r '.[]')
-          for device in $devices; do
-            if [ -f "/tmp/build-status/$device.status" ]; then
-              status=$(cat "/tmp/build-status/$device.status")
-            else
-              status="⏳ Pending"
-            fi
-            MESSAGE+="🔹 $device | $status%0A"
-          done
-          
-          MESSAGE+="======================="
-          
-          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
-            -d chat_id=$GROUP_ID \
-            -d message_id=${{ needs.prebuild.outputs.message_id }} \
-            -d message_thread_id=$MESSAGE_THREAD_ID \
-            -d parse_mode=Markdown \
-            -d text="$MESSAGE"
-
   opsional:
     needs: build
     runs-on: ubuntu-latest
@@ -329,10 +441,8 @@ jobs:
       - name: Add changelog info
         id: changelog
         run: |
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
-          r="${r//'%'/'%25'}"
-          r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found && NF' "${PWD}/CHANGELOG.md")
+          r=$(echo "$r" | sed -e 's/%/%25/g' -e 's/$/\n/g' -e 's/\r/%0D/g')
           echo "changelog=$r" >> $GITHUB_OUTPUT
 
       - name: Change Branch

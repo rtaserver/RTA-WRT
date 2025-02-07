@@ -524,6 +524,8 @@ custom_packages() {
         "xmm-modem|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         "luci-app-lite-watchdog|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         "luci-theme-alpha|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "luci-app-adguardhome|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "adguardhome|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         
         "luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
@@ -688,6 +690,8 @@ rebuild_firmware() {
     PACKAGES+=" kmod-usb-serial kmod-usb-serial-option unzip tar gzip openssh-sftp-server sms-tool luci-app-temp-status cpusage adb ttyd luci-app-ttyd bash dmesg screen kmod-tun jq luci-lib-ipkg"
     PACKAGES+=" ipset ipt2socks iptables iptables-legacy iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat coreutils coreutils-base64 coreutils-nohup curl dns2socks ip-full libuci-lua lua luci-compat luci-lib-jsonc microsocks resolveip tcping"
 
+    # AdguardHome
+    PACKAGES+=" adguardhome luci-app-adguardhome"
 
     # Modem Tools
     PACKAGES+=" modeminfo-serial-zte modeminfo-serial-gosun modeminfo-qmi modeminfo-serial-yuge modeminfo-serial-thales modeminfo-serial-tw modeminfo-serial-meig modeminfo-serial-styx modeminfo-serial-mikrotik modeminfo-serial-dell modeminfo-serial-sierra modeminfo-serial-quectel modeminfo-serial-huawei modeminfo-serial-xmm modeminfo-serial-telit modeminfo-serial-fibocom modeminfo-serial-simcom modeminfo luci-app-modeminfo"

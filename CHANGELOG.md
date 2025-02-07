@@ -5,6 +5,7 @@
 - OPHUB Add Kernel 6.x.x
 - Add Source Packages By openwrt.ai
 - Use Deafult Font Terminal
+- Add AdGuard Home
 
 **Changelog** (05-02-2025)
 

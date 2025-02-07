@@ -1,0 +1,305 @@
+#!/bin/bash
+# Script to install AdGuardHome with some recommended settings.
+# Created by Frizkyiman
+# Github https://github.com/frizkyiman/
+
+INFO="[\033[94m INFO \033[0m]"
+SUCCESS="[\033[92m SUCCESS \033[0m]"
+ERROR="[\033[91m ERROR \033[0m]"
+opkg_updated=false
+
+check_service_status() {
+    if /etc/init.d/AdGuardHome status | grep -q "running"; then
+      return 0
+    else
+      return 1
+    fi
+}
+
+
+install_adguardhome_core() {
+    ARCH=$(uname -m) && [ "$ARCH" == "aarch64" ] && ARCH="arm64" || [ "$ARCH" == "x86_64" ] && ARCH="amd64"
+    agh_api="https://api.github.com/repos/AdguardTeam/AdGuardHome/releases"
+    agh_file="AdGuardHome_linux_$ARCH"
+    agh_file_down="$(curl -s "$agh_api" | grep "browser_download_url" | grep -oE "https.*${agh_file}.*.tar.gz" | head -n 1)"
+    latest_version=$(curl -sSL "$agh_api/latest" | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' | head -n 1)
+    echo -e "${INFO} Downloading AdGuardHome core..."
+    [ ! -d "/opt" ] && mkdir -p /opt
+    if [ -e "/opt/AdGuardHome_linux_$ARCH.tar.gz" ] || [ -d "/opt/AdGuardHome" ]; then
+        if [ -e "/opt/AdGuardHome_linux_$ARCH.tar.gz" ]; then
+            echo -e "${INFO} Previous download exists, removing..."
+            rm "/opt/AdGuardHome_linux_$ARCH.tar.gz"
+        fi
+        if [ -d "/opt/AdGuardHome" ]; then
+            find "/opt/AdGuardHome" -type f ! -name '*.yaml' -exec rm {} \;
+        fi
+    fi
+    if wget -nv "$agh_file_down" -P /opt; then
+      echo -e "${INFO} Extracting core..."
+      if tar -zxf "/opt/AdGuardHome_linux_$ARCH.tar.gz" -C /opt; then
+         rm "/opt/AdGuardHome_linux_$ARCH.tar.gz"
+         echo -e "${SUCCESS} Finished! AdGuardHome core version $latest_version successfull installed"
+      else
+         echo -e "${ERROR} Failed to extract core!"
+         exit 1
+      fi
+    else
+     echo -e "${ERROR} Failed download AdGuardHome. Please check your internet connection or try again."
+     exit 1
+    fi
+}
+
+enable_agh() {
+    echo -e "${INFO} Enabling AdGuard Home..."
+    echo "Configuring AdGuardHome.yaml"
+    uci set AdGuardHome.AdGuardHome.httpport='3000'
+    uci set AdGuardHome.AdGuardHome.redirect='exchange'
+    uci set AdGuardHome.AdGuardHome.configpath='/opt/AdGuardHome/AdGuardHome.yaml'
+    uci set AdGuardHome.AdGuardHome.workdir='/opt/AdGuardHome'
+    uci set AdGuardHome.AdGuardHome.logfile='/tmp/AdGuardHome.log'
+    uci set AdGuardHome.AdGuardHome.binpath='/opt/AdGuardHome/AdGuardHome'
+    uci set AdGuardHome.AdGuardHome.verbose='0'
+    uci commit AdGuardHome
+
+    echo "Get the first IPv4 and IPv6 Address of router."
+    NET_ADDR=$(uci get network.lan.ipaddr)
+    NET_ADDR6=$(/sbin/ip -o -6 addr list br-lan scope global | awk 'NR==1{ split($4, ip_addr, "/"); print ip_addr[1] }')
+ 
+    echo "Router IPv4 : ""${NET_ADDR}"
+    echo "Router IPv6 : ""${NET_ADDR6}"
+
+    echo "Making some changes on .yaml confing."
+    sed -i "s/local_ptr_upstreams: \[\]/local_ptr_upstreams:\n    - ${NET_ADDR}:54/" /opt/AdGuardHome/AdGuardHome.yaml
+    sed -i '/port: 6060/! s/\(port:\s*\)[0-9]*/\153/' /opt/AdGuardHome/AdGuardHome.yaml
+
+    echo "Enable dnsmasq to do PTR requests."
+    uci set dhcp.@dnsmasq[0].noresolv='0'
+
+    echo "Reduce dnsmasq cache size as it will only provide PTR/rDNS info."
+    uci set dhcp.@dnsmasq[0].cachesize='1000'
+
+    echo "Disable rebind protection."
+    uci set dhcp.@dnsmasq[0].rebind_protection='0'
+
+    echo "Move dnsmasq to port 54 so adguardhome can use port 53."
+    uci set dhcp.@dnsmasq[0].port='54'
+
+    echo "Set Ipv4 DNS advertised by option 6 DHCP"
+    uci -q delete dhcp.@dnsmasq[0].server
+    echo "Set Ipv6 DNS advertised by DHCP"
+    uci add_list dhcp.@dnsmasq[0].server="${NET_ADDR}"
+
+    echo "Set 24hr DHCP Leases"
+    uci set dhcp.lan.leasetime='24h' 
+  
+    echo "Delete existing config ready to install new options."
+    uci -q delete dhcp.lan.dhcp_option
+    uci -q delete dhcp.lan.dns
+
+    echo "DHCP option 6: which DNS (Domain Name Server) to include in the IP configuration for name resolution"
+    uci add_list dhcp.lan.dhcp_option='6,'"${NET_ADDR}" 
+
+    echo "DHCP option 3: default router or last resort gateway for this interface"
+    uci add_list dhcp.lan.dhcp_option='3,'"${NET_ADDR}"
+
+    echo "Set IPv6 Announced DNS"
+    for OUTPUT in $(ip -o -6 addr list br-lan scope global | awk '{ split($4, ip_addr, "/"); print ip_addr[1] }')
+    do
+  	    echo "Adding $OUTPUT to IPV6 DNS"
+      	uci add_list dhcp.lan.dns=$OUTPUT
+    done
+
+    uci commit dhcp
+    /etc/init.d/dnsmasq restart >/dev/null 2>&1
+
+    echo "Setup Port Forward to 53"
+    if [ -n "$(command -v fw4)" ]; then
+       echo "Firewall 4 nftables detected"
+       uci set firewall.adguardhome_dns_53="redirect"
+       uci set firewall.adguardhome_dns_53.src='lan'
+       uci set firewall.adguardhome_dns_53.proto='tcp udp'
+       uci set firewall.adguardhome_dns_53.src_dport='53'
+       uci set firewall.adguardhome_dns_53.target='DNAT'
+       uci set firewall.adguardhome_dns_53.name='AdGuard Home'
+       uci set firewall.adguardhome_dns_53.dest='lan'
+       uci set firewall.adguardhome_dns_53.dest_ip="${NET_ADDR}"
+       uci set firewall.adguardhome_dns_53.dest_port='53'
+       uci commit firewall
+    else
+       echo "Firewall 3 iptables detected"
+       echo -e "iptables -t nat -A PREROUTING -i br-lan -p tcp --dport 53 -j DNAT --to "${NET_ADDR}":53" | tee -a /etc/firewall.user
+       echo -e "iptables -t nat -A PREROUTING -i br-lan -p udp --dport 53 -j DNAT --to "${NET_ADDR}":53" | tee -a /etc/firewall.user
+    fi
+
+    echo "Configuring AdGuard Home Luci"
+    uci set AdGuardHome.AdGuardHome.enabled='1'
+    uci commit AdGuardHome
+    /etc/init.d/AdGuardHome enable
+    /etc/init.d/AdGuardHome start
+    /etc/init.d/firewall restart >/dev/null 2>&1
+    echo -e "${SUCCESS} AdGuardHome Successfully Enable!"
+}
+
+disable_agh() {
+    echo -e "${INFO} Disabling AdGuard Home"
+    echo "Reverts AdGuard Home configuration and resets settings to default."
+    uci -q delete dhcp.@dnsmasq[0].noresolv
+    uci -q delete dhcp.@dnsmasq[0].cachesize
+    uci set dhcp.@dnsmasq[0].port='53'
+
+    echo "Enable rebind protection."
+    uci set dhcp.@dnsmasq[0].rebind_protection='1'
+
+    echo "Remove DHCP options for IPv4 and IPv6"
+    uci -q delete dhcp.@dnsmasq[0].server
+    uci -q delete dhcp.@dnsmasq[0].port
+    uci -q delete dhcp.lan.dhcp_option
+    uci -q delete dhcp.lan.dns
+    uci commit dhcp
+    /etc/init.d/dnsmasq restart >/dev/null 2>&1
+
+    if [ -n "$(command -v fw4)" ]; then
+       echo "Firewall 4 nftables detected"
+       uci delete firewall.adguardhome_dns_53
+       uci commit firewall
+    else
+       echo "Firewall 3 iptables detected"
+       NET_ADDR=$(uci get network.lan.ipaddr)
+       sed -i "/iptables -t nat -A PREROUTING -i br-lan -p tcp --dport 53 -j DNAT --to ${NET_ADDR}:53/d" /etc/firewall.user
+       sed -i "/iptables -t nat -A PREROUTING -i br-lan -p udp --dport 53 -j DNAT --to ${NET_ADDR}:53/d" /etc/firewall.user
+    fi
+
+    uci set AdGuardHome.AdGuardHome.enabled='0'
+    uci commit AdGuardHome
+    /etc/init.d/AdGuardHome stop
+    /etc/init.d/AdGuardHome disable
+    /etc/init.d/firewall restart >/dev/null 2>&1
+    echo -e "${SUCCESS} AdGuard Home Successfully Disable!"
+}
+
+check_openclash_installed() {
+    if opkg list-installed | grep -q "openclash"; then
+        return 0
+    else
+        echo -e "${INFO} OpenClash is not installed."
+        return 1
+    fi
+}
+
+manage_openclash_configuration() {
+    is_openclash_running() {
+        ps | grep -q "[o]penclash"
+    }
+    if ! uci show openclash | grep -qE "^openclash\.config\.enable_custom_dns='0'$" \
+        || ! uci show openclash | grep -qE "^openclash\.config\.ipv6_dns='0'$" \
+        || ! uci show openclash | grep -qE "^openclash\.config\.cachesize_dns='0'$" \
+        || ! uci show openclash | grep -qE "^openclash\.config\.append_wan_dns='0'$" \
+        || ! uci show openclash | grep -qE "^openclash\.config\.append_default_dns='0'$" \
+        || ! uci show openclash | grep -qE "^openclash\.config\.enable_custom_domain_dns_server='0'$" \
+        || ! uci show openclash | grep -qE "^openclash\.config\.redirect_dns='0'$" \
+        || ! uci show openclash | grep -qE "^openclash\.config\.enable_redirect_dns='0'$"; then
+
+        uci set openclash.config.enable_custom_dns='0'
+        uci set openclash.config.ipv6_dns='0'
+        uci set openclash.config.cachesize_dns='0'
+        uci set openclash.config.append_wan_dns='0'
+        uci set openclash.config.append_default_dns='0'
+        uci set openclash.config.enable_custom_domain_dns_server='0'
+        uci set openclash.config.redirect_dns='0'
+        uci set openclash.config.enable_redirect_dns='0'
+        uci commit openclash
+        echo -e "${SUCCESS} Openclash DNS Configuration updated."
+    else
+        echo -e "${INFO} Openclash DNS configuration is OK."
+    fi
+
+    if is_openclash_running; then
+        manage_openclash_restart
+    fi
+}
+
+manage_openclash_restart() {
+    local attempts=0
+    local max_attempts=2
+
+    while [ $attempts -lt $max_attempts ]; do
+        read -p "${INFO} Do you want to restart OpenClash service? (yes/no): " choice
+        if [[ $choice =~ ^[Yy](es)?$ ]]; then
+            /etc/init.d/openclash restart
+            echo -e "${SUCCESS} Done!"
+            return
+        elif [[ $choice =~ ^[Nn](o)?$ ]]; then
+            echo -e "${INFO} OpenClash service was not restarted."
+            return
+        else
+            echo -e "${ERROR} Invalid input. Please enter 'yes' or 'no'."
+            attempts=$((attempts + 1))
+        fi
+    done
+    echo "Maximum attempts reached. Do nothing."
+}
+
+dashboard() {
+    if ! grep -q 'entry({"admin","services","AdGuardHome", "agh"}, template("AdGuardHome"), _("Dashboard")).leaf=true' /usr/lib/lua/luci/controller/AdGuardHome.lua; then
+      echo -e "${INFO} setup AdGuardHome Dashboard."
+      sed -i '/Manual Config/ a\entry({"admin","services","AdGuardHome", "agh"}, template("AdGuardHome"), _("Dashboard")).leaf=true' /usr/lib/lua/luci/controller/AdGuardHome.lua
+    else
+      echo -e "${INFO} AdGuardHome Dashboard already setup."
+    fi
+
+cat <<'EOF' >/usr/lib/lua/luci/view/AdGuardHome.htm
+<%+header%>
+<div class="cbi-map"><br>
+<iframe id="agh" style="width: 100%; min-height: 650px; border: none; border-radius: 2px;"></iframe>
+</div>
+<script type="text/javascript">
+document.getElementById("agh").src = "http://" + window.location.hostname + ":3000";
+</script>
+<%+footer%>
+EOF
+
+cat <<'EOF' >/www/agh.php
+<script type="text/javascript">
+document.getElementById("agh").src = "http://" + window.location.hostname + ":3000";
+</script>
+EOF
+}
+
+setup() {
+    case "$1" in
+        enable)
+            if check_service_status "AdGuardHome"; then
+              echo "AdGuard Home service is already running. Skipping enable operation."
+            else
+              enable_agh
+              if check_openclash_installed; then
+                  manage_openclash_configuration
+              fi
+            fi
+            ;;
+        disable)
+            disable_agh
+            ;;
+        restart)
+            disable_agh
+            sleep 2
+            enable_agh
+            dashboard
+            if check_openclash_installed; then
+                manage_openclash_configuration
+            fi
+            ;;
+        update-core)
+            install_adguardhome_core
+            ;;
+        enable_agh)
+            enable_agh
+            dashboard
+            ;;
+        *)
+            echo -e "${ERROR} Invalid argument. Usage: $0 {enable|disable|restart|update-core}"
+            ;;
+    esac
+}
+
+setup "$@"
