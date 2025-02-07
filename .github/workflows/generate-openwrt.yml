@@ -146,7 +146,7 @@ jobs:
               
             ### 📥 **Download Statistics**
               
-            ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ needs.prebuild.outputs.openwrt_tag }}-${{ needs.prebuild.outputs.datetime }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.openwrt_tag }}-${{ env.datetime }}/total?style=for-the-badge&logo=Openwrt)
               
             ---
               
@@ -160,7 +160,7 @@ jobs:
               
             ### 📝 **Changelog**
 
-            ${{ needs.prebuild.outputs.changelog }}
+            ${{ steps.changelog.outputs.changelog }}
               
             ---
               
