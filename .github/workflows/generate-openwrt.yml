@@ -153,13 +153,131 @@ jobs:
           echo "Building for ${{ matrix.device }}"
           chmod +x ${IMAGEBUILDER_SH}
           if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}"; then
-            echo "status=Sukses" >> $GITHUB_OUTPUT
+            echo "status=✅ Sukses" >> $GITHUB_OUTPUT
           else
-            echo "status=Gagal" >> $GITHUB_OUTPUT
+            echo "status=❌ Gagal" >> $GITHUB_OUTPUT
           fi
 
-      - name: Edit Telegram Message
-        id: telegram
+      - name: Create Status File
+        run: |
+          mkdir -p /tmp/build-status
+          echo "${{ steps.imagebuilder.outputs.status }}" > "/tmp/build-status/${{ matrix.device }}.status"
+
+      - name: Upload Status
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-status
+          path: /tmp/build-status
+          retention-days: 1
+
+      - name: Upload to Release
+        if: ${{ steps.imagebuilder.outputs.status == '✅ Sukses' }}
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          file: imagebuilder/out_firmware/*
+          tag: ${{ env.openwrt_tag }}-${{ env.datetime }}
+          release_name: RTA-WRT - ${{ env.openwrt_tag }}-${{ env.datetime }}
+          overwrite: true
+          prerelease: ${{ github.ref_name == 'dev' }}
+          promote: ${{ github.ref_name != 'dev' }}
+          body: |
+            ---
+  
+            # 🚀 **RTA-WRT - Image Information**
+                
+            ---
+                
+            ### 📥 **Download Statistics**
+                
+            ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.openwrt_tag }}-${{ env.datetime }}/total?style=for-the-badge&logo=Openwrt)
+                
+            ---
+                
+            ### 📢 **Telegram Support**
+                
+            [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram&link=https%3A%2F%2Ft.me%2Frtawrt)](https://t.me/rtawrt)
+            [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram&link=https%3A%2F%2Ft.me%2Fbackup_rtawrt)](https://t.me/backup_rtawrt)
+            [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram&link=https%3A%2F%2Ft.me%2FRizkiKotet)](https://t.me/RizkiKotet)
+                
+            ---
+              
+            ### 📝 **Changelog**
+  
+            ${{ steps.changelog.outputs.changelog }}
+                
+            ---
+                
+            ## ⚠️ Peringatan untuk Instalasi Pertama
+            > **Catatan:** Booting awal memerlukan waktu agak lama karena proses partisi ulang dan konfigurasi tambahan.
+  
+            ---
+  
+            ## 📱 Device yang Didukung
+  
+            ### Amlogic
+            - **s905x** (HG680P, B860Hv1/v2) | Mod Boot SDCARD
+            - **s905x2** (HG680FJ, B860Hv5, MNC CYBORG001, X96Max-4G, X96Max-2G, MECOOL-KM3-4G, Tanix-Tx5-Max, A95X-F2)
+            - **s905x3** (X96-Max+, HK1-Box, Vontar-X3, H96-Max-X3, Ugoos-X3, TX3(QZ), TX3(BZ), X96-Air, X96-Max+_A100, A95X-F3-Air, Tencent-Aurora-3Pro(s905x3-b), X96-Max+Q1, X96-Max+100W, X96-Max+_2101, Infinity-B32, Whale, X88-Pro-X3, X99-Max-Plus, Transpeed-X3-Plus)
+            - **s905x4** (AKARI AX810, dll)
+            - **s912** (Tanix-TX8-Max, Tanix-TX9-Pro(3G), Tanix-TX9-Pro(2G), Tanix-TX92, Nexbox-A1, Nexbox-A95X-A2, A95X, H96-Pro-Plus, VORKE-Z6-Plus, Mecool-M8S-PRO-L, Vontar-X92, T95Z-Plus, Octopus-Planet, Phicomm-T1, TX3-Mini, OneCloudPro-V1.1_V1.2)
+  
+            ### Allwinner
+            - **H5** (Orange Pi Zero Plus 2, Orange Pi Zero Plus, Orange Pi Prime, Orange Pi PC2)
+            - **H6** (Orange Pi 1 Plus, Orange Pi Lite 2, Orange Pi 3 LTS, Orange Pi 3)
+            - **H616** (Orange Pi Zero 2)
+            - **H618** (Orange Pi Zero 3, Orange Pi Zero 2W)
+  
+            ### Rockchip
+            - **RK3566** (Orange Pi 3B)
+            - **RK3588S** (Orange Pi 5)
+            - **RK3588** (Orange Pi 5 Plus)
+  
+            ### Broadcom
+            - **BCM2710** (Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W - 64bit)
+            - **BCM2711** (Raspberry Pi 4B/400/CM4 - 64bit)
+  
+            ### Generic
+            - **x86-64**
+  
+            ---
+  
+            ## ℹ️ Informasi Sistem
+            - **IP Default:** 192.168.1.1
+            - **Username:** root
+            - **Password:** rtawrt
+            - **SSID:** RTA-WRT_2g / RTA-WRT_5g
+  
+            ### ⭐ Fitur Utama
+            - Modemmanager dengan koneksi ulang otomatis
+            - OpenClash dengan MetaCubeX Mihomo terbaru
+            - Passwall *Tunneling* alternatif
+            - MihomoTProxy *Tunneling* alternatif
+            - TinyFm file manager
+            - Internet Detector dan Lite Watchdog
+            - Tema Argon & Material dengan tampilan login kustom
+            - 3ginfo lite, Modeminfo, sms-tool, dan aplikasi modem lainnya
+            - Dukungan Layar OLED (teruji di Raspberry Pi 4B)
+  
+            ---
+                
+            **🚀 Tetap terhubung, nikmati performa maksimal dengan RTA-WRT! 🚀**
+                
+            ---
+
+  update-status:
+    needs: [prebuild, build]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Download Status Files
+        uses: actions/download-artifact@v4
+        with:
+          name: build-status
+          path: /tmp/build-status
+
+      - name: Update Telegram Message
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           GROUP_ID: ${{ secrets.CHAT_ID }}
@@ -173,127 +291,25 @@ jobs:
           MESSAGE+="📅 *Tanggal*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
           MESSAGE+="-----------------------%0A"
           MESSAGE+="📋 *Device List*%0A"
-  
-          STATUS_LIST="/tmp/status_list.txt"
-          touch $STATUS_LIST
-  
-          echo "${{ matrix.device }}=${{ steps.imagebuilder.outputs.status }}" >> $STATUS_LIST
-  
+          
           devices=$(echo '${{ needs.prebuild.outputs.devices }}' | jq -r '.[]')
-          for dev in $devices; do
-            status=$(grep "^$dev=" $STATUS_LIST | cut -d '=' -f2)
-            if [ -z "$status" ]; then
+          for device in $devices; do
+            if [ -f "/tmp/build-status/$device.status" ]; then
+              status=$(cat "/tmp/build-status/$device.status")
+            else
               status="⏳ Pending"
             fi
-            MESSAGE+="🔹 $dev | $status%0A"
+            MESSAGE+="🔹 $device | $status%0A"
           done
-  
+          
           MESSAGE+="======================="
-  
-          if [[ -n "${{ needs.prebuild.outputs.message_id }}" ]]; then
-            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
-              -d chat_id=$GROUP_ID \
-              -d message_id=${{ needs.prebuild.outputs.message_id }} \
-              -d message_thread_id=$MESSAGE_THREAD_ID \
-              -d parse_mode=Markdown \
-              -d text="$MESSAGE"
-          fi
-
-      - name: Upload to Release
-        if: ${{ steps.imagebuilder.outputs.status == 'Sukses' }}
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file_glob: true
-          file: imagebuilder/out_firmware/*
-          tag: ${{ env.openwrt_tag }}-${{ env.datetime }}
-          release_name: RTA-WRT - ${{ env.openwrt_tag }}-${{ env.datetime }}
-          overwrite: true
-          prerelease: ${{ github.ref_name == 'dev' }}
-          promote: ${{ github.ref_name != 'dev' }}
-          body: |
-            ---
-
-            # 🚀 **RTA-WRT - Image Information**
-              
-            ---
-              
-            ### 📥 **Download Statistics**
-              
-            ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.openwrt_tag }}-${{ env.datetime }}/total?style=for-the-badge&logo=Openwrt)
-              
-            ---
-              
-            ### 📢 **Telegram Support**
-              
-            [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram&link=https%3A%2F%2Ft.me%2Frtawrt)](https://t.me/rtawrt)
-            [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram&link=https%3A%2F%2Ft.me%2Fbackup_rtawrt)](https://t.me/backup_rtawrt)
-            [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram&link=https%3A%2F%2Ft.me%2FRizkiKotet)](https://t.me/RizkiKotet)
-              
-            ---
-              
-            ### 📝 **Changelog**
-
-            ${{ steps.changelog.outputs.changelog }}
-              
-            ---
-              
-            ## ⚠️ Peringatan untuk Instalasi Pertama
-            > **Catatan:** Booting awal memerlukan waktu agak lama karena proses partisi ulang dan konfigurasi tambahan.
-
-            ---
-
-            ## 📱 Device yang Didukung
-
-            ### Amlogic
-            - **s905x** (HG680P, B860Hv1/v2) | Mod Boot SDCARD
-            - **s905x2** (HG680FJ, B860Hv5, MNC CYBORG001, X96Max-4G, X96Max-2G, MECOOL-KM3-4G, Tanix-Tx5-Max, A95X-F2)
-            - **s905x3** (X96-Max+, HK1-Box, Vontar-X3, H96-Max-X3, Ugoos-X3, TX3(QZ), TX3(BZ), X96-Air, X96-Max+_A100, A95X-F3-Air, Tencent-Aurora-3Pro(s905x3-b), X96-Max+Q1, X96-Max+100W, X96-Max+_2101, Infinity-B32, Whale, X88-Pro-X3, X99-Max-Plus, Transpeed-X3-Plus)
-            - **s905x4** (AKARI AX810, dll)
-            - **s912** (Tanix-TX8-Max, Tanix-TX9-Pro(3G), Tanix-TX9-Pro(2G), Tanix-TX92, Nexbox-A1, Nexbox-A95X-A2, A95X, H96-Pro-Plus, VORKE-Z6-Plus, Mecool-M8S-PRO-L, Vontar-X92, T95Z-Plus, Octopus-Planet, Phicomm-T1, TX3-Mini, OneCloudPro-V1.1_V1.2)
-
-            ### Allwinner
-            - **H5** (Orange Pi Zero Plus 2, Orange Pi Zero Plus, Orange Pi Prime, Orange Pi PC2)
-            - **H6** (Orange Pi 1 Plus, Orange Pi Lite 2, Orange Pi 3 LTS, Orange Pi 3)
-            - **H616** (Orange Pi Zero 2)
-            - **H618** (Orange Pi Zero 3, Orange Pi Zero 2W)
-
-            ### Rockchip
-            - **RK3566** (Orange Pi 3B)
-            - **RK3588S** (Orange Pi 5)
-            - **RK3588** (Orange Pi 5 Plus)
-
-            ### Broadcom
-            - **BCM2710** (Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W - 64bit)
-            - **BCM2711** (Raspberry Pi 4B/400/CM4 - 64bit)
-
-            ### Generic
-            - **x86-64**
-
-            ---
-
-            ## ℹ️ Informasi Sistem
-            - **IP Default:** 192.168.1.1
-            - **Username:** root
-            - **Password:** rtawrt
-            - **SSID:** RTA-WRT_2g / RTA-WRT_5g
-
-            ### ⭐ Fitur Utama
-            - Modemmanager dengan koneksi ulang otomatis
-            - OpenClash dengan MetaCubeX Mihomo terbaru
-            - Passwall *Tunneling* alternatif
-            - MihomoTProxy *Tunneling* alternatif
-            - TinyFm file manager
-            - Internet Detector dan Lite Watchdog
-            - Tema Argon & Material dengan tampilan login kustom
-            - 3ginfo lite, Modeminfo, sms-tool, dan aplikasi modem lainnya
-            - Dukungan Layar OLED (teruji di Raspberry Pi 4B)
-
-            ---
-              
-            **🚀 Tetap terhubung, nikmati performa maksimal dengan RTA-WRT! 🚀**
-              
-            ---
+          
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
+            -d chat_id=$GROUP_ID \
+            -d message_id=${{ needs.prebuild.outputs.message_id }} \
+            -d message_thread_id=$MESSAGE_THREAD_ID \
+            -d parse_mode=Markdown \
+            -d text="$MESSAGE"
 
   opsional:
     needs: build
