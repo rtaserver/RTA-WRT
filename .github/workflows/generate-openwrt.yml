@@ -59,6 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       devices: ${{ steps.matrix.outputs.devices }}
+      message_id: ${{ steps.telegram.outputs.message_id }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -76,13 +77,45 @@ jobs:
           fi
           echo "devices=$devices" >> $GITHUB_OUTPUT
 
+      - name: Send Telegram Message
+        id: telegram
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GROUP_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_THREAD_ID: 616
+        run: |
+          MESSAGE="=======================%0A"
+          MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
+          MESSAGE+="=======================%0A"
+          MESSAGE+="📌 *Versi*: ${{ inputs.releases_branch }}%0A"
+          MESSAGE+="🌿 *Branch*: ${{ github.ref_name }}%0A"
+          MESSAGE+="📅 *Tanggal*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
+          MESSAGE+="-----------------------%0A"
+          MESSAGE+="📋 *Device List*%0A"
+  
+          devices=$(echo '${{ steps.matrix.outputs.devices }}' | jq -r '.[]')
+          for device in $devices; do
+            MESSAGE+="🔹 $device | ⏳ Pending%0A"
+          done
+  
+          MESSAGE+="======================="
+  
+          RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+            -d chat_id=$GROUP_ID \
+            -d message_thread_id=$MESSAGE_THREAD_ID \
+            -d parse_mode=Markdown \
+            -d text="$MESSAGE")
+  
+          MESSAGE_ID=$(echo $RESPONSE | jq -r '.result.message_id')
+          echo "message_id=$MESSAGE_ID" >> $GITHUB_OUTPUT
+
   build:
     needs: prebuild
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        devices: ${{ fromJSON(needs.prebuild.outputs.devices) }}
+        device: ${{ fromJSON(needs.prebuild.outputs.devices) }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -117,31 +150,54 @@ jobs:
         id: imagebuilder
         run: |
           set -euxo pipefail
-          echo "Building for ${{ matrix.devices }}"
+          echo "Building for ${{ matrix.device }}"
           chmod +x ${IMAGEBUILDER_SH}
-          if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.devices }}"; then
+          if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}"; then
             echo "status=Sukses" >> $GITHUB_OUTPUT
           else
             echo "status=Gagal" >> $GITHUB_OUTPUT
           fi
 
-      - name: Notif Action Build
-        uses: Ofceab-Studio/telegram-action@1.0.1
-        id: notif
-        with:
-          to: ${{ secrets.CHAT_ID }}
-          thread_id: 616
-          token: ${{ secrets.BOT_TOKEN }}
-          message: |
-            ==========================
-                    RTA-WRT | Build Status
-            ==========================
-            Status: ${{ steps.imagebuilder.outputs.status }}
-            Versi: ${{ env.openwrt_version }}
-            Branch: ${{ github.ref_name }}
-            Device: ${{ matrix.devices }}
-            ==========================
-
+      - name: Edit Telegram Message
+        id: telegram
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GROUP_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_THREAD_ID: 616
+        run: |
+          MESSAGE="=======================%0A"
+          MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
+          MESSAGE+="=======================%0A"
+          MESSAGE+="📌 *Versi*: ${{ inputs.releases_branch }}%0A"
+          MESSAGE+="🌿 *Branch*: ${{ github.ref_name }}%0A"
+          MESSAGE+="📅 *Tanggal*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
+          MESSAGE+="-----------------------%0A"
+          MESSAGE+="📋 *Device List*%0A"
+  
+          STATUS_LIST="/tmp/status_list.txt"
+          touch $STATUS_LIST
+  
+          echo "${{ matrix.device }}=${{ steps.imagebuilder.outputs.status }}" >> $STATUS_LIST
+  
+          devices=$(echo '${{ needs.prebuild.outputs.devices }}' | jq -r '.[]')
+          for dev in $devices; do
+            status=$(grep "^$dev=" $STATUS_LIST | cut -d '=' -f2)
+            if [ -z "$status" ]; then
+              status="⏳ Pending"
+            fi
+            MESSAGE+="🔹 $dev | $status%0A"
+          done
+  
+          MESSAGE+="======================="
+  
+          if [[ -n "${{ needs.prebuild.outputs.message_id }}" ]]; then
+            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
+              -d chat_id=$GROUP_ID \
+              -d message_id=${{ needs.prebuild.outputs.message_id }} \
+              -d message_thread_id=$MESSAGE_THREAD_ID \
+              -d parse_mode=Markdown \
+              -d text="$MESSAGE"
+          fi
 
       - name: Upload to Release
         if: ${{ steps.imagebuilder.outputs.status == 'Sukses' }}
@@ -239,7 +295,6 @@ jobs:
               
             ---
 
-
   opsional:
     needs: build
     runs-on: ubuntu-latest
@@ -297,42 +352,29 @@ jobs:
         run: |
           DATETIME=${{ env.datetime }}
           OPENWRT_VERSION=${{ env.openwrt_version }}
-          OPENWRT_TAG=${{ env.openwrt_tag }}
-
-          # Formatter untuk MarkdownV2
-          FORMATTER='s/([_*\[\]()~`>#+=|{}.!\\\-])/\\\1/g'
-
-          # Format semua variabel
-          FORMATTED_DATETIME=$(echo "$DATETIME" | sed -E "$FORMATTER")
-          FORMATTED_OPENWRT_VERSION=$(echo "$OPENWRT_VERSION" | sed -E "$FORMATTER")
-          FORMATTED_OPENWRT_TAG=$(echo "$OPENWRT_TAG" | sed -E "$FORMATTER")
-          
-          MESSAGE_STABLE=$(cat << EOF
-          🎯 *RTA\-WRT Firmware Update*
-          ✅ _Stable Release_
-
-          🔹 *Versi:* \`${FORMATTED_OPENWRT_VERSION}\`
-          🔹 *Tanggal:* \`${FORMATTED_DATETIME}\`
-
-          📌 *Catatan:*
-          🔒 Versi stabil dengan peningkatan keamanan dan performa\!
-          📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik\!
-          EOF
+  
+          # Escape karakter untuk MarkdownV2
+          FORMATTED_DATETIME=$(echo "$DATETIME" | sed 's/-/\\-/g')
+          FORMATTED_OPENWRT_VERSION=$(echo "$OPENWRT_VERSION" | sed 's/:/\\:/g' | sed 's/-/\\-/g' | sed 's/\./\\./g')
+  
+          MESSAGE_STABLE=$(printf "🎯 *RTA\-WRT Firmware Update*\n"
+            "✅ _Stable Release_\n\n"
+            "🔹 *Versi:* \`${FORMATTED_OPENWRT_VERSION}\`\n"
+            "🔹 *Tanggal:* \`${FORMATTED_DATETIME}\`\n\n"
+            "📌 *Catatan:*\n"
+            "🔒 Versi stabil dengan peningkatan keamanan dan performa\!\n"
+            "📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik\!\n"
           )
-
-          MESSAGE_DEV=$(cat << EOF
-          🚀 *RTA\-WRT Firmware Update*
-          🌟 _Development Release_
-
-          🔹 *Versi:* \`${FORMATTED_OPENWRT_VERSION}\`
-          🔹 *Tanggal:* \`${FORMATTED_DATETIME}\`
-
-          📌 *Catatan:*
-          🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan\!
-          🔄 Selalu gunakan versi terbaru untuk performa terbaik\!
-          EOF
+  
+          MESSAGE_DEV=$(printf "🚀 *RTA\-WRT Firmware Update*\n"
+            "🌟 _Development Release_\n\n"
+            "🔹 *Versi:* \`${FORMATTED_OPENWRT_VERSION}\`\n"
+            "🔹 *Tanggal:* \`${FORMATTED_DATETIME}\`\n\n"
+            "📌 *Catatan:*\n"
+            "🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan\!\n"
+            "🔄 Selalu gunakan versi terbaru untuk performa terbaik\!\n"
           )
-
+  
           BUTTONS_STABLE='{
               "inline_keyboard": [
                   [
@@ -341,7 +383,7 @@ jobs:
                   ]
               ]
           }'
-
+  
           BUTTONS_DEV='{
               "inline_keyboard": [
                   [
@@ -350,7 +392,7 @@ jobs:
                   ]
               ]
           }'
-
+  
           if [ "${{ inputs.notify }}" == "true" ]; then
             if [ "${{ env.CURRENT_BRANCH }}" == "main" ]; then
               curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
