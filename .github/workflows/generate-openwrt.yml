@@ -134,24 +134,24 @@ jobs:
 
       - name: Update Building Status
         run: |
-          DEVICES=${{ needs.prepare.outputs.devices }}
-          CURRENT_DEVICE=${{ matrix.device }}
-          STATUS_JSON=$(echo $DEVICES | jq -c 'reduce .[] as $item ({};
+          echo '${{ needs.prepare.outputs.devices }}' | jq -c 'reduce .[] as $item ({};
             . + { ($item): "⏳ Pending" }
-          )' | jq -c '. + { "'$CURRENT_DEVICE'": "🏗️ Building..." }')
+          )' | jq -c '. + { "${{ matrix.device }}": "🏗️ Building..." }' > status.json
           
-          curl -X POST https://api.github.com/repos/${{ github.repository }}/dispatches \
+          curl -X POST "https://api.github.com/repos/${{ github.repository }}/dispatches" \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
-            -d '{
-              "event_type": "update-build-status",
-              "client_payload": {
-                "message_id": "${{ needs.prepare.outputs.message_id }}",
-                "device_statuses": '"$STATUS_JSON"',
-                "releases_branch": "${{ inputs.releases_branch }}",
-                "ref_name": "${{ github.ref_name }}"
-              }
-            }'
+            -d @- << EOF
+          {
+            "event_type": "update-build-status",
+            "client_payload": {
+              "message_id": "${{ needs.prepare.outputs.message_id }}",
+              "device_statuses": $(cat status.json),
+              "releases_branch": "${{ inputs.releases_branch }}",
+              "ref_name": "${{ github.ref_name }}"
+            }
+          }
+          EOF
 
 
       # - name: Update Building Status
@@ -180,25 +180,24 @@ jobs:
       - name: Update Final Status
         if: always()
         run: |
-          DEVICES=${{ needs.prepare.outputs.devices }}
-          CURRENT_DEVICE=${{ matrix.device }}
-          BUILD_STATUS="${{ steps.build.outputs.status }}"
-          STATUS_JSON=$(echo $DEVICES | jq -c 'reduce .[] as $item ({};
+          echo '${{ needs.prepare.outputs.devices }}' | jq -c 'reduce .[] as $item ({};
             . + { ($item): "⏳ Pending" }
-          )' | jq -c '. + { "'$CURRENT_DEVICE'": "'$BUILD_STATUS'" }')
+          )' | jq -c '. + { "${{ matrix.device }}": "${{ steps.build.outputs.status }}" }' > status.json
           
-          curl -X POST https://api.github.com/repos/${{ github.repository }}/dispatches \
+          curl -X POST "https://api.github.com/repos/${{ github.repository }}/dispatches" \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
-            -d '{
-              "event_type": "update-build-status",
-              "client_payload": {
-                "message_id": "${{ needs.prepare.outputs.message_id }}",
-                "device_statuses": '"$STATUS_JSON"',
-                "releases_branch": "${{ inputs.releases_branch }}",
-                "ref_name": "${{ github.ref_name }}"
-              }
-            }'
+            -d @- << EOF
+          {
+            "event_type": "update-build-status",
+            "client_payload": {
+              "message_id": "${{ needs.prepare.outputs.message_id }}",
+              "device_statuses": $(cat status.json),
+              "releases_branch": "${{ inputs.releases_branch }}",
+              "ref_name": "${{ github.ref_name }}"
+            }
+          }
+          EOF
 
       # - name: Update Final Status
       #   if: always()
