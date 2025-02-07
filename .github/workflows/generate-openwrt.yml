@@ -109,7 +109,7 @@ jobs:
         run: |
           set -euxo pipefail
           sudo timedatectl set-timezone "$TZ"
-          echo "datetime=$(date +'%Y%m%d')" >> $GITHUB_ENV
+          echo "datetime=$(date +'%d%m%Y')" >> $GITHUB_ENV
           echo "openwrt_version=${{ inputs.releases_branch }}" >> $GITHUB_ENV
           echo "openwrt_tag=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')" >> $GITHUB_ENV
 
@@ -256,7 +256,7 @@ jobs:
         run: |
           set -euxo pipefail
           sudo timedatectl set-timezone "$TZ"
-          echo "datetime=$(date +'%Y%m%d')" >> $GITHUB_ENV
+          echo "datetime=$(date +'%d-%m-%Y')" >> $GITHUB_ENV
           echo "openwrt_version=${{ inputs.releases_branch }}" >> $GITHUB_ENV
           echo "openwrt_tag=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')" >> $GITHUB_ENV
 
@@ -282,7 +282,7 @@ jobs:
           OPENWRT_TAG=${{ env.openwrt_tag }}
 
           # Formatter untuk MarkdownV2
-          FORMATTER='s/([_*\[\]()~`>#+=|{}.!\\-])/\\\1/g'
+          FORMATTER='s/([_*\[\]()~`>#+=|{}.!\\\-])/\\\1/g'
 
           # Format semua variabel
           FORMATTED_DATETIME=$(echo "$DATETIME" | sed -E "$FORMATTER")
