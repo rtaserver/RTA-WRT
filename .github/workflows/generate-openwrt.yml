@@ -326,9 +326,11 @@ jobs:
       - name: Add changelog info
         id: changelog
         run: |
+          mkdir ../changelog
           r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found && NF' "${PWD}/CHANGELOG.md")
           r=$(echo "$r" | sed -e 's/%/%25/g' -e 's/$/\n/g' -e 's/\r/%0D/g')
-          echo "changelog=$r" >> $GITHUB_OUTPUT
+          echo "changelog=$r" >> changelog.txt
+          cp changelog.txt ../changelog/
 
       - name: Change Branch
         uses: actions/checkout@v4
@@ -347,7 +349,8 @@ jobs:
       - name: Update Branch Info
         id: update
         run: |
-          echo "${{ steps.changelog.outputs.changelog }}" > ${CURRENT_BRANCH}/changelog.txt
+          rm -rf ${CURRENT_BRANCH}/changelog.txt
+          cp ../changelog/changelog.txt ${CURRENT_BRANCH}/
           echo "${{ env.openwrt_tag }}--$( [ "$CURRENT_BRANCH" == "main" ] && echo "main" || echo "dev" )" > $CURRENT_BRANCH/version.txt
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'

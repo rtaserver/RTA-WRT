@@ -14,7 +14,10 @@ jobs:
           GROUP_ID: ${{ secrets.CHAT_ID }}
           TOPIC_ID: 616
         run: |
-          device_statuses=$(echo '${{ github.event.client_payload.device_statuses }}' | jq -r 'to_entries | .[] | "\(.key)|\(.value)"')
+          if ! device_statuses=$(jq -r 'to_entries | map("\(.key)|\(.value)") | .[]' <<< '${{ toJSON(github.event.client_payload.device_statuses) }}'); then
+            echo "Error parsing device statuses JSON"
+            exit 1
+          fi
           
           MESSAGE="=======================%0A"
           MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
