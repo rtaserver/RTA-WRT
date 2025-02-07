@@ -279,7 +279,7 @@ download_imagebuilder() {
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
             KERNEL="6.1.66-DBAI"
-            KERNEL2="5.15.y_5.10.y_6.1.y_6.6.y"
+            KERNEL2="5.15.y_6.6.y"
             ;;
         s912) # Amlogic (S912)
             op_target="amlogic"
@@ -290,7 +290,7 @@ download_imagebuilder() {
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
             KERNEL=""
-            KERNEL2="5.15.y_5.10.y_6.1.y_6.6.y"
+            KERNEL2="5.15.y_6.6.y"
             ;;
         rk*) # Rockchip (RK*)
             op_target="rockchip"
@@ -301,7 +301,7 @@ download_imagebuilder() {
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
             KERNEL="5.10.160-rk35v-dbai"
-            KERNEL2="5.15.y_5.10.y_6.1.y_6.6.y"
+            KERNEL2="5.15.y_6.6.y"
             ;;
         bcm2710*) # Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit)
             op_target="bcm2710"
@@ -1251,14 +1251,10 @@ case "${op_devices}" in
     s905x)
         repackwrt --ophub -t "s905x_s905x-b860h" -k "$KERNEL2"
         # Process HG680P with OPHUB firmware
-        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x_k5.10*.img.gz")" "OPHUB" "meson-gxl-s905x-p212.dtb" "HG680P"
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x_k5.15*.img.gz")" "OPHUB" "meson-gxl-s905x-p212.dtb" "HG680P"
-        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x_k6.1*.img.gz")" "OPHUB" "meson-gxl-s905x-p212.dtb" "HG680P"
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x_k6.6*.img.gz")" "OPHUB" "meson-gxl-s905x-p212.dtb" "HG680P"
         # Process B860H with OPHUB firmware
-        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k5.10*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k5.15*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
-        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k6.1*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k6.6*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         ;;
     s912)
