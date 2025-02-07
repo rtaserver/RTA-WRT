@@ -225,7 +225,6 @@ jobs:
   opsional:
     needs: build
     runs-on: ubuntu-latest
-    if: ${{ inputs.notify == 'true' }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -324,18 +323,20 @@ jobs:
               ]
           }'
 
-          if [ "${{ env.CURRENT_BRANCH }}" == "main" ]; then
-            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-              -d "chat_id=$GROUP_ID" \
-              -d "text=$(echo "$MESSAGE_STABLE" | sed -E "$FORMATTER")" \
-              -d "parse_mode=MarkdownV2" \
-              -d "reply_markup=$BUTTONS_STABLE" \
-              -d "message_thread_id=$MESSAGE_THREAD_ID" || exit 1
-          else
-            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-              -d "chat_id=$GROUP_ID" \
-              -d "text=$(echo "$MESSAGE_DEV" | sed -E "$FORMATTER")" \
-              -d "parse_mode=MarkdownV2" \
-              -d "reply_markup=$BUTTONS_DEV" \
-              -d "message_thread_id=$MESSAGE_THREAD_ID" || exit 1
+          if [ "${{ inputs.notify }}" == "true" ]; then
+            if [ "${{ env.CURRENT_BRANCH }}" == "main" ]; then
+              curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+                -d "chat_id=$GROUP_ID" \
+                -d "text=$(echo "$MESSAGE_STABLE" | sed -E "$FORMATTER")" \
+                -d "parse_mode=MarkdownV2" \
+                -d "reply_markup=$BUTTONS_STABLE" \
+                -d "message_thread_id=$MESSAGE_THREAD_ID" || exit 1
+            else
+              curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+                -d "chat_id=$GROUP_ID" \
+                -d "text=$(echo "$MESSAGE_DEV" | sed -E "$FORMATTER")" \
+                -d "parse_mode=MarkdownV2" \
+                -d "reply_markup=$BUTTONS_DEV" \
+                -d "message_thread_id=$MESSAGE_THREAD_ID" || exit 1
+            fi
           fi
