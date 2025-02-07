@@ -1,15 +1,6 @@
-#=====================================================================================
-# https://github.com/ophub/amlogic-s9xxx-openwrt
-# Description:   Build OpenWrt with Image Builder
-# Instructions:  https://openwrt.org/docs/guide-user/additional-software/imagebuilder
-# Download from: https://downloads.openwrt.org/releases
-#                https://downloads.immortalwrt.org/releases
-#=====================================================================================
-
-name: Build OpenWrt Firmware
+name: Build OpenWrt
 
 on:
-  repository_dispatch:
   workflow_dispatch:
     inputs:
       releases_branch:
@@ -23,252 +14,385 @@ on:
           - immortalwrt:24.10.0-rc4
           - immortalwrt:23.05.4
       devices:
-        description: "Select device target:"
+        description: "Select device target"
         required: true
         default: "all"
         type: choice
         options:
           - all
-          # Amlogic Devices
           - s905x
           - s905x2
           - s905x3
           - s905x4
           - s912
-          # Allwinner H5
           - h5-orangepi-zeroplus2
           - h5-orangepi-zeroplus
           - h5-orangepi-prime
           - h5-orangepi-pc2
-          # Allwinner H6
           - h6-orangepi-lite2
           - h6-orangepi-1plus
           - h6-orangepi-3
           - h6-orangepi-3lts
-          # Allwinner H616/H618
           - h616-orangepi-zero2
           - h618-orangepi-zero2w
           - h618-orangepi-zero3
-          # Rockchip
           - rk3566-orangepi-3b
-          - rk3588-orangepi-5plus
           - rk3588s-orangepi-5
-          # Broadcom
           - bcm2710-rpi-3b
           - bcm2711-rpi-4b
-          # x86
           - x86-64
-      prerelease:
-        description: "Pre-release:"
+      notify:
+        description: "Notify to Telegram"
         required: true
-        default: "false"
-        type: choice
-        options:
-          - "true"
-          - "false"
+        default: false
+        type: boolean
 
 env:
   TZ: Asia/Jakarta
   IMAGEBUILDER_SH: imagebuilder.sh
   DEBIAN_FRONTEND: noninteractive
-  PYTHON_PACKAGES: "telethon colorama"
-  APT_PACKAGES: >-
-    build-essential libncurses5-dev libncursesw5-dev zlib1g-dev gawk git
-    gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils
-    mkisofs jq python3 python3-pip
+  APT_PACKAGES: build-essential libncurses5-dev zlib1g-dev gawk git gettext libssl-dev rsync wget unzip tar gzip qemu-utils mkisofs jq python3 python3-pip
 
 jobs:
-  prebuild:
+  prepare:
     runs-on: ubuntu-latest
-    name: ${{ inputs.releases_branch }}
     outputs:
-      devices: ${{ steps.set-matrix.outputs.devices }}
+      devices: ${{ steps.matrix.outputs.devices }}
+      message_id: ${{ steps.telegram.outputs.message_id }}
+      status_key: ${{ steps.status.outputs.key }}
     steps:
-      - name: Set Matrix Run
-        id: set-matrix
+      - name: Configure Build Matrix
+        id: matrix
         run: |
-          if [ "${{ inputs.devices }}" == "all" ]; then
-            DEVICES_LIST='["s905x","s905x2","s905x3","s905x4","s912","h5-orangepi-zeroplus2","h5-orangepi-zeroplus","h5-orangepi-prime","h5-orangepi-pc2","h6-orangepi-lite2","h6-orangepi-1plus","h6-orangepi-3","h6-orangepi-3lts","h616-orangepi-zero2","h618-orangepi-zero2w","h618-orangepi-zero3","rk3566-orangepi-3b","rk3588-orangepi-5plus","rk3588s-orangepi-5","bcm2710-rpi-3b","bcm2711-rpi-4b","x86-64"]'
+          if [ "${{ inputs.devices }}" = "all" ]; then
+            devices=$(jq -nc '[ "s905x", "s905x2", "s905x3", "s905x4", "s912", "h5-orangepi-zeroplus2", "h5-orangepi-zeroplus", "h5-orangepi-prime", "h5-orangepi-pc2", "h6-orangepi-lite2", "h6-orangepi-1plus", "h6-orangepi-3", "h6-orangepi-3lts", "h616-orangepi-zero2", "h618-orangepi-zero2w", "h618-orangepi-zero3", "rk3566-orangepi-3b", "rk3588s-orangepi-5", "bcm2710-rpi-3b", "bcm2711-rpi-4b", "x86-64" ]')
           else
-            DEVICES_LIST="[\"${{ inputs.devices }}\"]"
+            devices=$(jq -nc --arg d "${{ inputs.devices }}" '[$d]')
           fi
-          echo "devices=$DEVICES_LIST" >> $GITHUB_OUTPUT
+          echo "devices=$devices" >> $GITHUB_OUTPUT
 
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Update Version
+      - name: Generate Status Key
+        id: status
         run: |
-          sudo timedatectl set-timezone "$TZ"
-          DATE=$(date +'%d%m%Y')
-          RELEASE_BRANCH="${{ inputs.releases_branch }}"
-          RELEASE_TAG="${RELEASE_BRANCH/:/_}-${DATE}"
-          git config user.name 'github-actions[bot]' || echo 'Failed to set git user name'
-          git config user.email 'github-actions[bot]@users.noreply.github.com' || echo 'Failed to set git user email'
-          if [ {{ inputs.prerelease }} == true ]; then
-            echo "Prerelease: $RELEASE_TAG"
-          else
-            sed -i "s|.*|${RELEASE_TAG}|g" latestversion.txt
-            sed -i "s|const currentVersion = \".*\"|const currentVersion = \"${RELEASE_TAG}\"|g" files/usr/share/ucode/luci/template/header.ut
-          fi
-          git add . || echo 'Failed to add changes'
-          git commit -m "Auto Release: v${DATE}" || echo 'Failed to commit changes'
-          git push || echo 'Failed to push changes'
+          echo "key=build-status-${{ github.run_id }}" >> $GITHUB_OUTPUT
+
+      - name: Send Initial Telegram Message
+        id: telegram
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GROUP_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          devices=$(echo '${{ steps.matrix.outputs.devices }}' | jq -r '.[]')
+          
+          MESSAGE="=======================%0A"
+          MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
+          MESSAGE+="=======================%0A"
+          MESSAGE+="📌 *Versi*: ${{ inputs.releases_branch }}%0A"
+          MESSAGE+="🌿 *Branch*: ${{ github.ref_name }}%0A"
+          MESSAGE+="📅 *Tanggal*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
+          MESSAGE+="-----------------------%0A"
+          MESSAGE+="📋 *Device List*%0A"
+          
+          for device in $devices; do
+            MESSAGE+="🔹 $device | ⏳ Pending%0A"
+          done
+          
+          MESSAGE+="======================="
+          
+          RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+            -d chat_id=$GROUP_ID \
+            -d message_thread_id=616 \
+            -d parse_mode=Markdown \
+            -d text="$MESSAGE")
+          
+          echo "message_id=$(echo $RESPONSE | jq -r '.result.message_id')" >> $GITHUB_OUTPUT
 
   build:
-    needs: prebuild
+    needs: prepare
     runs-on: ubuntu-24.04
-    if: ${{ github.event.repository.owner.id == github.event.sender.id }}
-    name: "${{ matrix.devices }}"
     strategy:
       fail-fast: false
       matrix:
-        devices: ${{fromJSON(needs.prebuild.outputs.devices)}}
-
+        device: ${{ fromJSON(needs.prepare.outputs.devices) }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
 
-      - name: Add changelog info to new release description
-        id: changelog
-        shell: bash
+      - name: Install Dependencies
         run: |
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
-          r="${r//'%'/'%25'}"
-          r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"  
-          echo "CHANGELOG=$r" >> $GITHUB_OUTPUT
+          sudo apt-get update -qq
+          sudo apt-get install -y ${{ env.APT_PACKAGES }}
 
-      - name: Install Required Packages
-        run: |
-          sudo apt-get -qq update
-          sudo apt-get -qq install ${{ env.APT_PACKAGES }}
-          pip install ${{ env.PYTHON_PACKAGES }}
-
-      - name: Initialize Environment
+      - name: Setup Environment
         run: |
           sudo timedatectl set-timezone "$TZ"
-          RELEASE_BRANCH="${{ inputs.releases_branch }}"
-          RELEASE_TAG="${RELEASE_BRANCH/:/_}"
-          echo "RELEASE_BRANCH=${RELEASE_BRANCH}" >> $GITHUB_ENV
-          echo "RELEASE_TAG=${RELEASE_TAG}" >> $GITHUB_ENV
-          echo "DEVICES=${{ matrix.devices }}" >> $GITHUB_ENV
-          echo "DATE=$(date +'%d%m%Y')" >> $GITHUB_ENV
-          echo -e "[\033[94m INFO \033[0m] Building for device: ${{ matrix.devices }}"
+          echo "datetime=$(date +'%d%m%Y')" >> $GITHUB_ENV
+          echo "openwrt_version=${{ inputs.releases_branch }}" >> $GITHUB_ENV
+          echo "openwrt_tag=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')" >> $GITHUB_ENV
 
-      - name: Build Image and Rootfs
-        id: imagebuilder
+      - name: Update Building Status
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: update-build-status
+          client-payload: |
+            {
+              "message_id": "${{ needs.prepare.outputs.message_id }}",
+              "device": "${{ matrix.device }}",
+              "status": "🏗️ Building...",
+              "releases_branch": "${{ inputs.releases_branch }}",
+              "ref_name": "${{ github.ref_name }}"
+            }
+
+      - name: Build Image
+        id: build
         run: |
-          echo -e "[\033[95m STEPS \033[0m] Starting firmware and rootfs build"
           chmod +x ${IMAGEBUILDER_SH}
-          if sudo bash ${IMAGEBUILDER_SH} ${{ env.RELEASE_BRANCH }} "${{ env.DEVICES }}"; then
-            echo "status=success" >> $GITHUB_OUTPUT
-            echo -e "[\033[92m SUCCESS \033[0m] Build completed successfully"
+          if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}"; then
+            echo "status=✅ Sukses" >> $GITHUB_OUTPUT
           else
-            echo "status=failed" >> $GITHUB_OUTPUT
-            echo -e "[\033[91m ERROR \033[0m] Build failed"
-            exit 1
+            echo "status=❌ Gagal" >> $GITHUB_OUTPUT
           fi
 
-      - name: Clean Build Space
-        if: ${{ steps.imagebuilder.outputs.status == 'success' && !cancelled() }}
-        run: |
-          cd imagebuilder
-          sudo find . -mindepth 1 -not -path './out_firmware*' -delete
-          df -hT ${PWD}
+      - name: Update Final Status
+        if: always()
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: update-build-status
+          client-payload: |
+            {
+              "message_id": "${{ needs.prepare.outputs.message_id }}",
+              "device": "${{ matrix.device }}",
+              "status": "${{ steps.build.outputs.status }}",
+              "releases_branch": "${{ inputs.releases_branch }}",
+              "ref_name": "${{ github.ref_name }}"
+            }
 
       - name: Upload to Release
-        if: ${{ steps.imagebuilder.outputs.status == 'success' }}
+        if: ${{ steps.imagebuilder.outputs.status == '✅ Sukses' }}
         uses: svenstaro/upload-release-action@v2
-        continue-on-error: false
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file_glob: true
           file: imagebuilder/out_firmware/*
-          tag: ${{ env.RELEASE_TAG }}-${{ env.DATE }}
-          release_name: RTA-WRT - ${{ env.RELEASE_TAG }}-${{ env.DATE }}
+          tag: ${{ env.openwrt_tag }}-${{ env.datetime }}
+          release_name: RTA-WRT - ${{ env.openwrt_tag }}-${{ env.datetime }}
           overwrite: true
-          prerelease: ${{ inputs.prerelease }}
+          prerelease: ${{ github.ref_name == 'dev' }}
+          promote: ${{ github.ref_name != 'dev' }}
           body: |
-              ---
+            ---
+  
+            # 🚀 **RTA-WRT - Image Information**
+                
+            ---
+                
+            ### 📥 **Download Statistics**
+                
+            ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.openwrt_tag }}-${{ env.datetime }}/total?style=for-the-badge&logo=Openwrt)
+                
+            ---
+                
+            ### 📢 **Telegram Support**
+                
+            [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram&link=https%3A%2F%2Ft.me%2Frtawrt)](https://t.me/rtawrt)
+            [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram&link=https%3A%2F%2Ft.me%2Fbackup_rtawrt)](https://t.me/backup_rtawrt)
+            [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram&link=https%3A%2F%2Ft.me%2FRizkiKotet)](https://t.me/RizkiKotet)
+                
+            ---
+              
+            ### 📝 **Changelog**
+  
+            ${{ steps.changelog.outputs.changelog }}
+                
+            ---
+                
+            ## ⚠️ Peringatan untuk Instalasi Pertama
+            > **Catatan:** Booting awal memerlukan waktu agak lama karena proses partisi ulang dan konfigurasi tambahan.
+  
+            ---
+  
+            ## 📱 Device yang Didukung
+  
+            ### Amlogic
+            - **s905x** (HG680P, B860Hv1/v2) | Mod Boot SDCARD
+            - **s905x2** (HG680FJ, B860Hv5, MNC CYBORG001, X96Max-4G, X96Max-2G, MECOOL-KM3-4G, Tanix-Tx5-Max, A95X-F2)
+            - **s905x3** (X96-Max+, HK1-Box, Vontar-X3, H96-Max-X3, Ugoos-X3, TX3(QZ), TX3(BZ), X96-Air, X96-Max+_A100, A95X-F3-Air, Tencent-Aurora-3Pro(s905x3-b), X96-Max+Q1, X96-Max+100W, X96-Max+_2101, Infinity-B32, Whale, X88-Pro-X3, X99-Max-Plus, Transpeed-X3-Plus)
+            - **s905x4** (AKARI AX810, dll)
+            - **s912** (Tanix-TX8-Max, Tanix-TX9-Pro(3G), Tanix-TX9-Pro(2G), Tanix-TX92, Nexbox-A1, Nexbox-A95X-A2, A95X, H96-Pro-Plus, VORKE-Z6-Plus, Mecool-M8S-PRO-L, Vontar-X92, T95Z-Plus, Octopus-Planet, Phicomm-T1, TX3-Mini, OneCloudPro-V1.1_V1.2)
+  
+            ### Allwinner
+            - **H5** (Orange Pi Zero Plus 2, Orange Pi Zero Plus, Orange Pi Prime, Orange Pi PC2)
+            - **H6** (Orange Pi 1 Plus, Orange Pi Lite 2, Orange Pi 3 LTS, Orange Pi 3)
+            - **H616** (Orange Pi Zero 2)
+            - **H618** (Orange Pi Zero 3, Orange Pi Zero 2W)
+  
+            ### Rockchip
+            - **RK3566** (Orange Pi 3B)
+            - **RK3588S** (Orange Pi 5)
+            - **RK3588** (Orange Pi 5 Plus)
+  
+            ### Broadcom
+            - **BCM2710** (Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W - 64bit)
+            - **BCM2711** (Raspberry Pi 4B/400/CM4 - 64bit)
+  
+            ### Generic
+            - **x86-64**
+  
+            ---
+  
+            ## ℹ️ Informasi Sistem
+            - **IP Default:** 192.168.1.1
+            - **Username:** root
+            - **Password:** rtawrt
+            - **SSID:** RTA-WRT_2g / RTA-WRT_5g
+  
+            ### ⭐ Fitur Utama
+            - Modemmanager dengan koneksi ulang otomatis
+            - OpenClash dengan MetaCubeX Mihomo terbaru
+            - Passwall *Tunneling* alternatif
+            - MihomoTProxy *Tunneling* alternatif
+            - TinyFm file manager
+            - Internet Detector dan Lite Watchdog
+            - Tema Argon & Material dengan tampilan login kustom
+            - 3ginfo lite, Modeminfo, sms-tool, dan aplikasi modem lainnya
+            - Dukungan Layar OLED (teruji di Raspberry Pi 4B)
+  
+            ---
+                
+            **🚀 Tetap terhubung, nikmati performa maksimal dengan RTA-WRT! 🚀**
+                
+            ---
 
-              # 🚀 **RTA-WRT - Image Information**
-              
-              ---
-              
-              ### 📥 **Download Statistics**
-              
-              ![GitHub Downloads](https://img.shields.io/github/downloads/rizkikotet-dev/RTA-WRT/${{ env.RELEASE_TAG }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
-              
-              ---
-              
-              ### 📢 **Telegram Support**
-              
-              [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram&link=https%3A%2F%2Ft.me%2Frtawrt)](https://t.me/rtawrt)
-              [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram&link=https%3A%2F%2Ft.me%2Fbackup_rtawrt)](https://t.me/backup_rtawrt)
-              [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram&link=https%3A%2F%2Ft.me%2FRizkiKotet)](https://t.me/RizkiKotet)
-              
-              ---
-              
-              ### 📝 **Changelog (05-02-2025)**
-              
-               ${{ steps.changelog.outputs.CHANGELOG }}
-              
-              ---
-              
-              ## ⚠️ Peringatan untuk Instalasi Pertama
-              > **Catatan:** Booting awal memerlukan waktu agak lama karena proses partisi ulang dan konfigurasi tambahan.
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2.0.6
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 0
 
-              ---
+  opsional:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
 
-              ## 📱 Device yang Didukung
+      - name: Install Dependencies
+        run: |
+          set -euxo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y ${{ env.APT_PACKAGES }}
 
-              ### Amlogic
-              - **s905x** (HG680P, B860Hv1/v2) | Mod Boot SDCARD
-              - **s905x2** (HG680FJ, B860Hv5, MNC CYBORG001, X96Max-4G, X96Max-2G, MECOOL-KM3-4G, Tanix-Tx5-Max, A95X-F2)
-              - **s905x3** (X96-Max+, HK1-Box, Vontar-X3, H96-Max-X3, Ugoos-X3, TX3(QZ), TX3(BZ), X96-Air, X96-Max+_A100, A95X-F3-Air, Tencent-Aurora-3Pro(s905x3-b), X96-Max+Q1, X96-Max+100W, X96-Max+_2101, Infinity-B32, Whale, X88-Pro-X3, X99-Max-Plus, Transpeed-X3-Plus)
-              - **s905x4** (AKARI AX810, dll)
-              - **s912** (Tanix-TX8-Max, Tanix-TX9-Pro(3G), Tanix-TX9-Pro(2G), Tanix-TX92, Nexbox-A1, Nexbox-A95X-A2, A95X, H96-Pro-Plus, VORKE-Z6-Plus, Mecool-M8S-PRO-L, Vontar-X92, T95Z-Plus, Octopus-Planet, Phicomm-T1, TX3-Mini, OneCloudPro-V1.1_V1.2)
+      - name: Add changelog info
+        id: changelog
+        run: |
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found && NF' "${PWD}/CHANGELOG.md")
+          r=$(echo "$r" | sed -e 's/%/%25/g' -e 's/$/\n/g' -e 's/\r/%0D/g')
+          echo "changelog=$r" >> $GITHUB_OUTPUT
 
-              ### Allwinner
-              - **H5** (Orange Pi Zero Plus 2, Orange Pi Zero Plus, Orange Pi Prime, Orange Pi PC2)
-              - **H6** (Orange Pi 1 Plus, Orange Pi Lite 2, Orange Pi 3 LTS, Orange Pi 3)
-              - **H616** (Orange Pi Zero 2)
-              - **H618** (Orange Pi Zero 3, Orange Pi Zero 2W)
+      - name: Change Branch
+        uses: actions/checkout@v4
+        with:
+          ref: info
 
-              ### Rockchip
-              - **RK3566** (Orange Pi 3B)
-              - **RK3588S** (Orange Pi 5)
-              - **RK3588** (Orange Pi 5 Plus)
+      - name: Setup Environment
+        id: environment
+        run: |
+          set -euxo pipefail
+          sudo timedatectl set-timezone "$TZ"
+          echo "datetime=$(date +'%d-%m-%Y')" >> $GITHUB_ENV
+          echo "openwrt_version=${{ inputs.releases_branch }}" >> $GITHUB_ENV
+          echo "openwrt_tag=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')" >> $GITHUB_ENV
 
-              ### Broadcom
-              - **BCM2710** (Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W - 64bit)
-              - **BCM2711** (Raspberry Pi 4B/400/CM4 - 64bit)
+      - name: Update Branch Info
+        id: update
+        run: |
+          echo "${{ steps.changelog.outputs.changelog }}" > ${CURRENT_BRANCH}/changelog.txt
+          echo "${{ env.openwrt_tag }}--$( [ "$CURRENT_BRANCH" == "main" ] && echo "main" || echo "dev" )" > $CURRENT_BRANCH/version.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add . || echo "No files to commit"
+          git commit -m "Auto Release: v${{ env.openwrt_version }}" || echo "No changes to commit"
+          git push || echo "Error pushing to GitHub"
 
-              ### Generic
-              - **x86-64**
+      - name: Notify Telegram
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GROUP_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_THREAD_ID: 36
+        run: |
+          DATETIME=${{ env.datetime }}
+          OPENWRT_VERSION=${{ env.openwrt_version }}
+  
+          # Escape karakter untuk MarkdownV2
+          FORMATTED_DATETIME=$(echo "$DATETIME" | sed 's/-/\\-/g')
+          FORMATTED_OPENWRT_VERSION=$(echo "$OPENWRT_VERSION" | sed 's/:/\\:/g' | sed 's/-/\\-/g' | sed 's/\./\\./g')
+  
+          MESSAGE_STABLE=$(printf "🎯 *RTA\-WRT Firmware Update*\n"
+            "✅ _Stable Release_\n\n"
+            "🔹 *Versi:* \`${FORMATTED_OPENWRT_VERSION}\`\n"
+            "🔹 *Tanggal:* \`${FORMATTED_DATETIME}\`\n\n"
+            "📌 *Catatan:*\n"
+            "🔒 Versi stabil dengan peningkatan keamanan dan performa\!\n"
+            "📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik\!\n"
+          )
+  
+          MESSAGE_DEV=$(printf "🚀 *RTA\-WRT Firmware Update*\n"
+            "🌟 _Development Release_\n\n"
+            "🔹 *Versi:* \`${FORMATTED_OPENWRT_VERSION}\`\n"
+            "🔹 *Tanggal:* \`${FORMATTED_DATETIME}\`\n\n"
+            "📌 *Catatan:*\n"
+            "🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan\!\n"
+            "🔄 Selalu gunakan versi terbaru untuk performa terbaik\!\n"
+          )
+  
+          BUTTONS_STABLE='{
+              "inline_keyboard": [
+                  [
+                      {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/latest"},
+                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/main/changelog.txt"}
+                  ]
+              ]
+          }'
+  
+          BUTTONS_DEV='{
+              "inline_keyboard": [
+                  [
+                      {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases"},
+                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/dev/changelog.txt"}
+                  ]
+              ]
+          }'
+  
+          if [ "${{ inputs.notify }}" == "true" ]; then
+            if [ "${{ env.CURRENT_BRANCH }}" == "main" ]; then
+              curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+                -d "chat_id=$GROUP_ID" \
+                -d "text=$MESSAGE_STABLE" \
+                -d "parse_mode=MarkdownV2" \
+                -d "reply_markup=$BUTTONS_STABLE" \
+                -d "message_thread_id=$MESSAGE_THREAD_ID" || exit 1
+            else
+              curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+                -d "chat_id=$GROUP_ID" \
+                -d "text=$MESSAGE_DEV" \
+                -d "parse_mode=MarkdownV2" \
+                -d "reply_markup=$BUTTONS_DEV" \
+                -d "message_thread_id=$MESSAGE_THREAD_ID" || exit 1
+            fi
+          fi
 
-              ---
-
-              ## ℹ️ Informasi Sistem
-              - **IP Default:** 192.168.1.1
-              - **Username:** root
-              - **Password:** rtawrt
-              - **SSID:** RTA-WRT_2g / RTA-WRT_5g
-
-              ### ⭐ Fitur Utama
-              - Modemmanager dengan koneksi ulang otomatis
-              - OpenClash dengan MetaCubeX Mihomo terbaru
-              - Passwall *Tunneling* alternatif
-              - MihomoTProxy *Tunneling* alternatif
-              - TinyFm file manager
-              - Internet Detector dan Lite Watchdog
-              - Tema Argon & Material dengan tampilan login kustom
-              - 3ginfo lite, Modeminfo, sms-tool, dan aplikasi modem lainnya
-              - Dukungan Layar OLED (teruji di Raspberry Pi 4B)
-
-              ---
-              
-              **🚀 Tetap terhubung, nikmati performa maksimal dengan RTA-WRT! 🚀**
-              
-              ---   
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2.0.6
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 0

@@ -279,7 +279,7 @@ download_imagebuilder() {
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
             KERNEL="6.1.66-DBAI"
-            KERNEL2="5.15.y_5.10.y"
+            KERNEL2="5.15.y_6.6.y"
             ;;
         s912) # Amlogic (S912)
             op_target="amlogic"
@@ -290,7 +290,7 @@ download_imagebuilder() {
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
             KERNEL=""
-            KERNEL2="5.15.y_5.10.y"
+            KERNEL2="5.15.y_6.6.y"
             ;;
         rk*) # Rockchip (RK*)
             op_target="rockchip"
@@ -301,7 +301,7 @@ download_imagebuilder() {
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
             KERNEL="5.10.160-rk35v-dbai"
-            KERNEL2="5.15.y_5.10.y"
+            KERNEL2="5.15.y_6.6.y"
             ;;
         bcm2710*) # Raspberry Pi 3A+/3B/3B+/CM3/Zero2/Zero2W (64bit)
             op_target="bcm2710"
@@ -524,6 +524,8 @@ custom_packages() {
         "xmm-modem|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         "luci-app-lite-watchdog|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         "luci-theme-alpha|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "luci-app-adguardhome|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "adguardhome|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         
         "luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
@@ -688,6 +690,8 @@ rebuild_firmware() {
     PACKAGES+=" kmod-usb-serial kmod-usb-serial-option unzip tar gzip openssh-sftp-server sms-tool luci-app-temp-status cpusage adb ttyd luci-app-ttyd bash dmesg screen kmod-tun jq luci-lib-ipkg"
     PACKAGES+=" ipset ipt2socks iptables iptables-legacy iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat coreutils coreutils-base64 coreutils-nohup curl dns2socks ip-full libuci-lua lua luci-compat luci-lib-jsonc microsocks resolveip tcping"
 
+    # AdguardHome
+    PACKAGES+=" adguardhome luci-app-adguardhome"
 
     # Modem Tools
     PACKAGES+=" modeminfo-serial-zte modeminfo-serial-gosun modeminfo-qmi modeminfo-serial-yuge modeminfo-serial-thales modeminfo-serial-tw modeminfo-serial-meig modeminfo-serial-styx modeminfo-serial-mikrotik modeminfo-serial-dell modeminfo-serial-sierra modeminfo-serial-quectel modeminfo-serial-huawei modeminfo-serial-xmm modeminfo-serial-telit modeminfo-serial-fibocom modeminfo-serial-simcom modeminfo luci-app-modeminfo"
@@ -1149,30 +1153,30 @@ rename_firmware() {
         "-bcm27xx-bcm2711-rpi-4-squashfs-sysupgrade|Broadcom_RaspberryPi_4B-Squashfs_Sysupgrade"
         
         # Allwinner
-        "-h5-orangepi-pc2-|Allwinner_OrangePi_PC2"
-        "-h5-orangepi-prime-|Allwinner_OrangePi_Prime"
-        "-h5-orangepi-zeroplus-|Allwinner_OrangePi_ZeroPlus"
-        "-h5-orangepi-zeroplus2-|Allwinner_OrangePi_ZeroPlus2"
-        "-h6-orangepi-1plus-|Allwinner_OrangePi_1Plus"
-        "-h6-orangepi-3-|Allwinner_OrangePi_3"
-        "-h6-orangepi-3lts-|Allwinner_OrangePi_3LTS"
-        "-h6-orangepi-lite2-|Allwinner_OrangePi_Lite2"
-        "-h616-orangepi-zero2-|Allwinner_OrangePi_Zero2"
-        "-h618-orangepi-zero2w-|Allwinner_OrangePi_Zero2W"
-        "-h618-orangepi-zero3-|Allwinner_OrangePi_Zero3"
+        "-h5-orangepi-pc2-|ULO-Allwinner_OrangePi_PC2"
+        "-h5-orangepi-prime-|ULO-Allwinner_OrangePi_Prime"
+        "-h5-orangepi-zeroplus-|ULO-Allwinner_OrangePi_ZeroPlus"
+        "-h5-orangepi-zeroplus2-|ULO-Allwinner_OrangePi_ZeroPlus2"
+        "-h6-orangepi-1plus-|ULO-Allwinner_OrangePi_1Plus"
+        "-h6-orangepi-3-|ULO-Allwinner_OrangePi_3"
+        "-h6-orangepi-3lts-|ULO-Allwinner_OrangePi_3LTS"
+        "-h6-orangepi-lite2-|ULO-Allwinner_OrangePi_Lite2"
+        "-h616-orangepi-zero2-|ULO-Allwinner_OrangePi_Zero2"
+        "-h618-orangepi-zero2w-|ULO-Allwinner_OrangePi_Zero2W"
+        "-h618-orangepi-zero3-|ULO-Allwinner_OrangePi_Zero3"
         
         # Rockchip
-        "-rk3566-orangepi-3b-|Rockchip_OrangePi_3B"
-        "-rk3588s-orangepi-5-|Rockchip_OrangePi_5"
+        "-rk3566-orangepi-3b-|ULO-Rockchip_OrangePi_3B"
+        "-rk3588s-orangepi-5-|ULO-Rockchip_OrangePi_5"
         
         # Amlogic
-        "-s905x-|ULO-Amlogic_s905x-NON_MOD_SDCARD"
+        "_amlogic_s912_|OPHUB-Amlogic_s912"
         "_amlogic_s905x_|OPHUB-Amlogic_s905x-NON_MOD_SDCARD-HG680P"
         "_amlogic_s905x-b860h_|OPHUB-Amlogic_s905x-NON_MOD_SDCARD-B860H_v1-v2"
-        "-s905x2-|Amlogic_s905x2"
-        "-s905x3-|Amlogic_s905x3"
-        "-s905x4-|Amlogic_s905x4"
-        "_amlogic_s912_|Amlogic_s912"
+        "-s905x-|ULO-Amlogic_s905x-NON_MOD_SDCARD"
+        "-s905x2-|ULO-Amlogic_s905x2"
+        "-s905x3-|ULO-Amlogic_s905x3"
+        "-s905x4-|ULO-Amlogic_s905x4"
 
         # x86_64
         "x86-64-generic-ext4-combined-efi|X86_64_Generic_Ext4_Combined_EFI"
@@ -1249,18 +1253,13 @@ custom_files
 rebuild_firmware
 case "${op_devices}" in
     s905x)
-        repackwrt --ulo -t "$op_devices" -k "$KERNEL"
         repackwrt --ophub -t "s905x_s905x-b860h" -k "$KERNEL2"
-        # Process HG680P with ULO firmware
-        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*-s905x-*.img.gz")" "ULO" "meson-gxl-s905x-p212.dtb" "HG680P"
-        # Process B860H with ULO firmware
-        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*-s905x-*.img.gz")" "ULO" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         # Process HG680P with OPHUB firmware
-        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x_k5.10*.img.gz")" "OPHUB" "meson-gxl-s905x-p212.dtb" "HG680P"
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x_k5.15*.img.gz")" "OPHUB" "meson-gxl-s905x-p212.dtb" "HG680P"
+        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x_k6.6*.img.gz")" "OPHUB" "meson-gxl-s905x-p212.dtb" "HG680P"
         # Process B860H with OPHUB firmware
-        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k5.10*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k5.15*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
+        build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k6.6*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         ;;
     s912)
         repackwrt --ophub -t "s912" -k "$KERNEL2"
