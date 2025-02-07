@@ -152,20 +152,6 @@ jobs:
           }
           EOF
 
-
-      # - name: Update Building Status
-      #   uses: peter-evans/repository-dispatch@v2
-      #   with:
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     event-type: update-build-status
-      #     client-payload: |
-      #       {
-      #         "message_id": "${{ needs.prepare.outputs.message_id }}",
-      #         "device_statuses": ${{ toJSON(fromJSON(needs.prepare.outputs.devices) | map({ "key": ., "value": "⏳ Pending" }) | from_entries | merge({ (matrix.device): "🏗️ Building..." })) }},
-      #         "releases_branch": "${{ inputs.releases_branch }}",
-      #         "ref_name": "${{ github.ref_name }}"
-      #       }
-
       - name: Build Image
         id: build
         run: |
@@ -197,20 +183,6 @@ jobs:
             }
           }
           EOF
-
-      # - name: Update Final Status
-      #   if: always()
-      #   uses: peter-evans/repository-dispatch@v2
-      #   with:
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     event-type: update-build-status
-      #     client-payload: |
-      #       {
-      #         "message_id": "${{ needs.prepare.outputs.message_id }}",
-      #         "device_statuses": ${{ toJSON(fromJSON(needs.prepare.outputs.devices) | map({ "key": ., "value": "⏳ Pending" }) | from_entries | merge({ (matrix.device): steps.build.outputs.status })) }},
-      #         "releases_branch": "${{ inputs.releases_branch }}",
-      #         "ref_name": "${{ github.ref_name }}"
-      #       }
 
       - name: Upload to Release
         if: ${{ steps.imagebuilder.outputs.status == '✅ Sukses' }}
@@ -349,8 +321,8 @@ jobs:
       - name: Update Branch Info
         id: update
         run: |
-          rm -rf ${CURRENT_BRANCH}/changelog.txt
-          cp ../changelog/changelog.txt ${CURRENT_BRANCH}/
+          sudo rm -rf ${CURRENT_BRANCH}/changelog.txt
+          sudo cp ../changelog/changelog.txt ${CURRENT_BRANCH}/
           echo "${{ env.openwrt_tag }}--$( [ "$CURRENT_BRANCH" == "main" ] && echo "main" || echo "dev" )" > $CURRENT_BRANCH/version.txt
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
@@ -413,17 +385,16 @@ jobs:
                 -d "chat_id=$GROUP_ID" \
                 -d "text=$MESSAGE_STABLE" \
                 -d "parse_mode=MarkdownV2" \
-                -d "reply_markup=$BUTTONS_STABLE" \
-                -d "message_thread_id=$MESSAGE_THREAD_ID" || exit 1
+                -d "reply_markup=$BUTTONS_STABLE" || exit 1
             else
               curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
                 -d "chat_id=$GROUP_ID" \
                 -d "text=$MESSAGE_DEV" \
                 -d "parse_mode=MarkdownV2" \
-                -d "reply_markup=$BUTTONS_DEV" \
-                -d "message_thread_id=$MESSAGE_THREAD_ID" || exit 1
+                -d "reply_markup=$BUTTONS_DEV" || exit 1
             fi
           fi
+          # -d "message_thread_id=$MESSAGE_THREAD_ID"
 
       - name: Delete workflow runs
         if: always()
