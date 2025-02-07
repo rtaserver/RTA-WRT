@@ -267,6 +267,14 @@ jobs:
                 
             ---
 
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2.0.6
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 0
+
   opsional:
     needs: build
     runs-on: ubuntu-latest
@@ -380,3 +388,11 @@ jobs:
                 -d "message_thread_id=$MESSAGE_THREAD_ID" || exit 1
             fi
           fi
+
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2.0.6
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 0

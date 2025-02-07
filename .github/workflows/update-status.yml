@@ -31,3 +31,10 @@ jobs:
             -d message_thread_id=$TOPIC_ID \
             -d parse_mode=Markdown \
             -d text="$MESSAGE"
+
+      - name: Update Final Status
+        if: always()
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: delete-workflows
