@@ -82,8 +82,8 @@ jobs:
           EOF
             
           chmod +x telegram.sh
-          IDTELE=$(sudo bash telegram.sh --generate '${{ steps.devices.outputs.devices }}')
-          echo "message_id=$IDTELE" >> "$GITHUB_OUTPUT"
+          message_id=$(sudo bash telegram.sh --generate '${{ steps.devices.outputs.devices }}')
+          echo "message_id=$message_id" >> "$GITHUB_OUTPUT"
           
       - name: Install Dependencies
         run: |
@@ -103,12 +103,12 @@ jobs:
           chmod +x ${IMAGEBUILDER_SH}
 
           for dev in ${{ steps.devices.outputs.devices }}; do
-            sudo bash telegram.sh --update "${{ steps.telegram.outputs.message_id }}" "$dev" "💿 Building"
+            sudo bash telegram.sh --update "${{ steps.telegram.outputs.message_id }}" ${{ steps.devices.outputs.devices }} "$dev" "💿 Building"
             if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "$dev"; then
-              sudo bash telegram.sh --update "${{ steps.telegram.outputs.message_id }}" "$dev" "✅ Success"
+              sudo bash telegram.sh --update "${{ steps.telegram.outputs.message_id }}" ${{ steps.devices.outputs.devices }} "$dev" "✅ Success"
             else
               echo "Build failed! Check build.log for details"
-              sudo bash telegram.sh --update "${{ steps.telegram.outputs.message_id }}" "$dev" "❌ Failed"
+              sudo bash telegram.sh --update "${{ steps.telegram.outputs.message_id }}" ${{ steps.devices.outputs.devices }} "$dev" "❌ Failed"
             fi
           done
 
