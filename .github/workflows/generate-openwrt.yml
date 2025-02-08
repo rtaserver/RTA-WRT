@@ -52,14 +52,13 @@ env:
   IMAGEBUILDER_SH: imagebuilder.sh
   DEBIAN_FRONTEND: noninteractive
   APT_PACKAGES: build-essential libncurses5-dev zlib1g-dev gawk git gettext libssl-dev rsync wget unzip tar gzip qemu-utils mkisofs jq python3 python3-pip
-
+  CURRENT_BRANCH: ${{ github.ref_name }}
 jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
       devices: ${{ steps.matrix.outputs.devices }}
       message_id: ${{ steps.telegram.outputs.message_id }}
-      status_key: ${{ steps.status.outputs.key }}
     steps:
       - name: Configure Build Matrix
         id: matrix
@@ -70,11 +69,6 @@ jobs:
             devices=$(jq -nc --arg d "${{ inputs.devices }}" '[$d]')
           fi
           echo "devices=$devices" >> $GITHUB_OUTPUT
-
-      - name: Generate Status Key
-        id: status
-        run: |
-          echo "key=build-status-${{ github.run_id }}" >> $GITHUB_OUTPUT
 
       - name: Send Initial Telegram Message
         id: telegram
@@ -94,7 +88,7 @@ jobs:
           MESSAGE+="📋 *Device List*%0A"
           
           for device in $devices; do
-            MESSAGE+="🔹 $device | ⏳ Pending%0A"
+            MESSAGE+="🔹 $device | ⏳ Building%0A"
           done
           
           MESSAGE+="======================="
@@ -124,33 +118,22 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y ${{ env.APT_PACKAGES }}
 
+      - name: Add changelog info to new release description
+        id: changelog
+        shell: bash
+        run: |
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
+          r="${r//'%'/'%25'}"
+          r="${r//$'\n'/'%0A'}"
+          r="${r//$'\r'/'%0D'}"  
+          echo "changelog=$r" >> $GITHUB_OUTPUT 
+
       - name: Setup Environment
         run: |
           sudo timedatectl set-timezone "$TZ"
           echo "datetime=$(date +'%d%m%Y')" >> $GITHUB_ENV
           echo "openwrt_version=${{ inputs.releases_branch }}" >> $GITHUB_ENV
           echo "openwrt_tag=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')" >> $GITHUB_ENV
-
-      - name: Update Building Status
-        run: |
-          echo '${{ needs.prepare.outputs.devices }}' | jq -c 'reduce .[] as $item ({};
-            . + { ($item): "⏳ Pending" }
-          )' | jq -c '. + { "${{ matrix.device }}": "🏗️ Building..." }' > status.json
-          
-          curl -X POST "https://api.github.com/repos/${{ github.repository }}/dispatches" \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -d @- << EOF
-          {
-            "event_type": "update-build-status",
-            "client_payload": {
-              "message_id": "${{ needs.prepare.outputs.message_id }}",
-              "device_statuses": $(cat status.json),
-              "releases_branch": "${{ inputs.releases_branch }}",
-              "ref_name": "${{ github.ref_name }}"
-            }
-          }
-          EOF
 
       - name: Build Image
         id: build
@@ -162,30 +145,20 @@ jobs:
             echo "status=❌ Gagal" >> $GITHUB_OUTPUT
           fi
 
-      - name: Update Final Status
-        if: always()
+      - name: Create Status File
         run: |
-          echo '${{ needs.prepare.outputs.devices }}' | jq -c 'reduce .[] as $item ({};
-            . + { ($item): "⏳ Pending" }
-          )' | jq -c '. + { "${{ matrix.device }}": "${{ steps.build.outputs.status }}" }' > status.json
-          
-          curl -X POST "https://api.github.com/repos/${{ github.repository }}/dispatches" \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -d @- << EOF
-          {
-            "event_type": "update-build-status",
-            "client_payload": {
-              "message_id": "${{ needs.prepare.outputs.message_id }}",
-              "device_statuses": $(cat status.json),
-              "releases_branch": "${{ inputs.releases_branch }}",
-              "ref_name": "${{ github.ref_name }}"
-            }
-          }
-          EOF
+          echo "Device: ${{ matrix.device }}" > status.txt
+          echo "Status: ${{ steps.build.outputs.status }}" >> status.txt
+
+      - name: Upload Build Status
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-status-${{ matrix.device }}
+          path: status.txt
 
       - name: Upload to Release
-        if: ${{ steps.imagebuilder.outputs.status == '✅ Sukses' }}
+        if: ${{ steps.build.outputs.status == '✅ Sukses' }}
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -280,6 +253,45 @@ jobs:
                 
             ---
 
+  
+  notify:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Build Status Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Update Telegram Message
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GROUP_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_ID: ${{ needs.prepare.outputs.message_id }}
+        run: |
+          devices=$(echo '${{ needs.prepare.outputs.devices }}' | jq -r '.[]')
+          MESSAGE="=======================%0A"
+          MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
+          MESSAGE+="=======================%0A"
+          MESSAGE+="📌 *Versi*: ${{ inputs.releases_branch }}%0A"
+          MESSAGE+="🌿 *Branch*: ${{ github.ref_name }}%0A"
+          MESSAGE+="📅 *Tanggal*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
+          MESSAGE+="-----------------------%0A"
+          MESSAGE+="📋 *Device List*%0A"
+          
+          for device in $devices; do
+            status=$(cat artifacts/build-status-$device/status.txt | grep "Status" | cut -d' ' -f2-)
+            MESSAGE+="🔹 $device | $status%0A"
+          done
+          
+          MESSAGE+="======================="
+          
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
+            -d chat_id=$GROUP_ID \
+            -d message_id=$MESSAGE_ID \
+            -d parse_mode=Markdown \
+            -d text="$MESSAGE"
+
   opsional:
     needs: build
     runs-on: ubuntu-latest
@@ -295,14 +307,15 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y ${{ env.APT_PACKAGES }}
 
-      - name: Add changelog info
+      - name: Add changelog info to new release description
         id: changelog
+        shell: bash
         run: |
-          mkdir ../changelog
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found && NF' "${PWD}/CHANGELOG.md")
-          r=$(echo "$r" | sed -e 's/%/%25/g' -e 's/$/\n/g' -e 's/\r/%0D/g')
-          echo "changelog=$r" >> changelog.txt
-          cp changelog.txt ../changelog/
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
+          r="${r//'%'/'%25'}"
+          r="${r//$'\n'/'%0A'}"
+          r="${r//$'\r'/'%0D'}"  
+          echo "changelog=$r" >> $GITHUB_OUTPUT 
 
       - name: Change Branch
         uses: actions/checkout@v4
@@ -321,8 +334,10 @@ jobs:
       - name: Update Branch Info
         id: update
         run: |
-          sudo rm -rf ${CURRENT_BRANCH}/changelog.txt
-          sudo cp ../changelog/changelog.txt ${CURRENT_BRANCH}/
+          changelog_message="${{ steps.changelog.outputs.changelog }}"
+          r=$(echo "$changelog_message" | sed -e 's/%0A/\n/g' -e 's/%0D/\r/g' -e 's/%25/%/g')
+          rm -rf $CURRENT_BRANCH/changelog.txt
+          echo "changelog=$r" >> $CURRENT_BRANCH/changelog.txt
           echo "${{ env.openwrt_tag }}--$( [ "$CURRENT_BRANCH" == "main" ] && echo "main" || echo "dev" )" > $CURRENT_BRANCH/version.txt
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
@@ -333,34 +348,30 @@ jobs:
       - name: Notify Telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          GROUP_ID: ${{ secrets.CHAT_ID }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
           MESSAGE_THREAD_ID: 36
         run: |
           DATETIME=${{ env.datetime }}
           OPENWRT_VERSION=${{ env.openwrt_version }}
-  
-          # Escape karakter untuk MarkdownV2
-          FORMATTED_DATETIME=$(echo "$DATETIME" | sed 's/-/\\-/g')
-          FORMATTED_OPENWRT_VERSION=$(echo "$OPENWRT_VERSION" | sed 's/:/\\:/g' | sed 's/-/\\-/g' | sed 's/\./\\./g')
-  
-          MESSAGE_STABLE=$(printf "🎯 *RTA\-WRT Firmware Update*\n"
+      
+          MESSAGE_STABLE=$(printf "🎯 *RTA-WRT Firmware Update*\n"
             "✅ _Stable Release_\n\n"
-            "🔹 *Versi:* \`${FORMATTED_OPENWRT_VERSION}\`\n"
-            "🔹 *Tanggal:* \`${FORMATTED_DATETIME}\`\n\n"
+            "🔹 *Versi:* \`$OPENWRT_VERSION\`\n"
+            "🔹 *Tanggal:* \`$DATETIME\`\n\n"
             "📌 *Catatan:*\n"
-            "🔒 Versi stabil dengan peningkatan keamanan dan performa\!\n"
-            "📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik\!\n"
+            "🔒 Versi stabil dengan peningkatan keamanan dan performa!\n"
+            "📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik!\n"
           )
-  
-          MESSAGE_DEV=$(printf "🚀 *RTA\-WRT Firmware Update*\n"
+      
+          MESSAGE_DEV=$(printf "🚀 *RTA-WRT Firmware Update*\n"
             "🌟 _Development Release_\n\n"
-            "🔹 *Versi:* \`${FORMATTED_OPENWRT_VERSION}\`\n"
-            "🔹 *Tanggal:* \`${FORMATTED_DATETIME}\`\n\n"
+            "🔹 *Versi:* \`$OPENWRT_VERSION\`\n"
+            "🔹 *Tanggal:* \`$DATETIME\`\n\n"
             "📌 *Catatan:*\n"
-            "🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan\!\n"
-            "🔄 Selalu gunakan versi terbaru untuk performa terbaik\!\n"
+            "🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan!\n"
+            "🔄 Selalu gunakan versi terbaru untuk performa terbaik!\n"
           )
-  
+      
           BUTTONS_STABLE='{
               "inline_keyboard": [
                   [
@@ -369,7 +380,7 @@ jobs:
                   ]
               ]
           }'
-  
+      
           BUTTONS_DEV='{
               "inline_keyboard": [
                   [
@@ -378,19 +389,19 @@ jobs:
                   ]
               ]
           }'
-  
+      
           if [ "${{ inputs.notify }}" == "true" ]; then
             if [ "${{ env.CURRENT_BRANCH }}" == "main" ]; then
               curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-                -d "chat_id=$GROUP_ID" \
+                -d "chat_id=$CHAT_ID" \
                 -d "text=$MESSAGE_STABLE" \
-                -d "parse_mode=MarkdownV2" \
+                -d "parse_mode=Markdown" \
                 -d "reply_markup=$BUTTONS_STABLE" || exit 1
             else
               curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-                -d "chat_id=$GROUP_ID" \
+                -d "chat_id=$CHAT_ID" \
                 -d "text=$MESSAGE_DEV" \
-                -d "parse_mode=MarkdownV2" \
+                -d "parse_mode=Markdown" \
                 -d "reply_markup=$BUTTONS_DEV" || exit 1
             fi
           fi

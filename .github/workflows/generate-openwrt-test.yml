@@ -1,0 +1,428 @@
+name: Build OpenWrt v2
+
+on:
+  workflow_dispatch:
+    inputs:
+      releases_branch:
+        description: "Select the releases branch"
+        required: true
+        default: "openwrt:24.10.0"
+        type: choice
+        options:
+          - openwrt:24.10.0
+          - openwrt:23.05.5
+          - immortalwrt:24.10.0-rc4
+          - immortalwrt:23.05.4
+      devices:
+        description: "Select device target"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - s905x
+          - s905x2
+          - s905x3
+          - s905x4
+          - s912
+          - h5-orangepi-zeroplus2
+          - h5-orangepi-zeroplus
+          - h5-orangepi-prime
+          - h5-orangepi-pc2
+          - h6-orangepi-lite2
+          - h6-orangepi-1plus
+          - h6-orangepi-3
+          - h6-orangepi-3lts
+          - h616-orangepi-zero2
+          - h618-orangepi-zero2w
+          - h618-orangepi-zero3
+          - rk3566-orangepi-3b
+          - rk3588s-orangepi-5
+          - bcm2710-rpi-3b
+          - bcm2711-rpi-4b
+          - x86-64
+      notify:
+        description: "Notify to Telegram"
+        required: true
+        default: false
+        type: boolean
+
+env:
+  TZ: Asia/Jakarta
+  IMAGEBUILDER_SH: imagebuilder.sh
+  DEBIAN_FRONTEND: noninteractive
+  APT_PACKAGES: >-
+    build-essential
+    libncurses5-dev
+    zlib1g-dev
+    gawk
+    git
+    gettext
+    libssl-dev
+    rsync
+    wget
+    unzip
+    tar
+    gzip
+    qemu-utils
+    mkisofs
+    jq
+    python3
+    python3-pip
+  CURRENT_BRANCH: ${{ github.ref_name }}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      devices: ${{ steps.matrix.outputs.devices }}
+      message_id: ${{ steps.telegram.outputs.message_id }}
+      release_tag: ${{ steps.setup.outputs.release_tag }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      - name: Add changelog info to new release description
+        id: changelog
+        shell: bash
+        run: |
+          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
+          r="${r//'%'/'%25'}"
+          r="${r//$'\n'/'%0A'}"
+          r="${r//$'\r'/'%0D'}"  
+          echo "changelog=$r" >> $GITHUB_OUTPUT 
+
+      - name: Setup Environment Variables
+        id: setup
+        run: |
+          DATETIME=$(date +'%Y%m%d')
+          BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
+          RELEASE_TAG="${BRANCH_TAG}-${DATETIME}"
+          echo "datetime=${DATETIME}" >> $GITHUB_ENV
+          echo "release_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
+
+      - name: Configure Build Matrix
+        id: matrix
+        run: |
+          DEVICES_JSON=$(cat << 'EOF'
+          [
+            "s905x", "s905x2", "s905x3", "s905x4", "s912",
+            "h5-orangepi-zeroplus2", "h5-orangepi-zeroplus",
+            "h5-orangepi-prime", "h5-orangepi-pc2",
+            "h6-orangepi-lite2", "h6-orangepi-1plus",
+            "h6-orangepi-3", "h6-orangepi-3lts",
+            "h616-orangepi-zero2", "h618-orangepi-zero2w",
+            "h618-orangepi-zero3", "rk3566-orangepi-3b",
+            "rk3588s-orangepi-5", "bcm2710-rpi-3b",
+            "bcm2711-rpi-4b", "x86-64"
+          ]
+          EOF
+          )
+          
+          if [ "${{ inputs.devices }}" = "all" ]; then
+            echo "devices=$DEVICES_JSON" >> $GITHUB_OUTPUT
+          else
+            echo "devices=$(jq -nc --arg d "${{ inputs.devices }}" '[$d]')" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Initial Telegram Message
+        id: telegram
+        if: inputs.notify == 'true'
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GROUP_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          function create_message() {
+            local devices=$1
+            cat << EOF
+          ==================
+          🚀 *RTA-WRT | Build Status*
+          ==================
+          📌 *Version*: ${{ inputs.releases_branch }}
+          🌿 *Branch*: ${{ github.ref_name }}
+          📅 *Date*: $(date "+%Y-%m-%d %H:%M:%S")
+          -------------------
+          📋 *Device List*
+          $(echo "$devices" | jq -r '.[]' | while read device; do
+            echo "🔹 $device | ⏳ Building"
+          done)
+          ==================
+          EOF
+          }
+          
+          MESSAGE=$(create_message '${{ steps.matrix.outputs.devices }}' | tr '\n' '%0A')
+          
+          RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+            -d chat_id=$GROUP_ID \
+            -d parse_mode=Markdown \
+            -d text="$MESSAGE")
+          
+          echo "message_id=$(echo $RESPONSE | jq -r '.result.message_id')" >> $GITHUB_OUTPUT
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        device: ${{ fromJSON(needs.prepare.outputs.devices) }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      - name: Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.openwrt-cache
+          key: ${{ runner.os }}-openwrt-${{ hashFiles('**/imagebuilder.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-openwrt-
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ${{ env.APT_PACKAGES }}
+
+      - name: Extract Changelog
+        id: changelog
+        run: |
+          changelog=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' CHANGELOG.md)
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$changelog" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Build Image
+        id: build
+        run: |
+          chmod +x ${{ env.IMAGEBUILDER_SH }}
+          if sudo ./${{ env.IMAGEBUILDER_SH }} ${{ inputs.releases_branch }} "${{ matrix.device }}"; then
+            echo "status=✅ Success" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ Failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Upload Build Status
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-status-${{ matrix.device }}
+          path: |
+            status.txt
+            logs/*.log
+          retention-days: 5
+
+      - name: Upload to Release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          files: imagebuilder/out_firmware/*
+          tag_name: ${{ needs.prepare.outputs.release_tag }}
+          name: "RTA-WRT - ${{ needs.prepare.outputs.release_tag }}"
+          body: |
+            # 🚀 RTA-WRT - Release Information
+            
+            ## 📥 Download Statistics
+            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/${{ needs.prepare.outputs.release_tag }}/total?style=for-the-badge&logo=Openwrt)
+            
+            ## 📢 Support Channels
+            [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt)
+            [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/backup_rtawrt)
+            [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/RizkiKotet)
+            
+            ## 📝 Changelog
+            ${{ steps.changelog.outputs.changelog }}
+          prerelease: ${{ github.ref_name == 'dev' }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    needs: [prepare, build]
+    if: inputs.notify == 'true' && always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Build Status Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Update Telegram Message
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GROUP_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          function create_final_message() {
+            local devices=$1
+            cat << EOF
+          ==================
+          🚀 *RTA-WRT | Build Status*
+          ==================
+          📌 *Version*: ${{ inputs.releases_branch }}
+          🌿 *Branch*: ${{ github.ref_name }}
+          📅 *Date*: $(date "+%Y-%m-%d %H:%M:%S")
+          -------------------
+          📋 *Device List*
+          $(echo "$devices" | jq -r '.[]' | while read device; do
+            status=$(cat artifacts/build-status-$device/status.txt 2>/dev/null || echo "Status: ❓ Unknown")
+            echo "🔹 $device | ${status#Status: }"
+          done)
+          ==================
+          EOF
+          }
+          
+          MESSAGE=$(create_final_message '${{ needs.prepare.outputs.devices }}' | tr '\n' '%0A')
+          
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
+            -d chat_id=$GROUP_ID \
+            -d message_id=${{ needs.prepare.outputs.message_id }} \
+            -d parse_mode=Markdown \
+            -d text="$MESSAGE"
+
+
+      - name: Notify Telegram
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_THREAD_ID: 36
+        run: |
+          MESSAGE_STABLE=$(printf "🎯 *RTA-WRT Firmware Update*\n"
+            "✅ _Stable Release_\n\n"
+            "🔹 *Versi:* ${{ inputs.releases_branch }}\n"
+            "🔹 *Tanggal:* ${{ github.ref_name }}\n\n"
+            "📌 *Catatan:*\n"
+            "🔒 Versi stabil dengan peningkatan keamanan dan performa!\n"
+            "📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik!\n"
+          )
+        
+          MESSAGE_DEV=$(printf "🚀 *RTA-WRT Firmware Update*\n"
+            "🌟 _Development Release_\n\n"
+            "🔹 *Versi:* ${{ inputs.releases_branch }}\n"
+            "🔹 *Tanggal:* ${{ github.ref_name }}\n\n"
+            "📌 *Catatan:*\n"
+            "🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan!\n"
+            "🔄 Selalu gunakan versi terbaru untuk performa terbaik!\n"
+          )
+        
+          BUTTONS_STABLE='{
+              "inline_keyboard": [
+                  [
+                      {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/latest"},
+                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/main/changelog.txt"}
+                  ]
+              ]
+          }'
+        
+          BUTTONS_DEV='{
+              "inline_keyboard": [
+                  [
+                      {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases"},
+                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/dev/changelog.txt"}
+                  ]
+              ]
+          }'
+        
+          if [ "${{ inputs.notify }}" == "true" ]; then
+            if [ "${{ env.CURRENT_BRANCH }}" == "main" ]; then
+              curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+                -d "chat_id=$CHAT_ID" \
+                -d "text=$MESSAGE_STABLE" \
+                -d "parse_mode=Markdown" \
+                -d "reply_markup=$BUTTONS_STABLE" || exit 1
+            else
+              curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+                -d "chat_id=$CHAT_ID" \
+                -d "text=$MESSAGE_DEV" \
+                -d "parse_mode=Markdown" \
+                -d "reply_markup=$BUTTONS_DEV" || exit 1
+            fi
+          fi
+
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: info
+
+      - name: Update Branch Info
+        id: update
+        run: |
+          # Checkout info branch
+          git fetch origin info
+          git checkout info
+          
+          set -euo pipefail
+          
+          mkdir -p "${CURRENT_BRANCH}"
+          
+          if [ -n "${{ needs.prepare.outputs.changelog }}" ]; then
+            # Clean and format changelog
+            changelog_content=$(echo "${{ needs.prepare.outputs.changelog }}" | \
+              sed -e 's/%0A/\n/g' \
+                  -e 's/%0D/\r/g' \
+                  -e 's/%25/%/g')
+            
+            # Update changelog file
+            echo "${changelog_content}" > "${CURRENT_BRANCH}/changelog.txt"
+          else
+            echo "No changelog content found"
+            exit 1
+          fi
+          
+          # Update version file with branch indicator
+          BRANCH_SUFFIX=$([ "${CURRENT_BRANCH}" == "main" ] && echo "main" || echo "dev")
+          VERSION_TAG="${{ needs.prepare.outputs.release_tag }}--${BRANCH_SUFFIX}"
+          echo "${VERSION_TAG}" > "${CURRENT_BRANCH}/version.txt"
+          
+          # Configure git
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          # Stage and commit changes if any exist
+          if ! git diff --quiet; then
+            git add "${CURRENT_BRANCH}/changelog.txt" "${CURRENT_BRANCH}/version.txt"
+            if git commit -m "Auto Release: v${{ inputs.releases_branch }}"; then
+              # Try to push with retry mechanism
+              for i in {1..3}; do
+                if git push; then
+                  echo "Successfully pushed changes"
+                  break
+                else
+                  if [ $i -eq 3 ]; then
+                    echo "Failed to push after 3 attempts"
+                    exit 1
+                  fi
+                  echo "Push failed, retrying... (Attempt $i/3)"
+                  git pull --rebase
+                  sleep 5
+                fi
+              done
+            else
+              echo "No changes to commit"
+            fi
+          else
+            echo "No changes detected"
+          fi
+  
+  cleanup:
+    needs: [build, notify]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete Old Workflow Runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 30
+          keep_minimum_runs: 10
