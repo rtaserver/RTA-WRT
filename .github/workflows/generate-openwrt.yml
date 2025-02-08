@@ -353,29 +353,25 @@ jobs:
         run: |
           DATETIME=${{ env.datetime }}
           OPENWRT_VERSION=${{ env.openwrt_version }}
-  
-          # Escape karakter untuk MarkdownV2
-          FORMATTED_DATETIME=$(echo "$DATETIME" | sed 's/-/\\-/g')
-          FORMATTED_OPENWRT_VERSION=$(echo "$OPENWRT_VERSION" | sed 's/:/\\:/g' | sed 's/-/\\-/g' | sed 's/\./\\./g')
-  
-          MESSAGE_STABLE=$(printf "🎯 *RTA\-WRT Firmware Update*\n"
+      
+          MESSAGE_STABLE=$(printf "🎯 *RTA-WRT Firmware Update*\n"
             "✅ _Stable Release_\n\n"
-            "🔹 *Versi:* \`${FORMATTED_OPENWRT_VERSION}\`\n"
-            "🔹 *Tanggal:* \`${FORMATTED_DATETIME}\`\n\n"
+            "🔹 *Versi:* \`$OPENWRT_VERSION\`\n"
+            "🔹 *Tanggal:* \`$DATETIME\`\n\n"
             "📌 *Catatan:*\n"
-            "🔒 Versi stabil dengan peningkatan keamanan dan performa\!\n"
-            "📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik\!\n"
+            "🔒 Versi stabil dengan peningkatan keamanan dan performa!\n"
+            "📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik!\n"
           )
-  
-          MESSAGE_DEV=$(printf "🚀 *RTA\-WRT Firmware Update*\n"
+      
+          MESSAGE_DEV=$(printf "🚀 *RTA-WRT Firmware Update*\n"
             "🌟 _Development Release_\n\n"
-            "🔹 *Versi:* \`${FORMATTED_OPENWRT_VERSION}\`\n"
-            "🔹 *Tanggal:* \`${FORMATTED_DATETIME}\`\n\n"
+            "🔹 *Versi:* \`$OPENWRT_VERSION\`\n"
+            "🔹 *Tanggal:* \`$DATETIME\`\n\n"
             "📌 *Catatan:*\n"
-            "🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan\!\n"
-            "🔄 Selalu gunakan versi terbaru untuk performa terbaik\!\n"
+            "🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan!\n"
+            "🔄 Selalu gunakan versi terbaru untuk performa terbaik!\n"
           )
-  
+      
           BUTTONS_STABLE='{
               "inline_keyboard": [
                   [
@@ -384,7 +380,7 @@ jobs:
                   ]
               ]
           }'
-  
+      
           BUTTONS_DEV='{
               "inline_keyboard": [
                   [
@@ -393,19 +389,19 @@ jobs:
                   ]
               ]
           }'
-  
+      
           if [ "${{ inputs.notify }}" == "true" ]; then
             if [ "${{ env.CURRENT_BRANCH }}" == "main" ]; then
               curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
                 -d "chat_id=$CHAT_ID" \
                 -d "text=$MESSAGE_STABLE" \
-                -d "parse_mode=MarkdownV2" \
+                -d "parse_mode=Markdown" \
                 -d "reply_markup=$BUTTONS_STABLE" || exit 1
             else
               curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
                 -d "chat_id=$CHAT_ID" \
                 -d "text=$MESSAGE_DEV" \
-                -d "parse_mode=MarkdownV2" \
+                -d "parse_mode=Markdown" \
                 -d "reply_markup=$BUTTONS_DEV" || exit 1
             fi
           fi
