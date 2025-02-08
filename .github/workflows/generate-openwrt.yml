@@ -75,6 +75,7 @@ jobs:
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_THREAD_ID: 616
         run: |
           sudo timedatectl set-timezone "$TZ"
           readarray -t DEVICES < <(echo '${{ steps.matrix.outputs.devices }}' | jq -r '.[]')
@@ -146,6 +147,7 @@ jobs:
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_THREAD_ID: 616
         run: |
           update_status() {
             local MESSAGE_ID=$1
@@ -348,7 +350,7 @@ jobs:
       - name: Notify Telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          GROUP_ID: ${{ secrets.CHAT_ID }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
           MESSAGE_THREAD_ID: 36
         run: |
           DATETIME=${{ env.datetime }}
@@ -397,13 +399,13 @@ jobs:
           if [ "${{ inputs.notify }}" == "true" ]; then
             if [ "${{ env.CURRENT_BRANCH }}" == "main" ]; then
               curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-                -d "chat_id=$GROUP_ID" \
+                -d "chat_id=$CHAT_ID" \
                 -d "text=$MESSAGE_STABLE" \
                 -d "parse_mode=MarkdownV2" \
                 -d "reply_markup=$BUTTONS_STABLE" || exit 1
             else
               curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-                -d "chat_id=$GROUP_ID" \
+                -d "chat_id=$CHAT_ID" \
                 -d "text=$MESSAGE_DEV" \
                 -d "parse_mode=MarkdownV2" \
                 -d "reply_markup=$BUTTONS_DEV" || exit 1
