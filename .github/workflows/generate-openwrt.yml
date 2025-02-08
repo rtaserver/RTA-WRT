@@ -74,9 +74,6 @@ jobs:
         if: inputs.notify
         id: telegram
         run: |
-          cd ..
-          mkdir tmp
-          cd tmp
           # Create telegram notification script
           cat > telegram.sh << 'EOF'
           #!/bin/bash
@@ -141,10 +138,7 @@ jobs:
           
           chmod +x telegram.sh
           # Use the devices output directly from the matrix step
-          #cp telegram.sh /home/
-          bash telegram.sh --generate '${{ steps.matrix.outputs.devices }}'
-          find "$(pwd)" -maxdepth 1
-          echo ${PWD}
+          ./telegram.sh --generate '${{ steps.matrix.outputs.devices }}'
 
   build:
     needs: prepare
@@ -171,18 +165,52 @@ jobs:
           echo "openwrt_version=${{ inputs.releases_branch }}" >> $GITHUB_ENV
           echo "openwrt_tag=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')" >> $GITHUB_ENV
 
+      - name: Create Telegram Script
+        if: inputs.notify
+        run: |
+          cat > telegram.sh << 'EOF'
+          #!/bin/bash
+          BOT_TOKEN="${{ secrets.BOT_TOKEN }}"
+          CHAT_ID="${{ secrets.CHAT_ID }}"
+          CACHE_DIR="/tmp/telegram_cache"
+          mkdir -p "$CACHE_DIR"
+
+          case $1 in
+              --update)
+                  message_id="$2"
+                  device="$3"
+                  status="$4"
+                  
+                  [ -f "$CACHE_DIR/message_${message_id}.txt" ] || exit 1
+                  
+                  current_message=$(cat "$CACHE_DIR/message_${message_id}.txt")
+                  updated_message=$(echo "$current_message" | sed "s/🔹 $device |.*$/🔹 $device | $status/")
+                  echo "$updated_message" > "$CACHE_DIR/message_${message_id}.txt"
+                  
+                  # Convert newlines to %0A for Telegram API
+                  telegram_message="${updated_message//$'\n'/%0A}"
+                  curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
+                      -d "chat_id=$CHAT_ID" \
+                      -d "message_id=$message_id" \
+                      -d "parse_mode=Markdown" \
+                      -d "text=$telegram_message"
+                  ;;
+          esac
+          EOF
+          chmod +x telegram.sh
+
       - name: Build Image
         id: build
         run: |
           chmod +x ${IMAGEBUILDER_SH}
-          bash /home/runner/work/RTA-WRT/tmp/telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "💿 Build"
+          ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "💿 Build"
           if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}"; then
             if [ "${{ inputs.notify }}" = "true" ]; then
-              bash /home/runner/work/RTA-WRT/tmp/telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "✅ Success"
+              ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "✅ Success"
             fi
           else
             if [ "${{ inputs.notify }}" = "true" ]; then
-              bash /home/runner/work/RTA-WRT/tmp/telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "❌ Failed"
+              ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "❌ Failed"
             fi
             exit 1
           fi
