@@ -108,23 +108,37 @@ jobs:
       - name: Configure Build Matrix
         id: matrix
         run: |
-          DEVICES_JSON=$(cat << 'EOF'
-          [
-            "s905x", "s905x2", "s905x3", "s905x4", "s912",
-            "h5-orangepi-zeroplus2", "h5-orangepi-zeroplus",
-            "h5-orangepi-prime", "h5-orangepi-pc2",
-            "h6-orangepi-lite2", "h6-orangepi-1plus",
-            "h6-orangepi-3", "h6-orangepi-3lts",
-            "h616-orangepi-zero2", "h618-orangepi-zero2w",
-            "h618-orangepi-zero3", "rk3566-orangepi-3b",
-            "rk3588s-orangepi-5", "bcm2710-rpi-3b",
-            "bcm2711-rpi-4b", "x86-64"
-          ]
-          EOF
+          DEVICES_JSON=$(cat << 'EOJ'
+          {
+            "devices": [
+              "s905x",
+              "s905x2",
+              "s905x3",
+              "s905x4",
+              "s912",
+              "h5-orangepi-zeroplus2",
+              "h5-orangepi-zeroplus",
+              "h5-orangepi-prime",
+              "h5-orangepi-pc2",
+              "h6-orangepi-lite2",
+              "h6-orangepi-1plus",
+              "h6-orangepi-3",
+              "h6-orangepi-3lts",
+              "h616-orangepi-zero2",
+              "h618-orangepi-zero2w",
+              "h618-orangepi-zero3",
+              "rk3566-orangepi-3b",
+              "rk3588s-orangepi-5",
+              "bcm2710-rpi-3b",
+              "bcm2711-rpi-4b",
+              "x86-64"
+            ]
+          }
+          EOJ
           )
           
           if [ "${{ inputs.devices }}" = "all" ]; then
-            echo "devices=$DEVICES_JSON" >> $GITHUB_OUTPUT
+            echo "devices=$(echo "$DEVICES_JSON" | jq -c '.devices')" >> $GITHUB_OUTPUT
           else
             echo "devices=$(jq -nc --arg d "${{ inputs.devices }}" '[$d]')" >> $GITHUB_OUTPUT
           fi
