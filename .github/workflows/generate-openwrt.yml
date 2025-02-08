@@ -204,13 +204,7 @@ jobs:
           }
 
           # Update status to "💿 Build" before starting the build process
-          update_status "${{ matrix.device }}" "💿 Build"
-
-      - name: Upload Updated Status File
-        uses: actions/upload-artifact@v2
-        with:
-          name: build-status
-          path: build_status.txt
+          # update_status "${{ matrix.device }}" "💿 Build"
 
           chmod +x ${IMAGEBUILDER_SH}
           if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}"; then
