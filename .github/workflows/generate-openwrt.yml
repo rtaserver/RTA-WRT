@@ -111,7 +111,7 @@ jobs:
                   message_id=$(echo "$response" | jq -r '.result.message_id')
                   # Store the raw message without %0A
                   echo "${message//%0A/$'\n'}" > "$CACHE_DIR/message_${message_id}.txt"
-                  # echo "message_id=$message_id" >> "$GITHUB_OUTPUT"
+                  echo "message_id=$message_id" >> "$GITHUB_OUTPUT"
                   echo "$message_id"
                   ;;
                   
@@ -139,7 +139,7 @@ jobs:
           
           chmod +x telegram.sh
           # Use the devices output directly from the matrix step
-          echo "message_id=$(bash telegram.sh --generate ${{ steps.matrix.outputs.devices }})" >> "$GITHUB_OUTPUT"
+          ./telegram.sh --generate '${{ steps.matrix.outputs.devices }}'
           find "$(pwd)" -maxdepth 1
 
   build:
@@ -170,6 +170,7 @@ jobs:
       - name: Create Telegram Script
         if: inputs.notify
         run: |
+          # Create telegram notification script
           cat > telegram.sh << 'EOF'
           #!/bin/bash
           BOT_TOKEN="${{ secrets.BOT_TOKEN }}"
@@ -178,6 +179,38 @@ jobs:
           mkdir -p "$CACHE_DIR"
 
           case $1 in
+              --generate)
+                  # Parse devices JSON safely using jq
+                  devices_json="$2"
+                  devices_array=($(echo "$devices_json" | jq -r '.[]'))
+                  
+                  message="=======================%0A"
+                  message+="🚀 *RTA-WRT | Build Status*%0A"
+                  message+="=======================%0A"
+                  message+="📌 *Version*: ${{ inputs.releases_branch }}%0A"
+                  message+="🌿 *Branch*: ${{ github.ref_name }}%0A"
+                  message+="📅 *Date*: $(date '+%d-%m-%Y %H:%M:%S')%0A"
+                  message+="-----------------------%0A"
+                  message+="📋 *Device List*%0A"
+                  
+                  for device in "${devices_array[@]}"; do
+                      message+="🔹 $device | ⏳ Pending%0A"
+                  done
+                  
+                  message+="======================="
+                  
+                  response=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+                      -d "chat_id=$CHAT_ID" \
+                      -d "parse_mode=Markdown" \
+                      -d "text=$message")
+                  
+                  message_id=$(echo "$response" | jq -r '.result.message_id')
+                  # Store the raw message without %0A
+                  echo "${message//%0A/$'\n'}" > "$CACHE_DIR/message_${message_id}.txt"
+                  echo "message_id=$message_id" >> "$GITHUB_OUTPUT"
+                  echo "$message_id"
+                  ;;
+                  
               --update)
                   message_id="$2"
                   device="$3"
