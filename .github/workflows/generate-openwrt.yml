@@ -135,7 +135,6 @@ jobs:
           echo "openwrt_version=${{ inputs.releases_branch }}" >> $GITHUB_ENV
           echo "openwrt_tag=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')" >> $GITHUB_ENV
 
-
       - name: Build Image
         id: build
         run: |
@@ -144,7 +143,18 @@ jobs:
             echo "status=✅ Sukses" >> $GITHUB_OUTPUT
           else
             echo "status=❌ Gagal" >> $GITHUB_OUTPUT
-          fi
+
+      - name: Create Status File
+        run: |
+          echo "Device: ${{ matrix.device }}" > status.txt
+          echo "Status: ${{ steps.build.outputs.status }}" >> status.txt
+
+      - name: Upload Build Status
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-status-${{ matrix.device }}
+          path: status.txt
 
       - name: Upload to Release
         if: ${{ steps.build.outputs.status == '✅ Sukses' }}
@@ -242,6 +252,45 @@ jobs:
                 
             ---
 
+  
+  notify:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Build Status Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Update Telegram Message
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GROUP_ID: ${{ secrets.CHAT_ID }}
+          MESSAGE_ID: ${{ needs.prepare.outputs.message_id }}
+        run: |
+          devices=$(echo '${{ needs.prepare.outputs.devices }}' | jq -r '.[]')
+          MESSAGE="=======================%0A"
+          MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
+          MESSAGE+="=======================%0A"
+          MESSAGE+="📌 *Versi*: ${{ inputs.releases_branch }}%0A"
+          MESSAGE+="🌿 *Branch*: ${{ github.ref_name }}%0A"
+          MESSAGE+="📅 *Tanggal*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
+          MESSAGE+="-----------------------%0A"
+          MESSAGE+="📋 *Device List*%0A"
+          
+          for device in $devices; do
+            status=$(cat artifacts/build-status-$device/status.txt | grep "Status" | cut -d' ' -f2-)
+            MESSAGE+="🔹 $device | $status%0A"
+          done
+          
+          MESSAGE+="======================="
+          
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
+            -d chat_id=$GROUP_ID \
+            -d message_id=$MESSAGE_ID \
+            -d parse_mode=Markdown \
+            -d text="$MESSAGE"
+
   opsional:
     needs: build
     runs-on: ubuntu-latest
@@ -284,8 +333,8 @@ jobs:
       - name: Update Branch Info
         id: update
         run: |
-          echo ${{ steps.changelog.outputs.changelog }}
-          r=$(echo "${{ steps.changelog.outputs.changelog }}" | sed -e 's/%0A/\n/g' -e 's/%0D/\r/g' -e 's/%25/%/g')
+          changelog_message="${{ steps.changelog.outputs.changelog }}"
+          r=$(echo "$changelog_message" | sed -e 's/%0A/\n/g' -e 's/%0D/\r/g' -e 's/%25/%/g')
           echo "changelog=$r" >> $CURRENT_BRANCH/changelog.txt
           echo "${{ env.openwrt_tag }}--$( [ "$CURRENT_BRANCH" == "main" ] && echo "main" || echo "dev" )" > $CURRENT_BRANCH/version.txt
           git config user.name 'github-actions[bot]'
