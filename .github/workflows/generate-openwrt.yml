@@ -175,14 +175,14 @@ jobs:
         id: build
         run: |
           chmod +x ${IMAGEBUILDER_SH}
-          bash /home/telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "💿 Build"
+          bash /home/runner/work/RTA-WRT/tmp/telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "💿 Build"
           if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}"; then
             if [ "${{ inputs.notify }}" = "true" ]; then
-              bash /home/telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "✅ Success"
+              bash /home/runner/work/RTA-WRT/tmp/telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "✅ Success"
             fi
           else
             if [ "${{ inputs.notify }}" = "true" ]; then
-              bash /home/telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "❌ Failed"
+              bash /home/runner/work/RTA-WRT/tmp/telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "❌ Failed"
             fi
             exit 1
           fi
