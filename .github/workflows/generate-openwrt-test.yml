@@ -167,7 +167,7 @@ jobs:
           EOF
           }
           
-          MESSAGE=$(create_message '${{ steps.matrix.outputs.devices }}' | tr '\n' '%0A')
+          MESSAGE=$(create_message '${{ steps.matrix.outputs.devices }}')
           
           RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
             -d chat_id=$GROUP_ID \
