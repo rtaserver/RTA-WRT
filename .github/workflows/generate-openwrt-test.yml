@@ -79,7 +79,7 @@ jobs:
       message_id: ${{ steps.telegram.outputs.message_id }}
       release_tag: ${{ steps.setup.outputs.release_tag }}
       changelog: ${{ steps.changelog.outputs.changelog }}
-      startbuildtime:
+      startbuildtime: ${{ steps.setup.outputs.startbuildtime }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -211,10 +211,10 @@ jobs:
           chmod +x ${{ env.IMAGEBUILDER_SH }}
           if sudo ./${{ env.IMAGEBUILDER_SH }} ${{ inputs.releases_branch }} "${{ matrix.device }}"; then
             echo "status=✅ Success" >> $GITHUB_OUTPUT
-            echo "status=✅ Success" > status.txt
+            echo "✅ Success" > status.txt
           else
             echo "status=❌ Failed" >> $GITHUB_OUTPUT
-            echo "status=❌ Failed" > status.txt
+            echo "❌ Failed" > status.txt
             exit 1
           fi
 
@@ -296,22 +296,22 @@ jobs:
             local minutes=$(( (total_seconds % 3600) / 60 ))
             local seconds=$((total_seconds % 60))
             printf "%02d:%02d:%02d" $hours $minutes $seconds
-           }
-           end_time=$(date +%s)
-           elapsed_time=$((end_time - ${{ needs.prepare.outputs.startbuildtime }}))
-           formatted_time=$(format_time $elapsed_time)
-           echo "Build took $formatted_time"
+          }
+          end_time=$(date +%s)
+          elapsed_time=$((end_time - ${{ needs.prepare.outputs.startbuildtime }}))
+          formatted_time=$(format_time $elapsed_time)
+          echo "Build took $formatted_time"
  
-           NEWMESSAGE="🎉====================🎉%0A"
-           NEWMESSAGE+="✨ *Build OpenWrt Selesai!* ✨%0A"
-           NEWMESSAGE+="🕒 Waktu Build: $formatted_time%0A"
-           NEWMESSAGE+="🎉====================🎉%0A"
-           NEWMESSAGE+="👤 @RizkiKotet"
+          NEWMESSAGE="🎉====================🎉%0A"
+          NEWMESSAGE+="✨ *Build OpenWrt Selesai!* ✨%0A"
+          NEWMESSAGE+="🕒 Waktu Build: $formatted_time%0A"
+          NEWMESSAGE+="🎉====================🎉%0A"
+          NEWMESSAGE+="👤 @RizkiKotet"
 
-           curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
             -d chat_id=$CHAT_ID \
             -d parse_mode=Markdown \
-            -d text="$NEWMESSAGE")
+            -d text="$NEWMESSAGE"
 
 
       - name: Notify Telegram
