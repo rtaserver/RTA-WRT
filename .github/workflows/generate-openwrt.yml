@@ -150,6 +150,9 @@ jobs:
           MESSAGE_THREAD_ID: 616
         run: |
           readarray -t DEVICES < <(echo '${{ needs.prepare.outputs.devices }}' | jq -r '.[]')
+          statuses=() # Array to store statuses of each device
+
+          # Function to update the status of a specific device
           update_status() {
             local MESSAGE_ID=$1
             local DEVICE=$2
@@ -162,6 +165,15 @@ jobs:
             fi
             echo "Message ID: $MESSAGE_ID"
 
+            # Update the status in the statuses array
+            for i in "${!DEVICES[@]}"; do
+              if [[ "${DEVICES[$i]}" == "$DEVICE" ]]; then
+                statuses[$i]="$STATUS"
+              elif [[ -z "${statuses[$i]}" ]]; then
+                statuses[$i]="⏳ Pending"
+              fi
+            done
+
             updated_message="=======================%0A"
             updated_message+="🚀 *RTA-WRT | Build Status*%0A"
             updated_message+="=======================%0A"
@@ -171,12 +183,8 @@ jobs:
             updated_message+="-----------------------%0A"
             updated_message+="📋 *Device List*%0A"
 
-            for dev in "${DEVICES[@]}"; do
-              if [[ "$dev" == "$DEVICE" ]]; then
-                updated_message+="🔹 $dev | $STATUS%0A"
-              # else
-              #   updated_message+="🔹 $dev | 💿 Build%0A"
-              fi
+            for i in "${!DEVICES[@]}"; do
+              updated_message+="🔹 ${DEVICES[$i]} | ${statuses[$i]}%0A"
             done
 
             updated_message+="======================="
@@ -191,7 +199,6 @@ jobs:
           }
 
           chmod +x ${IMAGEBUILDER_SH}
-          update_status ${{ needs.prepare.outputs.message_id }} "${{ matrix.device }}" "💿 Build"
           if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}"; then
             echo "status=✅ Sukses" >> "$GITHUB_OUTPUT"
             update_status ${{ needs.prepare.outputs.message_id }} "${{ matrix.device }}" "✅ Sukses"
