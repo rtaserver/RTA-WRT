@@ -143,6 +143,7 @@ jobs:
             echo "status=✅ Sukses" >> $GITHUB_OUTPUT
           else
             echo "status=❌ Gagal" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create Status File
         run: |
