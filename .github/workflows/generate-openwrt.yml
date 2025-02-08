@@ -336,6 +336,7 @@ jobs:
         run: |
           changelog_message="${{ steps.changelog.outputs.changelog }}"
           r=$(echo "$changelog_message" | sed -e 's/%0A/\n/g' -e 's/%0D/\r/g' -e 's/%25/%/g')
+          rm -rf $CURRENT_BRANCH/changelog.txt
           echo "changelog=$r" >> $CURRENT_BRANCH/changelog.txt
           echo "${{ env.openwrt_tag }}--$( [ "$CURRENT_BRANCH" == "main" ] && echo "main" || echo "dev" )" > $CURRENT_BRANCH/version.txt
           git config user.name 'github-actions[bot]'
