@@ -165,7 +165,7 @@ jobs:
             echo "Message ID: $MESSAGE_ID"
 
             # Save the status to a file
-            echo "$DEVICE|$STATUS" >> status.txt
+            echo "$DEVICE|$STATUS" > "status_${DEVICE}.txt"
 
             updated_message="=======================%0A"
             updated_message+="🚀 *RTA-WRT | Build Status*%0A"
@@ -176,10 +176,15 @@ jobs:
             updated_message+="-----------------------%0A"
             updated_message+="📋 *Device List*%0A"
 
-            # Read statuses from file and update the message
-            while IFS="|" read -r dev stat; do
-              updated_message+="🔹 $dev | $stat%0A"
-            done < status.txt
+            # Read statuses from files and update the message
+            for dev in "${DEVICES[@]}"; do
+              if [[ -f "status_${dev}.txt" ]]; then
+                stat=$(cat "status_${dev}.txt" | cut -d '|' -f2)
+                updated_message+="🔹 $dev | $stat%0A"
+              else
+                updated_message+="🔹 $dev | ⏳ Pending%0A"
+              fi
+            done
 
             updated_message+="======================="
 
