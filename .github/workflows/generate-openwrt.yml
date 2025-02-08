@@ -194,12 +194,13 @@ jobs:
           }
 
           chmod +x ${IMAGEBUILDER_SH}
+          update_status "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "💿 Build"
           if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}"; then
             echo "status=✅ Sukses" >> "$GITHUB_OUTPUT"
-            update_status "${{ matrix.device }}" "✅ Sukses"
+            update_status "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "✅ Sukses"
           else
             echo "status=❌ Gagal" >> "$GITHUB_OUTPUT"
-            update_status "${{ matrix.device }}" "❌ Gagal"
+            update_status "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "❌ Gagal"
           fi
 
       - name: Upload to Release
