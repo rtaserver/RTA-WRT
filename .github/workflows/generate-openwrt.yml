@@ -79,7 +79,7 @@ jobs:
           #!/bin/bash
           BOT_TOKEN="${{ secrets.BOT_TOKEN }}"
           CHAT_ID="${{ secrets.CHAT_ID }}"
-          CACHE_DIR="/tmp/telegram_cache"
+          CACHE_DIR="telegram_cache"
           mkdir -p "$CACHE_DIR"
   
           case $1 in
