@@ -150,7 +150,6 @@ jobs:
           MESSAGE_THREAD_ID: 616
         run: |
           readarray -t DEVICES < <(echo '${{ needs.prepare.outputs.devices }}' | jq -r '.[]')
-          statuses=() # Array to store statuses of each device
 
           # Function to update the status of a specific device
           update_status() {
@@ -165,14 +164,8 @@ jobs:
             fi
             echo "Message ID: $MESSAGE_ID"
 
-            # Update the status in the statuses array
-            for i in "${!DEVICES[@]}"; do
-              if [[ "${DEVICES[$i]}" == "$DEVICE" ]]; then
-                statuses[$i]="$STATUS"
-              elif [[ -z "${statuses[$i]}" ]]; then
-                statuses[$i]="⏳ Pending"
-              fi
-            done
+            # Save the status to a file
+            echo "$DEVICE|$STATUS" >> status.txt
 
             updated_message="=======================%0A"
             updated_message+="🚀 *RTA-WRT | Build Status*%0A"
@@ -183,9 +176,10 @@ jobs:
             updated_message+="-----------------------%0A"
             updated_message+="📋 *Device List*%0A"
 
-            for i in "${!DEVICES[@]}"; do
-              updated_message+="🔹 ${DEVICES[$i]} | ${statuses[$i]}%0A"
-            done
+            # Read statuses from file and update the message
+            while IFS="|" read -r dev stat; do
+              updated_message+="🔹 $dev | $stat%0A"
+            done < status.txt
 
             updated_message+="======================="
 
