@@ -285,7 +285,7 @@ jobs:
           EOF
           }
           
-          MESSAGE=$(create_final_message '${{ needs.prepare.outputs.devices }}' | tr '\n' '%0A')
+          MESSAGE=$(create_final_message '${{ needs.prepare.outputs.devices }}')
           
           curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
             -d chat_id=$GROUP_ID \
