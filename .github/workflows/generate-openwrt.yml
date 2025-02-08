@@ -174,8 +174,8 @@ jobs:
             for dev in "${DEVICES[@]}"; do
               if [[ "$dev" == "$DEVICE" ]]; then
                 updated_message+="🔹 $dev | $STATUS%0A"
-              else
-                updated_message+="🔹 $dev | ⏳ Pending%0A"
+              # else
+              #   updated_message+="🔹 $dev | 💿 Build%0A"
               fi
             done
 
