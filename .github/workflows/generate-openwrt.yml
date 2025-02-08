@@ -111,7 +111,8 @@ jobs:
                   message_id=$(echo "$response" | jq -r '.result.message_id')
                   # Store the raw message without %0A
                   echo "${message//%0A/$'\n'}" > "$CACHE_DIR/message_${message_id}.txt"
-                  echo "message_id=$message_id" >> "$GITHUB_OUTPUT"
+                  # echo "message_id=$message_id" >> "$GITHUB_OUTPUT"
+                  echo "$message_id"
                   ;;
                   
               --update)
@@ -138,7 +139,7 @@ jobs:
           
           chmod +x telegram.sh
           # Use the devices output directly from the matrix step
-          ./telegram.sh --generate '${{ steps.matrix.outputs.devices }}'
+          echo "message_id=$(bash telegram.sh --generate ${{ steps.matrix.outputs.devices }})" >> "$GITHUB_OUTPUT"
           find "$(pwd)" -maxdepth 1
 
   build:
@@ -199,6 +200,7 @@ jobs:
           esac
           EOF
           chmod +x telegram.sh
+          echo ${{ needs.prepare.outputs.message_id }}
           find "$(pwd)" -maxdepth 1
 
       - name: Build Image
