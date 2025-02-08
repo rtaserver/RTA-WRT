@@ -107,6 +107,9 @@ jobs:
           fi
           echo "message_id=$message_id" >> $GITHUB_OUTPUT
 
+      - name: Initialize Status File
+        run: echo "" > ../../build_status.txt
+
   build:
     needs: prepare
     runs-on: ubuntu-24.04
@@ -153,19 +156,11 @@ jobs:
 
           # Function to update the status of a specific device
           update_status() {
-            local MESSAGE_ID=$1
-            local DEVICE=$2
-            local STATUS=$3
-
-            if [[ -z "$MESSAGE_ID" || -z "$DEVICE" || -z "$STATUS" ]]; then
-              echo "❌ Parameter tidak lengkap!"
-              echo "Usage: $0 --update <id_message> <device> <status>"
-              exit 1
-            fi
-            echo "Message ID: $MESSAGE_ID"
+            local DEVICE=$1
+            local STATUS=$2
 
             # Save the status to a file
-            echo "$DEVICE|$STATUS" > "status_${DEVICE}.txt"
+            echo "$DEVICE|$STATUS" >> ../../build_status.txt
 
             updated_message="=======================%0A"
             updated_message+="🚀 *RTA-WRT | Build Status*%0A"
@@ -177,20 +172,15 @@ jobs:
             updated_message+="📋 *Device List*%0A"
 
             # Read statuses from files and update the message
-            for dev in "${DEVICES[@]}"; do
-              if [[ -f "status_${dev}.txt" ]]; then
-                stat=$(cat "status_${dev}.txt" | cut -d '|' -f2)
-                updated_message+="🔹 $dev | $stat%0A"
-              else
-                updated_message+="🔹 $dev | ⏳ Pending%0A"
-              fi
-            done
+            while IFS="|" read -r dev stat; do
+              updated_message+="🔹 $dev | $stat%0A"
+            done < ../../build_status.txt
 
             updated_message+="======================="
 
             curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
               -d "chat_id=$CHAT_ID" \
-              -d "message_id=$MESSAGE_ID" \
+              -d "message_id=${{ needs.prepare.outputs.message_id }}" \
               -d "parse_mode=Markdown" \
               -d "text=$updated_message"
 
@@ -198,15 +188,13 @@ jobs:
           }
 
           # Update status to "💿 Build" before starting the build process
-          update_status ${{ needs.prepare.outputs.message_id }} "${{ matrix.device }}" "💿 Build"
+          update_status "${{ matrix.device }}" "💿 Build"
 
           chmod +x ${IMAGEBUILDER_SH}
           if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}"; then
-            echo "status=✅ Sukses" >> "$GITHUB_OUTPUT"
-            update_status ${{ needs.prepare.outputs.message_id }} "${{ matrix.device }}" "✅ Sukses"
+            update_status "${{ matrix.device }}" "✅ Sukses"
           else
-            echo "status=❌ Gagal" >> "$GITHUB_OUTPUT"
-            update_status ${{ needs.prepare.outputs.message_id }} "${{ matrix.device }}" "❌ Gagal"
+            update_status "${{ matrix.device }}" "❌ Gagal"
           fi
 
       - name: Upload to Release
