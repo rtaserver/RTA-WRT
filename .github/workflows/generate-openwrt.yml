@@ -202,16 +202,34 @@ jobs:
       - name: Build Image
         id: build
         run: |
+          # Check if imagebuilder script exists
+          if [ ! -f "${IMAGEBUILDER_SH}" ]; then
+            echo "Error: ${IMAGEBUILDER_SH} not found!"
+            if [ "${{ inputs.notify }}" = "true" ]; then
+              ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "❌ Failed (Script not found)"
+            fi
+            exit 1
+          fi
+
+          # Make script executable
           chmod +x ${IMAGEBUILDER_SH}
-          ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "💿 Build"
-          if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}"; then
+
+          # Notify build start
+          if [ "${{ inputs.notify }}" = "true" ]; then
+            ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "💿 Building"
+          fi
+
+          # Run build with detailed logging
+          if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}" 2>&1 | tee build.log; then
             if [ "${{ inputs.notify }}" = "true" ]; then
               ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "✅ Success"
             fi
           else
+            echo "Build failed! Check build.log for details"
             if [ "${{ inputs.notify }}" = "true" ]; then
               ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "❌ Failed"
             fi
+            cat build.log
             exit 1
           fi
 
