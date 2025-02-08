@@ -138,7 +138,7 @@ jobs:
           
           chmod +x telegram.sh
           # Use the devices output directly from the matrix step
-          ./telegram.sh --generate '${{ steps.matrix.outputs.devices }}'
+          bash telegram.sh --generate '${{ steps.matrix.outputs.devices }}'
           find "$(pwd)" -maxdepth 1
           echo ${PWD}
 
@@ -171,14 +171,14 @@ jobs:
         id: build
         run: |
           chmod +x ${IMAGEBUILDER_SH}
-          ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "💿 Build"
+          bash /home/runner/work/RTA-WRT/RTA-WRT/telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "💿 Build"
           if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}"; then
             if [ "${{ inputs.notify }}" = "true" ]; then
-              ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "✅ Success"
+              bash /home/runner/work/RTA-WRT/RTA-WRT/telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "✅ Success"
             fi
           else
             if [ "${{ inputs.notify }}" = "true" ]; then
-              ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "❌ Failed"
+              bash /home/runner/work/RTA-WRT/RTA-WRT/telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "❌ Failed"
             fi
             exit 1
           fi
