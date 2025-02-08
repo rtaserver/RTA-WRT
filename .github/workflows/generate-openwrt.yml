@@ -82,8 +82,9 @@ jobs:
           EOF
             
           chmod +x telegram.sh
-          sudo bash telegram.sh --generate '${{ steps.devices.outputs.devices }}'
-
+          IDTELE=$(sudo bash telegram.sh --generate '${{ steps.devices.outputs.devices }}')
+          echo "message_id=$IDTELE" >> "$GITHUB_OUTPUT"
+          
       - name: Install Dependencies
         run: |
           sudo apt-get update -qq
