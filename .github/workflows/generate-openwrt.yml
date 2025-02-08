@@ -102,15 +102,19 @@ jobs:
         run: |
           chmod +x ${IMAGEBUILDER_SH}
           de=$(echo '${{ steps.devices.outputs.devices }}' | jq -r '.[]')
-          for dev in $de; do
+          build_image() {
+            local dev="$1"
             sudo bash telegram.sh --update "${{ steps.telegram.outputs.message_id }}" ${{ steps.devices.outputs.devices }} "$dev" "💿 Building"
             if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "$dev"; then
               sudo bash telegram.sh --update "${{ steps.telegram.outputs.message_id }}" ${{ steps.devices.outputs.devices }} "$dev" "✅ Success"
             else
-              echo "Build failed! Check build.log for details"
+              echo "Build failed for device: $dev! Check build.log for details"
               sudo bash telegram.sh --update "${{ steps.telegram.outputs.message_id }}" ${{ steps.devices.outputs.devices }} "$dev" "❌ Failed"
             fi
-          done
+          }
+
+          export -f build_image
+          echo "$de" | parallel build_image
 
       - name: Upload to Release
         if: ${{ steps.build.outputs.status == '✅ Success' }}
