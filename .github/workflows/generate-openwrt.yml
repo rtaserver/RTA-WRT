@@ -54,14 +54,16 @@ env:
   APT_PACKAGES: build-essential libncurses5-dev zlib1g-dev gawk git gettext libssl-dev rsync wget unzip tar gzip qemu-utils mkisofs jq python3 python3-pip
 
 jobs:
-  prepare:
-    runs-on: ubuntu-latest
-    outputs:
-      devices: ${{ steps.matrix.outputs.devices }}
-      message_id: ${{ steps.telegram.outputs.message_id }}
+  build:
+    runs-on: ubuntu-24.04
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
       - name: Configure Build Matrix
-        id: matrix
+        id: devices
         run: |
           if [ "${{ inputs.devices }}" = "all" ]; then
             devices=$(jq -nc '[ "s905x", "s905x2", "s905x3", "s905x4", "s912", "h5-orangepi-zeroplus2", "h5-orangepi-zeroplus", "h5-orangepi-prime", "h5-orangepi-pc2", "h6-orangepi-lite2", "h6-orangepi-1plus", "h6-orangepi-3", "h6-orangepi-3lts", "h616-orangepi-zero2", "h618-orangepi-zero2w", "h618-orangepi-zero3", "rk3566-orangepi-3b", "rk3588s-orangepi-5", "bcm2710-rpi-3b", "bcm2711-rpi-4b", "x86-64" ]')
@@ -71,20 +73,17 @@ jobs:
           echo "devices=$devices" >> "$GITHUB_OUTPUT"
 
       - name: Setup Telegram Notification
-        if: inputs.notify
         id: telegram
         run: |
-          # Create telegram notification script
           cat > telegram.sh << 'EOF'
           #!/bin/bash
           BOT_TOKEN="${{ secrets.BOT_TOKEN }}"
           CHAT_ID="${{ secrets.CHAT_ID }}"
           CACHE_DIR="/tmp/telegram_cache"
           mkdir -p "$CACHE_DIR"
-
+  
           case $1 in
               --generate)
-                  # Parse devices JSON safely using jq
                   devices_json="$2"
                   devices_array=($(echo "$devices_json" | jq -r '.[]'))
                   
@@ -109,7 +108,6 @@ jobs:
                       -d "text=$message")
                   
                   message_id=$(echo "$response" | jq -r '.result.message_id')
-                  # Store the raw message without %0A
                   echo "${message//%0A/$'\n'}" > "$CACHE_DIR/message_${message_id}.txt"
                   echo "message_id=$message_id" >> "$GITHUB_OUTPUT"
                   echo "$message_id"
@@ -126,7 +124,6 @@ jobs:
                   updated_message=$(echo "$current_message" | sed "s/🔹 $device |.*$/🔹 $device | $status/")
                   echo "$updated_message" > "$CACHE_DIR/message_${message_id}.txt"
                   
-                  # Convert newlines to %0A for Telegram API
                   telegram_message="${updated_message//$'\n'/%0A}"
                   curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
                       -d "chat_id=$CHAT_ID" \
@@ -136,24 +133,9 @@ jobs:
                   ;;
           esac
           EOF
-          
+            
           chmod +x telegram.sh
-          # Use the devices output directly from the matrix step
-          sudo bash telegram.sh --generate '${{ steps.matrix.outputs.devices }}'
-          find "$(pwd)" -maxdepth 1
-
-  build:
-    needs: prepare
-    runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        device: ${{ fromJSON(needs.prepare.outputs.devices) }}
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
+          sudo bash telegram.sh --generate '${{ steps.devices.outputs.devices }}'
 
       - name: Install Dependencies
         run: |
@@ -167,61 +149,20 @@ jobs:
           echo "openwrt_version=${{ inputs.releases_branch }}" >> $GITHUB_ENV
           echo "openwrt_tag=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')" >> $GITHUB_ENV
 
-      - name: Create Telegram Script
-        if: inputs.notify
-        run: |
-          # Create telegram notification script
-          cat > telegram.sh << 'EOF'
-          #!/bin/bash
-          BOT_TOKEN="${{ secrets.BOT_TOKEN }}"
-          CHAT_ID="${{ secrets.CHAT_ID }}"
-          CACHE_DIR="/tmp/telegram_cache"
-          mkdir -p "$CACHE_DIR"
-
-          case $1 in
-              --update)
-                  message_id="$2"
-                  device="$3"
-                  status="$4"
-                  
-                  [ -f "$CACHE_DIR/message_${message_id}.txt" ] || exit 1
-                  
-                  current_message=$(cat "$CACHE_DIR/message_${message_id}.txt")
-                  updated_message=$(echo "$current_message" | sed "s/🔹 $device |.*$/🔹 $device | $status/")
-                  echo "$updated_message" > "$CACHE_DIR/message_${message_id}.txt"
-                  
-                  # Convert newlines to %0A for Telegram API
-                  telegram_message="${updated_message//$'\n'/%0A}"
-                  curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
-                      -d "chat_id=$CHAT_ID" \
-                      -d "message_id=$message_id" \
-                      -d "parse_mode=Markdown" \
-                      -d "text=$telegram_message"
-                  ;;
-          esac
-          EOF
-          chmod +x telegram.sh
-          echo ${{ needs.prepare.outputs.message_id }}
-          find "$(pwd)" -maxdepth 1
-
       - name: Build Image
         id: build
         run: |
-          find "$(pwd)" -maxdepth 1
-          # Make script executable
           chmod +x ${IMAGEBUILDER_SH}
 
-          # Notify build start
-          sudo bash telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "💿 Building"
-          
-
-          # Run build with detailed logging
-          if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}"; then
-            sudo bash telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "✅ Success"
-          else
-            echo "Build failed! Check build.log for details"
-            sudo bash telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "❌ Failed"
-          fi
+          for dev in ${{ steps.devices.outputs.devices }}; do
+            sudo bash telegram.sh --update "${{ steps.telegram.outputs.message_id }}" "$dev" "💿 Building"
+            if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "$dev"; then
+              sudo bash telegram.sh --update "${{ steps.telegram.outputs.message_id }}" "$dev" "✅ Success"
+            else
+              echo "Build failed! Check build.log for details"
+              sudo bash telegram.sh --update "${{ steps.telegram.outputs.message_id }}" "$dev" "❌ Failed"
+            fi
+          done
 
       - name: Upload to Release
         if: ${{ steps.build.outputs.status == '✅ Success' }}
