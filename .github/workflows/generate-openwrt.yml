@@ -101,8 +101,8 @@ jobs:
         id: build
         run: |
           chmod +x ${IMAGEBUILDER_SH}
-
-          for dev in ${{ steps.devices.outputs.devices }}; do
+          de=$(echo '${{ steps.devices.outputs.devices }}' | jq -r '.[]')
+          for dev in $de; do
             sudo bash telegram.sh --update "${{ steps.telegram.outputs.message_id }}" ${{ steps.devices.outputs.devices }} "$dev" "💿 Building"
             if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "$dev"; then
               sudo bash telegram.sh --update "${{ steps.telegram.outputs.message_id }}" ${{ steps.devices.outputs.devices }} "$dev" "✅ Success"
