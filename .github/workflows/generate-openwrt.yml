@@ -284,8 +284,7 @@ jobs:
       - name: Update Branch Info
         id: update
         run: |
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found && NF' "${{ steps.changelog.outputs.changelog }}")
-          r=$(echo "$r" | sed -e 's/%/%25/g' -e 's/$/\n/g' -e 's/\r/%0D/g')
+          r=$(echo "${{ steps.changelog.outputs.changelog }}" | sed -e 's/%0A/\n/g' -e 's/%0D/\r/g' -e 's/%25/%/g')
           echo "changelog=$r" >> $CURRENT_BRANCH/changelog.txt
           echo "${{ env.openwrt_tag }}--$( [ "$CURRENT_BRANCH" == "main" ] && echo "main" || echo "dev" )" > $CURRENT_BRANCH/version.txt
           git config user.name 'github-actions[bot]'

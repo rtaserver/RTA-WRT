@@ -526,6 +526,7 @@ custom_packages() {
         "luci-theme-alpha|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         "luci-app-adguardhome|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         "adguardhome|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "homebox|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         "luci-app-netspeedtest|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
         
         "luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
@@ -712,7 +713,7 @@ rebuild_firmware() {
     PACKAGES+=" internet-detector luci-app-internet-detector internet-detector-mod-modem-restart nlbwmon luci-app-nlbwmon vnstat2 vnstati2 luci-app-vnstat2 netdata"
 
     # Speedtest
-    PACKAGES+=" librespeed-go python3-speedtest-cli iperf3 luci-app-netspeedtest"
+    PACKAGES+=" librespeed-go python3-speedtest-cli iperf3 homebox luci-app-netspeedtest"
 
     # Theme
     PACKAGES+=" luci-theme-material luci-theme-argon luci-app-argon-config luci-theme-material3"
