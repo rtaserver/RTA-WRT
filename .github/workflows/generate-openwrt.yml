@@ -198,6 +198,9 @@ jobs:
             echo "✅ Status '$DEVICE' diperbarui menjadi '$STATUS'"
           }
 
+          # Update status to "💿 Build" before starting the build process
+          update_status ${{ needs.prepare.outputs.message_id }} "${{ matrix.device }}" "💿 Build"
+
           chmod +x ${IMAGEBUILDER_SH}
           if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}"; then
             echo "status=✅ Sukses" >> "$GITHUB_OUTPUT"
