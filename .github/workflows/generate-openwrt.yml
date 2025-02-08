@@ -176,6 +176,7 @@ jobs:
           BOT_TOKEN="${{ secrets.BOT_TOKEN }}"
           CHAT_ID="${{ secrets.CHAT_ID }}"
           CACHE_DIR="/tmp/telegram_cache"
+          mkdir -p "$CACHE_DIR"
 
           case $1 in
               --update)
@@ -183,7 +184,7 @@ jobs:
                   device="$3"
                   status="$4"
                   
-                  [ -f "$CACHE_DIR/message_${message_id}.txt" ] || echo "cache not found" && exit 1
+                  [ -f "$CACHE_DIR/message_${message_id}.txt" ] || exit 1
                   
                   current_message=$(cat "$CACHE_DIR/message_${message_id}.txt")
                   updated_message=$(echo "$current_message" | sed "s/🔹 $device |.*$/🔹 $device | $status/")
