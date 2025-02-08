@@ -74,6 +74,7 @@ jobs:
         if: inputs.notify
         id: telegram
         run: |
+          cd ..
           # Create telegram notification script
           cat > telegram.sh << 'EOF'
           #!/bin/bash
@@ -138,8 +139,8 @@ jobs:
           
           chmod +x telegram.sh
           # Use the devices output directly from the matrix step
-          cp telegram.sh /home/
-          bash /home/telegram.sh --generate '${{ steps.matrix.outputs.devices }}'
+          #cp telegram.sh /home/
+          #bash /home/telegram.sh --generate '${{ steps.matrix.outputs.devices }}'
           find "$(pwd)" -maxdepth 1
           echo ${PWD}
 
