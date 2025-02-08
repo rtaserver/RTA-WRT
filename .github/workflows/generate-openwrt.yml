@@ -74,7 +74,7 @@ jobs:
         id: telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}  # Perbaikan: menggunakan CHAT_ID yang sesuai
+          CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
           sudo timedatectl set-timezone "$TZ"
           readarray -t DEVICES < <(echo '${{ steps.matrix.outputs.devices }}' | jq -r '.[]')
@@ -145,7 +145,7 @@ jobs:
         id: build
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          GROUP_ID: ${{ secrets.CHAT_ID }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
           update_status() {
             local MESSAGE_ID=$1
