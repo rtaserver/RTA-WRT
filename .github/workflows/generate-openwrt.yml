@@ -139,7 +139,7 @@ jobs:
           
           chmod +x telegram.sh
           # Use the devices output directly from the matrix step
-          ./telegram.sh --generate '${{ steps.matrix.outputs.devices }}'
+          sudo bash telegram.sh --generate '${{ steps.matrix.outputs.devices }}'
           find "$(pwd)" -maxdepth 1
 
   build:
@@ -242,9 +242,7 @@ jobs:
           # Check if imagebuilder script exists
           if [ ! -f "${IMAGEBUILDER_SH}" ]; then
             echo "Error: ${IMAGEBUILDER_SH} not found!"
-            if [ "${{ inputs.notify }}" = "true" ]; then
-              ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "❌ Failed (Script not found)"
-            fi
+            sudo bash telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "❌ Failed (Script not found)"
             exit 1
           fi
 
@@ -252,20 +250,15 @@ jobs:
           chmod +x ${IMAGEBUILDER_SH}
 
           # Notify build start
-          if [ "${{ inputs.notify }}" = "true" ]; then
-            ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "💿 Building"
-          fi
+          sudo bash telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "💿 Building"
+          
 
           # Run build with detailed logging
           if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}" 2>&1 | tee build.log; then
-            if [ "${{ inputs.notify }}" = "true" ]; then
-              ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "✅ Success"
-            fi
+            sudo bash telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "✅ Success"
           else
             echo "Build failed! Check build.log for details"
-            if [ "${{ inputs.notify }}" = "true" ]; then
-              ./telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "❌ Failed"
-            fi
+            sudo bash telegram.sh --update "${{ needs.prepare.outputs.message_id }}" "${{ matrix.device }}" "❌ Failed"
             cat build.log
             exit 1
           fi
