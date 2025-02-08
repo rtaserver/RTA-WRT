@@ -139,6 +139,8 @@ jobs:
           chmod +x telegram.sh
           # Use the devices output directly from the matrix step
           ./telegram.sh --generate '${{ steps.matrix.outputs.devices }}'
+          find "$(pwd)" -maxdepth 1
+          echo ${PWD}
 
   build:
     needs: prepare
