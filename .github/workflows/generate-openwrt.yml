@@ -108,7 +108,11 @@ jobs:
           echo "message_id=$message_id" >> $GITHUB_OUTPUT
 
       - name: Initialize Status File
-        run: echo "" > ../../build_status.txt
+        run: |
+          readarray -t DEVICES < <(echo '${{ steps.matrix.outputs.devices }}' | jq -r '.[]')
+          for device in "${DEVICES[@]}"; do
+            echo "$device=⏳ Pending" >> build_status.txt
+          done
 
   build:
     needs: prepare
@@ -152,15 +156,13 @@ jobs:
           CHAT_ID: ${{ secrets.CHAT_ID }}
           MESSAGE_THREAD_ID: 616
         run: |
-          readarray -t DEVICES < <(echo '${{ needs.prepare.outputs.devices }}' | jq -r '.[]')
-
           # Function to update the status of a specific device
           update_status() {
             local DEVICE=$1
             local STATUS=$2
 
-            # Save the status to a file
-            echo "$DEVICE|$STATUS" >> ../../build_status.txt
+            # Update the status in the build_status.txt file
+            sed -i "s/^$DEVICE=.*$/$DEVICE=$STATUS/" ../../build_status.txt
 
             updated_message="=======================%0A"
             updated_message+="🚀 *RTA-WRT | Build Status*%0A"
@@ -171,8 +173,8 @@ jobs:
             updated_message+="-----------------------%0A"
             updated_message+="📋 *Device List*%0A"
 
-            # Read statuses from files and update the message
-            while IFS="|" read -r dev stat; do
+            # Read statuses from the build_status.txt file and update the message
+            while IFS="=" read -r dev stat; do
               updated_message+="🔹 $dev | $stat%0A"
             done < ../../build_status.txt
 
