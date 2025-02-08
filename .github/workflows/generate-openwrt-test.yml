@@ -99,7 +99,8 @@ jobs:
       - name: Setup Environment Variables
         id: setup
         run: |
-          DATETIME=$(date +'%Y%m%d')
+          sudo timedatectl set-timezone "$TZ"
+          DATETIME=$(date +'%d%m%Y')
           BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
           RELEASE_TAG="${BRANCH_TAG}-${DATETIME}"
           echo "datetime=${DATETIME}" >> $GITHUB_ENV
@@ -157,7 +158,7 @@ jobs:
           ==================
           📌 *Version*: ${{ inputs.releases_branch }}
           🌿 *Branch*: ${{ github.ref_name }}
-          📅 *Date*: $(date "+%Y-%m-%d %H:%M:%S")
+          📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")
           -------------------
           📋 *Device List*
           $(echo "$devices" | jq -r '.[]' | while read device; do
@@ -204,6 +205,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y ${{ env.APT_PACKAGES }}
+          sudo timedatectl set-timezone "$TZ"
 
       - name: Extract Changelog
         id: changelog
@@ -282,7 +284,7 @@ jobs:
           ==================
           📌 *Version*: ${{ inputs.releases_branch }}
           🌿 *Branch*: ${{ github.ref_name }}
-          📅 *Date*: $(date "+%Y-%m-%d %H:%M:%S")
+          📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")
           -------------------
           📋 *Device List*
           $(echo "$devices" | jq -r '.[]' | while read device; do
