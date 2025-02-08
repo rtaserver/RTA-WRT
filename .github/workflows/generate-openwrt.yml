@@ -113,6 +113,14 @@ jobs:
           for device in "${DEVICES[@]}"; do
             echo "$device=⏳ Pending" >> build_status.txt
           done
+        # Ensure the file is accessible in later steps
+        shell: bash
+
+      - name: Upload Status File
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-status
+          path: build_status.txt
 
   build:
     needs: prepare
@@ -149,6 +157,12 @@ jobs:
           r="${r//$'\r'/'%0D'}"  
           echo "changelog=$r" >> $GITHUB_OUTPUT 
 
+      - name: Download Status File
+        uses: actions/download-artifact@v2
+        with:
+          name: build-status
+          path: .
+
       - name: Build Image
         id: build
         env:
@@ -162,7 +176,7 @@ jobs:
             local STATUS=$2
 
             # Update the status in the build_status.txt file
-            sed -i "s/^$DEVICE=.*$/$DEVICE=$STATUS/" ../../build_status.txt
+            sed -i "s/^$DEVICE=.*$/$DEVICE=$STATUS/" build_status.txt
 
             updated_message="=======================%0A"
             updated_message+="🚀 *RTA-WRT | Build Status*%0A"
@@ -176,7 +190,7 @@ jobs:
             # Read statuses from the build_status.txt file and update the message
             while IFS="=" read -r dev stat; do
               updated_message+="🔹 $dev | $stat%0A"
-            done < ../../build_status.txt
+            done < build_status.txt
 
             updated_message+="======================="
 
@@ -192,12 +206,24 @@ jobs:
           # Update status to "💿 Build" before starting the build process
           update_status "${{ matrix.device }}" "💿 Build"
 
+      - name: Upload Updated Status File
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-status
+          path: build_status.txt
+
           chmod +x ${IMAGEBUILDER_SH}
           if sudo bash ${IMAGEBUILDER_SH} ${{ env.openwrt_version }} "${{ matrix.device }}"; then
             update_status "${{ matrix.device }}" "✅ Sukses"
           else
             update_status "${{ matrix.device }}" "❌ Gagal"
           fi
+
+      - name: Upload Updated Status File
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-status
+          path: build_status.txt
 
       - name: Upload to Release
         if: ${{ steps.build.outputs.status == '✅ Sukses' }}
