@@ -713,7 +713,7 @@ rebuild_firmware() {
     PACKAGES+=" internet-detector luci-app-internet-detector internet-detector-mod-modem-restart nlbwmon luci-app-nlbwmon vnstat2 vnstati2 luci-app-vnstat2 netdata"
 
     # Speedtest
-    PACKAGES+=" librespeed-go python3-speedtest-cli iperf3 homebox luci-app-netspeedtest"
+    PACKAGES+=" librespeed-go python3-speedtest-cli iperf3 -iperf3-ssl homebox luci-app-netspeedtest"
 
     # Theme
     PACKAGES+=" luci-theme-material luci-theme-argon luci-app-argon-config luci-theme-material3"

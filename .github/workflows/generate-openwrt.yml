@@ -52,7 +52,7 @@ env:
   IMAGEBUILDER_SH: imagebuilder.sh
   DEBIAN_FRONTEND: noninteractive
   APT_PACKAGES: build-essential libncurses5-dev zlib1g-dev gawk git gettext libssl-dev rsync wget unzip tar gzip qemu-utils mkisofs jq python3 python3-pip
-
+  CURRENT_BRANCH: ${{ github.ref_name }}
 jobs:
   prepare:
     runs-on: ubuntu-latest
@@ -284,6 +284,7 @@ jobs:
       - name: Update Branch Info
         id: update
         run: |
+          echo ${{ steps.changelog.outputs.changelog }}
           r=$(echo "${{ steps.changelog.outputs.changelog }}" | sed -e 's/%0A/\n/g' -e 's/%0D/\r/g' -e 's/%25/%/g')
           echo "changelog=$r" >> $CURRENT_BRANCH/changelog.txt
           echo "${{ env.openwrt_tag }}--$( [ "$CURRENT_BRANCH" == "main" ] && echo "main" || echo "dev" )" > $CURRENT_BRANCH/version.txt
