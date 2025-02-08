@@ -145,7 +145,6 @@ jobs:
 
       - name: Send Initial Telegram Message
         id: telegram
-        if: inputs.notify == 'true'
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           GROUP_ID: ${{ secrets.CHAT_ID }}
@@ -262,7 +261,7 @@ jobs:
 
   notify:
     needs: [prepare, build]
-    if: inputs.notify == 'true' && always()
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Download Build Status Artifacts
