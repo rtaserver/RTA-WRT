@@ -149,6 +149,7 @@ jobs:
           CHAT_ID: ${{ secrets.CHAT_ID }}
           MESSAGE_THREAD_ID: 616
         run: |
+          readarray -t DEVICES < <(echo '${{ needs.prepare.outputs.devices }}' | jq -r '.[]')
           update_status() {
             local MESSAGE_ID=$1
             local DEVICE=$2
