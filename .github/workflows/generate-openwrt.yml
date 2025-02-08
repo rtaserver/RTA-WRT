@@ -120,6 +120,7 @@ jobs:
         uses: actions/upload-artifact@v4.6.0
         with:
           name: build-status
+          overwrite: true
           path: build_status.txt
 
   build:
@@ -158,7 +159,7 @@ jobs:
           echo "changelog=$r" >> $GITHUB_OUTPUT 
 
       - name: Download Status File
-        uses: actions/upload-artifact@v4.6.0
+        uses: actions/download-artifact@v4.1.8
         with:
           name: build-status
           path: .
@@ -217,6 +218,7 @@ jobs:
         uses: actions/upload-artifact@v4.6.0
         with:
           name: build-status
+          overwrite: true
           path: build_status.txt
 
       - name: Upload to Release
