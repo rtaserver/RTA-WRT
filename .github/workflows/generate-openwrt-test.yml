@@ -173,7 +173,7 @@ jobs:
           RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
             -d chat_id=$CHAT_ID \
             -d parse_mode=Markdown \
-            -d text="$MESSAGE")
+            --data-urlencode text="$MESSAGE")
           
           echo "message_id=$(echo $RESPONSE | jq -r '.result.message_id')" >> $GITHUB_OUTPUT
 
@@ -314,7 +314,7 @@ jobs:
            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
             -d chat_id=$CHAT_ID \
             -d parse_mode=Markdown \
-            -d text="$NEWMESSAGE")
+            --data-urlencode text="$NEWMESSAGE")
 
 
       - name: Notify Telegram
@@ -361,13 +361,13 @@ jobs:
             if [ "${CURRENT_BRANCH}" == "main" ]; then
               curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
                 -d "chat_id=$CHAT_ID" \
-                -d "text=$MESSAGE_STABLE" \
+                --data-urlencode text="$MESSAGE_STABLE" \
                 -d "parse_mode=Markdown" \
                 -d "reply_markup=$BUTTONS_STABLE"
             else
               curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
                 -d "chat_id=$CHAT_ID" \
-                -d "text=$MESSAGE_DEV" \
+                --data-urlencode text="$MESSAGE_DEV" \
                 -d "parse_mode=Markdown" \
                 -d "reply_markup=$BUTTONS_DEV"
             fi
