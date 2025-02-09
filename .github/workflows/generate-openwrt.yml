@@ -75,6 +75,7 @@ jobs:
     outputs:
       devices: ${{ steps.matrix.outputs.devices }}
       message_id: ${{ steps.telegram.outputs.message_id }}
+      release_name: ${{ steps.setup.outputs.release_name }}
       release_tag: ${{ steps.setup.outputs.release_tag }}
       changelog: ${{ steps.changelog.outputs.changelog }}
       startbuildtime: ${{ steps.setup.outputs.startbuildtime }}
@@ -99,16 +100,45 @@ jobs:
         id: setup
         run: |
           sudo timedatectl set-timezone "$TZ"
+
           STARTBUILDTIME=$(date +%s)
           DATETIME=$(date +'%d%m%Y')
+
           BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
-          if [ "${{ github.ref_name }}" == "main" ]; then
-            RELEASE_TAG="${BRANCH_TAG}-${DATETIME}"
-          elif [ "${{ github.ref_name }}" == "dev" ]; then
-            RELEASE_TAG="${BRANCH_TAG}-dev-${DATETIME}"
-          fi
+
+          release_name() {
+              local source_name="${1%:*}"  # Ambil bagian sebelum ":"
+              local branch_version="${1#*:}"  # Ambil bagian setelah ":"
+              local release_for="$2"
+
+              case "$source_name" in
+                  openwrt) source_name="OpenWrt" ;;
+                  immortalwrt) source_name="ImmortalWrt" ;;
+                  *) echo "Error: Source tidak dikenali" >&2; return 1 ;;
+              esac
+
+              case "$release_for" in
+                  main) release_type="Stable" ;;
+                  dev) release_type="Development" ;;
+                  *) echo "Error: Jenis release tidak dikenali" >&2; return 1 ;;
+              esac
+
+              local tanggal=$(date +'%d-%m-%Y')
+
+              echo "RTA-WRT - $release_type | $source_name:$branch_version | $tanggal"
+          }
+
+          RELEASE_NAME=$(release_name "${{ inputs.releases_branch }}" "${{ github.ref_name }}")
+
+          case "${{ github.ref_name }}" in
+              main) RELEASE_TAG="${BRANCH_TAG}-main-${DATETIME}" ;;
+              dev) RELEASE_TAG="${BRANCH_TAG}-dev-${DATETIME}" ;;
+              *) echo "Error: Branch tidak dikenali" >&2; exit 1 ;;
+          esac
+
           echo "startbuildtime=${STARTBUILDTIME}" >> $GITHUB_OUTPUT
           echo "datetime=${DATETIME}" >> $GITHUB_ENV
+          echo "release_name=${RELEASE_NAME}" >> $GITHUB_OUTPUT
           echo "release_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
 
       - name: Configure Build Matrix
@@ -252,7 +282,7 @@ jobs:
         with:
           files: imagebuilder/out_firmware/*
           tag_name: ${{ needs.prepare.outputs.release_tag }}
-          name: "RTA-WRT - ${{ needs.prepare.outputs.release_tag }}"
+          name: ${{ needs.prepare.outputs.release_name }}
           body: |
             # 🚀 RTA-WRT - Release Information
             
@@ -291,7 +321,7 @@ jobs:
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
           THREAD_ID_BUILD=616
-          
+
           devices='${{ needs.prepare.outputs.devices }}'
 
           format_time() {
