@@ -9,7 +9,7 @@
 #         https://github.com/rtaserver/RTA-WRT
 #
 # Command: ./config/imagebuilder/imagebuilder.sh <source:branch> <target>
-# Example: ./config/imagebuilder/imagebuilder.sh openwrt:21.02.3 x86-64
+# Example: ./config/imagebuilder/imagebuilder.sh openwrt:24.10.0 x86-64
 # Available Devices
 #- s905x | HG680P, B860Hv1/v2
 #- s905x2 | HG680FJ, B860Hv5, MNC CYBORG001
@@ -357,15 +357,7 @@ download_imagebuilder() {
             ;;
     esac
 
-    # Determine file extension and download URL
-    CURVER=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
-    if [[ "${CURVER}" == "23.05" ]]; then
-        archive_ext="tar.xz"
-    elif [[ "${CURVER}" == "24.10" ]]; then
-        archive_ext="tar.zst"
-    else
-        error_msg "Unknown OpenWrt version: ${op_branch}"
-    fi
+    archive_ext="tar.zst"
     download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
 
     ariadl "${download_file}" "${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
@@ -504,13 +496,13 @@ custom_packages() {
     CURVER=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
     declare -a other_packages=(
 
-        "modemmanager-rpcd|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
-        "luci-proto-modemmanager|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/luci"
-        "libqmi|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
-        "libmbim|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
-        "modemmanager|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
-        "sms-tool|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
-        "tailscale|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
+        "modemmanager-rpcd|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
+        "luci-proto-modemmanager|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/luci"
+        "libqmi|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
+        "libmbim|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
+        "modemmanager|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
+        "sms-tool|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
+        "tailscale|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
         
         "python3-speedtest-cli|https://downloads.openwrt.org/releases/packages-$CURVER/$ARCH_3/packages"
         "dns2tcp|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/packages"
@@ -519,36 +511,36 @@ custom_packages() {
         "luci-app-openclash|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
         "luci-app-passwall|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
         
-        "luci-app-tailscale|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "luci-app-diskman|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-zte|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-gosun|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-qmi|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-yuge|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-thales|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-tw|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-meig|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-styx|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-mikrotik|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-dell|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-sierra|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-quectel|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-huawei|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-xmm|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-telit|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-fibocom|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo-serial-simcom|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "modeminfo|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "luci-app-modeminfo|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "atinout|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "luci-app-poweroff|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "xmm-modem|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "luci-app-lite-watchdog|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "luci-theme-alpha|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "luci-app-adguardhome|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "adguardhome|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "homebox|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
-        "luci-app-netspeedtest|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
+        "luci-app-tailscale|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "luci-app-diskman|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-zte|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-gosun|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-qmi|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-yuge|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-thales|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-tw|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-meig|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-styx|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-mikrotik|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-dell|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-sierra|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-quectel|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-huawei|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-xmm|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-telit|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-fibocom|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo-serial-simcom|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "modeminfo|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "luci-app-modeminfo|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "atinout|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "luci-app-poweroff|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "xmm-modem|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "luci-app-lite-watchdog|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "luci-theme-alpha|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "luci-app-adguardhome|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "adguardhome|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "homebox|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "luci-app-netspeedtest|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
         
         "luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
@@ -559,12 +551,12 @@ custom_packages() {
         "luci-app-temp-status|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         #"luci-app-rakitanmanager|https://github.com/rtaserver/RakitanManager/raw/refs/heads/package/main"
 
-        "luci-app-zerotier|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
-        "luci-app-ramfree|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
-        "luci-app-3ginfo-lite|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
-        "modemband|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/packages"
-        "luci-app-modemband|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
-        "luci-app-sms-tool-js|https://downloads.immortalwrt.org/releases/packages-24.10/$ARCH_3/luci"
+        "luci-app-zerotier|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
+        "luci-app-ramfree|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
+        "luci-app-3ginfo-lite|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
+        "modemband|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/packages"
+        "luci-app-modemband|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
+        "luci-app-sms-tool-js|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
     )
 
     download_packages "custom" other_packages[@]
@@ -693,7 +685,7 @@ rebuild_firmware() {
     mkdir -p ${imagebuilder_path}/out_firmware ${imagebuilder_path}/out_rootfs
 
     # Selecting default packages, lib, theme, app and i18n, etc.
-    PACKAGES+=" -dnsmasq dnsmasq-full zsh coreutils-sleep fontconfig coreutils-whoami file lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
+    PACKAGES+=" -dnsmasq dnsmasq-full owut zsh coreutils-sleep fontconfig coreutils-whoami file lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
     PACKAGES+=" kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi kmod-usb-net-cdc-ether kmod-usb-serial-option kmod-usb-serial kmod-usb-serial-wwan qmi-utils"
     PACKAGES+=" kmod-usb-serial-qualcomm kmod-usb-acm kmod-usb-net-cdc-ncm kmod-usb-net-cdc-mbim umbim modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi usbutils luci-proto-mbim luci-proto-ncm"
     PACKAGES+=" kmod-usb-net-huawei-cdc-ncm kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial-sierrawireless kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem"
@@ -771,16 +763,6 @@ rebuild_firmware() {
         ;;
     x86-64)
         MISC+=" kmod-iwlwifi iw-full pciutils"
-        ;;
-    esac
-
-    CURVER=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
-    case "${CURVER}" in
-    23.05)
-        PACKAGES+=""
-        ;;
-    24.10)
-        PACKAGES+=" owut"
         ;;
     esac
 
@@ -1252,10 +1234,10 @@ rename_firmware() {
 # Show welcome message
 echo -e "${STEPS} Welcome to Rebuild OpenWrt Using the Image Builder."
 [[ -x "${0}" ]] || error_msg "Please give the script permission to run: [ chmod +x ${0} ]"
-[[ -z "${1}" ]] && error_msg "Please specify the OpenWrt Branch, such as [ ${0} openwrt:22.03.3 x86-64 or openwrt:22.03.3 s905x ]"
-[[ -z "${2}" ]] && error_msg "Please specify the OpenWrt Devices, such as [ ${0} openwrt:22.03.3 x86-64 or openwrt:22.03.3 s905x ]"
-[[ "${1}" =~ ^[a-z]{3,}:[0-9]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 s905x"
-[[ "${2}" =~ ^[a-zA-Z0-9_-]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:22.03.3 x86-64 or openwrt:22.03.3 s905x"
+[[ -z "${1}" ]] && error_msg "Please specify the OpenWrt Branch, such as [ ${0} openwrt:24.10.0 x86-64 or openwrt:24.10.0 s905x ]"
+[[ -z "${2}" ]] && error_msg "Please specify the OpenWrt Devices, such as [ ${0} openwrt:24.10.0 x86-64 or openwrt:24.10.0 s905x ]"
+[[ "${1}" =~ ^[a-z]{3,}:[0-9]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:24.10.0 x86-64 or openwrt:24.10.0 s905x"
+[[ "${2}" =~ ^[a-zA-Z0-9_-]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:24.10.0 x86-64 or openwrt:24.10.0 s905x"
 op_sourse="${1%:*}"
 op_branch="${1#*:}"
 op_devices="${2}"
