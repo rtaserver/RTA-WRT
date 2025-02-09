@@ -445,7 +445,7 @@ jobs:
           # Stage and commit changes if any exist
           if ! git diff --quiet; then
             git add "${CURRENT_BRANCH}/${OP_SOURCE}/changelog.txt" "${CURRENT_BRANCH}/${OP_SOURCE}/version.txt"
-            if git commit -m "Auto Release: v${{ inputs.releases_branch }}"; then
+            if git commit -m "Auto Release: $(date "+%d-%m-%Y %H:%M:%S")"; then
               # Try to push with retry mechanism
               for i in {1..3}; do
                 if git push; then
