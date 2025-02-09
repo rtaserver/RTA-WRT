@@ -398,8 +398,9 @@ jobs:
           git checkout info
           
           set -euo pipefail
-          
-          mkdir -p "${CURRENT_BRANCH}"
+          OPEWRT="${{ inputs.releases_branch }}"
+          OP_SOURCE="${OPEWRT%:*}"
+          mkdir -p "${CURRENT_BRANCH}/${OP_SOURCE}"
           
           if [ -n "${{ needs.prepare.outputs.changelog }}" ]; then
             # Clean and format changelog
@@ -409,7 +410,7 @@ jobs:
                   -e 's/%25/%/g')
             
             # Update changelog file
-            echo "${changelog_content}" > "${CURRENT_BRANCH}/changelog.txt"
+            echo "${changelog_content}" > "${CURRENT_BRANCH}/${OP_SOURCE}/changelog.txt"
           else
             echo "No changelog content found"
             exit 1
@@ -418,7 +419,7 @@ jobs:
           # Update version file with branch indicator
           BRANCH_SUFFIX=$([ "${CURRENT_BRANCH}" == "main" ] && echo "main" || echo "dev")
           VERSION_TAG="${{ needs.prepare.outputs.release_tag }}--${BRANCH_SUFFIX}"
-          echo "${VERSION_TAG}" > "${CURRENT_BRANCH}/version.txt"
+          echo "${VERSION_TAG}" > "${CURRENT_BRANCH}/${OP_SOURCE}/version.txt"
           
           # Configure git
           git config user.name 'github-actions[bot]'
@@ -426,7 +427,7 @@ jobs:
           
           # Stage and commit changes if any exist
           if ! git diff --quiet; then
-            git add "${CURRENT_BRANCH}/changelog.txt" "${CURRENT_BRANCH}/version.txt"
+            git add "${CURRENT_BRANCH}/${OP_SOURCE}/changelog.txt" "${CURRENT_BRANCH}/${OP_SOURCE}/version.txt"
             if git commit -m "Auto Release: v${{ inputs.releases_branch }}"; then
               # Try to push with retry mechanism
               for i in {1..3}; do

@@ -152,6 +152,9 @@
 </style>
 <script>
 // ====== Constants ======
+const baseopenwrt = "null";
+const currentBranch = "null";
+const currentVersion = "null";
 const INFO_URL = 'https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/informasi.txt';
 const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const TODAY = new Date().toDateString();
@@ -199,14 +202,12 @@ function saveToLocal(key, value) {
 }
 // ====== Update & Information Check ======
 async function checkForUpdates() {
-    const currentBranch = "null"
-    const currentVersion = "null";
     const lastShownUpdate = localStorage.getItem('mdl_update');
     if (lastShownUpdate === TODAY) return;
     try {
         const [latestVersion, changelogRaw] = await Promise.all([
-            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${currentBranch}/version.txt'),
-            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${currentBranch}/changelog.txt')
+            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${currentBranch}/${baseopenwrt}/version.txt'),
+            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${currentBranch}/${baseopenwrt}/changelog.txt')
         ]);
         if (latestVersion && latestVersion.trim() !== currentVersion) {
             const changelogMatch = changelogRaw.match(/\*\*Changelog\*\* \((.*?)\)\n([\s\S]*?)(?=\*\*Changelog\*\*|$)/);
