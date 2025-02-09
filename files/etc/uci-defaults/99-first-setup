@@ -49,16 +49,21 @@ uci set network.lan.delegate='0'
 uci set network.wan=interface
 uci set network.wan.proto='dhcp'
 uci set network.wan.device='eth1'
-uci set network.modemmanager=interface 
-uci set network.modemmanager.proto='modemmanager'
-uci set network.modemmanager.device='/sys/devices/platform/scb/fd500000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/usb2/2-1'
-uci set network.modemmanager.apn='internet'
-uci set network.modemmanager.auth='none'
-uci set network.modemmanager.iptype='ipv4'
-uci set network.modemmanager.force_connection='1'
+uci set network.wan1=interface
+uci set network.wan1.proto='dhcp'
+uci set network.wan1.device='eth2'
+uci set network.wan2=interface
+uci set network.wan2.proto='dhcp'
+uci set network.wan2.device='eth3'
+uci set network.mm=interface 
+uci set network.mm.proto='modemmanager'
+uci set network.mm.apn='internet'
+uci set network.mm.auth='none'
+uci set network.mm.iptype='ipv4'
+uci set network.mm.force_connection='1'
 uci -q delete network.wan6
 uci commit network
-uci set firewall.@zone[1].network='wan modemmanager'
+uci set firewall.@zone[1].network='wan wan1 wan2 mm'
 uci commit firewall
 
 # configure ipv6
@@ -108,43 +113,45 @@ else
   msg "No wireless device detected."
 fi
 
-# Step 1: Configure Password Login OpenWrt
-msg "Step 1: Configure Password Login OpenWrt"
+# Configure Password Login OpenWrt
+msg "Configure Password Login OpenWrt"
 (echo "rtawrt"; sleep 1; echo "rtawrt") | passwd > /dev/null
 
 
-# Step 2: Add Custom Repo and Disable opkg signature check
-msg "Step 2: Add Custom Repo and Disable opkg signature check"
+# Add Custom Repo and Disable opkg signature check
+msg "Add Custom Repo and Disable opkg signature check"
 sed -i 's/option check_signature/# option check_signature/g' /etc/opkg.conf
 echo "src/gz custom_arch https://dl.openwrt.ai/packages-$(grep "VERSION" /etc/os-release | head -n 1 | awk -F '"' '{print $2}' | cut -d. -f1,2)/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
 
 
-# Step 3: Remove login password required when accessing terminal
-msg "Step 3: Remove login password required when accessing terminal"
+# Remove login password required when accessing terminal
+msg "Remove login password required when accessing terminal"
 uci set ttyd.@ttyd[0].command='/bin/bash --login'
 # uci add_list ttyd.@ttyd[0].client_option='fontFamily=FiraCode Nerd Font'
 # uci add_list ttyd.@ttyd[0].client_option='fontSize=10'
 uci commit ttyd
 
 
-# Step 4: Remove huawei me909s usb-modeswitch
-msg "Step 4: Remove huawei me909s usb-modeswitch"
+# Remove huawei me909s usb-modeswitch
+msg "Remove huawei me909s usb-modeswitch"
 sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
 
 
-# Step 5: Remove dw5821e usb-modeswitch
-msg "Step 5: Remove dw5821e usb-modeswitch"
+# Remove dw5821e usb-modeswitch
+msg "Remove dw5821e usb-modeswitch"
 sed -i -e '/413c:81d7/,+5d' /etc/usb-mode.json
 
+msg "Remove Thales MV31-W T99W175 usb-modeswitch"
+sed -i -e '/1e2d:00b3/,+5d' /etc/usb-mode.json
 
-# Step 6: Disable /etc/config/xmm-modem
-msg "Step 6: Disable /etc/config/xmm-modem"
+# Disable /etc/config/xmm-modem
+msg "Disable /etc/config/xmm-modem"
 uci set xmm-modem.@xmm-modem[0].enable='0'
 uci commit xmm-modem
 
 
-# Step 7: Setup Nlbwmon Database Dir
-msg "Step 7: Setup Nlbwmon Database Dir"
+# Setup Nlbwmon Database Dir
+msg "Setup Nlbwmon Database Dir"
 uci set nlbwmon.@nlbwmon[0].database_directory='/etc/nlbwmon'
 uci set nlbwmon.@nlbwmon[0].commit_interval='3h'
 uci set nlbwmon.@nlbwmon[0].refresh_interval='60s'
@@ -152,16 +159,16 @@ uci commit nlbwmon
 bash /etc/init.d/nlbwmon restart
 
 
-# Step 8: Setup Auto Vnstat Database Backup
-msg "Step 8: Setup Auto Vnstat Database Backup"
+# Setup Auto Vnstat Database Backup
+msg "Setup Auto Vnstat Database Backup"
 sed -i 's/;DatabaseDir "\/var\/lib\/vnstat"/DatabaseDir "\/etc\/vnstat"/' /etc/vnstat.conf
 mkdir -p /etc/vnstat
 chmod +x /etc/init.d/vnstat_backup
 bash /etc/init.d/vnstat_backup enable
 
 
-# Step 9: Adjusting App Catagory
-# msg "Step 9: Adjusting App Catagory"
+# Adjusting App Catagory
+# msg "Adjusting App Catagory"
 # sed -i -E "s|status|services|g" /usr/lib/lua/luci/controller/base64.lua
 
 
