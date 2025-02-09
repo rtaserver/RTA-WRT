@@ -1,18 +1,24 @@
 <h1 align="center">
   <img src="/pictures/logo.png" alt="OpenWrt" width="100">
-  <br><strong>RTA WRT - Custom OpenWrt</strong><br>
+  <br><strong style="font-size: 2rem; color:rgb(22, 170, 238);">RTA WRT - Custom OpenWrt</strong><br>
 </h1>
 
-<h3 align="center">OpenWrt - 23.05.5 | ImmortalWrt - 23.05.4</h3>
+<h3 align="center" style="font-weight: normal;">OpenWrt - 24.10.0 | ImmortalWrt - 24.10.0</h3>
 
-<h4 align="center">Bergabunglah di Telegram untuk mendapatkan notifikasi update dan tutorial!</h4>
+<h4 align="center" style="font-size: 1.2rem; font-weight: 400;">Bergabunglah di Telegram untuk mendapatkan notifikasi update dan tutorial!</h4>
 <p align="center">
-  <a href="https://t.me/rtawrt"><img src="https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram"></a>
-  <a href="https://t.me/backup_rtawrt"><img src="https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram"></a>
-  <a href="https://t.me/RizkiKotet"><img src="https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram"></a>
+  <a href="https://t.me/rtawrt">
+    <img src="https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram" alt="Telegram Channel">
+  </a>
+  <a href="https://t.me/backup_rtawrt">
+    <img src="https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram" alt="Telegram Group">
+  </a>
+  <a href="https://t.me/RizkiKotet">
+    <img src="https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram" alt="Telegram Personal">
+  </a>
 </p>
 
-<p align="center">
+<p align="center" style="font-size: 1.1rem;">
   <strong>Build dengan ImageBuilder | Custom Script by FriWrt</strong>
 </p>
 
@@ -21,15 +27,17 @@
 ## 🚀 Link Download
 <p align="center">
   <a href="https://github.com/rizkikotet-dev/RTA-WRT/releases/">
-    <img src="https://img.shields.io/badge/Download-OpenWrt-%231aa5de?style=for-the-badge&logo=OpenWrt">
+    <img src="https://img.shields.io/badge/Download-OpenWrt-%231aa5de?style=for-the-badge&logo=OpenWrt" alt="Download OpenWrt">
   </a>
 </p>
 
 ### 📄 Lisensi & Sumber
-- [Apache License 2.0](https://github.com/rtaserver/RTA-WRT/blob/main/LICENSE)
-- [friWrt-MyWrtBuilder](https://github.com/frizkyiman/friWrt-MyWrtBuilder) by [frizkyiman](https://github.com/frizkyiman)
-- [MyWrtBuilder](https://github.com/Revincx/MyWrtBuilder) by [Revincx](https://github.com/Revincx)
-- [ULO-Builder](https://github.com/armarchindo/ULO-Builder) by [DBAI](https://github.com/armarchindo)
+<ul style="font-size: 1rem;">
+  <li><a href="https://github.com/rtaserver/RTA-WRT/blob/main/LICENSE" target="_blank">Apache License 2.0</a></li>
+  <li><a href="https://github.com/frizkyiman/friWrt-MyWrtBuilder" target="_blank">friWrt-MyWrtBuilder by frizkyiman</a></li>
+  <li><a href="https://github.com/Revincx/MyWrtBuilder" target="_blank">MyWrtBuilder by Revincx</a></li>
+  <li><a href="https://github.com/armarchindo/ULO-Builder" target="_blank">ULO-Builder by DBAI</a></li>
+</ul>
 
 ---
 
@@ -74,15 +82,17 @@
 - **SSID:** RTA-WRT_2g / RTA-WRT_5g
 
 ### ⭐ Fitur Utama
-- Modemmanager dengan koneksi ulang otomatis
-- OpenClash dengan MetaCubeX Mihomo terbaru
-- Passwall *Tunneling* alternatif
-- MihomoTProxy *Tunneling* alternatif
-- TinyFm file manager
-- Internet Detector dan Lite Watchdog
-- Tema Argon & Material dengan tampilan login kustom
-- 3ginfo lite, Modeminfo, sms-tool, dan aplikasi modem lainnya
-- Dukungan Layar OLED (teruji di Raspberry Pi 4B)
+<ul style="font-size: 1rem;">
+  <li>Modemmanager dengan koneksi ulang otomatis</li>
+  <li>OpenClash dengan MetaCubeX Mihomo terbaru</li>
+  <li>Passwall *Tunneling* alternatif</li>
+  <li>MihomoTProxy *Tunneling* alternatif</li>
+  <li>TinyFm file manager</li>
+  <li>Internet Detector dan Lite Watchdog</li>
+  <li>Tema Argon & Material dengan tampilan login kustom</li>
+  <li>3ginfo lite, Modeminfo, sms-tool, dan aplikasi modem lainnya</li>
+  <li>Dukungan Layar OLED (teruji di Raspberry Pi 4B)</li>
+</ul>
 
 ---
 
@@ -90,10 +100,10 @@
 
 ### 🔑 Tampilan Masuk
 <p align="center">
-  <img src="/pictures/Login.png" alt="Tampilan Masuk">
+  <img src="/pictures/Login.png" alt="Tampilan Masuk" width="80%">
 </p>
 
 ### 🗂️ Tampilan Utama
 <p align="center">
-  <img src="/pictures/Dashboard.png" alt="Tampilan Utama">
+  <img src="/pictures/Dashboard.png" alt="Tampilan Utama" width="80%">
 </p>
