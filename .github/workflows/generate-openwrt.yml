@@ -11,7 +11,7 @@ on:
         options:
           - openwrt:24.10.0
           - openwrt:23.05.5
-          - immortalwrt:24.10.0-rc4
+          - immortalwrt:24.10.0
           - immortalwrt:23.05.4
       devices:
         description: "Select device target"
@@ -344,7 +344,7 @@ jobs:
           BUTTONS_STABLE='{
               "inline_keyboard": [
                   [
-                      {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/latest"},
+                      {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${{ needs.prepare.outputs.release_tag }}"},
                       {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/main/changelog.txt"}
                   ]
               ]
@@ -353,7 +353,7 @@ jobs:
           BUTTONS_DEV='{
               "inline_keyboard": [
                   [
-                      {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases"},
+                      {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${{ needs.prepare.outputs.release_tag }}"},
                       {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/dev/changelog.txt"}
                   ]
               ]
