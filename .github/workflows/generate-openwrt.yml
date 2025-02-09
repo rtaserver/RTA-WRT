@@ -209,6 +209,14 @@ jobs:
           echo "$changelog" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      - name: Prepare Before Build
+        run: |
+          OPEWRT="${{ inputs.releases_branch }}"
+          OP_SOURCE="${OPEWRT%:*}"
+          sed -i -E "s|const baseopenwrt = "null"|const baseopenwrt = "${OP_SOURCE}"|g" files/usr/share/ucode/luci/template/header.ut
+          sed -i -E "s|const currentBranch = "null"|const currentBranch = "${{ github.ref_name }}"|g" files/usr/share/ucode/luci/template/header.ut
+          sed -i -E "s|const currentVersion = "null"|const currentVersion = "${{ needs.prepare.outputs.release_tag }}"|g" files/usr/share/ucode/luci/template/header.ut
+
       - name: Build Image
         id: build
         run: |
