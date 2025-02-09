@@ -230,6 +230,7 @@ jobs:
 
       - name: Upload to Release
         if: success()
+        id: uploadgh
         uses: softprops/action-gh-release@v2
         with:
           files: imagebuilder/out_firmware/*
@@ -252,6 +253,10 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+      - name: Save Download Link
+        id: save_link
+        run: echo "linkdl=${{ fromJSON(steps.uploadgh.outputs.assets)[0].browser_download_url }}" >> $GITHUB_OUTPUT
 
   notify:
     needs: [prepare, build]
@@ -345,7 +350,8 @@ jobs:
               "inline_keyboard": [
                   [
                       {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${{ needs.prepare.outputs.release_tag }}"},
-                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/main/changelog.txt"}
+                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/main/changelog.txt"},
+                      {"text": "📋 Status Build", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}
                   ]
               ]
           }'
@@ -354,7 +360,8 @@ jobs:
               "inline_keyboard": [
                   [
                       {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${{ needs.prepare.outputs.release_tag }}"},
-                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/dev/changelog.txt"}
+                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/dev/changelog.txt"},
+                      {"text": "📋 Status Build", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}
                   ]
               ]
           }'
@@ -377,6 +384,56 @@ jobs:
             fi
           fi
 
+      - name: Gabungkan Semua Link Download ke JSON
+        id: create_buttons
+        run: |
+          echo "Mengumpulkan link download..."
+          devices='${{ needs.prepare.outputs.devices }}'
+    
+          # Simpan semua output ke file sementara
+          echo '${{ toJSON(needs.build.outputs) }}' > outputs.json
+    
+          # Mulai membuat JSON tombol
+          json_device='{"inline_keyboard":['
+          first=1
+    
+          echo "$devices" | jq -r '.[]' | while read -r device; do
+            key="linkdl_${device}"
+            url=$(jq -r --arg key "$key" '.[$key]' outputs.json)
+    
+            if [[ -n "$url" && "$url" != "null" ]]; then
+              if [[ $first -eq 1 ]]; then
+                first=0
+              else
+                json_device+=','
+              fi
+              json_device+='[{"text": "📥 '"${device}"'", "url": "'"${url}"'"}]'
+            fi
+          done
+    
+          json_device+=']}'
+  
+          # Simpan ke variabel environment agar bisa digunakan
+          echo "buttons=$json_device" >> $GITHUB_ENV
+
+      - name: Kirim Notifikasi Telegram
+        run: |
+          THREAD_ID_UPDATE=36
+          curl -X POST "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "chat_id": "${{ secrets.CHAT_ID }}",
+            "text": "🚀 *Firmware RTA-WRT Tersedia!* \nSilakan pilih perangkat untuk mengunduh:",
+            "parse_mode": "Markdown",
+            "message_thread_id: $THREAD_ID_UPDATE",
+            "reply_markup": ${{ env.buttons }}
+          }'
+
+      - name: Simpan ke Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: download-links
+          path: links.txt
 
       - name: Checkout Repository
         uses: actions/checkout@v4
