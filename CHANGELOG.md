@@ -9,6 +9,7 @@
 - All Luci Neko
 - Add Tailscale
 - Add More Source Packages
+- Resize Root Partisi To 2GB
 
 **Changelog** (07-02-2025)
 
