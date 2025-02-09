@@ -177,6 +177,8 @@ ariadl() {
 
     local URL OUTPUT_FILE OUTPUT_DIR OUTPUT
     URL=$1
+    local RETRY_COUNT=0
+    local MAX_RETRIES=3
 
     if [ "$#" -eq 1 ]; then
         OUTPUT_FILE=$(basename "$URL")
@@ -191,28 +193,48 @@ ariadl() {
         mkdir -p "$OUTPUT_DIR"
     fi
 
-    echo -e "${INFO} Downloading: $URL"
-    aria2c -q -d "$OUTPUT_DIR" -o "$OUTPUT_FILE" "$URL"
-    if [ $? -eq 0 ]; then
-        echo -e "${SUCCESS} Downloaded: $OUTPUT_FILE"
-    else
-        echo -e "${ERROR} Failed to download: $OUTPUT_FILE"
-        exit 1
-    fi
+    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+        echo -e "${INFO} Downloading: $URL (Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
+        
+        if [ -f "$OUTPUT_DIR/$OUTPUT_FILE" ]; then
+            rm "$OUTPUT_DIR/$OUTPUT_FILE"
+        fi
+        
+        aria2c -q -d "$OUTPUT_DIR" -o "$OUTPUT_FILE" "$URL"
+        
+        if [ $? -eq 0 ]; then
+            echo -e "${SUCCESS} Downloaded: $OUTPUT_FILE"
+            return 0
+        else
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo -e "${ERROR} Download failed. Retrying..."
+                sleep 2
+            fi
+        fi
+    done
+
+    echo -e "${ERROR} Failed to download: $OUTPUT_FILE after $MAX_RETRIES attempts"
+    return 1
 }
 
 # Download external packages
 download_packages() {
     local list=("${!2}") # Capture array argument
+    
     if [[ $1 == "github" ]]; then
         for entry in "${list[@]}"; do
             IFS="|" read -r filename base_url <<< "$entry"
-            file_urls=$(curl -s "$base_url" | grep "browser_download_url" | grep -oE "https.*/${filename}_[_0-9a-zA-Z\._~-]*\.ipk" | sort -V | tail -n 1)
+            local file_urls=$(curl -s "$base_url" | grep "browser_download_url" | grep -oE "https.*/${filename}_[_0-9a-zA-Z\._~-]*\.ipk" | sort -V | tail -n 1)
+            
+            if [ -z "$file_urls" ]; then
+                error_msg "Failed to retrieve package info for [$filename] from $base_url"
+                continue
+            fi
+
             for file_url in $file_urls; do
                 if [ -n "$file_url" ]; then
                     ariadl "$file_url" "$(basename "$file_url")"
-                else
-                    error_msg "Failed to retrieve packages [$filename]. Retrying before exit..."
                 fi
             done
         done
@@ -225,9 +247,9 @@ download_packages() {
                 "\"${filename}[^\"]*\.ipk\""
                 "\"${filename}[^\"]*\.apk\""
                 "${filename}_.*\.ipk"
-				"${filename}_.*\.apk"
+                "${filename}_.*\.apk"
                 "${filename}.*\.ipk"
-				"${filename}.*\.apk"
+                "${filename}.*\.apk"
             )
             
             local file_urls=""
@@ -242,11 +264,10 @@ download_packages() {
                 fi
             done
             
-            # Percobaan download dengan mekanisme fallback
             if [ -n "$full_url" ]; then
                 ariadl "$full_url" "${filename}.ipk"
             else
-                error_msg "No matching file found for [$filename] at $base_url."
+                error_msg "No matching file found for [$filename] at $base_url"
             fi
         done
     fi
