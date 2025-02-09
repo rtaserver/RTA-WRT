@@ -261,7 +261,7 @@ jobs:
   notify:
     needs: [prepare, build]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest   
     steps:
       - name: Download Build Status Artifacts
         uses: actions/download-artifact@v4
@@ -324,7 +324,24 @@ jobs:
             -d text="$NEWMESSAGE"
 
 
+      - name: Check Workflow Status and Release
+        id: check_status
+        run: |
+          # Get latest release tag from GitHub API
+          latest_tag=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/latest" \
+            | jq -r '.tag_name')
+          
+          # Compare with current release tag
+          if [[ "$latest_tag" == "${{ needs.prepare.outputs.release_tag }}" ]]; then
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+          fi
+    
       - name: Notify Telegram
+        if: ${{ !cancelled() }} && inputs.notify == 'true' && steps.check_status.outputs.tag_exists != 'true'
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
@@ -365,23 +382,21 @@ jobs:
                   ]
               ]
           }'
-        
-          if [ "${{ inputs.notify }}" == "true" ]; then
-            if [ "${CURRENT_BRANCH}" == "main" ]; then
-              curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-                -d "chat_id=$CHAT_ID" \
-                -d "text=$MESSAGE_STABLE" \
-                -d "parse_mode=Markdown" \
-                -d "message_thread_id=$THREAD_ID_UPDATE" \
-                -d "reply_markup=$BUTTONS_STABLE"
-            else
-              curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-                -d "chat_id=$CHAT_ID" \
-                -d "text=$MESSAGE_DEV" \
-                -d "parse_mode=Markdown" \
-                -d "message_thread_id=$THREAD_ID_UPDATE" \
-                -d "reply_markup=$BUTTONS_DEV"
-            fi
+          
+          if [ "${CURRENT_BRANCH}" == "main" ]; then
+            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+              -d "chat_id=$CHAT_ID" \
+              -d "text=$MESSAGE_STABLE" \
+              -d "parse_mode=Markdown" \
+              -d "message_thread_id=$THREAD_ID_UPDATE" \
+              -d "reply_markup=$BUTTONS_STABLE"
+          else
+            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+              -d "chat_id=$CHAT_ID" \
+              -d "text=$MESSAGE_DEV" \
+              -d "parse_mode=Markdown" \
+              -d "message_thread_id=$THREAD_ID_UPDATE" \
+              -d "reply_markup=$BUTTONS_DEV"
           fi
 
       - name: Checkout Repository
