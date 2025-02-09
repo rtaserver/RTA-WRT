@@ -10,9 +10,7 @@ on:
         type: choice
         options:
           - openwrt:24.10.0
-          - openwrt:23.05.5
           - immortalwrt:24.10.0
-          - immortalwrt:23.05.4
       devices:
         description: "Select device target"
         required: true
@@ -104,7 +102,11 @@ jobs:
           STARTBUILDTIME=$(date +%s)
           DATETIME=$(date +'%d%m%Y')
           BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
-          RELEASE_TAG="${BRANCH_TAG}-${DATETIME}"
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            RELEASE_TAG="${BRANCH_TAG}-${DATETIME}"
+          elif [ "${{ github.ref_name }}" == "dev" ]; then
+            RELEASE_TAG="${BRANCH_TAG}-dev-${DATETIME}"
+          fi
           echo "startbuildtime=${STARTBUILDTIME}" >> $GITHUB_OUTPUT
           echo "datetime=${DATETIME}" >> $GITHUB_ENV
           echo "release_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
@@ -261,7 +263,7 @@ jobs:
   notify:
     needs: [prepare, build]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest   
     steps:
       - name: Download Build Status Artifacts
         uses: actions/download-artifact@v4
@@ -324,7 +326,24 @@ jobs:
             -d text="$NEWMESSAGE"
 
 
+      - name: Check Workflow Status and Release
+        id: check_status
+        run: |
+          # Get latest release tag from GitHub API
+          latest_tag=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/latest" \
+            | jq -r '.tag_name')
+          
+          # Compare with current release tag
+          if [[ "$latest_tag" == "${{ needs.prepare.outputs.release_tag }}" ]]; then
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+          fi
+    
       - name: Notify Telegram
+        if: ${{ !cancelled() }} && inputs.notify == 'true' && steps.check_status.outputs.tag_exists != 'true'
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
@@ -365,75 +384,22 @@ jobs:
                   ]
               ]
           }'
-        
-          if [ "${{ inputs.notify }}" == "true" ]; then
-            if [ "${CURRENT_BRANCH}" == "main" ]; then
-              curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-                -d "chat_id=$CHAT_ID" \
-                -d "text=$MESSAGE_STABLE" \
-                -d "parse_mode=Markdown" \
-                -d "message_thread_id=$THREAD_ID_UPDATE" \
-                -d "reply_markup=$BUTTONS_STABLE"
-            else
-              curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-                -d "chat_id=$CHAT_ID" \
-                -d "text=$MESSAGE_DEV" \
-                -d "parse_mode=Markdown" \
-                -d "message_thread_id=$THREAD_ID_UPDATE" \
-                -d "reply_markup=$BUTTONS_DEV"
-            fi
+          
+          if [ "${CURRENT_BRANCH}" == "main" ]; then
+            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+              -d "chat_id=$CHAT_ID" \
+              -d "text=$MESSAGE_STABLE" \
+              -d "parse_mode=Markdown" \
+              -d "message_thread_id=$THREAD_ID_UPDATE" \
+              -d "reply_markup=$BUTTONS_STABLE"
+          else
+            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+              -d "chat_id=$CHAT_ID" \
+              -d "text=$MESSAGE_DEV" \
+              -d "parse_mode=Markdown" \
+              -d "message_thread_id=$THREAD_ID_UPDATE" \
+              -d "reply_markup=$BUTTONS_DEV"
           fi
-
-      - name: Gabungkan Semua Link Download ke JSON
-        id: create_buttons
-        run: |
-          echo "Mengumpulkan link download..."
-          devices='${{ needs.prepare.outputs.devices }}'
-    
-          # Simpan semua output ke file sementara
-          echo '${{ toJSON(needs.build.outputs) }}' > outputs.json
-    
-          # Mulai membuat JSON tombol
-          json_device='{"inline_keyboard":['
-          first=1
-    
-          echo "$devices" | jq -r '.[]' | while read -r device; do
-            key="linkdl_${device}"
-            url=$(jq -r --arg key "$key" '.[$key]' outputs.json)
-    
-            if [[ -n "$url" && "$url" != "null" ]]; then
-              if [[ $first -eq 1 ]]; then
-                first=0
-              else
-                json_device+=','
-              fi
-              json_device+='[{"text": "📥 '"${device}"'", "url": "'"${url}"'"}]'
-            fi
-          done
-    
-          json_device+=']}'
-  
-          # Simpan ke variabel environment agar bisa digunakan
-          echo "buttons=$json_device" >> $GITHUB_ENV
-
-      - name: Kirim Notifikasi Telegram
-        run: |
-          THREAD_ID_UPDATE=36
-          curl -X POST "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage" \
-          -H "Content-Type: application/json" \
-          -d '{
-            "chat_id": "${{ secrets.CHAT_ID }}",
-            "text": "🚀 *Firmware RTA-WRT Tersedia!* \nSilakan pilih perangkat untuk mengunduh:",
-            "parse_mode": "Markdown",
-            "message_thread_id: $THREAD_ID_UPDATE",
-            "reply_markup": ${{ env.buttons }}
-          }'
-
-      - name: Simpan ke Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: download-links
-          path: links.txt
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -449,8 +415,9 @@ jobs:
           git checkout info
           
           set -euo pipefail
-          
-          mkdir -p "${CURRENT_BRANCH}"
+          OPEWRT="${{ inputs.releases_branch }}"
+          OP_SOURCE="${OPEWRT%:*}"
+          mkdir -p "${CURRENT_BRANCH}/${OP_SOURCE}"
           
           if [ -n "${{ needs.prepare.outputs.changelog }}" ]; then
             # Clean and format changelog
@@ -460,7 +427,7 @@ jobs:
                   -e 's/%25/%/g')
             
             # Update changelog file
-            echo "${changelog_content}" > "${CURRENT_BRANCH}/changelog.txt"
+            echo "${changelog_content}" > "${CURRENT_BRANCH}/${OP_SOURCE}/changelog.txt"
           else
             echo "No changelog content found"
             exit 1
@@ -469,7 +436,7 @@ jobs:
           # Update version file with branch indicator
           BRANCH_SUFFIX=$([ "${CURRENT_BRANCH}" == "main" ] && echo "main" || echo "dev")
           VERSION_TAG="${{ needs.prepare.outputs.release_tag }}--${BRANCH_SUFFIX}"
-          echo "${VERSION_TAG}" > "${CURRENT_BRANCH}/version.txt"
+          echo "${VERSION_TAG}" > "${CURRENT_BRANCH}/${OP_SOURCE}/version.txt"
           
           # Configure git
           git config user.name 'github-actions[bot]'
@@ -477,7 +444,7 @@ jobs:
           
           # Stage and commit changes if any exist
           if ! git diff --quiet; then
-            git add "${CURRENT_BRANCH}/changelog.txt" "${CURRENT_BRANCH}/version.txt"
+            git add "${CURRENT_BRANCH}/${OP_SOURCE}/changelog.txt" "${CURRENT_BRANCH}/${OP_SOURCE}/version.txt"
             if git commit -m "Auto Release: v${{ inputs.releases_branch }}"; then
               # Try to push with retry mechanism
               for i in {1..3}; do
