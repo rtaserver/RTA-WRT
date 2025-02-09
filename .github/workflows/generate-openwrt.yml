@@ -102,7 +102,11 @@ jobs:
           STARTBUILDTIME=$(date +%s)
           DATETIME=$(date +'%d%m%Y')
           BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
-          RELEASE_TAG="${BRANCH_TAG}-${DATETIME}"
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            RELEASE_TAG="${BRANCH_TAG}-${DATETIME}"
+          elif [ "${{ github.ref_name }}" == "dev" ]; then
+            RELEASE_TAG="${BRANCH_TAG}-dev-${DATETIME}"
+          fi
           echo "startbuildtime=${STARTBUILDTIME}" >> $GITHUB_OUTPUT
           echo "datetime=${DATETIME}" >> $GITHUB_ENV
           echo "release_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
