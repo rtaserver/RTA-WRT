@@ -410,10 +410,6 @@ jobs:
       - name: Update Branch Info
         id: update
         run: |
-          # Checkout info branch
-          git fetch origin info
-          git checkout info
-          
           set -euo pipefail
           OPEWRT="${{ inputs.releases_branch }}"
           OP_SOURCE="${OPEWRT%:*}"
@@ -446,19 +442,13 @@ jobs:
           if ! git diff --quiet; then
             git add "${CURRENT_BRANCH}/${OP_SOURCE}/changelog.txt" "${CURRENT_BRANCH}/${OP_SOURCE}/version.txt"
             if git commit -m "Auto Release: $(date "+%d-%m-%Y %H:%M:%S")"; then
-              # Try to push with retry mechanism
               for i in {1..3}; do
                 if git push; then
                   echo "Successfully pushed changes"
                   break
                 else
-                  if [ $i -eq 3 ]; then
-                    echo "Failed to push after 3 attempts"
-                    exit 1
-                  fi
-                  echo "Push failed, retrying... (Attempt $i/3)"
-                  git pull --rebase
-                  sleep 5
+                  echo "Pushed changes failed"
+                  break
                 fi
               done
             else
