@@ -543,6 +543,7 @@ custom_packages() {
         "homebox|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
         "luci-app-netspeedtest|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
         "sing-box|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "mihomo|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
         
         "luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
@@ -570,10 +571,10 @@ custom_packages() {
         clash_meta=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-$ARCH_1" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
     fi
 
-    # Mihomo
-    mihomo_api="https://api.github.com/repos/rizkikotet-dev/OpenWrt-mihomo-Mod/releases"
-    mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-${CURVER}"
-    mihomo_file_ipk_down=$(curl -s "${mihomo_api}" | grep "browser_download_url" | grep -oE "https.*${mihomo_file_ipk}.*.tar.gz" | head -n 1)
+    # Nikki
+    nikki_api="https://api.github.com/repos/rizkikotet-dev/OpenWrt-nikki-Mod/releases"
+    nikki_file_ipk="nikki_${ARCH_3}-openwrt-${CURVER}"
+    nikki_file_ipk_down=$(curl -s "${nikki_api}" | grep "browser_download_url" | grep -oE "https.*${nikki_file_ipk}.*.tar.gz" | head -n 1)
 
     #passwall
     passwall_api="https://api.github.com/repos/xiaorouji/openwrt-passwall/releases"
@@ -582,14 +583,14 @@ custom_packages() {
 
 
     # Output download information
-    echo -e "${STEPS} Installing OpenClash, Mihomo And Passwall"
+    echo -e "${STEPS} Installing OpenClash, Nikki And Passwall"
 
     mkdir -p "${custom_files_path}/etc/openclash/core"
     ariadl "${clash_meta}" "${custom_files_path}/etc/openclash/core/clash_meta.gz"
     gzip -d "${custom_files_path}/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
 
-    ariadl "${mihomo_file_ipk_down}" "${mihomo_file_ipk}.tar.gz"
-    tar -xzvf "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" > /dev/null 2>&1 && rm "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" || error_msg "Error: Failed to extract Mihomo package."
+    ariadl "${nikki_file_ipk_down}" "${nikki_file_ipk}.tar.gz"
+    tar -xzvf "nikki_${ARCH_3}-openwrt-${CURVER}.tar.gz" > /dev/null 2>&1 && rm "nikki_${ARCH_3}-openwrt-${CURVER}.tar.gz" || error_msg "Error: Failed to extract Nikki package."
 
     ariadl "${passwall_file_zip_down}" "passwall_packages_ipk_${ARCH_3}.zip"
     unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip" || error_msg "Error: Failed to extract Passwall package."
@@ -714,7 +715,7 @@ rebuild_firmware() {
 
     # Tunnel option
     OPENCLASH="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
-    MIHOMO+="mihomo luci-app-mihomo"
+    MIHOMO+="nikki luci-app-nikki"
     PASSWALL+="chinadns-ng resolveip dns2socks dns2tcp ipt2socks microsocks tcping xray-core xray-plugin luci-app-passwall"
     NEKOCLASH+="kmod-tun bash curl jq mihomo sing-box php8 php8-mod-curl luci-app-neko"
     PACKAGES+=" $OPENCLASH $MIHOMO $PASSWALL $NEKOCLASH"
