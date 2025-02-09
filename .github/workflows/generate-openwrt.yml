@@ -11,7 +11,7 @@ on:
         options:
           - openwrt:24.10.0
           - openwrt:23.05.5
-          - immortalwrt:24.10.0-rc4
+          - immortalwrt:24.10.0
           - immortalwrt:23.05.4
       devices:
         description: "Select device target"
@@ -156,20 +156,20 @@ jobs:
           THREAD_ID_BUILD=616
           devices='${{ steps.matrix.outputs.devices }}'
 
-          MESSAGE="==============================%0A"
+          MESSAGE="━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A"
           MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
-          MESSAGE+="==============================%0A"
+          MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A"
           MESSAGE+="📌 *Version*: ${{ inputs.releases_branch }}%0A"
           MESSAGE+="🌿 *Branch*: ${{ github.ref_name }}%0A"
           MESSAGE+="📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
-          MESSAGE+="------------------------------%0A"
+          MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A"
           MESSAGE+="📋 *Device List*%0A"
   
           while read -r device; do
               MESSAGE+="🔹 $device | ⏳ Building%0A"
           done < <(echo "$devices" | jq -r '.[]')
   
-          MESSAGE+="==============================%0A"
+          MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A"
           
           RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
             -d chat_id=$CHAT_ID \
@@ -230,6 +230,7 @@ jobs:
 
       - name: Upload to Release
         if: success()
+        id: uploadgh
         uses: softprops/action-gh-release@v2
         with:
           files: imagebuilder/out_firmware/*
@@ -252,6 +253,10 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+      - name: Save Download Link
+        id: save_link
+        run: echo "linkdl=${{ fromJSON(steps.uploadgh.outputs.assets)[0].browser_download_url }}" >> $GITHUB_OUTPUT
 
   notify:
     needs: [prepare, build]
@@ -271,13 +276,13 @@ jobs:
           THREAD_ID_BUILD=616
           devices='${{ needs.prepare.outputs.devices }}'
   
-          MESSAGE="==============================%0A"
+          MESSAGE="━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A"
           MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
-          MESSAGE+="==============================%0A"
+          MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A"
           MESSAGE+="📌 *Version*: ${{ inputs.releases_branch }}%0A"
           MESSAGE+="🌿 *Branch*: ${{ github.ref_name }}%0A"
           MESSAGE+="📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
-          MESSAGE+="------------------------------%0A"
+          MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A"
           MESSAGE+="📋 *Device List*%0A"
   
           while read -r device; do
@@ -285,7 +290,7 @@ jobs:
               MESSAGE+="🔹 $device | $status%0A"
           done < <(echo "$devices" | jq -r '.[]')
   
-          MESSAGE+="=============================="
+          MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           
           curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
             -d chat_id=$CHAT_ID \
@@ -306,10 +311,10 @@ jobs:
           formatted_time=$(format_time $elapsed_time)
           echo "Build took $formatted_time"
  
-          NEWMESSAGE="🎉============================🎉%0A"
+          NEWMESSAGE="🎉━━━━━━━━━━━━━━━━━━━━━━━━━━━━🎉%0A"
           NEWMESSAGE+="✨ *Build OpenWrt Selesai!* ✨%0A"
           NEWMESSAGE+="🕒 Waktu Build: $formatted_time%0A"
-          NEWMESSAGE+="🎉============================🎉%0A"
+          NEWMESSAGE+="🎉━━━━━━━━━━━━━━━━━━━━━━━━━━━━🎉%0A"
           NEWMESSAGE+="👤 @RizkiKotet"
 
           curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
@@ -328,7 +333,7 @@ jobs:
           MESSAGE_STABLE="🎯 *RTA-WRT Firmware Update*%0A"
           MESSAGE_STABLE+="✅ _Stable Release_%0A%0A"
           MESSAGE_STABLE+="🔹 *Versi:* ${{ inputs.releases_branch }}%0A"
-          MESSAGE_STABLE+="🔹 *Tanggal:* ${{ github.ref_name }}%0A%0A"
+          MESSAGE_STABLE+="🔹 *Tanggal:* $(date "+%d-%m-%Y %H:%M:%S")%0A%0A"
           MESSAGE_STABLE+="📌 *Catatan:*%0A"
           MESSAGE_STABLE+="🔒 Versi stabil dengan peningkatan keamanan dan performa!%0A"
           MESSAGE_STABLE+="📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik!%0A"
@@ -336,7 +341,7 @@ jobs:
           MESSAGE_DEV="🚀 *RTA-WRT Firmware Update*%0A"
           MESSAGE_DEV+="🌟 _Development Release_%0A%0A"
           MESSAGE_DEV+="🔹 *Versi:* ${{ inputs.releases_branch }}%0A"
-          MESSAGE_DEV+="🔹 *Tanggal:* ${{ github.ref_name }}%0A%0A"
+          MESSAGE_DEV+="🔹 *Tanggal:* $(date "+%d-%m-%Y %H:%M:%S")%0A%0A"
           MESSAGE_DEV+="📌 *Catatan:*%0A"
           MESSAGE_DEV+="🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan!%0A"
           MESSAGE_DEV+="🔄 Selalu gunakan versi terbaru untuk performa terbaik!%0A"
@@ -344,8 +349,9 @@ jobs:
           BUTTONS_STABLE='{
               "inline_keyboard": [
                   [
-                      {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/latest"},
-                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/main/changelog.txt"}
+                      {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${{ needs.prepare.outputs.release_tag }}"},
+                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/main/changelog.txt"},
+                      {"text": "📋 Status Build", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}
                   ]
               ]
           }'
@@ -353,8 +359,9 @@ jobs:
           BUTTONS_DEV='{
               "inline_keyboard": [
                   [
-                      {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases"},
-                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/dev/changelog.txt"}
+                      {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${{ needs.prepare.outputs.release_tag }}"},
+                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/dev/changelog.txt"},
+                      {"text": "📋 Status Build", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}
                   ]
               ]
           }'
@@ -377,6 +384,56 @@ jobs:
             fi
           fi
 
+      - name: Gabungkan Semua Link Download ke JSON
+        id: create_buttons
+        run: |
+          echo "Mengumpulkan link download..."
+          devices='${{ needs.prepare.outputs.devices }}'
+    
+          # Simpan semua output ke file sementara
+          echo '${{ toJSON(needs.build.outputs) }}' > outputs.json
+    
+          # Mulai membuat JSON tombol
+          json_device='{"inline_keyboard":['
+          first=1
+    
+          echo "$devices" | jq -r '.[]' | while read -r device; do
+            key="linkdl_${device}"
+            url=$(jq -r --arg key "$key" '.[$key]' outputs.json)
+    
+            if [[ -n "$url" && "$url" != "null" ]]; then
+              if [[ $first -eq 1 ]]; then
+                first=0
+              else
+                json_device+=','
+              fi
+              json_device+='[{"text": "📥 '"${device}"'", "url": "'"${url}"'"}]'
+            fi
+          done
+    
+          json_device+=']}'
+  
+          # Simpan ke variabel environment agar bisa digunakan
+          echo "buttons=$json_device" >> $GITHUB_ENV
+
+      - name: Kirim Notifikasi Telegram
+        run: |
+          THREAD_ID_UPDATE=36
+          curl -X POST "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "chat_id": "${{ secrets.CHAT_ID }}",
+            "text": "🚀 *Firmware RTA-WRT Tersedia!* \nSilakan pilih perangkat untuk mengunduh:",
+            "parse_mode": "Markdown",
+            "message_thread_id: $THREAD_ID_UPDATE",
+            "reply_markup": ${{ env.buttons }}
+          }'
+
+      - name: Simpan ke Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: download-links
+          path: links.txt
 
       - name: Checkout Repository
         uses: actions/checkout@v4
