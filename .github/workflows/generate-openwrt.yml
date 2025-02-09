@@ -389,7 +389,7 @@ jobs:
           fi
     
       - name: Notify Telegram
-        if: ${{ !cancelled() }} && inputs.notify == 'true' && steps.check_status.outputs.tag_exists != 'true'
+        if: ${{ !cancelled() && inputs.notify == 'true' && steps.check_status.outputs.tag_exists != 'true' }}
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
