@@ -1,5 +1,15 @@
 # What's New!
 
+**Changelog** (10-02-2025)
+
+- Fix Script Startup
+- s905x OPHUB Repack Only
+- Update Depends on Package
+- Add Docker
+- All Luci Neko
+- Add Tailscale
+- Add More Source Packages
+
 **Changelog** (07-02-2025)
 
 - OPHUB Add Kernel 6.x.x

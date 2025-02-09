@@ -5,6 +5,22 @@
 {%
 	include(`themes/${theme}/header`);
 -%}
+
+<script> 
+    window.intergramId = "1839038773";
+    window.intergramCustomizations = {
+        titleClosed: 'RTA-WRT',
+        titleOpen: 'RTA-WRT | Chat',
+        introMessage: 'Hallo. Ada Yang Bisa Saya Bantu?',
+        autoResponse: 'Pesan Kamu Teleh Dikirim Mohon Tunggu Sebentar',
+        autoNoResponse: 'Sepertinya Admin Sedang Sibuk. Coba Kirim Pesan Lagi Nanti ' +
+                        'Jika Masih Tidak Ada Respon. Silahkan Kirim Pesan Ke Telegram',
+        mainColor: "linear-gradient(90deg, #7b86ad, #7b86ad, #f694b9)",
+        alwaysUseFloatingButton: true
+    };
+</script>
+<script id="intergram" type="text/javascript" src="https://www.intergram.xyz/js/widget.js"></script>
+
 <script src="{{ resource }}/luci.js?v=25.017.24510~d42ec55"></script>
 <script src="{{ resource }}/sweetalert2.all.min.js"></script>
 <script>

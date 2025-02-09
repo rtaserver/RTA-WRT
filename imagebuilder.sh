@@ -488,6 +488,7 @@ custom_packages() {
     github_packages+=(
         "luci-app-alpha-config|https://api.github.com/repos/animegasan/luci-app-alpha-config/releases/latest"
         "luci-theme-material3|https://api.github.com/repos/AngelaCooljx/luci-theme-material3/releases/latest"
+        "luci-app-neko|https://api.github.com/repos/nosignals/openwrt-neko/releases/latest"
     )
 
     download_packages "github" github_packages[@]
@@ -541,6 +542,7 @@ custom_packages() {
         "adguardhome|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
         "homebox|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
         "luci-app-netspeedtest|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "sing-box|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
         
         "luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
@@ -714,10 +716,11 @@ rebuild_firmware() {
     OPENCLASH="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
     MIHOMO+="mihomo luci-app-mihomo"
     PASSWALL+="chinadns-ng resolveip dns2socks dns2tcp ipt2socks microsocks tcping xray-core xray-plugin luci-app-passwall"
-    PACKAGES+=" $OPENCLASH $MIHOMO $PASSWALL"
+    NEKOCLASH+="kmod-tun bash curl jq mihomo sing-box php8 php8-mod-curl luci-app-neko"
+    PACKAGES+=" $OPENCLASH $MIHOMO $PASSWALL $NEKOCLASH"
 
     # Remote Services
-    PACKAGES+=" luci-app-zerotier luci-app-cloudflared"
+    PACKAGES+=" luci-app-zerotier luci-app-cloudflared tailscale luci-app-tailscale"
 
     # NAS and Hard disk tools
     PACKAGES+=" luci-app-diskman luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
@@ -733,6 +736,9 @@ rebuild_firmware() {
 
     # PHP8
     PACKAGES+=" libc php8 php8-fastcgi php8-fpm coreutils-stat zoneinfo-asia php8-cgi php8-cli php8-mod-bcmath php8-mod-calendar php8-mod-ctype php8-mod-curl php8-mod-dom php8-mod-exif php8-mod-fileinfo php8-mod-filter php8-mod-gd php8-mod-iconv php8-mod-intl php8-mod-mbstring php8-mod-mysqli php8-mod-mysqlnd php8-mod-opcache php8-mod-pdo php8-mod-pdo-mysql php8-mod-phar php8-mod-session php8-mod-xml php8-mod-xmlreader php8-mod-xmlwriter php8-mod-zip libopenssl-legacy"
+
+    # Docker
+    PACKAGES+=" docker docker-compose dockerd luci-app-dockerman"
 
     # Misc and some custom .ipk files
     # Exclude package (must use - before packages name)
@@ -768,10 +774,13 @@ rebuild_firmware() {
 
     #MISC+=" luci-app-rakitanmanager"
 
+    # Disable service
+    DISABLED_SERVICES="AdGuardHome"
+
     PACKAGES+=" $misc zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-poweroff luci-app-log-viewer luci-app-ramfree htop bash curl wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
 
     # Membuat image firmware dan menampilkan progress bar
-    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files"
+    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files" DISABLED_SERVICES="$DISABLED_SERVICES"
     if [[ $? -eq 0 ]]; then
         echo -e "${SUCCESS} Firmware build completed."
         for file in ${imagebuilder_path}/bin/targets/*/*/*.img.gz; do
