@@ -369,25 +369,9 @@ jobs:
             -d parse_mode=Markdown \
             -d message_thread_id=$THREAD_ID_BUILD \
             -d text="$BUILD_STATUS_MESSAGE"
-
-      - name: Check Workflow Status and Release
-        id: check_status
-        run: |
-          # Get latest release tag from GitHub API
-          latest_tag=$(curl -s \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/latest" \
-            | jq -r '.tag_name')
-          
-          # Compare with current release tag
-          if [[ "$latest_tag" == "${{ needs.prepare.outputs.release_tag }}" ]]; then
-            echo "tag_exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "tag_exists=false" >> $GITHUB_OUTPUT
-          fi
     
       - name: Notify Telegram
-        if: ${{ !cancelled() && inputs.notify == 'true' && steps.check_status.outputs.tag_exists != 'true' }}
+        if: ${{ !cancelled() && inputs.notify == 'true' }}
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}

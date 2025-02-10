@@ -6,12 +6,13 @@
 - s905x OPHUB Repack Only
 - Update Depends on Package
 - Add Docker
-- All Luci Neko
+- Add Luci Neko
 - Add Tailscale
 - Add More Source Packages
 - Resize Root Partisi To 2GB
 - Change MihomoTProxy To Nikki
 - Fix Packages Not Include
+- Fix Header Mihomo. Change To Nikki
 
 **Changelog** (07-02-2025)
 
