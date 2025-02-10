@@ -13,6 +13,7 @@
 - Change MihomoTProxy To Nikki
 - Fix Packages Not Include
 - Fix Header Mihomo. Change To Nikki
+- Fix Amlogic Service Not Installed
 
 **Changelog** (07-02-2025)
 
