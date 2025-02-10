@@ -381,6 +381,7 @@ jobs:
           
           create_stable_message() {
           cat << EOF
+          ━━━━━━━━━━━━━━━━━━━━━━
           🎯 *RTA-WRT Firmware Update*
           ✅ _Stable Release_
 
@@ -388,8 +389,15 @@ jobs:
           🔹 *Tanggal:* $(date "+%d-%m-%Y %H:%M:%S")
 
           📌 *Catatan:*
-          🔒 Versi stabil dengan peningkatan keamanan dan performa!
-          📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik!
+          📢 Versi Stabil Telah Diterbitkan!
+          🔹 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik!
+          🔹 Ini Hasil Dari Marge Branch Development
+          🔹 Dengan Fitur Baru Dan Perbaikan Bug
+          🔹 Pastikan Anda Menggunakan Versi Terbaru Untuk Mendapatkan Fitur Terbaru
+
+          ━━━━━━━━━━━━━━━━━━━━━━
+          📋 ${{ needs.prepare.outputs.changelog }}
+          ━━━━━━━━━━━━━━━━━━━━━━
           EOF
           }
 
@@ -397,6 +405,7 @@ jobs:
        
           create_dev_message() {
           cat << EOF
+          ━━━━━━━━━━━━━━━━━━━━━━
           🚀 *RTA-WRT Firmware Update*
           🌟 _Development Release_
 
@@ -404,8 +413,17 @@ jobs:
           🔹 *Tanggal:* $(date "+%d-%m-%Y %H:%M:%S")
 
           📌 *Catatan:*
-          🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan!
-          🔄 Selalu gunakan versi terbaru untuk performa terbaik!
+          📢 Ini Versi Pengembangan!
+          🔹 Silahkan Bagi Yang Mempunyai Devices Nganggur
+             Atau Sekedar Ingin Mencoba.
+             Jika Terdapat Error Atau Bug. Mohon Lapor
+             Karena Laporan Sangat Bermanfaat!
+             Untuk Membantu Kami Membuat Firmware
+             Yang Lebih Baik!
+
+          ━━━━━━━━━━━━━━━━━━━━━━
+          📋 ${{ needs.prepare.outputs.changelog }}
+          ━━━━━━━━━━━━━━━━━━━━━━
           EOF
           }
 
@@ -415,7 +433,6 @@ jobs:
               "inline_keyboard": [
                   [
                       {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${{ needs.prepare.outputs.release_tag }}"},
-                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/main/changelog.txt"},
                       {"text": "📋 Status Build", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}
                   ]
               ]
@@ -425,23 +442,38 @@ jobs:
               "inline_keyboard": [
                   [
                       {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${{ needs.prepare.outputs.release_tag }}"},
-                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/dev/changelog.txt"},
                       {"text": "📋 Status Build", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}
                   ]
               ]
           }'
           
+          OPEWRT="${{ inputs.releases_branch }}"
+          OP_SOURCE="${OPEWRT%:*}"
+          if [ "$OP_SOURCE" == "immortalwrt" ]; then
+            IMGURL="https://avatars.githubusercontent.com/u/53193414?s=200&v=4"
+          else
+            IMGURL="https://avatars.githubusercontent.com/u/2528830?s=200&v=4"
+          fi
+
           if [ "${CURRENT_BRANCH}" == "main" ]; then
-            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+            MSGID=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
               -d "chat_id=$CHAT_ID" \
-              -d "text=$STABLE_MESSAGE" \
+              -d "caption=$STABLE_MESSAGE" \
               -d "parse_mode=Markdown" \
               -d "message_thread_id=$THREAD_ID_UPDATE" \
-              -d "reply_markup=$BUTTONS_STABLE"
-          else
-            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+              -d "reply_markup=$BUTTONS_STABLE" | jq '.result.message_id')
+
+            curl -s -X POST "https://api.telegram.org/bot$TOKEN/pinChatMessage" \
               -d "chat_id=$CHAT_ID" \
-              -d "text=$DEV_MESSAGE" \
+              -d "photo=$IMGURL" \
+              -d "message_id=$MSGID" \
+              -d "message_thread_id=$THREAD_ID_UPDATE" \
+              -d "disable_notification=true"
+          else
+            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
+              -d "chat_id=$CHAT_ID" \
+              -d "photo=$IMGURL" \
+              -d "caption=$DEV_MESSAGE" \
               -d "parse_mode=Markdown" \
               -d "message_thread_id=$THREAD_ID_UPDATE" \
               -d "reply_markup=$BUTTONS_DEV"
