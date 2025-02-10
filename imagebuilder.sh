@@ -566,9 +566,9 @@ custom_packages() {
 
     echo -e "${STEPS} Start Clash Core Download !"
     if [[ "$ARCH_3" == "x86_64" ]]; then
-        clash_meta=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-$ARCH_1-compatible" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
+        clash_meta=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-${ARCH_1}-compatible" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
     else
-        clash_meta=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-$ARCH_1" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
+        clash_meta=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-${ARCH_1}" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
     fi
 
     # Nikki
@@ -637,6 +637,19 @@ custom_config() {
     sed -i 's|^export OSH=~/.oh-my-bash|export OSH=/usr/share/oh-my-bash|g' ${custom_files_path}/usr/share/oh-my-bash/.bashrc
     sed -i 's|^OSH_THEME="font"|OSH_THEME="zork"|g' ${custom_files_path}/usr/share/oh-my-bash/.bashrc
     echo -e "${SUCCESS} Oh My Zsh installed successfully."
+
+    agh_api="https://api.github.com/repos/AdguardTeam/AdGuardHome/releases" 
+    agh_file="AdGuardHome_linux_${ARCH_1}"
+    agh_file_down="$(curl -s ${agh_api}/latest | grep "browser_download_url" | grep -oE "https.*${agh_file}.*.tar.gz" | head -n 1)"
+    latest_version=$(curl -sSL "$agh_api/latest" | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' | head -n 1)
+
+    ariadl "${agh_file_down}" "${custom_files_path}/opt/AdGuardHome_linux_${ARCH_1}.tar.gz"
+    if tar -zxvf ${custom_files_path}/opt/AdGuardHome_linux_"${ARCH_1}".tar.gz -C ${custom_files_path}/opt; then
+        rm -rf ${custom_files_path}/opt/AdGuardHome_linux_"${ARCH_1}".tar.gz
+        echo -e "${SUCCESS} Installed AdGuardHome version $latest_version"
+    else
+        echo -e "${WARNING} Failed to extract AdGuardHome."
+    fi
 
     # Sync and provide directory status
     sync && sleep 3
@@ -720,7 +733,7 @@ rebuild_firmware() {
     ipset ipt2socks iptables iptables-legacy iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat coreutils coreutils-base64 coreutils-nohup dns2socks ip-full libuci-lua microsocks resolveip tcping"
 
     PACKAGES+=" luci-app-diskman luci-app-poweroff luci-app-log-viewer luci-app-ramfree"
-    
+
     # AdguardHome
     PACKAGES+=" adguardhome luci-app-adguardhome"
 
