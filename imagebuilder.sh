@@ -544,7 +544,6 @@ custom_packages() {
         "luci-app-netspeedtest|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
         "sing-box|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
         "mihomo|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
-        "luci-app-mmconfig|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
         
         "luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
@@ -715,7 +714,7 @@ rebuild_firmware() {
     kmod-nls-utf8 kmod-usb-serial-option kmod-usb-serial-sierrawireless kmod-usb-uhci kmod-usb2 \
     kmod-usb-net-ipheth kmod-usb-net-cdc-mbim usbmuxd libusbmuxd-utils libimobiledevice-utils \
     mbim-utils qmi-utils uqmi umbim modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi luci-proto-3g luci-proto-ncm \
-    luci-proto-ncm usb-modeswitch nano picocom minicom luci-app-mmconfig libusb-1.0-0 \
+    luci-proto-ncm usb-modeswitch nano picocom minicom libusb-1.0-0 \
     xmm-modem kmod-usb-net-asix kmod-usb-net-asix-ax88179 kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 \
     ca-bundle ca-certificates luci-compat curl coreutils-sleep fontconfig coreutils-whoami file lolcat curl \
     owut zsh kmod-mii kmod-usb-wdm kmod-usb-serial-wwan kmod-usb-ehci kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty \
