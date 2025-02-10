@@ -112,18 +112,27 @@ set_ttl() {
     local TTL_VALUE="$1"
 
     echo -e "${YELLOW}Menerapkan TTL rules untuk interface ${GREEN}$INTERFACE${YELLOW} dengan nilai TTL ${GREEN}$TTL_VALUE${RESET}"
-cat << 'EOF' > /etc/nftables.d/11-ttl.nft
-chain mangle_postrouting_ttl$TTL_VALUE  {
-    type filter hook postrouting priority 300; policy accept;
-    counter ip ttl set $TTL_VALUE 
-}
 
-chain mangle_prerouting_ttl65 {
-    type filter hook prerouting priority 300; policy accept;
-    counter ip ttl set $TTL_VALUE 
+cat << EOF > /etc/nftables.d/11-ttl.nft
+table inet ttl_rules {
+    chain mangle_postrouting_ttl$TTL_VALUE {
+        type filter hook postrouting priority -150; policy accept;
+        ip ttl set $TTL_VALUE
+    }
+
+    chain mangle_prerouting_ttl$TTL_VALUE {
+        type filter hook prerouting priority -150; policy accept;
+        ip ttl set $TTL_VALUE
+    }
 }
 EOF
+
+    # Terapkan aturan langsung
+    cmdinstall "nft -f /etc/nftables.d/11-ttl.nft" "Menerapkan TTL"
+
+    # Restart firewall
     cmdinstall "/etc/init.d/firewall restart" "Restart Firewall"
+
     echo -e "${GREEN}Rules berhasil diterapkan!${RESET}"
 }
 
