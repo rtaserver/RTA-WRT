@@ -1,6 +1,6 @@
 # What's New!
 
-**Changelog** (10-02-2025)
+**Changelog** (11-02-2025)
 
 - Fix Script Startup
 - s905x OPHUB Repack Only
@@ -18,6 +18,7 @@
 - Fix Directory Mihomo. Change To Nikki
 - Fix Config Nikki
 - Fix Config Zerotier
+- Edit Config OpenClash
 
 **Changelog** (07-02-2025)
 

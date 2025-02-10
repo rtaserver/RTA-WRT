@@ -8,7 +8,7 @@ proxy-groups:
       - FALLBACK-ALL-SERVER
       - LOADBAlANCE-ALL-SERVER
       - SERVER-DIRECT
-    url: http://cp.cloudflare.com/generate_204
+    url: http://www.gstatic.com/generate_204
     interval: 60
   - name: SERVER-SG
     type: select
@@ -19,7 +19,7 @@ proxy-groups:
       - BESTPING-SG
     use:
       - PP-SG
-    url: http://cp.cloudflare.com/generate_204
+    url: http://www.gstatic.com/generate_204
     interval: 60
   - name: SERVER-ID
     type: select
@@ -30,7 +30,7 @@ proxy-groups:
       - BESTPING-ID
     use:
       - PP-ID
-    url: http://cp.cloudflare.com/generate_204
+    url: http://www.gstatic.com/generate_204
     interval: 60
   - name: SERVER-DIRECT
     type: select
@@ -45,7 +45,7 @@ proxy-groups:
     disable-udp: false
     use:
       - PP-SG
-    url: http://cp.cloudflare.com/generate_204
+    url: http://www.gstatic.com/generate_204
     interval: 180
     hidden: true
   - name: LOADBALANCE-SG
@@ -54,7 +54,7 @@ proxy-groups:
     disable-udp: false
     use:
       - PP-SG
-    url: http://cp.cloudflare.com/generate_204
+    url: http://www.gstatic.com/generate_204
     interval: 180
     hidden: true
   - name: BESTPING-SG
@@ -62,7 +62,7 @@ proxy-groups:
     disable-udp: false
     use:
       - PP-SG
-    url: http://cp.cloudflare.com/generate_204
+    url: http://www.gstatic.com/generate_204
     interval: 180
     tolerance: 60
   #===============================================
@@ -71,7 +71,7 @@ proxy-groups:
     disable-udp: false
     use:
       - PP-ID
-    url: http://cp.cloudflare.com/generate_204
+    url: http://www.gstatic.com/generate_204
     interval: 180
     hidden: true
   - name: LOADBALANCE-ID
@@ -80,7 +80,7 @@ proxy-groups:
     disable-udp: false
     use:
       - PP-ID
-    url: http://cp.cloudflare.com/generate_204
+    url: http://www.gstatic.com/generate_204
     interval: 180
     hidden: true
   - name: BESTPING-ID
@@ -88,7 +88,7 @@ proxy-groups:
     disable-udp: false
     use:
       - PP-ID
-    url: http://cp.cloudflare.com/generate_204
+    url: http://www.gstatic.com/generate_204
     interval: 180
     tolerance: 60
   #===============================================
@@ -97,7 +97,7 @@ proxy-groups:
     disable-udp: false
     use:
       - PP-ID
-    url: http://cp.cloudflare.com/generate_204
+    url: http://www.gstatic.com/generate_204
     interval: 180
     hidden: true
   - name: LOADBAlANCE-ALL-SERVER
@@ -107,7 +107,7 @@ proxy-groups:
     proxies:
       - SERVER-SG
       - SERVER-ID
-    url: http://cp.cloudflare.com/generate_204
+    url: http://www.gstatic.com/generate_204
     interval: 180
     hidden: true
   #===============================================
@@ -117,7 +117,7 @@ proxy-groups:
     disable-udp: false
     use:
       - PP-DIRECT
-    url: http://cp.cloudflare.com/generate_204
+    url: http://www.gstatic.com/generate_204
     interval: 180
     hidden: true
 proxy-providers:
