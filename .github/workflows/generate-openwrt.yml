@@ -370,15 +370,6 @@ jobs:
             -d parse_mode=Markdown \
             -d message_thread_id=$THREAD_ID_BUILD \
             -d text="$BUILD_STATUS_MESSAGE"
-
-          CHANGELOG="📋 *Changelog*
-          ${{ needs.prepare.outputs.changelog }}"
-
-          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-            -d chat_id=$CHAT_ID \
-            -d parse_mode=Markdown \
-            -d message_thread_id=$THREAD_ID_BUILD \
-            -d text="$CHANGELOG"
     
       - name: Notify Telegram
         if: ${{ !cancelled() && inputs.notify == 'true' }}
@@ -390,6 +381,7 @@ jobs:
           
           create_stable_message() {
           cat << EOF
+          ━━━━━━━━━━━━━━━━━━━━━━
           🎯 *RTA-WRT Firmware Update*
           ✅ _Stable Release_
 
@@ -399,6 +391,10 @@ jobs:
           📌 *Catatan:*
           🔒 Versi stabil dengan peningkatan keamanan dan performa!
           📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik!
+
+          ━━━━━━━━━━━━━━━━━━━━━━
+          📋 ${{ needs.prepare.outputs.changelog }}
+          ━━━━━━━━━━━━━━━━━━━━━━
           EOF
           }
 
@@ -406,6 +402,7 @@ jobs:
        
           create_dev_message() {
           cat << EOF
+          ━━━━━━━━━━━━━━━━━━━━━━
           🚀 *RTA-WRT Firmware Update*
           🌟 _Development Release_
 
@@ -415,6 +412,9 @@ jobs:
           📌 *Catatan:*
           🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan!
           🔄 Selalu gunakan versi terbaru untuk performa terbaik!
+          ━━━━━━━━━━━━━━━━━━━━━━
+          📋 ${{ needs.prepare.outputs.changelog }}
+          ━━━━━━━━━━━━━━━━━━━━━━
           EOF
           }
 
@@ -459,15 +459,6 @@ jobs:
               -d "message_thread_id=$THREAD_ID_UPDATE" \
               -d "reply_markup=$BUTTONS_DEV"
           fi
-
-          CHANGELOG="📋 *Changelog*
-          ${{ needs.prepare.outputs.changelog }}"
-
-          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-            -d chat_id=$CHAT_ID \
-            -d parse_mode=Markdown \
-            -d message_thread_id=$THREAD_ID_UPDATE \
-            -d text="$CHANGELOG"
 
       - name: Checkout Repository
         uses: actions/checkout@v4
