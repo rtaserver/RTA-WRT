@@ -1,5 +1,22 @@
 # What's New!
 
+**Changelog** (10-02-2025)
+
+- Fix Script Startup
+- s905x OPHUB Repack Only
+- Update Depends on Package
+- Add Docker
+- Add Luci Neko
+- Add Tailscale
+- Add More Source Packages
+- Resize Root Partisi To 2GB
+- Change MihomoTProxy To Nikki
+- Fix Packages Not Include
+- Fix Header Mihomo. Change To Nikki
+- Fix Amlogic Service Not Installed
+- Fix Package Source
+- Fix Directory Mihomo. Change To Nikki
+
 **Changelog** (07-02-2025)
 
 - OPHUB Add Kernel 6.x.x

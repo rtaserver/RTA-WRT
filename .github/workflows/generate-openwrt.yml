@@ -75,6 +75,7 @@ jobs:
     outputs:
       devices: ${{ steps.matrix.outputs.devices }}
       message_id: ${{ steps.telegram.outputs.message_id }}
+      release_name: ${{ steps.setup.outputs.release_name }}
       release_tag: ${{ steps.setup.outputs.release_tag }}
       changelog: ${{ steps.changelog.outputs.changelog }}
       startbuildtime: ${{ steps.setup.outputs.startbuildtime }}
@@ -82,7 +83,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           ref: ${{ github.ref_name }}
 
       - name: Add changelog info to new release description
@@ -99,16 +99,45 @@ jobs:
         id: setup
         run: |
           sudo timedatectl set-timezone "$TZ"
+
           STARTBUILDTIME=$(date +%s)
           DATETIME=$(date +'%d%m%Y')
+
           BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
-          if [ "${{ github.ref_name }}" == "main" ]; then
-            RELEASE_TAG="${BRANCH_TAG}-${DATETIME}"
-          elif [ "${{ github.ref_name }}" == "dev" ]; then
-            RELEASE_TAG="${BRANCH_TAG}-dev-${DATETIME}"
-          fi
+
+          release_name() {
+              local source_name="${1%:*}"  # Ambil bagian sebelum ":"
+              local branch_version="${1#*:}"  # Ambil bagian setelah ":"
+              local release_for="$2"
+
+              case "$source_name" in
+                  openwrt) source_name="OpenWrt" ;;
+                  immortalwrt) source_name="ImmortalWrt" ;;
+                  *) echo "Error: Source tidak dikenali" >&2; return 1 ;;
+              esac
+
+              case "$release_for" in
+                  main) release_type="Stable" ;;
+                  dev) release_type="Development" ;;
+                  *) echo "Error: Jenis release tidak dikenali" >&2; return 1 ;;
+              esac
+
+              local tanggal=$(date +'%d-%m-%Y')
+
+              echo "RTA-WRT - $release_type | $source_name:$branch_version | $tanggal"
+          }
+
+          RELEASE_NAME=$(release_name "${{ inputs.releases_branch }}" "${{ github.ref_name }}")
+
+          case "${{ github.ref_name }}" in
+              main) RELEASE_TAG="${BRANCH_TAG}--main-${DATETIME}" ;;
+              dev) RELEASE_TAG="${BRANCH_TAG}--dev-${DATETIME}" ;;
+              *) echo "Error: Branch tidak dikenali" >&2; exit 1 ;;
+          esac
+
           echo "startbuildtime=${STARTBUILDTIME}" >> $GITHUB_OUTPUT
           echo "datetime=${DATETIME}" >> $GITHUB_ENV
+          echo "release_name=${RELEASE_NAME}" >> $GITHUB_OUTPUT
           echo "release_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
 
       - name: Configure Build Matrix
@@ -156,28 +185,35 @@ jobs:
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
           THREAD_ID_BUILD=616
+          
           devices='${{ steps.matrix.outputs.devices }}'
 
-          MESSAGE="━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A"
-          MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
-          MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A"
-          MESSAGE+="📌 *Version*: ${{ inputs.releases_branch }}%0A"
-          MESSAGE+="🌿 *Branch*: ${{ github.ref_name }}%0A"
-          MESSAGE+="📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
-          MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A"
-          MESSAGE+="📋 *Device List*%0A"
-  
+          create_build_status_message() {
+          cat << EOF
+          ━━━━━━━━━━━━━━━━━━━━━━
+          🚀 *RTA-WRT | Build Status*
+          ━━━━━━━━━━━━━━━━━━━━━━
+          📌 *Version*: ${{ inputs.releases_branch }}
+          🌿 *Branch*: ${{ github.ref_name }}
+          📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")
+          ━━━━━━━━━━━━━━━━━━━━━━
+          📋 *Device List*
+          EOF
+
           while read -r device; do
-              MESSAGE+="🔹 $device | ⏳ Building%0A"
+              echo "🔹 $device | ⏳ Building"
           done < <(echo "$devices" | jq -r '.[]')
-  
-          MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A"
+
+          echo "━━━━━━━━━━━━━━━━━━━━━━"
+          }
+
+          BUILD_STATUS_MESSAGE=$(create_build_status_message)
           
           RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
             -d chat_id=$CHAT_ID \
             -d parse_mode=Markdown \
             -d message_thread_id=$THREAD_ID_BUILD \
-            -d text="$MESSAGE")
+            -d text="$BUILD_STATUS_MESSAGE")
           
           echo "message_id=$(echo $RESPONSE | jq -r '.result.message_id')" >> $GITHUB_OUTPUT
 
@@ -192,7 +228,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           ref: ${{ github.ref_name }}
 
       - name: Install Dependencies
@@ -208,6 +243,14 @@ jobs:
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$changelog" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Prepare Before Build
+        run: |
+          OPEWRT="${{ inputs.releases_branch }}"
+          OP_SOURCE="${OPEWRT%:*}"
+          sed -i -E "s|baseOpenwrt: 'null'|baseOpenwrt: '${OP_SOURCE}'|g" files/usr/share/ucode/luci/template/header.ut
+          sed -i -E "s|currentBranch: 'null'|currentBranch: '${{ github.ref_name }}'|g" files/usr/share/ucode/luci/template/header.ut
+          sed -i -E "s|currentVersion: 'null'|currentVersion: '${{ needs.prepare.outputs.release_tag }}'|g" files/usr/share/ucode/luci/template/header.ut
 
       - name: Build Image
         id: build
@@ -237,7 +280,7 @@ jobs:
         with:
           files: imagebuilder/out_firmware/*
           tag_name: ${{ needs.prepare.outputs.release_tag }}
-          name: "RTA-WRT - ${{ needs.prepare.outputs.release_tag }}"
+          name: ${{ needs.prepare.outputs.release_name }}
           body: |
             # 🚀 RTA-WRT - Release Information
             
@@ -245,9 +288,10 @@ jobs:
             ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/${{ needs.prepare.outputs.release_tag }}/total?style=for-the-badge&logo=Openwrt)
             
             ## 📢 Support Channels
-            [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt)
-            [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/backup_rtawrt)
-            [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/RizkiKotet)
+            [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt) [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/backup_rtawrt) [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/RizkiKotet)
+
+            ## NOTES
+            `Amlogic s905x Support Mod SDCard`
             
             ## 📝 Changelog
             ${{ steps.changelog.outputs.changelog }}
@@ -276,30 +320,8 @@ jobs:
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
           THREAD_ID_BUILD=616
+
           devices='${{ needs.prepare.outputs.devices }}'
-  
-          MESSAGE="━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A"
-          MESSAGE+="🚀 *RTA-WRT | Build Status*%0A"
-          MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A"
-          MESSAGE+="📌 *Version*: ${{ inputs.releases_branch }}%0A"
-          MESSAGE+="🌿 *Branch*: ${{ github.ref_name }}%0A"
-          MESSAGE+="📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")%0A"
-          MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━%0A"
-          MESSAGE+="📋 *Device List*%0A"
-  
-          while read -r device; do
-              status=$(cat "artifacts/build-status-$device/status.txt" 2>/dev/null || echo "❓ Unknown")
-              MESSAGE+="🔹 $device | $status%0A"
-          done < <(echo "$devices" | jq -r '.[]')
-  
-          MESSAGE+="━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
-          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
-            -d chat_id=$CHAT_ID \
-            -d message_id=${{ needs.prepare.outputs.message_id }} \
-            -d parse_mode=Markdown \
-            -d message_thread_id=$THREAD_ID_BUILD \
-            -d text="$MESSAGE"
 
           format_time() {
             local total_seconds=$1
@@ -308,62 +330,86 @@ jobs:
             local seconds=$((total_seconds % 60))
             printf "%02d:%02d:%02d" $hours $minutes $seconds
           }
+          
           end_time=$(date +%s)
           elapsed_time=$((end_time - ${{ needs.prepare.outputs.startbuildtime }}))
           formatted_time=$(format_time $elapsed_time)
-          echo "Build took $formatted_time"
- 
-          NEWMESSAGE="🎉━━━━━━━━━━━━━━━━━━━━━━━━━━━━🎉%0A"
-          NEWMESSAGE+="✨ *Build OpenWrt Selesai!* ✨%0A"
-          NEWMESSAGE+="🕒 Waktu Build: $formatted_time%0A"
-          NEWMESSAGE+="🎉━━━━━━━━━━━━━━━━━━━━━━━━━━━━🎉%0A"
-          NEWMESSAGE+="👤 @RizkiKotet"
+  
+          create_build_status_message() {
+          cat << EOF
+          ━━━━━━━━━━━━━━━━━━━━━━
+          🚀 *RTA-WRT | Build Status*
+          ━━━━━━━━━━━━━━━━━━━━━━
+          📌 *Version*: ${{ inputs.releases_branch }}
+          🌿 *Branch*: ${{ github.ref_name }}
+          📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")
+          ━━━━━━━━━━━━━━━━━━━━━━
+          📋 *Device List*
+          EOF
 
-          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+          while read -r device; do
+              status=$(cat "artifacts/build-status-$device/status.txt" 2>/dev/null || echo "❓ Unknown")
+              echo "🔹 $device | $status"
+          done < <(echo "$devices" | jq -r '.[]')
+
+          cat << EOF
+          🎉━━━━━━━━━━━━━━━━━━━━━━🎉
+          ✨ *Build OpenWrt Selesai!* ✨
+          🕒 Waktu Build: $formatted_time
+          🎉━━━━━━━━━━━━━━━━━━━━━━🎉
+          👤 @RizkiKotet
+          ━━━━━━━━━━━━━━━━━━━━━━
+          EOF
+          }
+
+          BUILD_STATUS_MESSAGE=$(create_build_status_message)
+          
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
             -d chat_id=$CHAT_ID \
+            -d message_id=${{ needs.prepare.outputs.message_id }} \
             -d parse_mode=Markdown \
             -d message_thread_id=$THREAD_ID_BUILD \
-            -d text="$NEWMESSAGE"
-
-
-      - name: Check Workflow Status and Release
-        id: check_status
-        run: |
-          # Get latest release tag from GitHub API
-          latest_tag=$(curl -s \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/latest" \
-            | jq -r '.tag_name')
-          
-          # Compare with current release tag
-          if [[ "$latest_tag" == "${{ needs.prepare.outputs.release_tag }}" ]]; then
-            echo "tag_exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "tag_exists=false" >> $GITHUB_OUTPUT
-          fi
+            -d text="$BUILD_STATUS_MESSAGE"
     
       - name: Notify Telegram
-        if: ${{ !cancelled() }} && inputs.notify == 'true' && steps.check_status.outputs.tag_exists != 'true'
+        if: ${{ !cancelled() && inputs.notify == 'true' }}
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
-          THREAD_ID_UPDATE=36
-          MESSAGE_STABLE="🎯 *RTA-WRT Firmware Update*%0A"
-          MESSAGE_STABLE+="✅ _Stable Release_%0A%0A"
-          MESSAGE_STABLE+="🔹 *Versi:* ${{ inputs.releases_branch }}%0A"
-          MESSAGE_STABLE+="🔹 *Tanggal:* $(date "+%d-%m-%Y %H:%M:%S")%0A%0A"
-          MESSAGE_STABLE+="📌 *Catatan:*%0A"
-          MESSAGE_STABLE+="🔒 Versi stabil dengan peningkatan keamanan dan performa!%0A"
-          MESSAGE_STABLE+="📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik!%0A"
+          THREAD_ID_UPDATE=734
+          
+          create_stable_message() {
+          cat << EOF
+          🎯 *RTA-WRT Firmware Update*
+          ✅ _Stable Release_
+
+          🔹 *Versi:* ${{ inputs.releases_branch }}
+          🔹 *Tanggal:* $(date "+%d-%m-%Y %H:%M:%S")
+
+          📌 *Catatan:*
+          🔒 Versi stabil dengan peningkatan keamanan dan performa!
+          📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik!
+          EOF
+          }
+
+          STABLE_MESSAGE=$(create_stable_message)
        
-          MESSAGE_DEV="🚀 *RTA-WRT Firmware Update*%0A"
-          MESSAGE_DEV+="🌟 _Development Release_%0A%0A"
-          MESSAGE_DEV+="🔹 *Versi:* ${{ inputs.releases_branch }}%0A"
-          MESSAGE_DEV+="🔹 *Tanggal:* $(date "+%d-%m-%Y %H:%M:%S")%0A%0A"
-          MESSAGE_DEV+="📌 *Catatan:*%0A"
-          MESSAGE_DEV+="🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan!%0A"
-          MESSAGE_DEV+="🔄 Selalu gunakan versi terbaru untuk performa terbaik!%0A"
+          create_dev_message() {
+          cat << EOF
+          🚀 *RTA-WRT Firmware Update*
+          🌟 _Development Release_
+
+          🔹 *Versi:* ${{ inputs.releases_branch }}
+          🔹 *Tanggal:* $(date "+%d-%m-%Y %H:%M:%S")
+
+          📌 *Catatan:*
+          🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan!
+          🔄 Selalu gunakan versi terbaru untuk performa terbaik!
+          EOF
+          }
+
+          DEV_MESSAGE=$(create_dev_message)
         
           BUTTONS_STABLE='{
               "inline_keyboard": [
@@ -388,14 +434,14 @@ jobs:
           if [ "${CURRENT_BRANCH}" == "main" ]; then
             curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
               -d "chat_id=$CHAT_ID" \
-              -d "text=$MESSAGE_STABLE" \
+              -d "text=$STABLE_MESSAGE" \
               -d "parse_mode=Markdown" \
               -d "message_thread_id=$THREAD_ID_UPDATE" \
               -d "reply_markup=$BUTTONS_STABLE"
           else
             curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
               -d "chat_id=$CHAT_ID" \
-              -d "text=$MESSAGE_DEV" \
+              -d "text=$DEV_MESSAGE" \
               -d "parse_mode=Markdown" \
               -d "message_thread_id=$THREAD_ID_UPDATE" \
               -d "reply_markup=$BUTTONS_DEV"
@@ -404,70 +450,46 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           ref: info
 
       - name: Update Branch Info
         id: update
+        env:
+          CURRENT_BRANCH: ${{ env.CURRENT_BRANCH }}
         run: |
-          # Checkout info branch
-          git fetch origin info
-          git checkout info
-          
           set -euo pipefail
           OPEWRT="${{ inputs.releases_branch }}"
           OP_SOURCE="${OPEWRT%:*}"
           mkdir -p "${CURRENT_BRANCH}/${OP_SOURCE}"
-          
+      
           if [ -n "${{ needs.prepare.outputs.changelog }}" ]; then
-            # Clean and format changelog
             changelog_content=$(echo "${{ needs.prepare.outputs.changelog }}" | \
               sed -e 's/%0A/\n/g' \
                   -e 's/%0D/\r/g' \
                   -e 's/%25/%/g')
-            
-            # Update changelog file
             echo "${changelog_content}" > "${CURRENT_BRANCH}/${OP_SOURCE}/changelog.txt"
+            cat "${CURRENT_BRANCH}/${OP_SOURCE}/changelog.txt"
           else
             echo "No changelog content found"
             exit 1
           fi
-          
-          # Update version file with branch indicator
-          BRANCH_SUFFIX=$([ "${CURRENT_BRANCH}" == "main" ] && echo "main" || echo "dev")
-          VERSION_TAG="${{ needs.prepare.outputs.release_tag }}--${BRANCH_SUFFIX}"
+      
+          VERSION_TAG="${{ needs.prepare.outputs.release_tag }}"
           echo "${VERSION_TAG}" > "${CURRENT_BRANCH}/${OP_SOURCE}/version.txt"
-          
-          # Configure git
+      
+          # Konfigurasi Git
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          
-          # Stage and commit changes if any exist
-          if ! git diff --quiet; then
-            git add "${CURRENT_BRANCH}/${OP_SOURCE}/changelog.txt" "${CURRENT_BRANCH}/${OP_SOURCE}/version.txt"
-            if git commit -m "Auto Release: v${{ inputs.releases_branch }}"; then
-              # Try to push with retry mechanism
-              for i in {1..3}; do
-                if git push; then
-                  echo "Successfully pushed changes"
-                  break
-                else
-                  if [ $i -eq 3 ]; then
-                    echo "Failed to push after 3 attempts"
-                    exit 1
-                  fi
-                  echo "Push failed, retrying... (Attempt $i/3)"
-                  git pull --rebase
-                  sleep 5
-                fi
-              done
-            else
-              echo "No changes to commit"
-            fi
+      
+          git add .
+      
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto Release: $(date "+%d-%m-%Y %H:%M:%S")"
+            git push || echo "Failed to push changes"
           else
-            echo "No changes detected"
+            echo "No changes detected, skipping commit"
           fi
-  
+        
   cleanup:
     needs: [build, notify]
     if: always()

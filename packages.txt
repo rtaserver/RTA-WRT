@@ -1,0 +1,17 @@
+nama: "Default"
+source: "custom"
+listpackages: [
+""
+]
+
+nama: "OpenClash"
+source: "github"
+listpackages: [
+
+]
+
+nama: "rtawrt"
+source: "custom"
+listpackages: [
+
+]

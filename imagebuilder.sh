@@ -429,7 +429,7 @@ adjust_settings() {
 
         # Resize Boot and Rootfs partition sizes
         sed -i "s/CONFIG_TARGET_KERNEL_PARTSIZE=.*/CONFIG_TARGET_KERNEL_PARTSIZE=128/" "${CONFIG_FILE}"
-        sed -i "s/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=1024/" "${CONFIG_FILE}"
+        sed -i "s/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=2048/" "${CONFIG_FILE}"
 
         # Amlogic-specific settings
         case "${op_target}" in
@@ -488,6 +488,7 @@ custom_packages() {
     github_packages+=(
         "luci-app-alpha-config|https://api.github.com/repos/animegasan/luci-app-alpha-config/releases/latest"
         "luci-theme-material3|https://api.github.com/repos/AngelaCooljx/luci-theme-material3/releases/latest"
+        "luci-app-neko|https://api.github.com/repos/nosignals/openwrt-neko/releases/latest"
     )
 
     download_packages "github" github_packages[@]
@@ -541,6 +542,8 @@ custom_packages() {
         "adguardhome|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
         "homebox|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
         "luci-app-netspeedtest|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "sing-box|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
+        "mihomo|https://dl.openwrt.ai/releases/$CURVER/packages/$ARCH_3/kiddin9"
         
         "luci-app-internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "internet-detector|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
@@ -563,15 +566,15 @@ custom_packages() {
 
     echo -e "${STEPS} Start Clash Core Download !"
     if [[ "$ARCH_3" == "x86_64" ]]; then
-        clash_meta=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-$ARCH_1-compatible" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
+        clash_meta=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-${ARCH_1}-compatible" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
     else
-        clash_meta=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-$ARCH_1" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
+        clash_meta=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-${ARCH_1}" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
     fi
 
-    # Mihomo
-    mihomo_api="https://api.github.com/repos/rizkikotet-dev/OpenWrt-mihomo-Mod/releases"
-    mihomo_file_ipk="mihomo_${ARCH_3}-openwrt-${CURVER}"
-    mihomo_file_ipk_down=$(curl -s "${mihomo_api}" | grep "browser_download_url" | grep -oE "https.*${mihomo_file_ipk}.*.tar.gz" | head -n 1)
+    # Nikki
+    nikki_api="https://api.github.com/repos/rizkikotet-dev/OpenWrt-nikki-Mod/releases"
+    nikki_file_ipk="nikki_${ARCH_3}-openwrt-${CURVER}"
+    nikki_file_ipk_down=$(curl -s "${nikki_api}" | grep "browser_download_url" | grep -oE "https.*${nikki_file_ipk}.*.tar.gz" | head -n 1)
 
     #passwall
     passwall_api="https://api.github.com/repos/xiaorouji/openwrt-passwall/releases"
@@ -580,14 +583,14 @@ custom_packages() {
 
 
     # Output download information
-    echo -e "${STEPS} Installing OpenClash, Mihomo And Passwall"
+    echo -e "${STEPS} Installing OpenClash, Nikki And Passwall"
 
     mkdir -p "${custom_files_path}/etc/openclash/core"
     ariadl "${clash_meta}" "${custom_files_path}/etc/openclash/core/clash_meta.gz"
     gzip -d "${custom_files_path}/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
 
-    ariadl "${mihomo_file_ipk_down}" "${mihomo_file_ipk}.tar.gz"
-    tar -xzvf "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" > /dev/null 2>&1 && rm "mihomo_${ARCH_3}-openwrt-${CURVER}.tar.gz" || error_msg "Error: Failed to extract Mihomo package."
+    ariadl "${nikki_file_ipk_down}" "${nikki_file_ipk}.tar.gz"
+    tar -xzvf "nikki_${ARCH_3}-openwrt-${CURVER}.tar.gz" > /dev/null 2>&1 && rm "nikki_${ARCH_3}-openwrt-${CURVER}.tar.gz" || error_msg "Error: Failed to extract Nikki package."
 
     ariadl "${passwall_file_zip_down}" "passwall_packages_ipk_${ARCH_3}.zip"
     unzip -q "passwall_packages_ipk_${ARCH_3}.zip" && rm "passwall_packages_ipk_${ARCH_3}.zip" || error_msg "Error: Failed to extract Passwall package."
@@ -634,6 +637,19 @@ custom_config() {
     sed -i 's|^export OSH=~/.oh-my-bash|export OSH=/usr/share/oh-my-bash|g' ${custom_files_path}/usr/share/oh-my-bash/.bashrc
     sed -i 's|^OSH_THEME="font"|OSH_THEME="zork"|g' ${custom_files_path}/usr/share/oh-my-bash/.bashrc
     echo -e "${SUCCESS} Oh My Zsh installed successfully."
+
+    agh_api="https://api.github.com/repos/AdguardTeam/AdGuardHome/releases" 
+    agh_file="AdGuardHome_linux_${ARCH_1}"
+    agh_file_down="$(curl -s ${agh_api}/latest | grep "browser_download_url" | grep -oE "https.*${agh_file}.*.tar.gz" | head -n 1)"
+    latest_version=$(curl -sSL "$agh_api/latest" | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' | head -n 1)
+
+    ariadl "${agh_file_down}" "${custom_files_path}/opt/AdGuardHome_linux_${ARCH_1}.tar.gz"
+    if tar -zxvf ${custom_files_path}/opt/AdGuardHome_linux_"${ARCH_1}".tar.gz -C ${custom_files_path}/opt; then
+        rm -rf ${custom_files_path}/opt/AdGuardHome_linux_"${ARCH_1}".tar.gz
+        echo -e "${SUCCESS} Installed AdGuardHome version $latest_version"
+    else
+        echo -e "${WARNING} Failed to extract AdGuardHome."
+    fi
 
     # Sync and provide directory status
     sync && sleep 3
@@ -685,23 +701,38 @@ rebuild_firmware() {
     mkdir -p ${imagebuilder_path}/out_firmware ${imagebuilder_path}/out_rootfs
 
     # Selecting default packages, lib, theme, app and i18n, etc.
-    PACKAGES+=" -dnsmasq dnsmasq-full owut zsh coreutils-sleep fontconfig coreutils-whoami file lolcat kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
-    PACKAGES+=" kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi kmod-usb-net-cdc-ether kmod-usb-serial-option kmod-usb-serial kmod-usb-serial-wwan qmi-utils"
-    PACKAGES+=" kmod-usb-serial-qualcomm kmod-usb-acm kmod-usb-net-cdc-ncm kmod-usb-net-cdc-mbim umbim modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi usbutils luci-proto-mbim luci-proto-ncm"
-    PACKAGES+=" kmod-usb-net-huawei-cdc-ncm kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial-sierrawireless kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem"
-    PACKAGES+=" kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty"
-    PACKAGES+=" libiwinfo libiwinfo-data libiwinfo-lua liblua liblucihttp liblucihttp-lua libubus-lua lua luci luci-app-firewall luci-app-opkg luci-base luci-lib-base luci-lib-ip luci-lib-jsonc luci-lib-nixio luci-mod-admin-full"
-    PACKAGES+=" luci-mod-network luci-mod-status luci-mod-system luci-proto-ipv6 luci-proto-ppp luci-theme-bootstrap rpcd rpcd-mod-file rpcd-mod-iwinfo rpcd-mod-luci rpcd-mod-rrdns uhttpd uhttpd-mod-ubus htop"
-    PACKAGES+=" kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-acm kmod-usb-net-qmi-wwan kmod-usb-net-rndis kmod-usb-serial-qualcomm kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial"
-    PACKAGES+=" kmod-nls-utf8 kmod-usb-serial-option kmod-usb-serial-sierrawireless kmod-usb-uhci kmod-usb2 kmod-usb-net-ipheth kmod-usb-net-cdc-mbim usbmuxd libusbmuxd-utils libimobiledevice-utils mbim-utils qmi-utils uqmi umbim luci-proto-3g luci-proto-ncm"
-    PACKAGES+=" luci-proto-ncm usb-modeswitch nano wget curl libusb-1.0-0 python3-pip"
-    PACKAGES+=" kmod-usb-net-asix kmod-usb-net-asix-ax88179 kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 hostapd wpa-cli wpa-supplicant kmod-cfg80211 kmod-mac80211 wireless-tools iw-full hostapd-utils"
-    PACKAGES+=" libqmi libqrtr-glib qmi-utils luci-proto-qmi mbim-utils libmbim luci-proto-mbim umbim php8 php8-cgi php8-fastcgi php8-fpm php8-mod-ctype php8-mod-curl php8-mod-fileinfo php8-mod-iconv php8-mod-mbstring php8-mod-session php8-mod-zip"
-    PACKAGES+=" perl perlbase-base perlbase-bytes perlbase-class perlbase-config perlbase-cwd perlbase-dynaloader perlbase-errno perlbase-essential perlbase-fcntl perlbase-file perlbase-filehandle perlbase-i18n perlbase-integer perlbase-io perlbase-list perlbase-locale perlbase-params perlbase-posix perlbase-re perlbase-scalar perlbase-selectsaver perlbase-socket perlbase-symbol perlbase-tie perlbase-time perlbase-unicore perlbase-utf8 perlbase-xsloader"
-    PACKAGES+=" ruby ruby-bigdecimal ruby-date ruby-digest ruby-enc ruby-forwardable ruby-pstore ruby-psych ruby-stringio ruby-yaml"
-    PACKAGES+=" luci-mod-admin-full luci-mod-network luci-mod-status luci-mod-system luci-lua-runtime zoneinfo-asia zoneinfo-core"
-    PACKAGES+=" kmod-usb-serial kmod-usb-serial-option unzip tar gzip openssh-sftp-server sms-tool luci-app-temp-status cpusage adb ttyd luci-app-ttyd bash dmesg screen kmod-tun jq luci-lib-ipkg"
-    PACKAGES+=" ipset ipt2socks iptables iptables-legacy iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat coreutils coreutils-base64 coreutils-nohup curl dns2socks ip-full libuci-lua lua luci-compat luci-lib-jsonc microsocks resolveip tcping"
+    PACKAGES+=" -dnsmasq dnsmasq-full cgi-io libiwinfo libiwinfo-data libiwinfo-lua liblua \
+    zram-swap adb parted losetup resize2fs luci luci-ssl block-mount htop bash curl wget-ssl \
+    tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server \
+    liblucihttp liblucihttp-lua libubus-lua lua luci luci-app-firewall luci-app-opkg \
+    luci-base luci-lib-base luci-lib-ip luci-lib-jsonc luci-lib-nixio luci-mod-admin-full \
+    luci-mod-network luci-mod-status luci-mod-system luci-proto-ipv6 luci-proto-ppp luci-ssl \
+    luci-theme-bootstrap px5g-wolfssl rpcd rpcd-mod-file rpcd-mod-iwinfo rpcd-mod-luci \
+    rpcd-mod-rrdns uhttpd uhttpd-mod-ubus usbutils htop \
+    kmod-usb-net kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-acm kmod-usb-net-qmi-wwan \
+    kmod-usb-net-rndis kmod-usb-serial-qualcomm kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial \
+    kmod-nls-utf8 kmod-usb-serial-option kmod-usb-serial-sierrawireless kmod-usb-uhci kmod-usb2 \
+    kmod-usb-net-ipheth kmod-usb-net-cdc-mbim usbmuxd libusbmuxd-utils libimobiledevice-utils \
+    mbim-utils qmi-utils uqmi umbim modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi luci-proto-3g luci-proto-ncm \
+    luci-proto-ncm usb-modeswitch nano picocom minicom libusb-1.0-0 \
+    xmm-modem kmod-usb-net-asix kmod-usb-net-asix-ax88179 kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 \
+    ca-bundle ca-certificates luci-compat curl coreutils-sleep fontconfig coreutils-whoami file lolcat curl \
+    owut zsh kmod-mii kmod-usb-wdm kmod-usb-serial-wwan kmod-usb-ehci kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty \
+    hostapd wpa-cli wpa-supplicant kmod-cfg80211 kmod-mac80211 wireless-tools iw-full hostapd-utils \
+    libqrtr-glib luci-proto-qmi php8 php8-cgi php8-fastcgi php8-fpm php8-mod-ctype php8-mod-curl php8-mod-fileinfo php8-mod-iconv php8-mod-mbstring php8-mod-session php8-mod-zip \
+    perl perlbase-base perlbase-bytes perlbase-class perlbase-config perlbase-cwd perlbase-dynaloader perlbase-errno perlbase-essential perlbase-fcntl perlbase-file \
+    perlbase-filehandle perlbase-i18n perlbase-integer perlbase-io perlbase-list perlbase-locale perlbase-params perlbase-posix \
+    perlbase-re perlbase-scalar perlbase-selectsaver perlbase-socket perlbase-symbol perlbase-tie perlbase-time perlbase-unicore perlbase-utf8 perlbase-xsloader \
+    ruby ruby-bigdecimal ruby-date ruby-digest ruby-enc ruby-forwardable ruby-pstore ruby-psych ruby-stringio ruby-yaml \
+    luci-lua-runtime zoneinfo-asia zoneinfo-core python3 python3-pip luci-proto-mbim \
+    libc php8 php8-fastcgi php8-fpm coreutils-stat zoneinfo-asia php8-cgi php8-cli php8-mod-bcmath php8-mod-calendar php8-mod-ctype \
+    php8-mod-curl php8-mod-dom php8-mod-exif php8-mod-fileinfo php8-mod-filter php8-mod-gd php8-mod-iconv php8-mod-intl \
+    php8-mod-mbstring php8-mod-mysqli php8-mod-mysqlnd php8-mod-opcache php8-mod-pdo php8-mod-pdo-mysql php8-mod-phar \
+    php8-mod-session php8-mod-xml php8-mod-xmlreader php8-mod-xmlwriter php8-mod-zip libopenssl-legacy \
+    unzip tar gzip openssh-sftp-server sms-tool luci-app-temp-status cpusage adb ttyd luci-app-ttyd bash dmesg screen kmod-tun jq luci-lib-ipkg \
+    ipset ipt2socks iptables iptables-legacy iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat coreutils coreutils-base64 coreutils-nohup dns2socks ip-full libuci-lua microsocks resolveip tcping"
+
+    PACKAGES+=" luci-app-diskman luci-app-poweroff luci-app-log-viewer luci-app-ramfree"
 
     # AdguardHome
     PACKAGES+=" adguardhome luci-app-adguardhome"
@@ -712,12 +743,13 @@ rebuild_firmware() {
 
     # Tunnel option
     OPENCLASH="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
-    MIHOMO+="mihomo luci-app-mihomo"
+    MIHOMO+="nikki luci-app-nikki"
     PASSWALL+="chinadns-ng resolveip dns2socks dns2tcp ipt2socks microsocks tcping xray-core xray-plugin luci-app-passwall"
-    PACKAGES+=" $OPENCLASH $MIHOMO $PASSWALL"
+    NEKOCLASH+="kmod-tun bash curl jq mihomo sing-box php8 php8-mod-curl luci-app-neko"
+    PACKAGES+=" $OPENCLASH $MIHOMO $PASSWALL $NEKOCLASH"
 
     # Remote Services
-    PACKAGES+=" luci-app-zerotier luci-app-cloudflared"
+    PACKAGES+=" luci-app-zerotier luci-app-cloudflared tailscale luci-app-tailscale"
 
     # NAS and Hard disk tools
     PACKAGES+=" luci-app-diskman luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
@@ -731,8 +763,8 @@ rebuild_firmware() {
     # Theme
     PACKAGES+=" luci-theme-material luci-theme-argon luci-app-argon-config luci-theme-material3"
 
-    # PHP8
-    PACKAGES+=" libc php8 php8-fastcgi php8-fpm coreutils-stat zoneinfo-asia php8-cgi php8-cli php8-mod-bcmath php8-mod-calendar php8-mod-ctype php8-mod-curl php8-mod-dom php8-mod-exif php8-mod-fileinfo php8-mod-filter php8-mod-gd php8-mod-iconv php8-mod-intl php8-mod-mbstring php8-mod-mysqli php8-mod-mysqlnd php8-mod-opcache php8-mod-pdo php8-mod-pdo-mysql php8-mod-phar php8-mod-session php8-mod-xml php8-mod-xmlreader php8-mod-xmlwriter php8-mod-zip libopenssl-legacy"
+    # Docker
+    PACKAGES+=" docker docker-compose dockerd luci-app-dockerman"
 
     # Misc and some custom .ipk files
     # Exclude package (must use - before packages name)
@@ -754,7 +786,7 @@ rebuild_firmware() {
 
     case "${op_target}" in
     amlogic)
-        MISC+=" luci-app-amlogic ath9k-htc-firmware btrfs-progs hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-cfg80211 kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs kmod-mac80211 wireless-tools wpa-cli wpa-supplicant"
+        MISC+=" luci-app-amlogic ath9k-htc-firmware btrfs-progs hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-cfg80211 kmod-crypto-acompress kmod-crypto-crc32c kmod kmod-fs-btrfs kmod-mac80211 wireless-tools wpa-cli wpa-supplicant"
         EXCLUDED+=" -procd-ujail"
         ;;
     bcm27*)
@@ -766,12 +798,13 @@ rebuild_firmware() {
         ;;
     esac
 
-    #MISC+=" luci-app-rakitanmanager"
+    # Disable service
+    DISABLED_SERVICES="AdGuardHome"
 
-    PACKAGES+=" $misc zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-poweroff luci-app-log-viewer luci-app-ramfree htop bash curl wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
+    PACKAGES+=" $MISC"
 
     # Membuat image firmware dan menampilkan progress bar
-    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files"
+    make image PROFILE="${target_profile}" PACKAGES="${PACKAGES} ${EXCLUDED}" FILES="files" DISABLED_SERVICES="$DISABLED_SERVICES"
     if [[ $? -eq 0 ]]; then
         echo -e "${SUCCESS} Firmware build completed."
         for file in ${imagebuilder_path}/bin/targets/*/*/*.img.gz; do
@@ -1111,7 +1144,7 @@ build_mod_sdcard() {
     echo -e "${INFO} Renaming image file..."
     local kernel
     kernel=$(grep -oP 'k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)?' <<<"${file_name}")
-    local new_name="RTA-WRT${op_source}-${op_branch}-${pack_name}-Amlogic_s905x-MOD_SDCARD-${suffix}-${kernel}.img.gz"
+    local new_name="RTA-WRT${op_source}-${op_branch}-${pack_name}-Amlogic_s905x-${suffix}-${kernel}.img.gz"
 
     mv "${file_name}.gz" "../${new_name}" || {
         error_msg "Failed to rename image file"
@@ -1174,9 +1207,9 @@ rename_firmware() {
         
         # Amlogic
         "_amlogic_s912_|OPHUB-Amlogic_s912"
-        "_amlogic_s905x_|OPHUB-Amlogic_s905x-NON_MOD_SDCARD-HG680P"
-        "_amlogic_s905x-b860h_|OPHUB-Amlogic_s905x-NON_MOD_SDCARD-B860H_v1-v2"
-        "-s905x-|ULO-Amlogic_s905x-NON_MOD_SDCARD"
+        "_amlogic_s905x_|OPHUB-Amlogic_s905x-HG680P"
+        "_amlogic_s905x-b860h_|OPHUB-Amlogic_s905x-B860H_v1-v2"
+        "-s905x-|ULO-Amlogic_s905x"
         "-s905x2-|ULO-Amlogic_s905x2"
         "-s905x3-|ULO-Amlogic_s905x3"
         "-s905x4-|ULO-Amlogic_s905x4"
