@@ -370,6 +370,15 @@ jobs:
             -d parse_mode=Markdown \
             -d message_thread_id=$THREAD_ID_BUILD \
             -d text="$BUILD_STATUS_MESSAGE"
+
+          CHANGELOG="📋 *Changelog*
+          ${{ needs.prepare.outputs.changelog }}"
+
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+            -d chat_id=$CHAT_ID \
+            -d parse_mode=Markdown \
+            -d message_thread_id=$THREAD_ID_BUILD \
+            -d text="$CHANGELOG"
     
       - name: Notify Telegram
         if: ${{ !cancelled() && inputs.notify == 'true' }}
@@ -415,7 +424,6 @@ jobs:
               "inline_keyboard": [
                   [
                       {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${{ needs.prepare.outputs.release_tag }}"},
-                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/main/changelog.txt"},
                       {"text": "📋 Status Build", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}
                   ]
               ]
@@ -425,7 +433,6 @@ jobs:
               "inline_keyboard": [
                   [
                       {"text": "📥 Unduh Firmware", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${{ needs.prepare.outputs.release_tag }}"},
-                      {"text": "📖 Changelog", "url": "https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/dev/changelog.txt"},
                       {"text": "📋 Status Build", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}
                   ]
               ]
@@ -452,6 +459,15 @@ jobs:
               -d "message_thread_id=$THREAD_ID_UPDATE" \
               -d "reply_markup=$BUTTONS_DEV"
           fi
+
+          CHANGELOG="📋 *Changelog*
+          ${{ needs.prepare.outputs.changelog }}"
+
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+            -d chat_id=$CHAT_ID \
+            -d parse_mode=Markdown \
+            -d message_thread_id=$THREAD_ID_UPDATE \
+            -d text="$CHANGELOG"
 
       - name: Checkout Repository
         uses: actions/checkout@v4
