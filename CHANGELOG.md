@@ -14,6 +14,8 @@
 - Fix Packages Not Include
 - Fix Header Mihomo. Change To Nikki
 - Fix Amlogic Service Not Installed
+- Fix Package Source
+- Fix Directory Mihomo. Change To Nikki
 
 **Changelog** (07-02-2025)
 

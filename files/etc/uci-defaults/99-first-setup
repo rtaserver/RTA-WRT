@@ -144,8 +144,7 @@ msg "Configure Password Login OpenWrt"
 # Add Custom Repo and Disable opkg signature check
 msg "Add Custom Repo and Disable opkg signature check"
 sed -i 's/option check_signature/# option check_signature/g' /etc/opkg.conf
-echo "src/gz custom_arch https://dl.openwrt.ai/packages-$(grep "VERSION" /etc/os-release | head -n 1 | awk -F '"' '{print $2}' | cut -d. -f1,2)/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
-
+echo "src/gz custom_arch https://dl.openwrt.ai/latest/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
 
 # Remove login password required when accessing terminal
 msg "Remove login password required when accessing terminal"

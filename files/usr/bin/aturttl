@@ -154,7 +154,7 @@ while true; do
     echo -e "${CYAN}2. Delete TTL Rules${RESET}"
     echo -e "${CYAN}3. Keluar${RESET}"
     echo -e "${BLUE}════════════════════════════════════════════════════════════${RESET}"
-    echo -e -n "${YELLOW}Pilih menu (1-4): ${RESET}"
+    echo -e -n "${YELLOW}Pilih menu (1-3): ${RESET}"
     read choice
 
     case $choice in
