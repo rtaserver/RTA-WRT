@@ -150,120 +150,14 @@
         transition-delay: 0.3s;
     }
 </style>
+
 <script>
-// ====== Constants ======
-const baseopenwrt = "null";
-const currentBranch = "null";
-const currentVersion = "null";
-const INFO_URL = 'https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/informasi.txt';
-const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
-const TODAY = new Date().toDateString();
-let checkTimer;
-const cache = {
-    content: localStorage.getItem('lastInformation') || '',
-    lastUpdate: localStorage.getItem('lastUpdate') || ''
-};
-// ====== Alert Queue System ======
-let alertQueue = [];
-let isAlertShowing = false;
+
+// ====== Global Functions ======
 function enqueueAlert(alertConfig) {
-    alertQueue.push(alertConfig);
-    processQueue();
+    AlertSystem.enqueueAlert(alertConfig);
 }
-async function processQueue() {
-    if (isAlertShowing || alertQueue.length === 0) return;
-    isAlertShowing = true;
-    const alertConfig = alertQueue.shift();
-    const result = await Swal.fire(alertConfig);
-    if (result.isConfirmed && alertConfig.onConfirm) alertConfig.onConfirm(result);
-    if (result.isDenied && alertConfig.onDenied) alertConfig.onDenied(result);
-    isAlertShowing = false;
-    processQueue();
-}
-// ====== Utility Functions ======
-async function fetchText(url) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Failed to fetch: ${url} (Status: ${response.status})`);
-        return await response.text();
-    } catch (error) {
-        console.error(`Error fetching ${url}:`, error);
-        return null;
-    }
-}
-function saveToLocal(key, value) {
-    try {
-        localStorage.setItem(key, value);
-        return true;
-    } catch (error) {
-        console.error(`Error saving to localStorage: ${error}`);
-        return false;
-    }
-}
-// ====== Update & Information Check ======
-async function checkForUpdates() {
-    const lastShownUpdate = localStorage.getItem('mdl_update');
-    if (lastShownUpdate === TODAY) return;
-    try {
-        const [latestVersion, changelogRaw] = await Promise.all([
-            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${currentBranch}/${baseopenwrt}/version.txt'),
-            fetchText('https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${currentBranch}/${baseopenwrt}/changelog.txt')
-        ]);
-        if (latestVersion && latestVersion.trim() !== currentVersion) {
-            const changelogMatch = changelogRaw.match(/\*\*Changelog\*\* \((.*?)\)\n([\s\S]*?)(?=\*\*Changelog\*\*|$)/);
-            const changelogFormatted = changelogMatch 
-                ? `<strong>Changelog (${changelogMatch[1]})</strong><p>${changelogMatch[2].trim().replace(/-\s/g, '• ').replace(/\n/g, '<br>')}</p>`
-                : 'Tidak ada catatan perubahan.';
-            enqueueAlert({
-                title: '🚀 Update Tersedia!',
-                width: 400,
-                html: `
-                    <div class="update-info" style="text-align: center;">
-                        <img alt="Current Version" width="155" height="30" src="https://img.shields.io/badge/${currentVersion}-x?style=for-the-badge&logo=openwrt&color=blue">
-                        <img alt="Latest Version" width="155" height="30" src="https://img.shields.io/badge/${latestVersion}-x?style=for-the-badge&logo=openwrt&color=green">
-                        <div class="changelog" style="margin-top: 15px; text-align: left;">
-                            <h4 style="color: #007BFF; background-color: #FFFFFF;">📋 Changelog:</h4>
-                            <div>${changelogFormatted}</div>
-                        </div>
-                    </div>
-                `,
-                showCancelButton: true,
-                showDenyButton: true,
-                confirmButtonText: '🔄 Update',
-                denyButtonText: '⏳ Nanti',
-                cancelButtonText: '❌ Batal',
-                onConfirm: () => {
-                    window.open('https://github.com/rizkikotet-dev/RTA-WRT/releases', '_blank'),
-                    saveToLocal('mdl_update', TODAY)
-                },
-                onDenied: () => saveToLocal('mdl_update', TODAY)
-            });
-        }
-    } catch (error) {
-        console.error('Error checking for updates:', error);
-    }
-}
-async function checkInformation() {
-    const infoContent = await fetchText(INFO_URL);
-    if (infoContent && infoContent !== cache.content) {
-        enqueueAlert({
-            title: '🚀 Informasi',
-            width: 400,
-            html: `<div class="changelog" style="margin-top: 15px; text-align: left; white-space: pre-line;">
-                    <div>${infoContent}</div>
-                </div>`,
-            icon: 'info',
-            confirmButtonText: 'Mengerti',
-            cancelButtonText: '❌ Tutup',
-            onConfirm: () => {
-                saveToLocal('lastInformation', infoContent);
-                cache.content = infoContent;
-                cache.lastUpdate = new Date().toISOString();
-            }
-        });
-    }
-}
-// ====== Event About ======
+
 function showProfile() {
     enqueueAlert({
         width: 400,
@@ -283,12 +177,228 @@ function showProfile() {
         `
     });
 }
-// ====== Show Daily Modal ======
-function showDailyModal() {
-    const lastShownSaweria = localStorage.getItem('mdl_Saweria');
-    if (lastShownSaweria !== TODAY) {
-        enqueueAlert({
-            title: "🚀 Welcome To RTA-WRT",
+
+// ====== Constants ======
+const CONFIG = {
+    APP: {
+        name: 'RTA-WRT',
+        baseOpenwrt: 'null',
+        currentBranch: 'null',
+        currentVersion: 'null',
+        checkInterval: 5 * 60 * 1000, // 5 minutes
+    },
+    URLS: {
+        info: 'https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/informasi.txt',
+        getVersion() {
+            return `https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${this.APP.currentBranch}/${this.APP.baseOpenwrt}/version.txt`;
+        },
+        getChangelog() {
+            return `https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${this.APP.currentBranch}/${this.APP.baseOpenwrt}/changelog.txt`;
+        },
+        internetCheck: 'https://www.google.com/favicon.ico'
+    },
+    SOCIAL: {
+        channel: 'https://t.me/rtawrt',
+        group: 'https://t.me/backup_rtawrt',
+        personal: 'https://t.me/RizkiKotet'
+    }
+};
+
+// ====== State Management ======
+class StateManager {
+    constructor() {
+        this.today = new Date().toDateString();
+        this.cache = {
+            content: localStorage.getItem('lastInformation') || '',
+            lastUpdate: localStorage.getItem('lastUpdate') || ''
+        };
+        this.alertQueue = [];
+        this.isAlertShowing = false;
+        this.checkTimer = null;
+    }
+
+    static getInstance() {
+        if (!StateManager.instance) {
+            StateManager.instance = new StateManager();
+        }
+        return StateManager.instance;
+    }
+}
+
+// ====== Alert System ======
+class AlertSystem {
+    static async enqueueAlert(alertConfig) {
+        const state = StateManager.getInstance();
+        state.alertQueue.push(alertConfig);
+        await this.processQueue();
+    }
+
+    static async processQueue() {
+        const state = StateManager.getInstance();
+        if (state.isAlertShowing || state.alertQueue.length === 0) return;
+
+        state.isAlertShowing = true;
+        const alertConfig = state.alertQueue.shift();
+
+        try {
+            const result = await Swal.fire(alertConfig);
+            if (result.isConfirmed && alertConfig.onConfirm) await alertConfig.onConfirm(result);
+            if (result.isDenied && alertConfig.onDenied) await alertConfig.onDenied(result);
+        } catch (error) {
+            console.error('Error processing alert:', error);
+        } finally {
+            state.isAlertShowing = false;
+            await this.processQueue();
+        }
+    }
+}
+
+// ====== Network Utilities ======
+class NetworkUtils {
+    static async fetchText(url) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.text();
+        } catch (error) {
+            console.error(`Error fetching ${url}:`, error);
+            return null;
+        }
+    }
+
+    static async checkInternetConnection() {
+        try {
+            await fetch(CONFIG.URLS.internetCheck, { mode: "no-cors" });
+            return true;
+        } catch {
+            return false;
+        }
+    }
+}
+
+// ====== Storage Utilities ======
+class StorageUtils {
+    static save(key, value) {
+        try {
+            localStorage.setItem(key, value);
+            return true;
+        } catch (error) {
+            console.error(`Storage error: ${error}`);
+            return false;
+        }
+    }
+
+    static get(key) {
+        return localStorage.getItem(key);
+    }
+
+    static remove(key) {
+        localStorage.removeItem(key);
+    }
+}
+
+// ====== Information Manager ======
+class InformationManager {
+    static async checkInformation() {
+        const state = StateManager.getInstance();
+        const infoContent = await NetworkUtils.fetchText(CONFIG.URLS.info);
+        
+        if (infoContent && infoContent !== state.cache.content) {
+            await AlertSystem.enqueueAlert({
+                title: '🚀 Informasi',
+                width: 400,
+                html: `
+                    <div class="changelog" style="margin-top: 15px; text-align: left; white-space: pre-line;">
+                        <div>${infoContent}</div>
+                    </div>
+                `,
+                icon: 'info',
+                confirmButtonText: 'Mengerti',
+                cancelButtonText: '❌ Tutup',
+                onConfirm: () => {
+                    StorageUtils.save('lastInformation', infoContent);
+                    state.cache.content = infoContent;
+                    state.cache.lastUpdate = new Date().toISOString();
+                }
+            });
+        }
+    }
+}
+
+// ====== Update Manager ======
+class UpdateManager {
+    static formatChangelog(changelogRaw) {
+        if (!changelogRaw) return 'Tidak ada catatan perubahan.';
+        
+        const match = changelogRaw.match(/\*\*Changelog\*\* \((.*?)\)\n([\s\S]*?)(?=\*\*Changelog\*\*|$)/);
+        if (!match) return changelogRaw;
+        
+        return `<strong>Changelog (${match[1]})</strong><p>${match[2].trim().replace(/-\s/g, '• ').replace(/\n/g, '<br>')}</p>`;
+    }
+
+    static async checkForUpdates() {
+        const state = StateManager.getInstance();
+        if (StorageUtils.get('mdl_update') === state.today) return;
+
+        try {
+            const [latestVersion, changelogRaw] = await Promise.all([
+                NetworkUtils.fetchText(CONFIG.URLS.getVersion.call(CONFIG)),
+                NetworkUtils.fetchText(CONFIG.URLS.getChangelog.call(CONFIG))
+            ]);
+
+            if (!latestVersion) {
+                console.log('No version information available');
+                return;
+            }
+
+            if (latestVersion.trim() === CONFIG.APP.currentVersion) {
+                console.log('Already on latest version');
+                return;
+            }
+
+            const changelog = this.formatChangelog(changelogRaw);
+            await this.showUpdateAlert(latestVersion.trim(), changelog);
+        } catch (error) {
+            console.error('Update check failed:', error);
+        }
+    }
+
+    static async showUpdateAlert(latestVersion, changelog) {
+        const state = StateManager.getInstance();
+        await AlertSystem.enqueueAlert({
+            title: '🚀 Update Tersedia!',
+            width: 400,
+            html: `
+                <div class="update-info" style="text-align: center;">
+                    <img alt="Latest Version" width="100" height="28" src="https://img.shields.io/badge/${latestVersion}--x?style=flat-square&logo=openwrt&color=green">
+                    <div class="changelog" style="margin-top: 15px; text-align: left;">
+                        <h4 style="color: #007BFF; background-color: #FFFFFF;">📋 Changelog:</h4>
+                        <div>${changelog}</div>
+                    </div>
+                </div>
+            `,
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: '🔄 Update',
+            denyButtonText: '⏳ Nanti',
+            cancelButtonText: '❌ Batal',
+            onConfirm: () => {
+                window.open('https://github.com/rizkikotet-dev/RTA-WRT/releases', '_blank');
+                StorageUtils.save('mdl_update', state.today);
+            },
+            onDenied: () => StorageUtils.save('mdl_update', state.today)
+        });
+    }
+}
+
+// ====== Daily Modal Manager ======
+class DailyModalManager {
+    static async showDailyModal() {
+        const state = StateManager.getInstance();
+        if (StorageUtils.get('mdl_Saweria') === state.today) return;
+
+        await AlertSystem.enqueueAlert({
+            title: `🚀 Welcome To ${CONFIG.APP.name}`,
             width: 400,
             imageUrl: "{{ resource }}/Saweria.png",
             imageWidth: 200,
@@ -296,16 +406,14 @@ function showDailyModal() {
             imageAlt: "Saweria",
             html: `
                 <p style="text-align: center;">
-                    <a href="https://t.me/rtawrt" target="_blank"><img alt="Channel" src="{{ resource }}/Channel.svg" width="110" height="20"></a>
-                    <a href="https://t.me/backup_rtawrt" target="_blank"><img alt="Group" src="{{ resource }}/Group.svg" width="110" height="20"></a>
-                    <a href="https://t.me/RizkiKotet" target="_blank"><img alt="Personal" src="{{ resource }}/Personal.svg" width="110" height="20"></a>
+                    <a href="${CONFIG.SOCIAL.channel}" target="_blank"><img alt="Channel" src="{{ resource }}/Channel.svg" width="110" height="20"></a>
+                    <a href="${CONFIG.SOCIAL.group}" target="_blank"><img alt="Group" src="{{ resource }}/Group.svg" width="110" height="20"></a>
+                    <a href="${CONFIG.SOCIAL.personal}" target="_blank"><img alt="Personal" src="{{ resource }}/Personal.svg" width="110" height="20"></a>
                 </p>
                 <div style="margin-top: 10px; text-align: center;">
                     <input type="checkbox" id="noShowToday">
                     <style>
-                    #noShowToday:checked {
-                        background-color: #5e72e4 !important;
-                    }
+                        #noShowToday:checked { background-color: #5e72e4 !important; }
                     </style>
                     <label for="noShowToday">Jangan tampilkan lagi hari ini</label>
                 </div>
@@ -315,9 +423,9 @@ function showDailyModal() {
             didOpen: () => {
                 document.getElementById('noShowToday').addEventListener('change', event => {
                     if (event.target.checked) {
-                        saveToLocal('mdl_Saweria', TODAY);
+                        StorageUtils.save('mdl_Saweria', state.today);
                     } else {
-                        localStorage.removeItem('mdl_Saweria');
+                        StorageUtils.remove('mdl_Saweria');
                     }
                 });
             }
@@ -325,39 +433,52 @@ function showDailyModal() {
     }
 }
 
-function checkInternetConnection() {
-    fetch("https://www.google.com/favicon.ico", { mode: "no-cors" })
-        .then(() => onOnline())
-        .catch(() => onOffline());
-}
-
-function onOnline() {
-    console.log("Internet tersedia, eksekusi lanjutan...");
-    showDailyModal();
-    checkForUpdates();
-    initializeChecker();
-}
-
-function onOffline() {
-    console.log("Tidak ada internet, hentikan eksekusi");
-}
-
-// ====== Periodic Checker Initialization ======
-function initializeChecker() {
-    checkInformation();
-    checkTimer = setInterval(checkInformation, CHECK_INTERVAL);
-}
+// ====== Application Controller ======
+class AppController {
+    static async initialize() {
+        const state = StateManager.getInstance();
         
-// ====== Event Listeners ======
-document.addEventListener('DOMContentLoaded', () => {
-    checkInternetConnection();
-});
-document.addEventListener('visibilitychange', () => {
-    document.visibilityState === 'visible' ? initializeChecker() : clearInterval(checkTimer);
-});
-window.addEventListener('online', initializeChecker);
-window.addEventListener('offline', () => clearInterval(checkTimer));
+        if (await NetworkUtils.checkInternetConnection()) {
+            await DailyModalManager.showDailyModal();
+            await UpdateManager.checkForUpdates();
+            await this.startInformationChecker();
+        }
+
+        this.setupEventListeners();
+    }
+
+    static async startInformationChecker() {
+        const state = StateManager.getInstance();
+        await InformationManager.checkInformation();
+        state.checkTimer = setInterval(
+            () => InformationManager.checkInformation(),
+            CONFIG.APP.checkInterval
+        );
+    }
+
+    static setupEventListeners() {
+        document.addEventListener('visibilitychange', () => {
+            const state = StateManager.getInstance();
+            if (document.visibilityState === 'visible') {
+                this.startInformationChecker();
+            } else {
+                clearInterval(state.checkTimer);
+            }
+        });
+
+        window.addEventListener('online', () => this.startInformationChecker());
+        window.addEventListener('offline', () => {
+            const state = StateManager.getInstance();
+            clearInterval(state.checkTimer);
+        });
+    }
+}
+
+// ====== Initialize Application ======
+document.addEventListener('DOMContentLoaded', () => AppController.initialize());
+
 </script>
+
 <div class="square-wrapper">
     <div class="square" onclick="showProfile()">
         <div class="burgerwrap">

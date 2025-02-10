@@ -130,8 +130,8 @@ jobs:
           RELEASE_NAME=$(release_name "${{ inputs.releases_branch }}" "${{ github.ref_name }}")
 
           case "${{ github.ref_name }}" in
-              main) RELEASE_TAG="${BRANCH_TAG}-main-${DATETIME}" ;;
-              dev) RELEASE_TAG="${BRANCH_TAG}-dev-${DATETIME}" ;;
+              main) RELEASE_TAG="${BRANCH_TAG}--main-${DATETIME}" ;;
+              dev) RELEASE_TAG="${BRANCH_TAG}--dev-${DATETIME}" ;;
               *) echo "Error: Branch tidak dikenali" >&2; exit 1 ;;
           esac
 
@@ -248,9 +248,9 @@ jobs:
         run: |
           OPEWRT="${{ inputs.releases_branch }}"
           OP_SOURCE="${OPEWRT%:*}"
-          sed -i -E "s|const baseopenwrt = "null"|const baseopenwrt = "${OP_SOURCE}"|g" files/usr/share/ucode/luci/template/header.ut
-          sed -i -E "s|const currentBranch = "null"|const currentBranch = "${{ github.ref_name }}"|g" files/usr/share/ucode/luci/template/header.ut
-          sed -i -E "s|const currentVersion = "null"|const currentVersion = "${{ needs.prepare.outputs.release_tag }}"|g" files/usr/share/ucode/luci/template/header.ut
+          sed -i -E "s|baseOpenwrt: 'null'|baseOpenwrt: '${OP_SOURCE}'|g" files/usr/share/ucode/luci/template/header.ut
+          sed -i -E "s|currentBranch: 'null'|currentBranch: '${{ github.ref_name }}'|g" files/usr/share/ucode/luci/template/header.ut
+          sed -i -E "s|currentVersion: 'null'|currentVersion: '${{ needs.prepare.outputs.release_tag }}'|g" files/usr/share/ucode/luci/template/header.ut
 
       - name: Build Image
         id: build
@@ -489,13 +489,7 @@ jobs:
             exit 1
           fi
       
-          # Tentukan suffix berdasarkan branch
-          if [ "$CURRENT_BRANCH" == "main" ]; then
-            BRANCH_SUFFIX="main"
-          else
-            BRANCH_SUFFIX="dev"
-          fi
-          VERSION_TAG="${{ needs.prepare.outputs.release_tag }}--${BRANCH_SUFFIX}"
+          VERSION_TAG="${{ needs.prepare.outputs.release_tag }}"
           echo "${VERSION_TAG}" > "${CURRENT_BRANCH}/${OP_SOURCE}/version.txt"
       
           # Konfigurasi Git
