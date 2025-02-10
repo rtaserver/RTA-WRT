@@ -1140,14 +1140,9 @@ build_mod_sdcard() {
         return 1
     fi
 
-    # Rename image file
-    echo -e "${INFO} Renaming image file..."
-    local kernel
-    kernel=$(grep -oP 'k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)?' <<<"${file_name}")
-    local new_name="RTA-WRT${op_source}-${op_branch}-${pack_name}-Amlogic_s905x-MOD_SDCARD-${suffix}-${kernel}.img.gz"
 
-    mv "${file_name}.gz" "../${new_name}" || {
-        error_msg "Failed to rename image file"
+    mv "${file_name}.gz" "../${file_name}" || {
+        error_msg "Failed to move image file"
         return 1
     }
 
@@ -1207,9 +1202,9 @@ rename_firmware() {
         
         # Amlogic
         "_amlogic_s912_|OPHUB-Amlogic_s912"
-        "_amlogic_s905x_|OPHUB-Amlogic_s905x-NON_MOD_SDCARD-HG680P"
-        "_amlogic_s905x-b860h_|OPHUB-Amlogic_s905x-NON_MOD_SDCARD-B860H_v1-v2"
-        "-s905x-|ULO-Amlogic_s905x-NON_MOD_SDCARD"
+        "_amlogic_s905x_|OPHUB-Amlogic_s905x-HG680P"
+        "_amlogic_s905x-b860h_|OPHUB-Amlogic_s905x-B860H_v1-v2"
+        "-s905x-|ULO-Amlogic_s905x"
         "-s905x2-|ULO-Amlogic_s905x2"
         "-s905x3-|ULO-Amlogic_s905x3"
         "-s905x4-|ULO-Amlogic_s905x4"

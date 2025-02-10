@@ -288,9 +288,10 @@ jobs:
             ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/${{ needs.prepare.outputs.release_tag }}/total?style=for-the-badge&logo=Openwrt)
             
             ## 📢 Support Channels
-            [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt)
-            [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/backup_rtawrt)
-            [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/RizkiKotet)
+            [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt) [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/backup_rtawrt) [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/RizkiKotet)
+
+            ## NOTES
+            `Amlogic s905x Support Mod SDCard`
             
             ## 📝 Changelog
             ${{ steps.changelog.outputs.changelog }}
