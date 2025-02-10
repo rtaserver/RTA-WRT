@@ -389,8 +389,11 @@ jobs:
           🔹 *Tanggal:* $(date "+%d-%m-%Y %H:%M:%S")
 
           📌 *Catatan:*
-          🔒 Versi stabil dengan peningkatan keamanan dan performa!
-          📢 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik!
+          📢 Versi Stabil Telah Diterbitkan!
+          🔹 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik!
+          🔹 Ini Hasil Dari Marge Branch Developer
+          🔹 Dengan Fitur Baru Dan Perbaikan Bug
+          🔹 Pastikan Anda Menggunakan Versi Terbaru Untuk Mendapatkan Fitur Terbaru
 
           ━━━━━━━━━━━━━━━━━━━━━━
           📋 ${{ needs.prepare.outputs.changelog }}
@@ -410,8 +413,14 @@ jobs:
           🔹 *Tanggal:* $(date "+%d-%m-%Y %H:%M:%S")
 
           📌 *Catatan:*
-          🔥 Pastikan untuk mencadangkan konfigurasi sebelum pembaruan!
-          🔄 Selalu gunakan versi terbaru untuk performa terbaik!
+          📢 Ini Versi Pengembangan!
+          🔹 Silahkan Bagi Yang Mempunyai Devices Nganggur
+             Atau Sekedar Ingin Mencoba.
+             Jika Terdapat Error Atau Bug. Mohon Lapor
+             Karena Laporan Sangat Bermanfaat!
+             Untuk Membantu Kami Membuat Firmware
+             Yang Lebih Baik!
+
           ━━━━━━━━━━━━━━━━━━━━━━
           📋 ${{ needs.prepare.outputs.changelog }}
           ━━━━━━━━━━━━━━━━━━━━━━
