@@ -83,7 +83,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           ref: ${{ github.ref_name }}
 
       - name: Add changelog info to new release description
@@ -229,7 +228,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           ref: ${{ github.ref_name }}
 
       - name: Install Dependencies
@@ -467,60 +465,52 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           ref: info
 
       - name: Update Branch Info
         id: update
+        env:
+          CURRENT_BRANCH: ${{ env.CURRENT_BRANCH }}
         run: |
           set -euo pipefail
           OPEWRT="${{ inputs.releases_branch }}"
           OP_SOURCE="${OPEWRT%:*}"
           mkdir -p "${CURRENT_BRANCH}/${OP_SOURCE}"
-          
+      
           if [ -n "${{ needs.prepare.outputs.changelog }}" ]; then
-            # Clean and format changelog
             changelog_content=$(echo "${{ needs.prepare.outputs.changelog }}" | \
               sed -e 's/%0A/\n/g' \
                   -e 's/%0D/\r/g' \
                   -e 's/%25/%/g')
-            
-            # Update changelog file
             echo "${changelog_content}" > "${CURRENT_BRANCH}/${OP_SOURCE}/changelog.txt"
+            cat "${CURRENT_BRANCH}/${OP_SOURCE}/changelog.txt"
           else
             echo "No changelog content found"
             exit 1
           fi
-          
-          # Update version file with branch indicator
-          BRANCH_SUFFIX=$([ "${CURRENT_BRANCH}" == "main" ] && echo "main" || echo "dev")
+      
+          # Tentukan suffix berdasarkan branch
+          if [ "$CURRENT_BRANCH" == "main" ]; then
+            BRANCH_SUFFIX="main"
+          else
+            BRANCH_SUFFIX="dev"
+          fi
           VERSION_TAG="${{ needs.prepare.outputs.release_tag }}--${BRANCH_SUFFIX}"
           echo "${VERSION_TAG}" > "${CURRENT_BRANCH}/${OP_SOURCE}/version.txt"
-          
-          # Configure git
+      
+          # Konfigurasi Git
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          
-          # Stage and commit changes if any exist
-          if ! git diff --quiet; then
-            git add "${CURRENT_BRANCH}/${OP_SOURCE}/changelog.txt" "${CURRENT_BRANCH}/${OP_SOURCE}/version.txt"
-            if git commit -m "Auto Release: $(date "+%d-%m-%Y %H:%M:%S")"; then
-              for i in {1..3}; do
-                if git push; then
-                  echo "Successfully pushed changes"
-                  break
-                else
-                  echo "Pushed changes failed"
-                  break
-                fi
-              done
-            else
-              echo "No changes to commit"
-            fi
+      
+          git add .
+      
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto Release: $(date "+%d-%m-%Y %H:%M:%S")"
+            git push || echo "Failed to push changes"
           else
-            echo "No changes detected"
+            echo "No changes detected, skipping commit"
           fi
-  
+        
   cleanup:
     needs: [build, notify]
     if: always()
