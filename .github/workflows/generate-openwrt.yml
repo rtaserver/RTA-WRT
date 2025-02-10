@@ -447,23 +447,33 @@ jobs:
               ]
           }'
           
+          OPEWRT="${{ inputs.releases_branch }}"
+          OP_SOURCE="${OPEWRT%:*}"
+          if [ "$OP_SOURCE" == "immortalwrt" ]; then
+            IMGURL="https://avatars.githubusercontent.com/u/53193414?s=200&v=4"
+          else
+            IMGURL="https://avatars.githubusercontent.com/u/2528830?s=200&v=4"
+          fi
+
           if [ "${CURRENT_BRANCH}" == "main" ]; then
-            MSGID=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+            MSGID=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
               -d "chat_id=$CHAT_ID" \
-              -d "text=$STABLE_MESSAGE" \
+              -d "caption=$STABLE_MESSAGE" \
               -d "parse_mode=Markdown" \
               -d "message_thread_id=$THREAD_ID_UPDATE" \
               -d "reply_markup=$BUTTONS_STABLE" | jq '.result.message_id')
 
             curl -s -X POST "https://api.telegram.org/bot$TOKEN/pinChatMessage" \
               -d "chat_id=$CHAT_ID" \
+              -d "photo=$IMGURL" \
               -d "message_id=$MSGID" \
               -d "message_thread_id=$THREAD_ID_UPDATE" \
               -d "disable_notification=true"
           else
-            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
               -d "chat_id=$CHAT_ID" \
-              -d "text=$DEV_MESSAGE" \
+              -d "photo=$IMGURL" \
+              -d "caption=$DEV_MESSAGE" \
               -d "parse_mode=Markdown" \
               -d "message_thread_id=$THREAD_ID_UPDATE" \
               -d "reply_markup=$BUTTONS_DEV"
