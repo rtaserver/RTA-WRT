@@ -16,6 +16,8 @@
 - Fix Amlogic Service Not Installed
 - Fix Package Source
 - Fix Directory Mihomo. Change To Nikki
+- Fix Config Nikki
+- Fix Config Zerotier
 
 **Changelog** (07-02-2025)
 
