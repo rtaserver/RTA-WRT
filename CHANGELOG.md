@@ -11,6 +11,7 @@
 - Add More Source Packages
 - Resize Root Partisi To 2GB
 - Change MihomoTProxy To Nikki
+- Fix Packages Not Include
 
 **Changelog** (07-02-2025)
 
