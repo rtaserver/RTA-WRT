@@ -135,7 +135,7 @@ jobs:
           EOJ
           )
 
-          FITUR_JSON=$(cat << 'EOJ'
+          FITURS_JSON=$(cat << 'EOJ'
           {
             "fiturs": [
               "full-fitur",
@@ -152,9 +152,9 @@ jobs:
           fi
 
           if [ "${{ inputs.fiturs }}" = "all" ]; then
-             echo "fiturs=$(echo "$FITUR_JSON" | jq -c '.fiturs')" >> $GITHUB_OUTPUT
+             echo "fiturs=$(echo "$FITURS_JSON" | jq -c '.fiturs')" >> $GITHUB_OUTPUT
           else
-             echo "fiturs=$(jq -nc --arg f "${{ inputs.fiturs }}" '[$f]'" >> $GITHUB_OUTPUT
+             echo "fiturs=$(jq -nc --arg f "${{ inputs.fiturs }}" '[$f]')" >> $GITHUB_OUTPUT
           fi
 
       - name: Send Initial Telegram Message
