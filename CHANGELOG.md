@@ -20,6 +20,9 @@
 - Fix Config Zerotier
 - Edit Config OpenClash
 - Add Gpioled HG
+- Adjust Config Builder
+- New Simpel Mode
+- Reduc et Size Of Image
 
 **Changelog** (07-02-2025)
 
