@@ -158,11 +158,13 @@ jobs:
           fi
 
       - name: Send Initial Telegram Message
+        if: inputs.notify == true && !cancelled()
         id: telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
+          trap "exit" SIGTERM
           sudo timedatectl set-timezone "$TZ"
           THREAD_ID_BUILD=616
           
@@ -382,10 +384,12 @@ jobs:
           path: artifacts
 
       - name: Update Telegram Message
+        if: inputs.notify == true && !cancelled()
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
+          trap "exit" SIGTERM
           THREAD_ID_BUILD=616
 
           devices='${{ needs.prepare.outputs.devices }}'
@@ -447,6 +451,7 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
+          trap "exit" SIGTERM
           THREAD_ID_UPDATE=734
           
           create_stable_message() {
