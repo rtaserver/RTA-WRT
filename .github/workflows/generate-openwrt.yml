@@ -315,12 +315,27 @@ jobs:
           path: status.txt
           retention-days: 5
 
-      - name: Upload to Release
-        if: success()
-        id: uploadgh
+      - name: Get Existing Release ID
+        id: get_release_id
+        run: |
+          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ steps.releases-name.outputs.release_tag }}")
+          
+          RELEASE_ID=$(echo "$RESPONSE" | jq -r '.id')
+
+          if [[ "$RELEASE_ID" == "null" ]]; then
+            echo "Error: Release not found! Creating new release." >&2
+            echo "release_exists=false" >> $GITHUB_ENV
+          else
+            echo "release_id=$RELEASE_ID" >> $GITHUB_ENV
+            echo "release_exists=true" >> $GITHUB_ENV
+          fi
+  
+      - name: Create Release (If Not Exists)
+        if: env.release_exists == 'false'
+        id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          files: imagebuilder/out_firmware/*
           tag_name: ${{ steps.releases-name.outputs.release_tag }}
           name: ${{ steps.releases-name.outputs.release_name }}
           body: |
@@ -341,10 +356,20 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
-      - name: Save Download Link
-        id: save_link
-        run: echo "linkdl=${{ fromJSON(steps.uploadgh.outputs.assets)[0].browser_download_url }}" >> $GITHUB_OUTPUT
+
+      - name: Set Release ID from New Release
+        if: env.release_exists == 'false'
+        run: echo "release_id=${{ steps.create_release.outputs.id }}" >> $GITHUB_ENV
+
+      - name: Upload Artifact to Release
+        run: |
+          for file in imagebuilder/out_firmware/*; do
+            curl -s -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary @"$file" \
+              "https://uploads.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets?name=$(basename $file)"
+          done
 
   notify:
     needs: [prepare, build]
@@ -490,25 +515,11 @@ jobs:
               *) echo "Error: Branch tidak dikenali" >&2; exit 1 ;;
           esac
         
-          BUTTONS_STABLE='{
-              "inline_keyboard": [
-                  [
-                      {"text": "📥 Unduh Full Fiturs", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${RELEASE_TAG_FULL}"},
-                      {"text": "📥 Unduh Simpel", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${RELEASE_TAG_SIMPEL}"},
-                      {"text": "📋 Status Build", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}
-                  ]
-              ]
-          }'
-        
-          BUTTONS_DEV='{
-              "inline_keyboard": [
-                  [
-                      {"text": "📥 Unduh Full Fiturs", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${RELEASE_TAG_FULL}"},
-                      {"text": "📥 Unduh Simpel", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${RELEASE_TAG_SIMPEL}"},
-                      {"text": "📋 Status Build", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}
-                  ]
-              ]
-          }'
+          BUTTONS='[
+              [{"text": "📥 Unduh Full Fiturs", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${RELEASE_TAG_FULL}"}],
+              [{"text": "📥 Unduh Simpel", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${RELEASE_TAG_SIMPEL}"}],
+              [{"text": "📋 Status Build"", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}]
+          ]'
           
           OPEWRT="${{ inputs.releases_branch }}"
           OP_SOURCE="${OPEWRT%:*}"
@@ -524,7 +535,7 @@ jobs:
               -d "caption=$STABLE_MESSAGE" \
               -d "parse_mode=Markdown" \
               -d "message_thread_id=$THREAD_ID_UPDATE" \
-              -d "reply_markup=$BUTTONS_STABLE" | jq '.result.message_id')
+              -d "reply_markup={\"inline_keyboard\":$BUTTONS}" | jq '.result.message_id')
 
             curl -s -X POST "https://api.telegram.org/bot$TOKEN/pinChatMessage" \
               -d "chat_id=$CHAT_ID" \
@@ -539,7 +550,7 @@ jobs:
               -d "caption=$DEV_MESSAGE" \
               -d "parse_mode=Markdown" \
               -d "message_thread_id=$THREAD_ID_UPDATE" \
-              -d "reply_markup=$BUTTONS_DEV"
+              -d "reply_markup={\"inline_keyboard\":$BUTTONS}"
           fi
 
       - name: Checkout Repository
