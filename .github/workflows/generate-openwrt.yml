@@ -515,10 +515,21 @@ jobs:
               *) echo "Error: Branch tidak dikenali" >&2; exit 1 ;;
           esac
         
-          BUTTONS='[
-              [{"text": "📥 Unduh Full Fiturs", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${RELEASE_TAG_FULL}"}],
-              [{"text": "📥 Unduh Simpel", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${RELEASE_TAG_SIMPEL}"}],
-              [{"text": "📋 Status Build"", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}]
+          BUTTONS='['
+          if [[ "${{ inputs.fiturs }}" == "all" ]]; then
+            BUTTONS+='
+              [{"text": "📥 Unduh Full Fiturs", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/'${RELEASE_TAG_FULL}'"}],
+              [{"text": "📥 Unduh Simpel", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/'${RELEASE_TAG_SIMPEL}'"}],'
+          elif [[ "${{ inputs.fiturs }}" == "full-fitur" ]]; then
+            BUTTONS+='
+              [{"text": "📥 Unduh Full Fiturs", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/'${RELEASE_TAG_FULL}'"}],'
+          elif [[ "${{ inputs.fiturs }}" == "simpel" ]]; then
+            BUTTONS+='
+              [{"text": "📥 Unduh Simpel", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/'${RELEASE_TAG_SIMPEL}'"}],'
+          fi
+
+          BUTTONS+='
+              [{"text": "📋 Status Build", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}]
           ]'
           
           OPEWRT="${{ inputs.releases_branch }}"
