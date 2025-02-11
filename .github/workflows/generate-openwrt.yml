@@ -56,6 +56,7 @@ on:
 
 env:
   TZ: Asia/Jakarta
+  NOTIFY: ${{ inputs.notify }}
   IMAGEBUILDER_SH: imagebuilder.sh
   DEBIAN_FRONTEND: noninteractive
   APT_PACKAGES: >-
@@ -158,7 +159,7 @@ jobs:
           fi
 
       - name: Send Initial Telegram Message
-        if: ${{ inputs.notify }} == 'true' && !cancelled()
+        if: ${{ env.NOTIFY }} == 'true' && !cancelled()
         id: telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
@@ -291,6 +292,14 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
 
+      - name: Extract Changelog
+        id: changelog
+        run: |
+          changelog=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' CHANGELOG.md)
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$changelog" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Setup Environment
         run: |
           sudo timedatectl set-timezone "${{ env.TZ }}"
@@ -348,7 +357,7 @@ jobs:
             `Amlogic s905x Support Mod SDCard`
             
             ## 📝 Changelog
-            ${{ needs.prepare.outputs.changelog }}
+            ${{ steps.changelog.outputs.changelog }}
           prerelease: ${{ github.ref_name == 'dev' }}
           generate_release_notes: true
         env:
@@ -365,7 +374,7 @@ jobs:
           path: artifacts
 
       - name: Update Telegram Message
-        if: ${{ inputs.notify }} == 'true' && !cancelled()
+        if: ${{ env.NOTIFY }} == 'true' && !cancelled()
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
@@ -427,7 +436,7 @@ jobs:
             -d text="$BUILD_STATUS_MESSAGE"
     
       - name: Notify Telegram
-        if: ${{ inputs.notify }} == 'true' && !cancelled()
+        if: ${{ env.NOTIFY }} == 'true' && !cancelled()
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
