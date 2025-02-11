@@ -429,7 +429,11 @@ adjust_settings() {
 
         # Resize Boot and Rootfs partition sizes
         sed -i "s/CONFIG_TARGET_KERNEL_PARTSIZE=.*/CONFIG_TARGET_KERNEL_PARTSIZE=128/" "${CONFIG_FILE}"
-        sed -i "s/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=2048/" "${CONFIG_FILE}"
+        if [[ "$op_fiturs" == "full-fitur" ]]; then
+            sed -i "s/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=2048/" "${CONFIG_FILE}"
+        elif [[ "$op_fiturs" == "simpel" ]]; then
+            sed -i "s/CONFIG_TARGET_ROOTFS_PARTSIZE=.*/CONFIG_TARGET_ROOTFS_PARTSIZE=1024/" "${CONFIG_FILE}"
+        fi
 
         # Amlogic-specific settings
         case "${op_target}" in
@@ -551,7 +555,6 @@ custom_packages() {
         "luci-app-disks-info|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "luci-app-log-viewer|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
         "luci-app-temp-status|https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
-        #"luci-app-rakitanmanager|https://github.com/rtaserver/RakitanManager/raw/refs/heads/package/main"
 
         "luci-app-zerotier|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
         "luci-app-ramfree|https://downloads.immortalwrt.org/releases/packages-$CURVER/$ARCH_3/luci"
@@ -608,7 +611,6 @@ custom_config() {
     declare -A custom_scripts=(
         ["${custom_files_path}/sbin/sync_time.sh"]="https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/sbin/sync_time.sh"
         ["${custom_files_path}/usr/bin/clock"]="https://raw.githubusercontent.com/frizkyiman/auto-sync-time/main/usr/bin/clock"
-        ["${custom_files_path}/root/install2.sh"]="https://raw.githubusercontent.com/frizkyiman/fix-read-only/main/install2.sh"
         ["${custom_files_path}/usr/bin/mount_hdd"]="https://raw.githubusercontent.com/frizkyiman/auto-mount-hdd/main/mount_hdd"
     )
 
@@ -625,29 +627,22 @@ custom_config() {
         ariadl "$file_url" "$file_path"
     done
 
-    # Add Oh My Zsh
-    echo -e "${INFO} Installing Oh My Bash..."
-    mkdir -p ${custom_files_path}/usr/share/oh-my-bash
-    if ! git clone https://github.com/ohmybash/oh-my-bash.git ${custom_files_path}/usr/share/oh-my-bash; then
-        echo -e "${ERROR} Failed to clone Oh My Bash repository."
-        exit 1
-    fi
-    cp ${custom_files_path}/usr/share/oh-my-bash/templates/bashrc.osh-template ${custom_files_path}/usr/share/oh-my-bash/.bashrc
-    sed -i 's|^export OSH=~/.oh-my-bash|export OSH=/usr/share/oh-my-bash|g' ${custom_files_path}/usr/share/oh-my-bash/.bashrc
-    sed -i 's|^OSH_THEME="font"|OSH_THEME="zork"|g' ${custom_files_path}/usr/share/oh-my-bash/.bashrc
-    echo -e "${SUCCESS} Oh My Zsh installed successfully."
+    # Add custom config files
+    if [[ "$op_fiturs" == "full-fitur" ]]; then
+        agh_api="https://api.github.com/repos/AdguardTeam/AdGuardHome/releases" 
+        agh_file="AdGuardHome_linux_${ARCH_1}"
+        agh_file_down="$(curl -s ${agh_api}/latest | grep "browser_download_url" | grep -oE "https.*${agh_file}.*.tar.gz" | head -n 1)"
+        latest_version=$(curl -sSL "$agh_api/latest" | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' | head -n 1)
 
-    agh_api="https://api.github.com/repos/AdguardTeam/AdGuardHome/releases" 
-    agh_file="AdGuardHome_linux_${ARCH_1}"
-    agh_file_down="$(curl -s ${agh_api}/latest | grep "browser_download_url" | grep -oE "https.*${agh_file}.*.tar.gz" | head -n 1)"
-    latest_version=$(curl -sSL "$agh_api/latest" | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' | head -n 1)
-
-    ariadl "${agh_file_down}" "${custom_files_path}/opt/AdGuardHome_linux_${ARCH_1}.tar.gz"
-    if tar -zxvf ${custom_files_path}/opt/AdGuardHome_linux_"${ARCH_1}".tar.gz -C ${custom_files_path}/opt; then
-        rm -rf ${custom_files_path}/opt/AdGuardHome_linux_"${ARCH_1}".tar.gz
-        echo -e "${SUCCESS} Installed AdGuardHome version $latest_version"
-    else
-        echo -e "${WARNING} Failed to extract AdGuardHome."
+        ariadl "${agh_file_down}" "${custom_files_path}/opt/AdGuardHome_linux_${ARCH_1}.tar.gz"
+        if tar -zxvf ${custom_files_path}/opt/AdGuardHome_linux_"${ARCH_1}".tar.gz -C ${custom_files_path}/opt; then
+            rm -rf ${custom_files_path}/opt/AdGuardHome_linux_"${ARCH_1}".tar.gz
+            echo -e "${SUCCESS} Installed AdGuardHome version $latest_version"
+        else
+            echo -e "${WARNING} Failed to extract AdGuardHome."
+        fi
+    elif [[ "$op_fiturs" == "simpel" ]]; then
+        echo -e "${INFO} No custom config added."
     fi
 
     # Sync and provide directory status
@@ -699,42 +694,37 @@ rebuild_firmware() {
     make clean > /dev/null 2>&1 || { error_msg "Error: Failed to clean previous build"; }
     mkdir -p ${imagebuilder_path}/out_firmware ${imagebuilder_path}/out_rootfs
 
-    # Selecting default packages, lib, theme, app and i18n, etc.
+    # Selecting default packages, lib, app and etc.
     PACKAGES+=" -dnsmasq dnsmasq-full cgi-io libiwinfo libiwinfo-data libiwinfo-lua liblua \
     zram-swap adb parted losetup resize2fs luci luci-ssl block-mount htop bash curl wget-ssl \
     tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server \
-    liblucihttp liblucihttp-lua libubus-lua lua luci luci-app-firewall luci-app-opkg \
+    liblucihttp liblucihttp-lua libubus-lua lua luci-app-firewall luci-app-opkg \
     luci-base luci-lib-base luci-lib-ip luci-lib-jsonc luci-lib-nixio luci-mod-admin-full \
-    luci-mod-network luci-mod-status luci-mod-system luci-proto-ipv6 luci-proto-ppp luci-ssl \
+    luci-mod-network luci-mod-status luci-mod-system luci-proto-ipv6 luci-proto-ppp \
     luci-theme-bootstrap px5g-wolfssl rpcd rpcd-mod-file rpcd-mod-iwinfo rpcd-mod-luci \
-    rpcd-mod-rrdns uhttpd uhttpd-mod-ubus usbutils htop \
+    rpcd-mod-rrdns uhttpd uhttpd-mod-ubus usbutils \
     kmod-usb-net kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-acm kmod-usb-net-qmi-wwan \
     kmod-usb-net-rndis kmod-usb-serial-qualcomm kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial \
     kmod-nls-utf8 kmod-usb-serial-option kmod-usb-serial-sierrawireless kmod-usb-uhci kmod-usb2 \
     kmod-usb-net-ipheth kmod-usb-net-cdc-mbim usbmuxd libusbmuxd-utils libimobiledevice-utils \
     mbim-utils qmi-utils uqmi umbim modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi luci-proto-3g luci-proto-ncm \
-    luci-proto-ncm usb-modeswitch nano picocom minicom libusb-1.0-0 \
+    usb-modeswitch picocom minicom libusb-1.0-0 \
     xmm-modem kmod-usb-net-asix kmod-usb-net-asix-ax88179 kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 \
-    ca-bundle ca-certificates luci-compat curl coreutils-sleep fontconfig coreutils-whoami file lolcat curl \
+    ca-bundle ca-certificates luci-compat coreutils-sleep fontconfig coreutils-whoami file lolcat \
     owut zsh kmod-mii kmod-usb-wdm kmod-usb-serial-wwan kmod-usb-ehci kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty \
     hostapd wpa-cli wpa-supplicant kmod-cfg80211 kmod-mac80211 wireless-tools iw-full hostapd-utils \
-    libqrtr-glib luci-proto-qmi php8 php8-cgi php8-fastcgi php8-fpm php8-mod-ctype php8-mod-curl php8-mod-fileinfo php8-mod-iconv php8-mod-mbstring php8-mod-session php8-mod-zip \
+    libqrtr-glib luci-proto-qmi \
     perl perlbase-base perlbase-bytes perlbase-class perlbase-config perlbase-cwd perlbase-dynaloader perlbase-errno perlbase-essential perlbase-fcntl perlbase-file \
     perlbase-filehandle perlbase-i18n perlbase-integer perlbase-io perlbase-list perlbase-locale perlbase-params perlbase-posix \
     perlbase-re perlbase-scalar perlbase-selectsaver perlbase-socket perlbase-symbol perlbase-tie perlbase-time perlbase-unicore perlbase-utf8 perlbase-xsloader \
     ruby ruby-bigdecimal ruby-date ruby-digest ruby-enc ruby-forwardable ruby-pstore ruby-psych ruby-stringio ruby-yaml \
-    luci-lua-runtime zoneinfo-asia zoneinfo-core python3 python3-pip luci-proto-mbim \
-    libc php8 php8-fastcgi php8-fpm coreutils-stat zoneinfo-asia php8-cgi php8-cli php8-mod-bcmath php8-mod-calendar php8-mod-ctype \
-    php8-mod-curl php8-mod-dom php8-mod-exif php8-mod-fileinfo php8-mod-filter php8-mod-gd php8-mod-iconv php8-mod-intl \
-    php8-mod-mbstring php8-mod-mysqli php8-mod-mysqlnd php8-mod-opcache php8-mod-pdo php8-mod-pdo-mysql php8-mod-phar \
-    php8-mod-session php8-mod-xml php8-mod-xmlreader php8-mod-xmlwriter php8-mod-zip libopenssl-legacy \
-    unzip tar gzip openssh-sftp-server sms-tool luci-app-temp-status cpusage adb ttyd luci-app-ttyd bash dmesg screen kmod-tun jq luci-lib-ipkg \
-    ipset ipt2socks iptables iptables-legacy iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat coreutils coreutils-base64 coreutils-nohup dns2socks ip-full libuci-lua microsocks resolveip tcping"
+    luci-lua-runtime zoneinfo-asia zoneinfo-core luci-proto-mbim \
+    libc coreutils-stat libopenssl-legacy \
+    sms-tool luci-app-temp-status cpusage ttyd dmesg kmod-tun luci-lib-ipkg \
+    ipset ipt2socks iptables iptables-legacy iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat \
+    coreutils coreutils-base64 coreutils-nohup dns2socks ip-full libuci-lua microsocks resolveip tcping"
 
     PACKAGES+=" luci-app-diskman luci-app-poweroff luci-app-log-viewer luci-app-ramfree"
-
-    # AdguardHome
-    PACKAGES+=" adguardhome luci-app-adguardhome"
 
     # Modem Tools
     PACKAGES+=" modeminfo-serial-zte modeminfo-serial-gosun modeminfo-qmi modeminfo-serial-yuge modeminfo-serial-thales modeminfo-serial-tw modeminfo-serial-meig modeminfo-serial-styx modeminfo-serial-mikrotik modeminfo-serial-dell modeminfo-serial-sierra modeminfo-serial-quectel modeminfo-serial-huawei modeminfo-serial-xmm modeminfo-serial-telit modeminfo-serial-fibocom modeminfo-serial-simcom modeminfo luci-app-modeminfo"
@@ -745,7 +735,6 @@ rebuild_firmware() {
     MIHOMO+="nikki luci-app-nikki"
     PASSWALL+="chinadns-ng resolveip dns2socks dns2tcp ipt2socks microsocks tcping xray-core xray-plugin luci-app-passwall"
     NEKOCLASH+="kmod-tun bash curl jq mihomo sing-box php8 php8-mod-curl luci-app-neko"
-    PACKAGES+=" $OPENCLASH $MIHOMO $PASSWALL $NEKOCLASH"
 
     # Remote Services
     PACKAGES+=" luci-app-zerotier luci-app-cloudflared tailscale luci-app-tailscale"
@@ -756,14 +745,40 @@ rebuild_firmware() {
     # Bandwidth And Network Monitoring
     PACKAGES+=" internet-detector luci-app-internet-detector internet-detector-mod-modem-restart nlbwmon luci-app-nlbwmon vnstat2 vnstati2 luci-app-vnstat2 netdata"
 
-    # Speedtest
-    PACKAGES+=" librespeed-go python3-speedtest-cli iperf3-ssl luci-app-netspeedtest"
-
     # Theme
     PACKAGES+=" luci-theme-material luci-theme-argon luci-app-argon-config luci-theme-material3"
 
-    # Docker
-    PACKAGES+=" docker docker-compose dockerd luci-app-dockerman"
+    if [[ "$op_fiturs" == "full-fitur" ]]; then
+        # Python3
+        PACKAGES+=" python3 python3-pip"
+        # AdguardHome
+        PACKAGES+=" adguardhome luci-app-adguardhome"
+        # Tunnel
+        PACKAGES+=" $OPENCLASH $MIHOMO $PASSWALL $NEKOCLASH"
+        # Docker
+        PACKAGES+=" docker docker-compose dockerd luci-app-dockerman"
+        # Speedtest
+        PACKAGES+=" librespeed-go python3-speedtest-cli iperf3-ssl luci-app-netspeedtest"
+        # PHP8
+        PACKAGES+=" php8 php8-cgi php8-fastcgi php8-fpm php8-mod-ctype php8-mod-curl php8-mod-fileinfo php8-mod-iconv php8-mod-mbstring php8-mod-session php8-mod-zip \
+        php8-cli php8-mod-bcmath php8-mod-calendar php8-mod-filter php8-mod-gd php8-mod-intl \
+        php8-mod-mysqli php8-mod-mysqlnd php8-mod-opcache php8-mod-pdo php8-mod-pdo-mysql php8-mod-phar \
+        php8-mod-xml php8-mod-xmlreader php8-mod-xmlwriter"
+
+
+        # Disable service
+        DISABLED_SERVICES="AdGuardHome"
+    elif [[ "$op_fiturs" == "simpel" ]]; then
+        # Tunnel
+        PACKAGES+=" $OPENCLASH $MIHOMO $PASSWALL"
+
+        # PHP8
+        PACKAGES+=" php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring"
+
+
+        # Disable service
+        DISABLED_SERVICES=""
+    fi
 
     # Misc and some custom .ipk files
     # Exclude package (must use - before packages name)
@@ -795,10 +810,7 @@ rebuild_firmware() {
     x86-64)
         MISC+=" kmod-iwlwifi iw-full pciutils"
         ;;
-    esac
-
-    # Disable service
-    DISABLED_SERVICES="AdGuardHome"
+    esac 
 
     PACKAGES+=" $MISC"
 
@@ -1266,13 +1278,15 @@ rename_firmware() {
 # Show welcome message
 echo -e "${STEPS} Welcome to Rebuild OpenWrt Using the Image Builder."
 [[ -x "${0}" ]] || error_msg "Please give the script permission to run: [ chmod +x ${0} ]"
-[[ -z "${1}" ]] && error_msg "Please specify the OpenWrt Branch, such as [ ${0} openwrt:24.10.0 x86-64 or openwrt:24.10.0 s905x ]"
-[[ -z "${2}" ]] && error_msg "Please specify the OpenWrt Devices, such as [ ${0} openwrt:24.10.0 x86-64 or openwrt:24.10.0 s905x ]"
-[[ "${1}" =~ ^[a-z]{3,}:[0-9]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:24.10.0 x86-64 or openwrt:24.10.0 s905x"
-[[ "${2}" =~ ^[a-zA-Z0-9_-]+ ]] || echo "Incoming parameter format <source:branch> <target>: openwrt:24.10.0 x86-64 or openwrt:24.10.0 s905x"
+[[ -z "${1}" ]] && error_msg "Please specify the OpenWrt Branch, such as [ ${0} openwrt:24.10.0 x86-64 full-fitur or openwrt:24.10.0 s905x simpel ]"
+[[ -z "${2}" ]] && error_msg "Please specify the OpenWrt Devices, such as [ ${0} openwrt:24.10.0 x86-64 full-fitur or openwrt:24.10.0 s905x simpel ]"
+[[ "${1}" =~ ^[a-z]{3,}:[0-9]+ ]] || echo "Incoming parameter format <source:branch> <target> <fiturs>: openwrt:24.10.0 x86-64 full-fitur or openwrt:24.10.0 s905x simpel"
+[[ "${2}" =~ ^[a-zA-Z0-9_-]+ ]] || echo "Incoming parameter format <source:branch> <target> <fiturs>: openwrt:24.10.0 x86-64 full-fitur or openwrt:24.10.0 s905x simpel"
+[[ "${3}" =~ ^[a-zA-Z0-9_-]+ ]] || echo "Incoming parameter format <source:branch> <target> <fiturs>: openwrt:24.10.0 x86-64 full-fitur or openwrt:24.10.0 s905x simpel"
 op_sourse="${1%:*}"
 op_branch="${1#*:}"
 op_devices="${2}"
+op_fiturs="${3}"
 echo -e "${INFO} Rebuild path: [ ${PWD} ]"
 echo -e "${INFO} Rebuild Source: [ ${op_sourse} ], Branch: [ ${op_branch} ], Devices: ${op_devices}"
 echo -e "${INFO} Server space usage before starting to compile: \n$(df -hT ${make_path}) \n"
