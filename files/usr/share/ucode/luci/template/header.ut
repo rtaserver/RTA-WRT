@@ -186,6 +186,9 @@ const CONFIG = {
         currentBranch: 'null',
         currentVersion: 'null',
         checkInterval: 5 * 60 * 1000, // 5 minutes
+        offlineRetryInterval: 30 * 1000, // 30 seconds
+        maxRetryAttempts: 3,
+        cacheExpiration: 24 * 60 * 60 * 1000, // 24 hours
     },
     URLS: {
         info: 'https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/informasi.txt',
@@ -215,6 +218,10 @@ class StateManager {
         this.alertQueue = [];
         this.isAlertShowing = false;
         this.checkTimer = null;
+        this.connectionState = {
+            isOnline: true,
+            lastCheck: Date.now()
+        };
     }
 
     static getInstance() {
@@ -222,6 +229,128 @@ class StateManager {
             StateManager.instance = new StateManager();
         }
         return StateManager.instance;
+    }
+
+    updateConnectionState(isOnline) {
+        this.connectionState.isOnline = isOnline;
+        this.connectionState.lastCheck = Date.now();
+    }
+}
+
+// ====== Cache Manager ======
+class CacheManager {
+    static CACHE_KEYS = {
+        INFO: 'cache_info',
+        VERSION: 'cache_version',
+        CHANGELOG: 'cache_changelog',
+        TIMESTAMPS: 'cache_timestamps'
+    };
+
+    static async get(key) {
+        const cacheData = StorageUtils.get(key);
+        const timestamps = JSON.parse(StorageUtils.get(this.CACHE_KEYS.TIMESTAMPS) || '{}');
+        
+        if (!cacheData || !timestamps[key]) return null;
+        
+        // Check if cache has expired
+        if (Date.now() - timestamps[key] > CONFIG.APP.cacheExpiration) {
+            this.remove(key);
+            return null;
+        }
+        
+        return cacheData;
+    }
+
+    static set(key, value) {
+        StorageUtils.save(key, value);
+        const timestamps = JSON.parse(StorageUtils.get(this.CACHE_KEYS.TIMESTAMPS) || '{}');
+        timestamps[key] = Date.now();
+        StorageUtils.save(this.CACHE_KEYS.TIMESTAMPS, JSON.stringify(timestamps));
+    }
+
+    static remove(key) {
+        StorageUtils.remove(key);
+        const timestamps = JSON.parse(StorageUtils.get(this.CACHE_KEYS.TIMESTAMPS) || '{}');
+        delete timestamps[key];
+        StorageUtils.save(this.CACHE_KEYS.TIMESTAMPS, JSON.stringify(timestamps));
+    }
+}
+
+// ====== Connection Manager ======
+class ConnectionManager {
+    static retryCount = 0;
+    static isOnline = true;
+
+    static async checkConnection() {
+        try {
+            await fetch(CONFIG.URLS.internetCheck, { 
+                mode: "no-cors",
+                cache: 'no-store',
+                timeout: 5000
+            });
+            this.retryCount = 0;
+            if (!this.isOnline) {
+                this.isOnline = true;
+                ConnectionManager.dispatchConnectionChange(true);
+            }
+            return true;
+        } catch {
+            if (this.isOnline) {
+                this.isOnline = false;
+                ConnectionManager.dispatchConnectionChange(false);
+            }
+            return false;
+        }
+    }
+
+    static dispatchConnectionChange(isOnline) {
+        window.dispatchEvent(new CustomEvent('connectionChange', { 
+            detail: { isOnline } 
+        }));
+    }
+
+    static async retryWithBackoff(operation, maxRetries = CONFIG.APP.maxRetryAttempts) {
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                return await operation();
+            } catch (error) {
+                if (i === maxRetries - 1) throw error;
+                await new Promise(resolve => 
+                    setTimeout(resolve, Math.min(1000 * Math.pow(2, i), 10000))
+                );
+            }
+        }
+    }
+}
+
+// ====== Network Utilities ======
+class NetworkUtils {
+    static async fetchText(url, useCache = true) {
+        if (useCache) {
+            const cachedData = await CacheManager.get(url);
+            if (cachedData) return cachedData;
+        }
+
+        try {
+            const response = await ConnectionManager.retryWithBackoff(async () => {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                return res;
+            });
+            
+            const text = await response.text();
+            if (useCache) {
+                CacheManager.set(url, text);
+            }
+            return text;
+        } catch (error) {
+            console.error(`Error fetching ${url}:`, error);
+            return null;
+        }
+    }
+
+    static async checkInternetConnection() {
+        return ConnectionManager.checkConnection();
     }
 }
 
@@ -253,28 +382,6 @@ class AlertSystem {
     }
 }
 
-// ====== Network Utilities ======
-class NetworkUtils {
-    static async fetchText(url) {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return await response.text();
-        } catch (error) {
-            console.error(`Error fetching ${url}:`, error);
-            return null;
-        }
-    }
-
-    static async checkInternetConnection() {
-        try {
-            await fetch(CONFIG.URLS.internetCheck, { mode: "no-cors" });
-            return true;
-        } catch {
-            return false;
-        }
-    }
-}
 
 // ====== Storage Utilities ======
 class StorageUtils {
@@ -301,27 +408,40 @@ class StorageUtils {
 class InformationManager {
     static async checkInformation() {
         const state = StateManager.getInstance();
-        const infoContent = await NetworkUtils.fetchText(CONFIG.URLS.info);
         
-        if (infoContent && infoContent !== state.cache.content) {
-            await AlertSystem.enqueueAlert({
-                title: '🚀 Informasi',
-                width: 400,
-                html: `
-                    <div class="changelog" style="margin-top: 15px; text-align: left; white-space: pre-line;">
-                        <div>${infoContent}</div>
-                    </div>
-                `,
-                icon: 'info',
-                confirmButtonText: 'Mengerti',
-                cancelButtonText: '❌ Tutup',
-                onConfirm: () => {
-                    StorageUtils.save('lastInformation', infoContent);
-                    state.cache.content = infoContent;
-                    state.cache.lastUpdate = new Date().toISOString();
-                }
-            });
+        if (!await NetworkUtils.checkInternetConnection()) {
+            const cachedInfo = await CacheManager.get(CONFIG.URLS.info);
+            if (cachedInfo && cachedInfo !== state.cache.content) {
+                this.showInformationAlert(cachedInfo);
+            }
+            return;
         }
+
+        const infoContent = await NetworkUtils.fetchText(CONFIG.URLS.info);
+        if (infoContent && infoContent !== state.cache.content) {
+            this.showInformationAlert(infoContent);
+        }
+    }
+
+    static async showInformationAlert(infoContent) {
+        const state = StateManager.getInstance();
+        await AlertSystem.enqueueAlert({
+            title: '🚀 Informasi',
+            width: 400,
+            html: `
+                <div class="changelog" style="margin-top: 15px; text-align: left; white-space: pre-line;">
+                    <div>${infoContent}</div>
+                </div>
+            `,
+            icon: 'info',
+            confirmButtonText: 'Mengerti',
+            cancelButtonText: '❌ Tutup',
+            onConfirm: () => {
+                StorageUtils.save('lastInformation', infoContent);
+                state.cache.content = infoContent;
+                state.cache.lastUpdate = new Date().toISOString();
+            }
+        });
     }
 }
 
@@ -339,6 +459,18 @@ class UpdateManager {
     static async checkForUpdates() {
         const state = StateManager.getInstance();
         if (StorageUtils.get('mdl_update') === state.today) return;
+
+        if (!await NetworkUtils.checkInternetConnection()) {
+            const [cachedVersion, cachedChangelog] = await Promise.all([
+                CacheManager.get(CONFIG.URLS.getVersion.call(CONFIG)),
+                CacheManager.get(CONFIG.URLS.getChangelog.call(CONFIG))
+            ]);
+            
+            if (cachedVersion && cachedVersion.trim() !== CONFIG.APP.currentVersion) {
+                await this.showUpdateAlert(cachedVersion.trim(), this.formatChangelog(cachedChangelog));
+            }
+            return;
+        }
 
         try {
             const [latestVersion, changelogRaw] = await Promise.all([
@@ -370,7 +502,6 @@ class UpdateManager {
             width: 400,
             html: `
                 <div class="update-info" style="text-align: center;">
-                    <img alt="Latest Version" width="100" height="28" src="https://img.shields.io/badge/${latestVersion}--x?style=flat-square&logo=openwrt&color=green">
                     <div class="changelog" style="margin-top: 15px; text-align: left;">
                         <h4 style="color: #007BFF; background-color: #FFFFFF;">📋 Changelog:</h4>
                         <div>${changelog}</div>
@@ -438,17 +569,38 @@ class AppController {
     static async initialize() {
         const state = StateManager.getInstance();
         
-        if (await NetworkUtils.checkInternetConnection()) {
+        // Initial connection check and setup
+        await this.setupConnectionHandling();
+        
+        // Setup event listeners
+        this.setupEventListeners();
+        
+        // Initial checks if online
+        if (ConnectionManager.isOnline) {
             await DailyModalManager.showDailyModal();
             await UpdateManager.checkForUpdates();
             await this.startInformationChecker();
         }
+    }
 
-        this.setupEventListeners();
+    static async setupConnectionHandling() {
+        await ConnectionManager.checkConnection();
+        
+        // Setup periodic connection checking
+        setInterval(async () => {
+            if (!ConnectionManager.isOnline) {
+                const isNowOnline = await ConnectionManager.checkConnection();
+                if (isNowOnline) {
+                    await this.startInformationChecker();
+                }
+            }
+        }, CONFIG.APP.offlineRetryInterval);
     }
 
     static async startInformationChecker() {
         const state = StateManager.getInstance();
+        if (state.checkTimer) clearInterval(state.checkTimer);
+        
         await InformationManager.checkInformation();
         state.checkTimer = setInterval(
             () => InformationManager.checkInformation(),
@@ -457,19 +609,24 @@ class AppController {
     }
 
     static setupEventListeners() {
+        // Handle visibility change
         document.addEventListener('visibilitychange', () => {
             const state = StateManager.getInstance();
-            if (document.visibilityState === 'visible') {
+            if (document.visibilityState === 'visible' && ConnectionManager.isOnline) {
                 this.startInformationChecker();
             } else {
                 clearInterval(state.checkTimer);
             }
         });
 
-        window.addEventListener('online', () => this.startInformationChecker());
-        window.addEventListener('offline', () => {
-            const state = StateManager.getInstance();
-            clearInterval(state.checkTimer);
+        // Handle connection changes
+        window.addEventListener('connectionChange', async (event) => {
+            if (event.detail.isOnline) {
+                await this.startInformationChecker();
+            } else {
+                const state = StateManager.getInstance();
+                clearInterval(state.checkTimer);
+            }
         });
     }
 }

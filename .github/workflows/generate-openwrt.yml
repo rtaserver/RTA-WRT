@@ -372,7 +372,7 @@ jobs:
             -d text="$BUILD_STATUS_MESSAGE"
     
       - name: Notify Telegram
-        if: ${{ !cancelled() && inputs.notify == 'true' }}
+        if: inputs.notify == true && !cancelled()
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
