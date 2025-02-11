@@ -19,6 +19,7 @@
 - Fix Config Nikki
 - Fix Config Zerotier
 - Edit Config OpenClash
+- Add Gpioled HG
 
 **Changelog** (07-02-2025)
 
