@@ -103,9 +103,9 @@ jobs:
         shell: bash
         run: |
           chs=$(awk '/^\*\*Changelog Simpel\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG_SIMPEL.md)
-          chs="${r//'%'/'%25'}"
-          chs="${r//$'\n'/'%0A'}"
-          chs="${r//$'\r'/'%0D'}"  
+          chs="${chs//'%'/'%25'}"
+          chs="${chs//$'\n'/'%0A'}"
+          chs="${chs//$'\r'/'%0D'}"  
           echo "changelog_simpel=$chs" >> $GITHUB_OUTPUT
 
       - name: Add changelog FULL
@@ -113,9 +113,9 @@ jobs:
         shell: bash
         run: |
           chf=$(awk '/^\*\*Changelog Full\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG_FULL.md)
-          chf="${r//'%'/'%25'}"
-          chf="${r//$'\n'/'%0A'}"
-          chf="${r//$'\r'/'%0D'}"  
+          chf="${chf//'%'/'%25'}"
+          chf="${chf//$'\n'/'%0A'}"
+          chf="${chf//$'\r'/'%0D'}"  
           echo "changelog_full=$chf" >> $GITHUB_OUTPUT 
 
       - name: Add changelog Firmware
@@ -123,9 +123,9 @@ jobs:
         shell: bash
         run: |
           chfr=$(awk '/^\*\*Changelog Firmware\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
-          chfr="${r//'%'/'%25'}"
-          chfr="${r//$'\n'/'%0A'}"
-          chfr="${r//$'\r'/'%0D'}"  
+          chfr="${chfr//'%'/'%25'}"
+          chfr="${chfr//$'\n'/'%0A'}"
+          chfr="${chfr//$'\r'/'%0D'}"  
           echo "changelog_firmware=$chfr" >> $GITHUB_OUTPUT 
 
       - name: Configure Build Matrix
@@ -241,7 +241,7 @@ jobs:
       fail-fast: false
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
-        fitur: ${{ fromJson(needs.prepare.outputs.fiturs) }}
+        fitur: ${{ fromJSON(needs.prepare.outputs.fiturs) }}
   
     steps:
       - name: Checkout Repository
@@ -257,7 +257,6 @@ jobs:
 
       - name: Prepare Before Build
         run: |
-          
           DATETIME=$(date +'%d%m%Y')
           BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
           
@@ -306,7 +305,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        fitur: ${{ fromJson(needs.prepare.outputs.fiturs) }}
+        fitur: ${{ fromJSON(needs.prepare.outputs.fiturs) }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -329,7 +328,7 @@ jobs:
             echo "changelog_devices<<EOF" >> $GITHUB_OUTPUT
             echo "$changelog_devices" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
-          elif [[ ${{ matrix.fitur }} == "full-fitur ]]; then
+          elif [[ ${{ matrix.fitur }} == "full-fitur" ]]; then
             changelog_devices=$(awk '/^\*\*Changelog Full\*\*/ {if(found) exit; found=1} found' CHANGELOG_FULL.md)
             echo "changelog_devices<<EOF" >> $GITHUB_OUTPUT
             echo "$changelog_devices" >> $GITHUB_OUTPUT
@@ -638,7 +637,7 @@ jobs:
                     -e 's/%25/%/g')
               echo "${changelog_content}" > "${CURRENT_BRANCH}/${OP_SOURCE}/${fitur}/changelog.txt"
               cat "${CURRENT_BRANCH}/${OP_SOURCE}/${fitur}/changelog.txt"
-            elid if [[ $fitur == "full-fitur" ]]; then
+            elif [[ $fitur == "full-fitur" ]]; then
               changelog_content=$(echo "${{ needs.prepare.outputs.changelog_full }}" | \
                 sed -e 's/%0A/\n/g' \
                     -e 's/%0D/\r/g' \
