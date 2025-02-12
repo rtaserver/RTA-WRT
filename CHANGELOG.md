@@ -23,6 +23,7 @@
 - Adjust Config Builder
 - New Simpel Mode
 - Reduc et Size Of Image
+- Fix ModemManager - v23.05
 
 **Changelog Firmware** (07-02-2025)
 

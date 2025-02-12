@@ -357,7 +357,12 @@ download_imagebuilder() {
             ;;
     esac
 
-    archive_ext="tar.zst"
+    CURVER=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
+    if [[ ${CURVER} == "24.10" ]]; then
+        archive_ext="tar.zst"
+    elif [[ ${CURVER} == "23.05" ]]; then
+        archive_ext="tar.xz"
+    fi
     download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
 
     ariadl "${download_file}" "${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
@@ -501,11 +506,11 @@ custom_packages() {
     CURVER=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
     declare -a other_packages=(
 
-        "modemmanager-rpcd|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
-        "luci-proto-modemmanager|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/luci"
-        "libqmi|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
-        "libmbim|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
-        "modemmanager|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
+        "modemmanager-rpcd|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
+        "luci-proto-modemmanager|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/luci"
+        "libqmi|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
+        "libmbim|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
+        "modemmanager|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "sms-tool|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
         "tailscale|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
         
@@ -711,7 +716,7 @@ rebuild_firmware() {
     usb-modeswitch picocom minicom libusb-1.0-0 \
     xmm-modem kmod-usb-net-asix kmod-usb-net-asix-ax88179 kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 \
     ca-bundle ca-certificates luci-compat coreutils-sleep fontconfig coreutils-whoami file lolcat \
-    owut zsh kmod-mii kmod-usb-wdm kmod-usb-serial-wwan kmod-usb-ehci kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty \
+    zsh kmod-mii kmod-usb-wdm kmod-usb-serial-wwan kmod-usb-ehci kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty \
     hostapd wpa-cli wpa-supplicant kmod-cfg80211 kmod-mac80211 wireless-tools iw-full hostapd-utils \
     libqrtr-glib luci-proto-qmi \
     perl perlbase-base perlbase-bytes perlbase-class perlbase-config perlbase-cwd perlbase-dynaloader perlbase-errno perlbase-essential perlbase-fcntl perlbase-file \
@@ -1155,8 +1160,11 @@ build_mod_sdcard() {
     echo -e "${INFO} Renaming image file..."
     local kernel
     kernel=$(grep -oP 'k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)?' <<<"${file_name}")
-    local new_name="RTA-WRT${op_source}-${op_branch}-${pack_name}-Amlogic_s905x-${suffix}-${kernel}.img.gz"
+    local new_name="RTA-WRT${op_source}-${op_branch}-Amlogic_s905x-${suffix}-${kernel}.img.gz"
 
+    if -f "../${new_name}"; then
+        rm -rf "../${new_name}"
+    fi
     mv "${file_name}.gz" "../${new_name}" || {
         error_msg "Failed to rename image file"
         return 1
@@ -1200,30 +1208,27 @@ rename_firmware() {
         "-bcm27xx-bcm2711-rpi-4-squashfs-sysupgrade|Broadcom_RaspberryPi_4B-Squashfs_Sysupgrade"
         
         # Allwinner
-        "-h5-orangepi-pc2-|ULO-Allwinner_OrangePi_PC2"
-        "-h5-orangepi-prime-|ULO-Allwinner_OrangePi_Prime"
-        "-h5-orangepi-zeroplus-|ULO-Allwinner_OrangePi_ZeroPlus"
-        "-h5-orangepi-zeroplus2-|ULO-Allwinner_OrangePi_ZeroPlus2"
-        "-h6-orangepi-1plus-|ULO-Allwinner_OrangePi_1Plus"
-        "-h6-orangepi-3-|ULO-Allwinner_OrangePi_3"
-        "-h6-orangepi-3lts-|ULO-Allwinner_OrangePi_3LTS"
-        "-h6-orangepi-lite2-|ULO-Allwinner_OrangePi_Lite2"
-        "-h616-orangepi-zero2-|ULO-Allwinner_OrangePi_Zero2"
-        "-h618-orangepi-zero2w-|ULO-Allwinner_OrangePi_Zero2W"
-        "-h618-orangepi-zero3-|ULO-Allwinner_OrangePi_Zero3"
+        "-h5-orangepi-pc2-|Allwinner_OrangePi_PC2"
+        "-h5-orangepi-prime-|Allwinner_OrangePi_Prime"
+        "-h5-orangepi-zeroplus-|Allwinner_OrangePi_ZeroPlus"
+        "-h5-orangepi-zeroplus2-|Allwinner_OrangePi_ZeroPlus2"
+        "-h6-orangepi-1plus-|Allwinner_OrangePi_1Plus"
+        "-h6-orangepi-3-|Allwinner_OrangePi_3"
+        "-h6-orangepi-3lts-|Allwinner_OrangePi_3LTS"
+        "-h6-orangepi-lite2-|Allwinner_OrangePi_Lite2"
+        "-h616-orangepi-zero2-|Allwinner_OrangePi_Zero2"
+        "-h618-orangepi-zero2w-|Allwinner_OrangePi_Zero2W"
+        "-h618-orangepi-zero3-|Allwinner_OrangePi_Zero3"
         
         # Rockchip
-        "-rk3566-orangepi-3b-|ULO-Rockchip_OrangePi_3B"
-        "-rk3588s-orangepi-5-|ULO-Rockchip_OrangePi_5"
+        "-rk3566-orangepi-3b-|Rockchip_OrangePi_3B"
+        "-rk3588s-orangepi-5-|Rockchip_OrangePi_5"
         
         # Amlogic
-        "_amlogic_s912_|OPHUB-Amlogic_s912"
-        "_amlogic_s905x_|OPHUB-Amlogic_s905x-HG680P"
-        "_amlogic_s905x-b860h_|OPHUB-Amlogic_s905x-B860H_v1-v2"
-        "-s905x-|ULO-Amlogic_s905x"
-        "-s905x2-|ULO-Amlogic_s905x2"
-        "-s905x3-|ULO-Amlogic_s905x3"
-        "-s905x4-|ULO-Amlogic_s905x4"
+        "-s905x4-|Amlogic_s905x4"
+        "_amlogic_s912_|Amlogic_s912"
+        "_amlogic_s905x2_|Amlogic_s905x2"
+        "_amlogic_s905x3_|Amlogic_s905x3"
 
         # x86_64
         "x86-64-generic-ext4-combined-efi|X86_64_Generic_Ext4_Combined_EFI"
@@ -1310,10 +1315,13 @@ case "${op_devices}" in
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k5.15*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         build_mod_sdcard "$(find "${imagebuilder_path}/out_firmware" -name "*_s905x-b860h_k6.6*.img.gz")" "OPHUB" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
         ;;
+    s905x[2-3])
+        repackwrt --ophub -t "s905x2_s905x3" -k "$KERNEL2"
+        ;;
     s912)
         repackwrt --ophub -t "s912" -k "$KERNEL2"
         ;;
-    h5-*|h616-*|h618-*|h6-*|s905x[0-9]*|rk*)
+    h5-*|h616-*|h618-*|h6-*|s905x4|rk*)
         repackwrt --ulo -t "$op_devices" -k "$KERNEL"
         ;;
     *)
