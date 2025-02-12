@@ -183,7 +183,7 @@ jobs:
           fi
 
       - name: Send Initial Telegram Message
-        if: ${{ env.NOTIFY }} == 'true' && !cancelled()
+        if: ${{ env.NOTIFY == 'true' && !cancelled() }}
         id: telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
@@ -413,7 +413,7 @@ jobs:
           path: artifacts
 
       - name: Update Telegram Message
-        if: ${{ env.NOTIFY }} == 'true' && !cancelled()
+        if: ${{ env.NOTIFY == 'true' && !cancelled() }}
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
@@ -476,7 +476,7 @@ jobs:
             -d text="$BUILD_STATUS_MESSAGE"
     
       - name: Notify Telegram
-        if: ${{ env.NOTIFY }} == 'true' && !cancelled()
+        if: ${{ env.NOTIFY == 'true' && !cancelled() }}
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
