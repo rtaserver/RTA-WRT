@@ -357,7 +357,12 @@ download_imagebuilder() {
             ;;
     esac
 
-    archive_ext="tar.zst"
+    CURVER=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
+    if [[ ${CURVER} == "24.10" ]]; then
+        archive_ext="tar.zst"
+    elif [[ ${CURVER} == "23.05" ]]; then
+        archive_ext="tar.xz"
+    fi
     download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/${target_system}/${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
 
     ariadl "${download_file}" "${op_sourse}-imagebuilder-${op_branch}-${target_name}.Linux-x86_64.${archive_ext}"
@@ -502,10 +507,10 @@ custom_packages() {
     declare -a other_packages=(
 
         "modemmanager-rpcd|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
-        "luci-proto-modemmanager|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/luci"
-        "libqmi|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
-        "libmbim|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
-        "modemmanager|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
+        "luci-proto-modemmanager|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/luci"
+        "libqmi|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
+        "libmbim|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
+        "modemmanager|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "sms-tool|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
         "tailscale|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
         
