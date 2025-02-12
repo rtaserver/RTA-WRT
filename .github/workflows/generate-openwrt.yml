@@ -10,7 +10,9 @@ on:
         type: choice
         options:
           - openwrt:24.10.0
+          - openwrt:23.05.5
           - immortalwrt:24.10.0
+          - immortalwrt:23.05.4
       devices:
         description: "Select device target"
         required: true
@@ -559,7 +561,7 @@ jobs:
               *) echo "Error: Branch tidak dikenali" >&2; exit 1 ;;
           esac
         
-          
+
           BUTTONS='['
           if [[ "${{ inputs.fiturs }}" == "all" ]]; then
             BUTTONS+='
