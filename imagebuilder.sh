@@ -716,7 +716,7 @@ rebuild_firmware() {
     usb-modeswitch picocom minicom libusb-1.0-0 \
     xmm-modem kmod-usb-net-asix kmod-usb-net-asix-ax88179 kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 \
     ca-bundle ca-certificates luci-compat coreutils-sleep fontconfig coreutils-whoami file lolcat \
-    owut zsh kmod-mii kmod-usb-wdm kmod-usb-serial-wwan kmod-usb-ehci kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty \
+    zsh kmod-mii kmod-usb-wdm kmod-usb-serial-wwan kmod-usb-ehci kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty \
     hostapd wpa-cli wpa-supplicant kmod-cfg80211 kmod-mac80211 wireless-tools iw-full hostapd-utils \
     libqrtr-glib luci-proto-qmi \
     perl perlbase-base perlbase-bytes perlbase-class perlbase-config perlbase-cwd perlbase-dynaloader perlbase-errno perlbase-essential perlbase-fcntl perlbase-file \
