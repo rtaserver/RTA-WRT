@@ -3,6 +3,14 @@
 # ENV
 exec > /root/firs-setup.log 2>&1
 
+echo "Setting permission..."
+chmod +x /sbin/repair_ro
+chmod +x /etc/init.d/repair_ro
+chmod +x /usr/bin/repair_ro
+echo "Adding to startup..."
+/etc/init.d/repair_ro enable
+echo "Success!"
+
 msg() {
     local DATE=$(date '+%d %B %Y %T')
     echo "[ INFO FIRST SETUP ] $1"
@@ -149,15 +157,12 @@ echo "src/gz custom_arch https://dl.openwrt.ai/latest/packages/$(grep "OPENWRT_A
 # Remove login password required when accessing terminal
 msg "Remove login password required when accessing terminal"
 uci set ttyd.@ttyd[0].command='/bin/bash --login'
-# uci add_list ttyd.@ttyd[0].client_option='fontFamily=FiraCode Nerd Font'
-# uci add_list ttyd.@ttyd[0].client_option='fontSize=10'
 uci commit ttyd
 
 
 # Remove huawei me909s usb-modeswitch
 msg "Remove huawei me909s usb-modeswitch"
 sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
-
 
 # Remove dw5821e usb-modeswitch
 msg "Remove dw5821e usb-modeswitch"
@@ -187,18 +192,6 @@ sed -i 's/;DatabaseDir "\/var\/lib\/vnstat"/DatabaseDir "\/etc\/vnstat"/' /etc/v
 mkdir -p /etc/vnstat
 chmod +x /etc/init.d/vnstat_backup
 bash /etc/init.d/vnstat_backup enable
-
-
-# Adjusting App Catagory
-# msg "Adjusting App Catagory"
-# sed -i -E "s|status|services|g" /usr/lib/lua/luci/controller/base64.lua
-
-
-# Adding New Line For Enable i2c Oled Display if Devices Supported
-msg "Adding New Line For Enable i2c Oled Display if Devices Supported"
-if grep -q "Raspberry Pi 4\|Raspberry Pi 3" /proc/cpuinfo; then
-    echo -e "\ndtparam=i2c1=on\ndtparam=spi=on\ndtparam=i2s=on" >> /boot/config.txt
-fi
 
 
 # Setup PHP
@@ -255,6 +248,7 @@ fi
 # Log success
 msg "First Setup settings successfully applied..."
 
+# Adjust Settings
 
 # Remove this script after successful execution
 rm -f /etc/uci-defaults/$(basename $0)

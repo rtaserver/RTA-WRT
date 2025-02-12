@@ -1,0 +1,3 @@
+#!/bin/sh
+root_device="$1"
+/sbin/repair_ro "$root_device"
