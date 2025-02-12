@@ -377,6 +377,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.PAT_TOKEN }}
+          repository: rizkikotet-dev/RTA-WRT
           tag_name: ${{ env.release_tag }}
           name: ${{ env.release_name }}
           files: firmware/*
