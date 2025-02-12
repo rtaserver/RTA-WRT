@@ -501,7 +501,7 @@ custom_packages() {
     CURVER=$(echo "${op_branch}" | awk -F. '{print $1"."$2}')
     declare -a other_packages=(
 
-        "modemmanager-rpcd|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
+        "modemmanager-rpcd|https://downloads.$op_sourse.org/releases/packages-24.10/$ARCH_3/packages"
         "luci-proto-modemmanager|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/luci"
         "libqmi|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
         "libmbim|https://downloads.$op_sourse.org/releases/packages-$CURVER/$ARCH_3/packages"
