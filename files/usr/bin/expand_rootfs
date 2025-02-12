@@ -86,6 +86,19 @@ cmdinstall() {
     fi
 }
 
+show_banner() {
+    echo -e "${BLUE}════════════════════════════════════════════════════════════${RESET}"
+    echo -e "${CYAN}"
+    echo '██████╗ ████████╗ █████╗ ██╗    ██╗██████╗ ████████╗'
+    echo '██╔══██╗╚══██╔══╝██╔══██╗██║    ██║██╔══██╗╚══██╔══╝'
+    echo '██████╔╝   ██║   ███████║██║ █╗ ██║██████╔╝   ██║   '
+    echo '██╔══██╗   ██║   ██╔══██║██║███╗██║██╔══██╗   ██║   '
+    echo '██║  ██║   ██║   ██║  ██║╚███╔███╔╝██║  ██║   ██║   '
+    echo '╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝   '
+    echo -e "${RESET}"
+    echo -e "${BLUE}════════════════════════════════════════════════════════════${RESET}"
+}
+
 check_dependencies() {
     local required_packages=("parted" "losetup" "resize2fs")
 
@@ -122,7 +135,7 @@ get_disk_info() {
             continue
         elif [ -b "$disk" ]; then
             echo -e "${INFO} Ditemukan disk: $disk"
-            fdisk -l "$disk"
+            #fdisk -l "$disk"
         fi
     done
 }
@@ -172,6 +185,8 @@ main() {
     if [ "$1" = "-y" ]; then
         AUTO_REBOOT=true
     fi
+
+    show_banner
 
     echo -e "${STEPS} Memulai proses expand root filesystem..."
     
