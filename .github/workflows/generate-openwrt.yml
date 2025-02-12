@@ -86,7 +86,9 @@ jobs:
       devices: ${{ steps.matrix.outputs.devices }}
       fiturs: ${{ steps.matrix.outputs.fiturs }}
       message_id: ${{ steps.telegram.outputs.message_id }}
-      changelog: ${{ steps.changelog.outputs.changelog }}
+      changelog_simpel: ${{ steps.changelog_simpel.outputs.changelog_simpel }}
+      changelog_full: ${{ steps.changelog_full.outputs.changelog_full }}
+      changelog_firmware: ${{ steps.changelog_firmware.outputs.changelog_firmware }}
       startbuildtime: ${{ steps.setup.outputs.startbuildtime }}
     steps:
       - name: Checkout Repository
@@ -94,15 +96,35 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
 
-      - name: Add changelog info to new release description
-        id: changelog
+      - name: Add changelog SIMPEL
+        id: changelog_simpel
         shell: bash
         run: |
-          r=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
-          r="${r//'%'/'%25'}"
-          r="${r//$'\n'/'%0A'}"
-          r="${r//$'\r'/'%0D'}"  
-          echo "changelog=$r" >> $GITHUB_OUTPUT 
+          chs=$(awk '/^\*\*Changelog Simpel\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG_SIMPEL.md)
+          chs="${r//'%'/'%25'}"
+          chs="${r//$'\n'/'%0A'}"
+          chs="${r//$'\r'/'%0D'}"  
+          echo "changelog_simpel=$chs" >> $GITHUB_OUTPUT
+
+      - name: Add changelog FULL
+        id: changelog_full
+        shell: bash
+        run: |
+          chf=$(awk '/^\*\*Changelog Full\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG_FULL.md)
+          chf="${r//'%'/'%25'}"
+          chf="${r//$'\n'/'%0A'}"
+          chf="${r//$'\r'/'%0D'}"  
+          echo "changelog_full=$chf" >> $GITHUB_OUTPUT 
+
+      - name: Add changelog Firmware
+        id: changelog_firmware
+        shell: bash
+        run: |
+          chfr=$(awk '/^\*\*Changelog Firmware\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
+          chfr="${r//'%'/'%25'}"
+          chfr="${r//$'\n'/'%0A'}"
+          chfr="${r//$'\r'/'%0D'}"  
+          echo "changelog_firmware=$chfr" >> $GITHUB_OUTPUT 
 
       - name: Configure Build Matrix
         id: matrix
@@ -206,8 +228,6 @@ jobs:
       - name: Setup Environment Variables
         id: setup
         run: |
-          sudo timedatectl set-timezone "$TZ"
-
           STARTBUILDTIME=$(date +%s)
           echo "startbuildtime=${STARTBUILDTIME}" >> $GITHUB_OUTPUT
 
@@ -235,7 +255,6 @@ jobs:
 
       - name: Prepare Before Build
         run: |
-          sudo timedatectl set-timezone "${{ env.TZ }}"
           
           DATETIME=$(date +'%d%m%Y')
           BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
@@ -292,13 +311,28 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
 
-      - name: Extract Changelog
-        id: changelog
+      - name: Extract Changelog Firmware
+        id: changelog_firmware
         run: |
-          changelog=$(awk '/^\*\*Changelog\*\*/ {if(found) exit; found=1} found' CHANGELOG.md)
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "$changelog" >> $GITHUB_OUTPUT
+          changelog_firmware=$(awk '/^\*\*Changelog Firmware\*\*/ {if(found) exit; found=1} found' CHANGELOG.md)
+          echo "changelog_firmware<<EOF" >> $GITHUB_OUTPUT
+          echo "$changelog_firmware" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Extract Changelog Devices
+        id: changelog_devices
+        run: |
+          if [[ ${{ matrix.fitur }} == "simpel" ]]; then
+            changelog_devices=$(awk '/^\*\*Changelog Simpel\*\*/ {if(found) exit; found=1} found' CHANGELOG_SIMPEL.md)
+            echo "changelog_devices<<EOF" >> $GITHUB_OUTPUT
+            echo "$changelog_devices" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          elif [[ ${{ matrix.fitur }} == "full-fitur ]]; then
+            changelog_devices=$(awk '/^\*\*Changelog Full\*\*/ {if(found) exit; found=1} found' CHANGELOG_FULL.md)
+            echo "changelog_devices<<EOF" >> $GITHUB_OUTPUT
+            echo "$changelog_devices" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
 
       - name: Setup Environment
         run: |
@@ -355,9 +389,12 @@ jobs:
 
             ## NOTES
             `Amlogic s905x Support Mod SDCard`
-            
-            ## 📝 Changelog
-            ${{ steps.changelog.outputs.changelog }}
+
+            ## 📝 Changelog Firmware
+            ${{ steps.changelog_firmware.outputs.changelog_firmware }}
+          
+            ## 📝 Changelog Decices
+            ${{ steps.changelog_devices.outputs.changelog_devices }}
           prerelease: ${{ github.ref_name == 'dev' }}
           generate_release_notes: true
         env:
@@ -379,6 +416,7 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
+          sudo timedatectl set-timezone "${{ env.TZ }}"
           trap "exit" SIGTERM
           THREAD_ID_BUILD=616
 
@@ -461,7 +499,13 @@ jobs:
           🔹 Pastikan Anda Menggunakan Versi Terbaru Untuk Mendapatkan Fitur Terbaru
 
           ━━━━━━━━━━━━━━━━━━━━━━
-          📋 ${{ needs.prepare.outputs.changelog }}
+          📋 ${{ needs.prepare.outputs.changelog_firmware }}
+          ━━━━━━━━━━━━━━━━━━━━━━
+          ━━━━━━━━━━━━━━━━━━━━━━
+          📋 ${{ needs.prepare.outputs.changelog_full }}
+          ━━━━━━━━━━━━━━━━━━━━━━
+          ━━━━━━━━━━━━━━━━━━━━━━
+          📋 ${{ needs.prepare.outputs.changelog_simpel }}
           ━━━━━━━━━━━━━━━━━━━━━━
           EOF
           }
@@ -487,8 +531,13 @@ jobs:
              Yang Lebih Baik!
 
           ━━━━━━━━━━━━━━━━━━━━━━
-          📋 ${{ needs.prepare.outputs.changelog }}
+          📋 ${{ needs.prepare.outputs.changelog_firmware }}
           ━━━━━━━━━━━━━━━━━━━━━━
+          ━━━━━━━━━━━━━━━━━━━━━━
+          📋 ${{ needs.prepare.outputs.changelog_full }}
+          ━━━━━━━━━━━━━━━━━━━━━━
+          ━━━━━━━━━━━━━━━━━━━━━━
+          📋 ${{ needs.prepare.outputs.changelog_simpel }}
           EOF
           }
 
@@ -510,6 +559,7 @@ jobs:
               *) echo "Error: Branch tidak dikenali" >&2; exit 1 ;;
           esac
         
+          
           BUTTONS='['
           if [[ "${{ inputs.fiturs }}" == "all" ]]; then
             BUTTONS+='
@@ -570,6 +620,7 @@ jobs:
           CURRENT_BRANCH: ${{ env.CURRENT_BRANCH }}
         run: |
           set -euo pipefail
+          DATETIME=$(date +'%d%m%Y')
 
           fiturs='${{ needs.prepare.outputs.fiturs }}'
           BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
@@ -577,17 +628,21 @@ jobs:
             OPEWRT="${{ inputs.releases_branch }}"
             OP_SOURCE="${OPEWRT%:*}"
             mkdir -p "${CURRENT_BRANCH}/${OP_SOURCE}"
-        
-            if [ -n "${{ needs.prepare.outputs.changelog }}" ]; then
-              changelog_content=$(echo "${{ needs.prepare.outputs.changelog }}" | \
+
+            if [[ $fitur == "simpel" ]]; then
+              changelog_content=$(echo "${{ needs.prepare.outputs.changelog_simpel }}" | \
                 sed -e 's/%0A/\n/g' \
                     -e 's/%0D/\r/g' \
                     -e 's/%25/%/g')
               echo "${changelog_content}" > "${CURRENT_BRANCH}/${OP_SOURCE}/${fitur}/changelog.txt"
               cat "${CURRENT_BRANCH}/${OP_SOURCE}/${fitur}/changelog.txt"
-            else
-              echo "No changelog content found"
-              exit 1
+            elid if [[ $fitur == "full-fitur" ]]; then
+              changelog_content=$(echo "${{ needs.prepare.outputs.changelog_full }}" | \
+                sed -e 's/%0A/\n/g' \
+                    -e 's/%0D/\r/g' \
+                    -e 's/%25/%/g')
+              echo "${changelog_content}" > "${CURRENT_BRANCH}/${OP_SOURCE}/${fitur}/changelog.txt"
+              cat "${CURRENT_BRANCH}/${OP_SOURCE}/${fitur}/changelog.txt"
             fi
         
             VERSION_TAG="${BRANCH_TAG}-${fitur}-${CURRENT_BRANCH}-${DATETIME}"

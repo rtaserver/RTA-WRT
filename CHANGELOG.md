@@ -1,6 +1,6 @@
 # What's New!
 
-**Changelog** (11-02-2025)
+**Changelog Firmware** (12-02-2025)
 
 - Fix Script Startup
 - s905x OPHUB Repack Only
@@ -24,14 +24,14 @@
 - New Simpel Mode
 - Reduc et Size Of Image
 
-**Changelog** (07-02-2025)
+**Changelog Firmware** (07-02-2025)
 
 - OPHUB Add Kernel 6.x.x
 - Add Source Packages By openwrt.ai
 - Use Deafult Font Terminal
 - Add AdGuard Home
 
-**Changelog** (05-02-2025)
+**Changelog Firmware** (05-02-2025)
 
 - Add Theme Material3
 - Fix Logo Theme Argon
@@ -39,7 +39,7 @@
 - Minor Update
 - Change Kernel Alwiner To 6.1.31
 
-**Changelog** (03-02-2025)
+**Changelog Firmware** (03-02-2025)
 
 - Remove Expand root partition and filesystem
   Because Some Firmware Not Boot To OpenWrt
@@ -47,13 +47,13 @@
 - Update FixTTL
 - Add SweetAlert2
 
-**Changelog** (01-02-2025)
+**Changelog Firmware** (01-02-2025)
 
 - Automatically expand root partition and filesystem to available free space!
 - Fix Modeminfo
 - Add Script Fix And Change TTL
 
-**Changelog** (31-01-2025)
+**Changelog Firmware** (31-01-2025)
 
 - Minor bug fixes and improvements.
 - Updated dependencies.
@@ -67,7 +67,7 @@
 - Improved maintainability.
 - Fix boot strapping issue.
 
-**Changelog** (24-01-2025)
+**Changelog Firmware** (24-01-2025)
 
 - Minor Bug Fixes
 - Add Theme Alpha
@@ -75,7 +75,7 @@
 - Fixed Terminal
 - Add Source Packages By kiddin9
 
-**Changelog** (19-01-2025)
+**Changelog Firmware** (19-01-2025)
 
 - Minor Bug Fixes
 - Fixed Theme Argon
@@ -86,28 +86,28 @@
 - Add Mod SDCard : s905x-b860h-v2
 - Update Mihomo TProxy
 
-**Changelog** (06-01-2025):
+**Changelog Firmware** (06-01-2025):
 
 - Test Build OpenWrt 24.10
 - Update Mihomo TProxy
 
-**Changelog** (31-12-2024):
+**Changelog Firmware** (31-12-2024):
 
 - Remove Docker
 - Update Mihomo TProxy
 - Minor Bug Fixes
 
-**Changelog** (14-12-2024):
+**Changelog Firmware** (14-12-2024):
 
 - Minor Bug Fixes
 
-**Changelog** (19-11-2024):
+**Changelog Firmware** (19-11-2024):
 
 - Latest Build
 - Bug Fixes
 - Fixed Booting
 
-**Changelog** (17-11-2024):
+**Changelog Firmware** (17-11-2024):
 
 - Fixed Depends Lolcat
 - Fixed Navbar Terminal
@@ -115,7 +115,7 @@
 - Update OpenClash to v0.46.050-beta
 - Update Mihomo to v1.11.0
 
-**Changelog** (13-11-2024):
+**Changelog Firmware** (13-11-2024):
 
 - Added support for Immortalwrt
 - Updated dependencies to the latest versions
@@ -125,56 +125,56 @@
 - Added new features and functionality
 - Improved performance and efficiency
 
-**Changelog** (7-11-2024):
+**Changelog Firmware** (7-11-2024):
 
 - Update Mihomo
 - Add Passwall
 - Fixed Fast Booting
 
-**Changelog** (3-11-2024):
+**Changelog Firmware** (3-11-2024):
 
 - Remove Radius Monitor
 - Fixed OpenClash
 - Update Mihomo
 - Fixed Booting
 
-**Changelog** (10-10-2024):
+**Changelog Firmware** (10-10-2024):
 
 - Fixed Radius Monitor
 
-**Changelog** (9-10-2024):
+**Changelog Firmware** (9-10-2024):
 
 - Add Radius Monitor - Voucher
 - Update All Depends
 - Fixed Boot
 - Marge From Pre-Release
 
-**Changelog** (7-10-2024):
+**Changelog Firmware** (7-10-2024):
 
 - Add Config Mihomo
 - Update UI Mihomo
 - Add Editor Mihomo To Tinyfilemanager
 - Change Style Login Page
 
-**Changelog** (6-10-2024):
+**Changelog Firmware** (6-10-2024):
 
 - Fixed Tinyfilemanager Search Engine
 - Fixed Terminal Openwrt
 - Add Icon Mihomo - Navbar
 - Change Icon Passwall - Navbar
 
-**Changelog** (3-10-2024):
+**Changelog Firmware** (3-10-2024):
 
 - Update OpenWrt To 23.05.5
 - Add Tailscale
 - Add Mihomo TProxy
 
-**Changelog** (24-09-2024):
+**Changelog Firmware** (24-09-2024):
 
 - Update Config OpenClash
 - Update OpenClash To v0.46.033-beta
 
-**Changelog** (23-09-2024):
+**Changelog Firmware** (23-09-2024):
 
 - Update Config OpenClash
 - Add Zerotier
