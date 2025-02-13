@@ -249,6 +249,25 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
 
+      # Cleanup artifacts and workspace
+      - name: Cleanup prepare
+        run: |
+          echo "Disk usage before cleanup:"
+          df -h
+          
+          sudo rm -rf ${GITHUB_WORKSPACE}/*
+          sudo rm -rf /home/runner/work/_temp/_github_workflow/prepare
+          sudo rm -rf /home/runner/work/_temp/_github_home/prepare
+          
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          
+          echo "Disk usage after cleanup:"
+          df -h
+
       - name: Install Dependencies
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -256,17 +275,11 @@ jobs:
           docker rmi $(docker images -q) 2>/dev/null
           [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
           sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
-          sudo swapoff -a
           sudo rm -f /swapfile /mnt/swapfile
           sudo -E apt-get -y update
           sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
           sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
           sudo -E systemctl daemon-reload
-          #sudo -E apt-get -y full-upgrade
-          sudo -E apt-get -y autoremove --purge
-          sudo -E apt-get clean
-          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
-          sudo rm -rf ~/{.cargo,.dotnet,.rustup}
           sudo timedatectl set-timezone "${TZ}"
 
       - name: Prepare Before Build
@@ -335,6 +348,25 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
+
+      # Cleanup artifacts and workspace
+      - name: Cleanup build
+        run: |
+          echo "Disk usage before cleanup:"
+          df -h
+          
+          sudo rm -rf ${GITHUB_WORKSPACE}/*
+          sudo rm -rf /home/runner/work/_temp/_github_workflow/build
+          sudo rm -rf /home/runner/work/_temp/_github_home/build
+          
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          
+          echo "Disk usage after cleanup:"
+          df -h
 
       - name: Extract Changelog Firmware
         id: changelog_firmware
@@ -436,6 +468,30 @@ jobs:
     if: always()
     runs-on: ubuntu-22.04 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      # Cleanup artifacts and workspace
+      - name: Cleanup create_releases
+        run: |
+          echo "Disk usage before cleanup:"
+          df -h
+          
+          sudo rm -rf ${GITHUB_WORKSPACE}/*
+          sudo rm -rf /home/runner/work/_temp/_github_workflow/create_releases
+          sudo rm -rf /home/runner/work/_temp/_github_home/create_releases
+          
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          
+          echo "Disk usage after cleanup:"
+          df -h
+
       - name: Download Build Status Artifacts
         uses: actions/download-artifact@v4
         with:

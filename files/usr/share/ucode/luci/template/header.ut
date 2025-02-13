@@ -329,7 +329,6 @@ class NetworkUtils {
         try {
             const response = await fetch(url, { cache: 'no-store' });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
             const text = await response.text();
             
             // Cek jika konten berubah sebelum menyimpan ke cache
@@ -377,7 +376,6 @@ class AlertSystem {
         }
     }
 }
-
 
 // ====== Storage Utilities ======
 class StorageUtils {
