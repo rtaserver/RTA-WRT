@@ -9,6 +9,7 @@ chmod +x /etc/init.d/repair_ro
 chmod +x /usr/bin/repair_ro
 echo "Adding to startup..."
 /etc/init.d/repair_ro enable
+chmod +x /www/vnstati/vnstati.sh
 echo "Success!"
 
 msg() {
