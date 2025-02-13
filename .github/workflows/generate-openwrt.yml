@@ -325,6 +325,7 @@ jobs:
 
   create_releases:
     needs: [prepare, build]
+    if: always()
     runs-on: ubuntu-latest
     strategy:
       matrix:
