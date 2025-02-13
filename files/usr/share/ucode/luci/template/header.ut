@@ -414,7 +414,7 @@ class InformationManager {
         }
 
         const infoContent = await NetworkUtils.fetchText(CONFIG.URLS.info);
-        if (infoContent && infoContent !== state.cache.content) {
+        if (infoContent && infoContent !== state.cache.content && !this.isAlertShownToday()) {
             this.showInformationAlert(infoContent);
         }
     }
@@ -434,10 +434,17 @@ class InformationManager {
             cancelButtonText: '❌ Tutup',
             onConfirm: () => {
                 StorageUtils.save('lastInformation', infoContent);
+                StorageUtils.save('lastInformationDate', state.today);  // Save the date when the alert is shown
                 state.cache.content = infoContent;
                 state.cache.lastUpdate = new Date().toISOString();
             }
         });
+    }
+
+    static isAlertShownToday() {
+        const lastInformationDate = StorageUtils.get('lastInformationDate');
+        const state = StateManager.getInstance();
+        return lastInformationDate === state.today;
     }
 }
 
