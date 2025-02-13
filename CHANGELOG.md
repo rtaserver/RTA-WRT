@@ -1,5 +1,8 @@
 # What's New!
 
+**Changelog Firmware** (13-02-2025)
+- Add Extend Partition Script
+
 **Changelog Firmware** (12-02-2025)
 
 - Fix Script Startup
