@@ -265,6 +265,7 @@ jobs:
           sudo -E apt-get clean || true
           sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile} || true
           sudo rm -rf ~/{.cargo,.dotnet,.rustup} || true
+          sudo -E apt-get update || true
           sudo apt-get install -y ${{ env.APT_PACKAGES }} || true
           sudo timedatectl set-timezone "${TZ}"
 
