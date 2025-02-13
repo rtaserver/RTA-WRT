@@ -1,119 +1,233 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>Network Monitor</title>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-	<script type='text/javascript'>
-		var dashboard = '<script type="text/javascript" src="' + window.location.protocol + '//' + window.location.host + ':19999/dashboard.js"><\/script>';
-		document.write(dashboard);
-	</script>
-	<script>
-		var netdataTheme = 'white'; // or 'slate' for the dark one
-		var netdataPrepCallback = function() {
-		NETDATA.requiredCSS = [];
-		};
-	</script>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- Add dashboard.js here! -->
+  <script type='text/javascript'>
+	var dashboard = '<script type="text/javascript" src="' + window.location.protocol + '//' + window.location.host + ':19999/dashboard.js"><\/script>';
+	document.write(dashboard);
+  </script>
+  <script type="text/javascript">
+    NETDATA.options.current.stop_updates_when_focus_is_lost = false;
+    NETDATA.options.current.concurrent_refreshes = true;
+    NETDATA.options.current.parallel_refresher = true;
+  </script>
+  <script>
+    var netdataTheme = 'white'; // or 'slate' for the dark one
 
-	<style>
-		.wrap {
-			max-width: 1280px;
-			margin: 0 auto;
-		}
-		h3 {
-			margin-bottom: 30px;
-			text-align: center;
-		}
-		.charts {
-			display: flex;
-			flex-flow: row wrap;
-			justify-content: space-around;
-		}
-		.charts > div {
-			margin-bottom: 6rem;
-			position: relative;
-			color: white;
-		}
-		.btn {
-			background-color: #cc9b1f;
-			border: none;
-			color: white;
-			padding: 10px 15px;
-			text-align: center;
-			text-decoration: none;
-			display: inline-block;
-			font-size: 20px;
-			margin: 4px 2px;
-			cursor: pointer;
-		}
-	</style>
+    var netdataPrepCallback = function() {
+      // code here
+      // remove all css files - netdata will not load any now
+      NETDATA.requiredCSS = [];
+    };
+
+    // Ensure that Netdata refreshes the charts in real-time
+    window.onload = function() {
+      NETDATA.start();
+    };
+
+    function showTime() {
+      var date = new Date();
+      var h = date.getHours();
+      var m = date.getMinutes();
+      var s = date.getSeconds();
+      var session = "AM";
+      if (h == 0) {
+        h = 12;
+      }
+      if (h > 12) {
+        h = h - 12;
+        session = "PM";
+      }
+      h = (h < 10) ? "0" + h : h;
+      m = (m < 10) ? "0" + m : m;
+      s = (s < 10) ? "0" + s : s;
+      var time = h + ":" + m + ":" + s + " " + session;
+      var clockDisplay = document.getElementById("MyClockDisplay");
+      if (clockDisplay) {
+        clockDisplay.innerText = time;
+        clockDisplay.textContent = time;
+      }
+      setTimeout(showTime, 1000);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      showTime();
+      var cookieButton = document.getElementById("cookie-button");
+      if (cookieButton) {
+        cookieButton.addEventListener("click", function() {
+          document.querySelector(".main-header__wrapper").classList.toggle("active");
+        });
+      }
+    });
+  </script>
+  <style>
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h3 {
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .charts {
+      display: flex;
+      flex-flow: row wrap;
+      justify-content: space-around;
+    }
+    .charts > div {
+      margin-bottom: 6rem;
+      position: relative;
+    }
+    body {
+      background: white;
+    }
+    .clock {
+      color: #5bc0de;
+      font-size: 30px;
+      font-family: Franklin Gothic Medium;
+      text-shadow: 1px 1px 0px #000;
+      letter-spacing: 2px;
+    }
+    .info-box.info-box--ipv4 {
+      color: #5bc0de;
+      font-size: 30px;
+      font-family: Franklin Gothic Medium;
+      text-shadow: 1px 1px 0px #000;
+      letter-spacing: 2px;
+    }
+  </style>
 </head>
 <body>
-	<main class="wrap">
-		<center>
-			<br>
-			<h3>Network Monitor</h3>
-			<br>
-			<!-- eth1 -->
-			<div data-netdata="net.eth1"
-				data-title="ETH1"
-				data-chart-library="gauge"
-				data-after="-150"
-				data-height="250px"
-				data-width="250px">
-			</div>
-			<!-- eth2 -->
-			<div data-netdata="net.eth2"
-				data-title="ETH2"
-				data-chart-library="gauge"
-				data-after="-150"
-				data-height="150px"
-				data-width="250px">
-			</div>
-			<!-- LAN Gauge -->
-			<div data-netdata="net.br_lan"
-				data-title="LAN"
-				data-chart-library="gauge"
-				data-after="-150"
-				data-height="150px"
-				data-width="250px"
-				data-colors="#66AA00">
-			</div>
-			<!-- CPU -->
-			<div data-netdata="system.cpu"
-				data-chart-library="gauge" 
-				data-title="CPU" 
-				data-units="%" 
-				data-gauge-max-value="100" 
-				data-width="250px" 
-				data-after="-720" 
-				data-points="720" 
-				data-colors="#ee9911">
-			</div>
-			<!-- LAN DyGraph-->
-			<div data-netdata="net.br_lan" 
-				data-chart-library="dygraph" 
-				data-title="BR_LAN"
-				data-height="150px"	
-				data-width="100%" 
-				data-after="-720" 
-				data-points="720" 
-				data-colors="#66AA00">
-			</div>
-			<br>
-			<br>
-			<script type='text/javascript'>
-				var dashboard = '<a href="' + window.location.protocol + '//' + window.location.host + ':19999" target="_blank" class="btn">Open NetData Dashboard</a>';
-				document.write(dashboard);
-			</script>
-			<br>
-			<br>
-			<a href="https://t.me/RizkiKotet">RTA-WRT</a> ® 2025 <br> Thank You ! 🤝
-		</center>
-	</main>
+  <main class="wrap">
+    <br>
+    <center>
+      <div data-netdata="net.wwan0"
+           data-title="Modem"
+           data-chart-library="gauge"
+           data-after="-150"
+           data-width="28%" 
+           data-points="720"
+           data-gauge-generate-gradient="[0,10,60,100]"
+           data-gauge-gradient-percent-color-0="#870115"
+           data-gauge-gradient-percent-color-10="#870115"
+           data-gauge-gradient-percent-color-60="#f5df1d"
+           data-gauge-gradient-percent-color-100="#207305"
+           data-colors="#002b49">
+      </div>
+      <div data-netdata="net.br-lan"
+           data-title="LAN"
+           data-chart-library="easypiechart"
+           data-after="-150"
+           data-width="18%" 
+           data-points="720"
+           data-colors="#002b49">
+      </div>
+      <div data-netdata="net.eth0"
+           data-title="Client"
+           data-chart-library="gauge"
+           data-after="-150"
+           data-width="28%" 
+           data-points="720"
+           data-gauge-generate-gradient="[0,10,60,100]"
+           data-gauge-gradient-percent-color-0="#870115"
+           data-gauge-gradient-percent-color-10="#870115"
+           data-gauge-gradient-percent-color-60="#f5df1d"
+           data-gauge-gradient-percent-color-100="#207305"
+           data-colors="#002b49">
+      </div>
+      <br><br>
+      <div data-netdata="system.net" 
+           data-dimensions="received" 
+           data-chart-library="easypiechart" 
+           data-title="Net Inbound" 
+           data-width="18%" 
+           data-points="720" 
+           data-common-units="system.net.mainhead"
+           data-colors="#002b49">
+      </div>
+      <div data-netdata="system.cpu" 
+           data-chart-library="easypiechart" 
+           data-title="CPU" 
+           data-units="%" 
+           data-easypiechart-max-value="100" 
+           data-width="18%" 
+           data-points="720" 
+           data-colors="#002b49">
+      </div>
+      <div data-netdata="system.ram" 
+           data-dimensions="used|buffers|active|wired" 
+           data-append-options="percentage" 
+           data-chart-library="easypiechart" 
+           data-title="Used RAM" 
+           data-units="%" 
+           data-easypiechart-max-value="100" 
+           data-width="18%" 
+           data-points="720"
+           data-colors="#002b49">
+      </div> 
+      <div data-netdata="system.net" 
+           data-dimensions="sent" 
+           data-chart-library="easypiechart" 
+           data-title="Net Outbound" 
+           data-width="18%" 
+           data-points="720" 
+           data-common-units="system.net.mainhead"
+           data-colors="#002b49">
+      </div>
+    </center>
+    <center>
+      <div id="MyClockDisplay" class="clock"></div>
+      <header class="jsx-516063367 hamburger icon-hamburger"></header>
+      <div id="wimi-ipv4" class="jsx-1634742381 info-box info-box--ipv4"></div>
+      <div id="cookie-button">IP</div>
+      <script class="jsx-989262791">
+        (function () {
+          var lazyToSrc = eval(arguments[0]),
+              requestIPv4 = eval(arguments[1]);
+          document.getElementById("cookie-button").addEventListener("click", function () {
+            document.querySelector(".main-header__wrapper").classList.toggle("active");
+          });
+          lazyToSrc("img[data-lazy-src]");
+        })(function (a) {
+          fetch("https://iptools-4.top10vpn.com/ip/?genToken=1").then((b) => {
+            b.json().then((b) => {
+              document.getElementById("wimi-ipv4").innerText = b.ip;
+              fetch("/api/jade/", {
+                method: "POST",
+                body: JSON.stringify({
+                  ip: b.ip,
+                  token: b.token
+                })
+              }).then((b) => {
+                b.json().then((b) => {
+                });
+              });
+            });
+          });
+        });
+      </script>
+    </center>
+    <center>
+      <img src="/vnstati/br-lan_vnstat_s.png" border="0" alt="summary">
+      <br>
+      <img src="/vnstati/br-lan_vnstat_5.png" border="0" alt="5 minutes">
+      <br>
+      <img src="/vnstati/br-lan_vnstat_h.png" border="0" alt="hourly">
+      <br>
+      <img src="/vnstati/br-lan_vnstat_d.png" border="0" alt="daily">
+      <br>
+      <img src="/vnstati/br-lan_vnstat_m.png" border="0" alt="monthly">
+      <br>
+      <img src="/vnstati/br-lan_vnstat_y.png" border="0" alt="yearly">
+      <br>
+      <img src="/vnstati/br-lan_vnstat_t.png" border="0" alt="top 25">
+    </center>
+  </main>
 </body>
 </html>
