@@ -83,7 +83,7 @@ env:
 
 jobs:
   prepare:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       devices: ${{ steps.matrix.outputs.devices }}
       fiturs: ${{ steps.matrix.outputs.fiturs }}
@@ -236,7 +236,7 @@ jobs:
   build:
     name: ${{ matrix.device }}-${{ matrix.fitur }} release
     needs: prepare
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -253,20 +253,20 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}" || true
-          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null || true
-          sudo swapoff -a || true
-          sudo rm -f /swapfile /mnt/swapfile || true
+          docker rmi $(docker images -q) 2>/dev/null
+          [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
+          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
+          sudo swapoff -a
+          sudo rm -f /swapfile /mnt/swapfile
           sudo -E apt-get -y update
           sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
-          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt) || true
-          sudo -E systemctl daemon-reload || true
-          sudo -E apt-get -y autoremove --purge || true
-          sudo -E apt-get clean || true
-          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile} || true
-          sudo rm -rf ~/{.cargo,.dotnet,.rustup} || true
-          sudo -E apt-get update || true
-          sudo apt-get -y install ${{ env.APT_PACKAGES }}
+          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
+          sudo -E systemctl daemon-reload
+          #sudo -E apt-get -y full-upgrade
+          sudo -E apt-get -y autoremove --purge
+          sudo -E apt-get clean
+          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
+          sudo rm -rf ~/{.cargo,.dotnet,.rustup}
           sudo timedatectl set-timezone "${TZ}"
 
       - name: Prepare Before Build
@@ -326,7 +326,7 @@ jobs:
   create_releases:
     needs: [prepare, build]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         fitur: ${{ fromJSON(needs.prepare.outputs.fiturs) }}
@@ -432,7 +432,7 @@ jobs:
   notify:
     needs: [prepare, build, create_releases]
     if: always()
-    runs-on: ubuntu-latest   
+    runs-on: ubuntu-22.04 
     steps:
       - name: Download Build Status Artifacts
         uses: actions/download-artifact@v4
@@ -694,7 +694,7 @@ jobs:
   cleanup:
     needs: [build, notify]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Delete Old Workflow Runs
         uses: Mattraks/delete-workflow-runs@v2
