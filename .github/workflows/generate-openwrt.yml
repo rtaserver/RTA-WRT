@@ -294,6 +294,10 @@ jobs:
             exit 1
           fi
 
+      - name: Before Upload
+        run: |
+          find imagebuilder/out_firmware/ ! -name "RTA-WRT*" -exec rm -rf {} +
+
       - name: Upload Build Status
         uses: actions/upload-artifact@v4
         if: always()
