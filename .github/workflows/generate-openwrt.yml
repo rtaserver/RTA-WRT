@@ -259,12 +259,13 @@ jobs:
           sudo rm -f /swapfile /mnt/swapfile || true
           sudo -E apt-get -y update
           sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
-          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
+          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt) || true
           sudo -E systemctl daemon-reload || true
           sudo -E apt-get -y autoremove --purge || true
           sudo -E apt-get clean || true
           sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile} || true
           sudo rm -rf ~/{.cargo,.dotnet,.rustup} || true
+          sudo -E apt-get update || true
           sudo apt-get install -y ${{ env.APT_PACKAGES }} || true
           sudo timedatectl set-timezone "${TZ}"
 
