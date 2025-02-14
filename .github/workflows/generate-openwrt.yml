@@ -244,11 +244,6 @@ jobs:
         fitur: ${{ fromJSON(needs.prepare.outputs.fiturs) }}
   
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
-
       # Cleanup artifacts and workspace
       - name: Cleanup prepare
         run: |
@@ -268,6 +263,11 @@ jobs:
           echo "Disk usage after cleanup:"
           df -h
 
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
       - name: Install Dependencies
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -275,7 +275,6 @@ jobs:
           docker rmi $(docker images -q) 2>/dev/null
           [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
           sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
-          sudo rm -f /swapfile /mnt/swapfile
           sudo -E apt-get -y update
           sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
           sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
@@ -344,11 +343,6 @@ jobs:
       matrix:
         fitur: ${{ fromJSON(needs.prepare.outputs.fiturs) }}
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
-
       # Cleanup artifacts and workspace
       - name: Cleanup build
         run: |
@@ -367,6 +361,11 @@ jobs:
           
           echo "Disk usage after cleanup:"
           df -h
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Extract Changelog Firmware
         id: changelog_firmware
@@ -468,11 +467,6 @@ jobs:
     if: always()
     runs-on: ubuntu-22.04 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
-
       # Cleanup artifacts and workspace
       - name: Cleanup create_releases
         run: |
@@ -491,6 +485,11 @@ jobs:
           
           echo "Disk usage after cleanup:"
           df -h
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Download Build Status Artifacts
         uses: actions/download-artifact@v4
