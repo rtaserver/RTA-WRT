@@ -244,11 +244,6 @@ jobs:
         fitur: ${{ fromJSON(needs.prepare.outputs.fiturs) }}
   
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
-
       # Cleanup artifacts and workspace
       - name: Cleanup prepare
         run: |
@@ -267,6 +262,11 @@ jobs:
           
           echo "Disk usage after cleanup:"
           df -h
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Install Dependencies
         env:
@@ -343,11 +343,6 @@ jobs:
       matrix:
         fitur: ${{ fromJSON(needs.prepare.outputs.fiturs) }}
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
-
       # Cleanup artifacts and workspace
       - name: Cleanup build
         run: |
@@ -366,6 +361,11 @@ jobs:
           
           echo "Disk usage after cleanup:"
           df -h
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Extract Changelog Firmware
         id: changelog_firmware
@@ -465,11 +465,6 @@ jobs:
     if: always()
     runs-on: ubuntu-22.04 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
-
       # Cleanup artifacts and workspace
       - name: Cleanup create_releases
         run: |
@@ -488,6 +483,11 @@ jobs:
           
           echo "Disk usage after cleanup:"
           df -h
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Download Build Status Artifacts
         uses: actions/download-artifact@v4
