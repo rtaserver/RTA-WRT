@@ -1,8 +1,11 @@
 # What's New!
 
+**Changelog Firmware** (15-02-2025)
+
 - Add currentFitur to header template and adjust package list in imagebuilder
 
 **Changelog Firmware** (13-02-2025)
+
 - Add Extend Partition Script
 - Fix Netmonitor Auto Start / Play
 - Add Vnstati To Netmonitor
