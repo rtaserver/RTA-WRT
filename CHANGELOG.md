@@ -3,6 +3,7 @@
 **Changelog Firmware** (15-02-2025)
 
 - Add currentFitur to header template and adjust package list in imagebuilder
+- Update header template to include currentFitur in version and changelog URLs
 
 **Changelog Firmware** (13-02-2025)
 
