@@ -185,6 +185,7 @@ const CONFIG = {
         baseOpenwrt: 'null',
         currentBranch: 'null',
         currentVersion: 'null',
+        currentFitur: 'null',
         checkInterval: 5 * 60 * 1000, // 5 minutes
         offlineRetryInterval: 30 * 1000, // 30 seconds
         maxRetryAttempts: 3,

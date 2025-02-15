@@ -751,7 +751,7 @@ rebuild_firmware() {
     PACKAGES+=" internet-detector luci-app-internet-detector internet-detector-mod-modem-restart nlbwmon luci-app-nlbwmon vnstat2 vnstati2 luci-app-vnstat2 netdata"
 
     # Theme
-    PACKAGES+=" luci-theme-material luci-theme-argon luci-app-argon-config luci-theme-material3"
+    PACKAGES+=" luci-theme-material luci-theme-argon luci-app-argon-config"
 
     if [[ "$op_fiturs" == "full-fitur" ]]; then
         # Python3

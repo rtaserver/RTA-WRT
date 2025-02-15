@@ -296,6 +296,7 @@ jobs:
           sed -i -E "s|baseOpenwrt: 'null'|baseOpenwrt: '${OP_SOURCE}'|g" files/usr/share/ucode/luci/template/header.ut
           sed -i -E "s|currentBranch: 'null'|currentBranch: '${{ github.ref_name }}'|g" files/usr/share/ucode/luci/template/header.ut
           sed -i -E "s|currentVersion: 'null'|currentVersion: '${RELEASE_TAG}'|g" files/usr/share/ucode/luci/template/header.ut
+          sed -i -E "s|currentFitur: 'null'|currentFitur: '${{ matrix.fitur }}'|g" files/usr/share/ucode/luci/template/header.ut
 
       - name: Build Image
         id: build
