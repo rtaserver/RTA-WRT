@@ -634,18 +634,7 @@ custom_config() {
 
     # Add custom config files
     if [[ "$op_fiturs" == "full-fitur" ]]; then
-        agh_api="https://api.github.com/repos/AdguardTeam/AdGuardHome/releases" 
-        agh_file="AdGuardHome_linux_${ARCH_1}"
-        agh_file_down="$(curl -s ${agh_api}/latest | grep "browser_download_url" | grep -oE "https.*${agh_file}.*.tar.gz" | head -n 1)"
-        latest_version=$(curl -sSL "$agh_api/latest" | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' | head -n 1)
-
-        ariadl "${agh_file_down}" "${custom_files_path}/opt/AdGuardHome_linux_${ARCH_1}.tar.gz"
-        if tar -zxvf ${custom_files_path}/opt/AdGuardHome_linux_"${ARCH_1}".tar.gz -C ${custom_files_path}/opt; then
-            rm -rf ${custom_files_path}/opt/AdGuardHome_linux_"${ARCH_1}".tar.gz
-            echo -e "${SUCCESS} Installed AdGuardHome version $latest_version"
-        else
-            echo -e "${WARNING} Failed to extract AdGuardHome."
-        fi
+        echo -e "${INFO} No custom config added." 
     elif [[ "$op_fiturs" == "simpel" ]]; then
         echo -e "${INFO} No custom config added."
     fi
@@ -768,13 +757,13 @@ rebuild_firmware() {
 
 
         # Disable service
-        DISABLED_SERVICES="AdGuardHome"
+        DISABLED_SERVICES+=" AdGuardHome"
     elif [[ "$op_fiturs" == "simpel" ]]; then
         # Tunnel
         PACKAGES+=" $OPENCLASH $MIHOMO $PASSWALL"
 
         # Disable service
-        DISABLED_SERVICES=""
+        DISABLED_SERVICES+=""
     fi
 
     # Misc and some custom .ipk files

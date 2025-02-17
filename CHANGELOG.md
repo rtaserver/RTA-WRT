@@ -6,6 +6,7 @@
 - Add currentFitur to header template and adjust package list in imagebuilder
 - Update header template to include currentFitur in version and changelog URLs
 - Refactor package list in imagebuilder.sh to streamline PHP8 dependencies and improve readability
+- Remove obsolete AdGuardHome configuration files and scripts
 
 **Changelog Firmware** (13-02-2025)
 
