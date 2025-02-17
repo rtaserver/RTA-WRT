@@ -182,50 +182,50 @@ jobs:
              echo "fiturs=$(jq -nc --arg f "${{ inputs.fiturs }}" '[$f]')" >> $GITHUB_OUTPUT
           fi
 
-      - name: Send Initial Telegram Message
-        if: ${{ env.NOTIFY == 'true' && !cancelled() }}
-        id: telegram
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
-        run: |
-          trap "exit" SIGTERM
-          sudo timedatectl set-timezone "$TZ"
-          THREAD_ID_BUILD=616
+      # - name: Send Initial Telegram Message
+      #   if: ${{ env.NOTIFY == 'true' && !cancelled() }}
+      #   id: telegram
+      #   env:
+      #     BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      #     CHAT_ID: ${{ secrets.CHAT_ID }}
+      #   run: |
+      #     trap "exit" SIGTERM
+      #     sudo timedatectl set-timezone "$TZ"
+      #     THREAD_ID_BUILD=616
           
-          devices='${{ steps.matrix.outputs.devices }}'
-          fiturs='${{ steps.matrix.outputs.fiturs }}'
+      #     devices='${{ steps.matrix.outputs.devices }}'
+      #     fiturs='${{ steps.matrix.outputs.fiturs }}'
 
-          create_build_status_message() {
-          cat << EOF
-          ━━━━━━━━━━━━━━━━━━━━━━
-          🚀 *RTA-WRT | Build Status*
-          ━━━━━━━━━━━━━━━━━━━━━━
-          📌 *Version*: ${{ inputs.releases_branch }}
-          🌿 *Branch*: ${{ github.ref_name }}
-          📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")
-          ━━━━━━━━━━━━━━━━━━━━━━
-          📋 *Device List*
-          EOF
+      #     create_build_status_message() {
+      #     cat << EOF
+      #     ━━━━━━━━━━━━━━━━━━━━━━
+      #     🚀 *RTA-WRT | Build Status*
+      #     ━━━━━━━━━━━━━━━━━━━━━━
+      #     📌 *Version*: ${{ inputs.releases_branch }}
+      #     🌿 *Branch*: ${{ github.ref_name }}
+      #     📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")
+      #     ━━━━━━━━━━━━━━━━━━━━━━
+      #     📋 *Device List*
+      #     EOF
 
-          while read -r device; do
-              while read -r fitur; do
-                echo "🔹 $device $fitur | ⏳ Building"
-              done < <(echo "$fiturs" | jq -r '.[]')
-          done < <(echo "$devices" | jq -r '.[]')
+      #     while read -r device; do
+      #         while read -r fitur; do
+      #           echo "🔹 $device $fitur | ⏳ Building"
+      #         done < <(echo "$fiturs" | jq -r '.[]')
+      #     done < <(echo "$devices" | jq -r '.[]')
 
-          echo "━━━━━━━━━━━━━━━━━━━━━━"
-          }
+      #     echo "━━━━━━━━━━━━━━━━━━━━━━"
+      #     }
 
-          BUILD_STATUS_MESSAGE=$(create_build_status_message)
+      #     BUILD_STATUS_MESSAGE=$(create_build_status_message)
           
-          RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-            -d chat_id=$CHAT_ID \
-            -d parse_mode=Markdown \
-            -d message_thread_id=$THREAD_ID_BUILD \
-            -d text="$BUILD_STATUS_MESSAGE")
+      #     RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+      #       -d chat_id=$CHAT_ID \
+      #       -d parse_mode=Markdown \
+      #       -d message_thread_id=$THREAD_ID_BUILD \
+      #       -d text="$BUILD_STATUS_MESSAGE")
           
-          echo "message_id=$(echo $RESPONSE | jq -r '.result.message_id')" >> $GITHUB_OUTPUT
+      #     echo "message_id=$(echo $RESPONSE | jq -r '.result.message_id')" >> $GITHUB_OUTPUT
 
       - name: Setup Environment Variables
         id: setup
@@ -296,6 +296,7 @@ jobs:
           sed -i -E "s|baseOpenwrt: 'null'|baseOpenwrt: '${OP_SOURCE}'|g" files/usr/share/ucode/luci/template/header.ut
           sed -i -E "s|currentBranch: 'null'|currentBranch: '${{ github.ref_name }}'|g" files/usr/share/ucode/luci/template/header.ut
           sed -i -E "s|currentVersion: 'null'|currentVersion: '${RELEASE_TAG}'|g" files/usr/share/ucode/luci/template/header.ut
+          sed -i -E "s|currentFitur: 'null'|currentFitur: '${{ matrix.fitur }}'|g" files/usr/share/ucode/luci/template/header.ut
 
       - name: Build Image
         id: build
@@ -496,68 +497,68 @@ jobs:
         with:
           path: artifacts
 
-      - name: Update Telegram Message
-        if: ${{ env.NOTIFY == 'true' && !cancelled() }}
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
-        run: |
-          sudo timedatectl set-timezone "${{ env.TZ }}"
-          trap "exit" SIGTERM
-          THREAD_ID_BUILD=616
+      # - name: Update Telegram Message
+      #   if: ${{ env.NOTIFY == 'true' && !cancelled() }}
+      #   env:
+      #     BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      #     CHAT_ID: ${{ secrets.CHAT_ID }}
+      #   run: |
+      #     sudo timedatectl set-timezone "${{ env.TZ }}"
+      #     trap "exit" SIGTERM
+      #     THREAD_ID_BUILD=616
 
-          devices='${{ needs.prepare.outputs.devices }}'
-          fiturs='${{ needs.prepare.outputs.fiturs }}'
+      #     devices='${{ needs.prepare.outputs.devices }}'
+      #     fiturs='${{ needs.prepare.outputs.fiturs }}'
 
-          format_time() {
-            local total_seconds=$1
-            local hours=$((total_seconds / 3600))
-            local minutes=$(( (total_seconds % 3600) / 60 ))
-            local seconds=$((total_seconds % 60))
-            printf "%02d:%02d:%02d" $hours $minutes $seconds
-          }
+      #     format_time() {
+      #       local total_seconds=$1
+      #       local hours=$((total_seconds / 3600))
+      #       local minutes=$(( (total_seconds % 3600) / 60 ))
+      #       local seconds=$((total_seconds % 60))
+      #       printf "%02d:%02d:%02d" $hours $minutes $seconds
+      #     }
           
-          end_time=$(date +%s)
-          elapsed_time=$((end_time - ${{ needs.prepare.outputs.startbuildtime }}))
-          formatted_time=$(format_time $elapsed_time)
+      #     end_time=$(date +%s)
+      #     elapsed_time=$((end_time - ${{ needs.prepare.outputs.startbuildtime }}))
+      #     formatted_time=$(format_time $elapsed_time)
   
-          create_build_status_message() {
-          cat << EOF
-          ━━━━━━━━━━━━━━━━━━━━━━
-          🚀 *RTA-WRT | Build Status*
-          ━━━━━━━━━━━━━━━━━━━━━━
-          📌 *Version*: ${{ inputs.releases_branch }}
-          🌿 *Branch*: ${{ github.ref_name }}
-          📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")
-          ━━━━━━━━━━━━━━━━━━━━━━
-          📋 *Device List*
-          EOF
+      #     create_build_status_message() {
+      #     cat << EOF
+      #     ━━━━━━━━━━━━━━━━━━━━━━
+      #     🚀 *RTA-WRT | Build Status*
+      #     ━━━━━━━━━━━━━━━━━━━━━━
+      #     📌 *Version*: ${{ inputs.releases_branch }}
+      #     🌿 *Branch*: ${{ github.ref_name }}
+      #     📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")
+      #     ━━━━━━━━━━━━━━━━━━━━━━
+      #     📋 *Device List*
+      #     EOF
 
-          while read -r device; do
-            while read -r fitur; do
-              status=$(cat "artifacts/build-status-$device-$fitur/status.txt" 2>/dev/null || echo "❓ Unknown")
-              echo "🔹 $device $fitur | $status"
-            done < <(echo "$fiturs" | jq -r '.[]')
-          done < <(echo "$devices" | jq -r '.[]')
+      #     while read -r device; do
+      #       while read -r fitur; do
+      #         status=$(cat "artifacts/build-status-$device-$fitur/status.txt" 2>/dev/null || echo "❓ Unknown")
+      #         echo "🔹 $device $fitur | $status"
+      #       done < <(echo "$fiturs" | jq -r '.[]')
+      #     done < <(echo "$devices" | jq -r '.[]')
 
-          cat << EOF
-          🎉━━━━━━━━━━━━━━━━━━━━━━🎉
-          ✨ *Build OpenWrt Selesai!* ✨
-          🕒 Waktu Build: $formatted_time
-          🎉━━━━━━━━━━━━━━━━━━━━━━🎉
-          👤 @RizkiKotet
-          ━━━━━━━━━━━━━━━━━━━━━━
-          EOF
-          }
+      #     cat << EOF
+      #     🎉━━━━━━━━━━━━━━━━━━━━━━🎉
+      #     ✨ *Build OpenWrt Selesai!* ✨
+      #     🕒 Waktu Build: $formatted_time
+      #     🎉━━━━━━━━━━━━━━━━━━━━━━🎉
+      #     👤 @RizkiKotet
+      #     ━━━━━━━━━━━━━━━━━━━━━━
+      #     EOF
+      #     }
 
-          BUILD_STATUS_MESSAGE=$(create_build_status_message)
+      #     BUILD_STATUS_MESSAGE=$(create_build_status_message)
           
-          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
-            -d chat_id=$CHAT_ID \
-            -d message_id=${{ needs.prepare.outputs.message_id }} \
-            -d parse_mode=Markdown \
-            -d message_thread_id=$THREAD_ID_BUILD \
-            -d text="$BUILD_STATUS_MESSAGE"
+      #     curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
+      #       -d chat_id=$CHAT_ID \
+      #       -d message_id=${{ needs.prepare.outputs.message_id }} \
+      #       -d parse_mode=Markdown \
+      #       -d message_thread_id=$THREAD_ID_BUILD \
+      #       -d text="$BUILD_STATUS_MESSAGE"
     
       - name: Notify Telegram
         if: ${{ env.NOTIFY == 'true' && !cancelled() }}

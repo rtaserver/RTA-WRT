@@ -185,6 +185,7 @@ const CONFIG = {
         baseOpenwrt: 'null',
         currentBranch: 'null',
         currentVersion: 'null',
+        currentFitur: 'null',
         checkInterval: 5 * 60 * 1000, // 5 minutes
         offlineRetryInterval: 30 * 1000, // 30 seconds
         maxRetryAttempts: 3,
@@ -193,10 +194,10 @@ const CONFIG = {
     URLS: {
         info: 'https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/informasi.txt',
         getVersion() {
-            return `https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${this.APP.currentBranch}/${this.APP.baseOpenwrt}/version.txt`;
+            return `https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${this.APP.currentBranch}/${this.APP.baseOpenwrt}/${this.APP.currentFitur}/version.txt`;
         },
         getChangelog() {
-            return `https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${this.APP.currentBranch}/${this.APP.baseOpenwrt}/changelog.txt`;
+            return `https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${this.APP.currentBranch}/${this.APP.baseOpenwrt}/${this.APP.currentFitur}/changelog.txt`;
         },
         internetCheck: 'https://www.google.com/favicon.ico'
     },
