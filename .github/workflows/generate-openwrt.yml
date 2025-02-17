@@ -594,8 +594,6 @@ jobs:
           ━━━━━━━━━━━━━━━━━━━━━━
           EOF
           }
-
-          STABLE_MESSAGE=$(create_stable_message)
        
           create_dev_message() {
           cat << EOF
@@ -625,8 +623,6 @@ jobs:
           📋 ${{ needs.prepare.outputs.changelog_simpel }}
           EOF
           }
-
-          DEV_MESSAGE=$(create_dev_message)
 
           DATETIME=$(date +'%d%m%Y')
 
@@ -671,28 +667,18 @@ jobs:
           fi
 
           if [ "${CURRENT_BRANCH}" == "main" ]; then
-            MSGID=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
-              -d "chat_id=$CHAT_ID" \
-              -d "caption=$STABLE_MESSAGE" \
-              -d "parse_mode=Markdown" \
-              -d "message_thread_id=$THREAD_ID_UPDATE" \
-              -d "reply_markup={\"inline_keyboard\":$BUTTONS}" | jq '.result.message_id')
-
-            curl -s -X POST "https://api.telegram.org/bot$TOKEN/pinChatMessage" \
-              -d "chat_id=$CHAT_ID" \
-              -d "photo=$IMGURL" \
-              -d "message_id=$MSGID" \
-              -d "message_thread_id=$THREAD_ID_UPDATE" \
-              -d "disable_notification=true"
+            TELEMSG=$(create_stable_message)
           else
-            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
-              -d "chat_id=$CHAT_ID" \
-              -d "photo=$IMGURL" \
-              -d "caption=$DEV_MESSAGE" \
-              -d "parse_mode=Markdown" \
-              -d "message_thread_id=$THREAD_ID_UPDATE" \
-              -d "reply_markup={\"inline_keyboard\":$BUTTONS}"
+            TELEMSG=$(create_dev_message)
           fi
+          
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
+            -d "chat_id=$CHAT_ID" \
+            -d "photo=$IMGURL" \
+            -d "caption=$TELEMSG" \
+            -d "parse_mode=Markdown" \
+            -d "message_thread_id=$THREAD_ID_UPDATE" \
+            -d "reply_markup={\"inline_keyboard\":$BUTTONS}"
 
       - name: Checkout Repository
         uses: actions/checkout@v4
