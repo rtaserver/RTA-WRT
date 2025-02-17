@@ -1,10 +1,11 @@
 # What's New!
 
-**Changelog Firmware** (15-02-2025)
+**Changelog Firmware** (17-02-2025)
 
 - Remove Theme Material 3
 - Add currentFitur to header template and adjust package list in imagebuilder
 - Update header template to include currentFitur in version and changelog URLs
+- Refactor package list in imagebuilder.sh to streamline PHP8 dependencies and improve readability
 
 **Changelog Firmware** (13-02-2025)
 

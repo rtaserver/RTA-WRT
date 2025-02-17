@@ -727,16 +727,14 @@ rebuild_firmware() {
     libc coreutils-stat libopenssl-legacy \
     sms-tool luci-app-temp-status cpusage ttyd dmesg kmod-tun luci-lib-ipkg \
     ipset ipt2socks iptables iptables-legacy iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat \
-    coreutils coreutils-base64 coreutils-nohup dns2socks ip-full libuci-lua microsocks resolveip tcping"
-
-    PACKAGES+=" luci-app-diskman luci-app-poweroff luci-app-log-viewer luci-app-ramfree"
+    coreutils coreutils-base64 coreutils-nohup dns2socks ip-full libuci-lua microsocks resolveip tcping luci-app-poweroff luci-app-log-viewer luci-app-ramfree"
 
     # Modem Tools
     PACKAGES+=" modeminfo-serial-zte modeminfo-serial-gosun modeminfo-qmi modeminfo-serial-yuge modeminfo-serial-thales modeminfo-serial-tw modeminfo-serial-meig modeminfo-serial-styx modeminfo-serial-mikrotik modeminfo-serial-dell modeminfo-serial-sierra modeminfo-serial-quectel modeminfo-serial-huawei modeminfo-serial-xmm modeminfo-serial-telit modeminfo-serial-fibocom modeminfo-serial-simcom modeminfo luci-app-modeminfo"
     PACKAGES+=" atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js luci-app-lite-watchdog luci-app-3ginfo-lite picocom minicom"
 
     # Tunnel option
-    OPENCLASH="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
+    OPENCLASH+="coreutils-nohup bash dnsmasq-full curl ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag unzip kmod-nft-tproxy luci-compat luci luci-base luci-app-openclash"
     MIHOMO+="nikki luci-app-nikki"
     PASSWALL+="chinadns-ng resolveip dns2socks dns2tcp ipt2socks microsocks tcping xray-core xray-plugin luci-app-passwall"
     NEKOCLASH+="kmod-tun bash curl jq mihomo sing-box php8 php8-mod-curl luci-app-neko"
@@ -753,6 +751,9 @@ rebuild_firmware() {
     # Theme
     PACKAGES+=" luci-theme-material luci-theme-argon luci-app-argon-config"
 
+    # PHP8
+    PACKAGES+=" php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring"
+
     if [[ "$op_fiturs" == "full-fitur" ]]; then
         # Python3
         PACKAGES+=" python3 python3-pip"
@@ -764,11 +765,6 @@ rebuild_firmware() {
         PACKAGES+=" docker docker-compose dockerd luci-app-dockerman"
         # Speedtest
         PACKAGES+=" librespeed-go python3-speedtest-cli iperf3-ssl luci-app-netspeedtest"
-        # PHP8
-        PACKAGES+=" php8 php8-cgi php8-fastcgi php8-fpm php8-mod-ctype php8-mod-curl php8-mod-fileinfo php8-mod-iconv php8-mod-mbstring php8-mod-session php8-mod-zip \
-        php8-cli php8-mod-bcmath php8-mod-calendar php8-mod-filter php8-mod-gd php8-mod-intl \
-        php8-mod-mysqli php8-mod-mysqlnd php8-mod-opcache php8-mod-pdo php8-mod-pdo-mysql php8-mod-phar \
-        php8-mod-xml php8-mod-xmlreader php8-mod-xmlwriter"
 
 
         # Disable service
@@ -776,10 +772,6 @@ rebuild_firmware() {
     elif [[ "$op_fiturs" == "simpel" ]]; then
         # Tunnel
         PACKAGES+=" $OPENCLASH $MIHOMO $PASSWALL"
-
-        # PHP8
-        PACKAGES+=" php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring"
-
 
         # Disable service
         DISABLED_SERVICES=""
