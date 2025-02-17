@@ -689,34 +689,40 @@ rebuild_firmware() {
     mkdir -p ${imagebuilder_path}/out_firmware ${imagebuilder_path}/out_rootfs
 
     # Selecting default packages, lib, app and etc.
+    # Profile info
+    make info
+
+    # Main configuration name
+    PROFILE=""
+    PACKAGES=""
+
+    # Default
     PACKAGES+=" -dnsmasq dnsmasq-full cgi-io libiwinfo libiwinfo-data libiwinfo-lua liblua \
+    luci-base luci-lib-base luci-lib-ip luci-lib-jsonc luci-lib-nixio luci-mod-admin-full \
+    luci-app-temp-status cpusage ttyd dmesg kmod-tun luci-lib-ipkg \
     zram-swap adb parted losetup resize2fs luci luci-ssl block-mount htop bash curl wget-ssl \
     tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server \
     liblucihttp liblucihttp-lua libubus-lua lua luci-app-firewall luci-app-opkg \
+    ca-bundle ca-certificates luci-compat coreutils-sleep fontconfig coreutils-whoami file lolcat \
     luci-base luci-lib-base luci-lib-ip luci-lib-jsonc luci-lib-nixio luci-mod-admin-full \
     luci-mod-network luci-mod-status luci-mod-system luci-proto-ipv6 luci-proto-ppp \
     luci-theme-bootstrap px5g-wolfssl rpcd rpcd-mod-file rpcd-mod-iwinfo rpcd-mod-luci \
-    rpcd-mod-rrdns uhttpd uhttpd-mod-ubus usbutils \
-    kmod-usb-net kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-acm kmod-usb-net-qmi-wwan \
-    kmod-usb-net-rndis kmod-usb-serial-qualcomm kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial \
-    kmod-nls-utf8 kmod-usb-serial-option kmod-usb-serial-sierrawireless kmod-usb-uhci kmod-usb2 \
-    kmod-usb-net-ipheth kmod-usb-net-cdc-mbim usbmuxd libusbmuxd-utils libimobiledevice-utils \
-    mbim-utils qmi-utils uqmi umbim modemmanager modemmanager-rpcd luci-proto-modemmanager libmbim libqmi luci-proto-3g luci-proto-ncm \
-    usb-modeswitch picocom minicom libusb-1.0-0 \
-    xmm-modem kmod-usb-net-asix kmod-usb-net-asix-ax88179 kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 \
-    ca-bundle ca-certificates luci-compat coreutils-sleep fontconfig coreutils-whoami file lolcat \
-    zsh kmod-mii kmod-usb-wdm kmod-usb-serial-wwan kmod-usb-ehci kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 iptables-nft coreutils-stty \
-    hostapd wpa-cli wpa-supplicant kmod-cfg80211 kmod-mac80211 wireless-tools iw-full hostapd-utils \
-    libqrtr-glib luci-proto-qmi \
+    rpcd-mod-rrdns uhttpd uhttpd-mod-ubus coreutils coreutils-base64 coreutils-nohup coreutils-stty libc coreutils-stat\
+    ip-full libuci-lua microsocks resolveip tcping ipset ipt2socks iptables iptables-legacy \
+    iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat luci-lua-runtime zoneinfo-asia zoneinfo-core \
     perl perlbase-base perlbase-bytes perlbase-class perlbase-config perlbase-cwd perlbase-dynaloader perlbase-errno perlbase-essential perlbase-fcntl perlbase-file \
     perlbase-filehandle perlbase-i18n perlbase-integer perlbase-io perlbase-list perlbase-locale perlbase-params perlbase-posix \
-    perlbase-re perlbase-scalar perlbase-selectsaver perlbase-socket perlbase-symbol perlbase-tie perlbase-time perlbase-unicore perlbase-utf8 perlbase-xsloader \
-    ruby ruby-bigdecimal ruby-date ruby-digest ruby-enc ruby-forwardable ruby-pstore ruby-psych ruby-stringio ruby-yaml \
-    luci-lua-runtime zoneinfo-asia zoneinfo-core luci-proto-mbim \
-    libc coreutils-stat libopenssl-legacy \
-    sms-tool luci-app-temp-status cpusage ttyd dmesg kmod-tun luci-lib-ipkg \
-    ipset ipt2socks iptables iptables-legacy iptables-mod-iprange iptables-mod-socket iptables-mod-tproxy kmod-ipt-nat \
-    coreutils coreutils-base64 coreutils-nohup dns2socks ip-full libuci-lua microsocks resolveip tcping luci-app-poweroff luci-app-log-viewer luci-app-ramfree"
+    perlbase-re perlbase-scalar perlbase-selectsaver perlbase-socket perlbase-symbol perlbase-tie perlbase-time perlbase-unicore perlbase-utf8 perlbase-xsloader"
+
+    # Modem and UsbLAN Driver
+    PACKAGES+=" kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
+    PACKAGES+=" kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi luci-proto-qmi \
+    kmod-usb-net-cdc-ether kmod-usb-serial-option kmod-usb-serial kmod-usb-serial-wwan qmi-utils \
+    kmod-usb-serial-qualcomm kmod-usb-acm kmod-usb-net-cdc-ncm kmod-usb-net-cdc-mbim umbim \
+    modemmanager  modemmanager-rpcd luci-proto-modemmanager libmbim libqmi usbutils luci-proto-mbim luci-proto-ncm \
+    kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-ohci kmod-usb-serial-sierrawireless \
+    kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb-net-ipheth usbmuxd libusbmuxd-utils libimobiledevice-utils usb-modeswitch kmod-nls-utf8 mbim-utils xmm-modem \
+    kmod-phy-broadcom kmod-phylib-broadcom kmod-tg3 libusb-1.0-0"
 
     # Modem Tools
     PACKAGES+=" modeminfo-serial-zte modeminfo-serial-gosun modeminfo-qmi modeminfo-serial-yuge modeminfo-serial-thales modeminfo-serial-tw modeminfo-serial-meig modeminfo-serial-styx modeminfo-serial-mikrotik modeminfo-serial-dell modeminfo-serial-sierra modeminfo-serial-quectel modeminfo-serial-huawei modeminfo-serial-xmm modeminfo-serial-telit modeminfo-serial-fibocom modeminfo-serial-simcom modeminfo luci-app-modeminfo"
@@ -742,6 +748,9 @@ rebuild_firmware() {
 
     # PHP8
     PACKAGES+=" php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring"
+
+    # More
+    PACKAGES+=" luci-app-poweroff luci-app-log-viewer luci-app-ramfree"
 
     if [[ "$op_fiturs" == "full-fitur" ]]; then
         # Python3
