@@ -450,7 +450,7 @@ jobs:
             ## 📝 Changelog Firmware
             ${{ steps.changelog_firmware.outputs.changelog_firmware }}
           
-            ## 📝 Changelog Decices
+            ## 📝 Changelog Devices
             ${{ steps.changelog_devices.outputs.changelog_devices }}
           prerelease: ${{ github.ref_name == 'dev' }}
           generate_release_notes: true
