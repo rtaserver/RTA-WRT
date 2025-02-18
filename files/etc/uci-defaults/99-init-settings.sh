@@ -1,47 +1,8 @@
 #!/bin/sh
 
-# ENV
-exec > /root/firs-setup.log 2>&1
+exec > /root/setup.log 2>&1
 
-echo "Setting permission..."
-chmod +x /sbin/repair_ro
-chmod +x /etc/init.d/repair_ro
-chmod +x /usr/bin/repair_ro
-echo "Adding to startup..."
-/etc/init.d/repair_ro enable
-bash /usr/bin/repair_ro
-chmod +x /www/vnstati/vnstati.sh
-echo "Success!"
-
-msg() {
-    local DATE=$(date '+%d %B %Y %T')
-    echo "[ INFO FIRST SETUP ] $1"
-    logger -p "notice" "[ INFO FIRST SETUP ] $1"
-}
-
-# Set All permission files
-msg "Set All permission files"
-check_permission() {
-    local DIR=${1:-.}
-
-    find "$DIR" -type f | while read file; do
-        if file "$file" | grep -q "executable"; then
-            if [ ! -x "$file" ]; then
-                msg "File requiring chmod +x: $file"
-                chmod +x "$file"
-            fi
-        fi
-    done
-}
-
-check_permission "/etc/init.d"
-check_permission "/etc/mihomo"
-check_permission "/etc/openclash"
-check_permission "/lib/netifd"
-check_permission "/lib/wifi"
-check_permission "/sbin"
-check_permission "/usr/bin"
-
+# dont remove!
 # dont remove!
 msg "Installed Time: $(date '+%A, %d %B %Y %T')"
 msg "###############################################"
@@ -50,9 +11,6 @@ msg "Device Model: $(ubus call system board | grep '\"model\"' | sed 's/ \+/ /g'
 msg "Device Board: $(ubus call system board | grep '\"board_name\"' | sed 's/ \+/ /g' | awk -F'\"' '{print $4}')"
 sed -i "s#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' / ':'')+(luciversion||''),#_('Firmware Version'),(L.isObject(boardinfo.release)?boardinfo.release.description+' build by RTA-WRT [ Ouc3kNF6 ]':''),#g" /www/luci-static/resources/view/status/include/10_system.js
 sed -i -E "s|icons/port_%s.png|icons/port_%s.gif|g" /www/luci-static/resources/view/status/include/29_ports.js
-sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
-sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/#&/' /etc/profile
-#sed -i '1i source /usr/share/oh-my-bash/.bashrc' /etc/profile
 if grep -q "ImmortalWrt" /etc/openwrt_release; then
   sed -i "s/\(DISTRIB_DESCRIPTION='ImmortalWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
   sed -i -E "s|services/ttyd|system/ttyd|g" /usr/share/ucode/luci/template/themes/material/header.ut
@@ -62,10 +20,14 @@ elif grep -q "OpenWrt" /etc/openwrt_release; then
   sed -i "s/\(DISTRIB_DESCRIPTION='OpenWrt [0-9]*\.[0-9]*\.[0-9]*\).*'/\1'/g" /etc/openwrt_release
   msg Branch version: "$(grep 'DISTRIB_DESCRIPTION=' /etc/openwrt_release | awk -F"'" '{print $2}')"
 fi
-msg "###############################################"
+echo "Tunnel Installed: $(opkg list-installed | grep -e luci-app-openclash -e luci-app-nikki -e luci-app-passwall | awk '{print $1}' | tr '\n' ' ')"
+echo "###############################################"
+
+# Set login root password
+(echo "rtawrt"; sleep 1; echo "rtawrt") | passwd > /dev/null
 
 # Set hostname and Timezone to Asia/Jakarta
-msg "Setup NTP Server and Time Zone to Asia/Jakarta"
+echo "Setup NTP Server and Time Zone to Asia/Jakarta"
 uci set system.@system[0].hostname='RTA-WRT'
 uci set system.@system[0].timezone='WIB-7'
 uci set system.@system[0].zonename='Asia/Jakarta'
@@ -76,44 +38,26 @@ uci add_list system.ntp.server="time.google.com"
 uci commit system
 
 # configure wan interface
-msg "Setup WAN and LAN Interface"
+echo "Setup WAN and LAN Interface"
 uci set network.lan.ipaddr="192.168.1.1"
-uci set network.lan.delegate='0'
-uci set network.wan=interface
-uci set network.wan.proto='dhcp'
-uci set network.wan.device='eth1'
-uci set network.wan1=interface
-uci set network.wan1.proto='dhcp'
-uci set network.wan1.device='eth2'
-uci set network.wan2=interface
-uci set network.wan2.proto='dhcp'
-uci set network.wan2.device='eth3'
-uci set network.mm=interface 
-uci set network.mm.proto='modemmanager'
-uci set network.mm.apn='internet'
-uci set network.mm.auth='none'
-uci set network.mm.iptype='ipv4'
-uci set network.mm.force_connection='1'
-uci -q delete network.wan6
+uci set network.wan=interface 
+uci set network.wan.proto='modemmanager'
+uci set network.wan.device='/sys/devices/platform/scb/fd500000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/usb2/2-1'
+uci set network.wan.apn='internet'
+uci set network.wan.auth='none'
+uci set network.wan.iptype='ipv4'
 uci commit network
-uci set firewall.@zone[1].network='wan wan1 wan2 mm'
+uci set firewall.@zone[1].network='wan'
 uci commit firewall
 
 # configure ipv6
 uci -q delete dhcp.lan.dhcpv6
 uci -q delete dhcp.lan.ra
 uci -q delete dhcp.lan.ndp
-uci -q delete dhcp.lan.ra_slaac
-uci -q delete dhcp.lan.ra_flags
-uci -q delete dhcp.lan.max_preferred_lifetime
-uci -q delete dhcp.lan.max_valid_lifetime
 uci commit dhcp
-uci set network.lan.delegate='0'
-uci del network.lan.ip6assign
-uci commit network
 
 # configure WLAN
-msg "Setup Wireless if available"
+echo "Setup Wireless if available"
 uci set wireless.@wifi-device[0].disabled='0'
 uci set wireless.@wifi-iface[0].disabled='0'
 uci set wireless.@wifi-iface[0].encryption='none'
@@ -143,62 +87,95 @@ if iw dev | grep -q Interface; then
     fi
   fi
 else
-  msg "No wireless device detected."
+  echo "No wireless device detected."
 fi
 
-# Configure Password Login OpenWrt
-msg "Configure Password Login OpenWrt"
-(echo "rtawrt"; sleep 1; echo "rtawrt") | passwd > /dev/null
-
-
-# Add Custom Repo and Disable opkg signature check
-msg "Add Custom Repo and Disable opkg signature check"
+# custom repo and Disable opkg signature check
+echo "Setup custom repo using dlopenwrtai Repo"
 sed -i 's/option check_signature/# option check_signature/g' /etc/opkg.conf
-echo "src/gz custom_arch https://dl.openwrt.ai/latest/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
+echo "src/gz custom_pkg https://dl.openwrt.ai/latest/packages/$(grep "OPENWRT_ARCH" /etc/os-release | awk -F '"' '{print $2}')/kiddin9" >> /etc/opkg/customfeeds.conf
 
-# Remove login password required when accessing terminal
-msg "Remove login password required when accessing terminal"
+# set argon as default theme
+echo "Setup Default Theme"
+uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
+
+echo "Setup misc settings"
+# remove login password required when accessing terminal
 uci set ttyd.@ttyd[0].command='/bin/bash --login'
-uci commit ttyd
+uci commit
 
-
-# Remove huawei me909s usb-modeswitch
-msg "Remove huawei me909s usb-modeswitch"
+# remove huawei me909s usb-modeswitch
 sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
 
-# Remove dw5821e usb-modeswitch
-msg "Remove dw5821e usb-modeswitch"
+# remove dw5821e usb-modeswitch
 sed -i -e '/413c:81d7/,+5d' /etc/usb-mode.json
 
-msg "Remove Thales MV31-W T99W175 usb-modeswitch"
+# Remove Thales MV31-W T99W175 usb-modeswitch
 sed -i -e '/1e2d:00b3/,+5d' /etc/usb-mode.json
 
 # Disable /etc/config/xmm-modem
-msg "Disable /etc/config/xmm-modem"
 uci set xmm-modem.@xmm-modem[0].enable='0'
-uci commit xmm-modem
+uci commit
 
-
-# Setup Nlbwmon Database Dir
-msg "Setup Nlbwmon Database Dir"
+# setup nlbwmon database dir
 uci set nlbwmon.@nlbwmon[0].database_directory='/etc/nlbwmon'
 uci set nlbwmon.@nlbwmon[0].commit_interval='3h'
 uci set nlbwmon.@nlbwmon[0].refresh_interval='60s'
 uci commit nlbwmon
 bash /etc/init.d/nlbwmon restart
 
-
-# Setup Auto Vnstat Database Backup
-msg "Setup Auto Vnstat Database Backup"
+# setup auto vnstat database backup
 sed -i 's/;DatabaseDir "\/var\/lib\/vnstat"/DatabaseDir "\/etc\/vnstat"/' /etc/vnstat.conf
 mkdir -p /etc/vnstat
 chmod +x /etc/init.d/vnstat_backup
 bash /etc/init.d/vnstat_backup enable
 
+# adjusting app catagory
+sed -i 's/services/modem/g' /usr/share/luci/menu.d/luci-app-lite-watchdog.json
+
+# setup misc settings
+sed -i 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' /etc/profile
+sed -i 's/\[ -n "$FAILSAFE" \] && cat \/etc\/banner.failsafe/#&/' /etc/profile
+chmod +x /root/install2.sh && bash /root/install2.sh
+chmod +x /sbin/sync_time.sh
+chmod +x /sbin/free.sh
+chmod +x /usr/bin/clock
+chmod +x /usr/bin/openclash.sh
+chmod +x /usr/bin/cek_sms.sh
+
+# configurating openclash
+if opkg list-installed | grep luci-app-openclash > /dev/null; then
+  echo "Openclash Detected!"
+  echo "Configuring Core..."
+  chmod +x /etc/openclash/core/clash_meta
+  chmod +x /usr/bin/patchoc.sh
+  echo "Patching Openclash Overview"
+  bash /usr/bin/patchoc.sh
+  sed -i '/exit 0/i #/usr/bin/patchoc.sh' /etc/rc.local
+  ln -s /etc/openclash/history/config-wrt.db /etc/openclash/cache.db
+  ln -s /etc/openclash/core/clash_meta  /etc/openclash/clash
+  rm -rf /etc/config/openclash
+  mv /etc/config/openclash1 /etc/config/openclash
+  echo "setup complete!"
+else
+  echo "No Openclash Detected."
+  uci delete internet-detector.Openclash
+  uci commit internet-detector
+  service internet-detector restart
+  rm -rf /etc/config/openclash1
+  rm -rf /etc/openclash
+fi
+
+# configurating Nikki
+if opkg list-installed | grep luci-app-nikki > /dev/null; then
+  echo "setup complete!"
+else
+  echo "No Nikki Detected."
+  rm -rf /etc/config/nikki
+  rm -rf /etc/nikki
+fi
 
 # Setup PHP
-msg "Setup PHP"
-msg "system not using php-cgi, patching php config ..."
 uci set uhttpd.main.ubus_prefix='/ubus'
 uci set uhttpd.main.interpreter='.php=/usr/bin/php-cgi'
 uci set uhttpd.main.index_page='cgi-bin/luci'
@@ -209,36 +186,11 @@ sed -i -E "s|memory_limit = [0-9]+M|memory_limit = 100M|g" /etc/php.ini
 sed -i -E "s|display_errors = On|display_errors = Off|g" /etc/php.ini
 ln -s /usr/bin/php-cli /usr/bin/php
 [ -d /usr/lib/php8 ] && [ ! -d /usr/lib/php ] && ln -sf /usr/lib/php8 /usr/lib/php
-msg "patching system with php configuration done ..."
-msg "restarting uhttpd ..."
 /etc/init.d/uhttpd restart
-
 
 # Setting Tinyfm
 msg "Setting Tinyfm"
 ln -s / /www/tinyfm/rootfs
-
-
-# Configurating OpenClash
-msg "Configurating OpenClash"
-bash /usr/bin/patchoc.sh
-sed -i '/exit 0/i #/usr/bin/patchoc.sh' /etc/rc.local
-ln -s /etc/openclash/history/config-wrt.db /etc/openclash/cache.db
-ln -s /etc/openclash/core/clash_meta  /etc/openclash/clash
-
-
-# Set Openclash Config
-msg "Set Openclash Config"
-if [ -f "/etc/config/openclash" ]; then
-  rm -rf /etc/config/openclash
-  mv /etc/config/openclash1 /etc/config/openclash
-else
-  mv /etc/config/openclash1 /etc/config/openclash
-fi
-
-# set argon as default theme
-msg "set argon as default theme"
-uci set luci.main.mediaurlbase='/luci-static/argon' && uci commit
 
 if [ -f "/etc/profile.d/30-sysinfo.sh" ]; then
   rm -rf /etc/profile.d/30-sysinfo.sh
@@ -247,12 +199,6 @@ else
   mv /etc/profile.d/30-sysinfo.sh-bak /etc/profile.d/30-sysinfo.sh
 fi
 
-# Log success
-msg "First Setup settings successfully applied..."
-
-# Adjust Settings
-
-# Remove this script after successful execution
+echo "All first boot setup complete!"
 rm -f /etc/uci-defaults/$(basename $0)
-/etc/init.d/system restart
 exit 0

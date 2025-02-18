@@ -36,12 +36,11 @@
 #================================================================================================
 
 # Default parameters
-make_path="${PWD}"
+make_path="${PWD}/scripts"
 openwrt_dir="imagebuilder"
 imagebuilder_path="${make_path}/${openwrt_dir}"
 custom_files_path="${make_path}/files"
 custom_packages_path="${make_path}/packages"
-custom_scripts_file="${make_path}/scripts"
 
 # Output log prefixes with better color handling and backup if tput fails
 setup_colors() {
@@ -288,8 +287,9 @@ download_imagebuilder() {
             ARCH_1="arm64"
             ARCH_2="aarch64"
             ARCH_3="aarch64_generic"
-            KERNEL="6.1.31-AW64-DBAI"
-            KERNEL2=""
+            KERNEL="6.1.104-AW64-DBAI"
+            KERNEL2="6.1.31-AW64-DBAI"
+            KERNEL3="6.6.6-AW64-DBAI"
             ;;
         s905*) # Amlogic (S905*)
             op_target="amlogic"
@@ -1311,7 +1311,15 @@ case "${op_devices}" in
     s912)
         repackwrt --ophub -t "s912" -k "$KERNEL2"
         ;;
-    h5-*|h616-*|h618-*|h6-*|s905x4|rk*)
+    s905x4)
+        repackwrt --ulo -t "$op_devices" -k "$KERNEL"
+        ;;
+    h5-*|h616-*|h618-*|h6-*)
+        repackwrt --ulo -t "$op_devices" -k "$KERNEL"
+        repackwrt --ulo -t "$op_devices" -k "$KERNEL2"
+        repackwrt --ulo -t "$op_devices" -k "$KERNEL3"
+        ;;
+    rk*)
         repackwrt --ulo -t "$op_devices" -k "$KERNEL"
         ;;
     *)
