@@ -452,7 +452,7 @@ jobs:
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Upload Firmware
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: steps.prep_upload.outputs.status == 'success'
         with:
           name: fri-${{ env.openwrt_board }}-${{ env.BRANCH }}-${{ env.TUNNEL }}-${{ env.DATE }}
@@ -460,7 +460,7 @@ jobs:
           retention-days: 7
 
       - name: Upload SHA256 Checksums
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: steps.prep_upload.outputs.status == 'success'
         with:
           name: fri-${{ env.openwrt_board }}-${{ env.BRANCH }}-${{ env.TUNNEL }}-${{ env.DATE }}-sha256
