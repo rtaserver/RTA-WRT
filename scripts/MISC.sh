@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./INCLUDE.sh
+. ./scripts/INCLUDE.sh
 
 echo "Start Downloading Misc files and setup configuration!"
 echo "Current Path: $PWD"

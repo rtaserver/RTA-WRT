@@ -65,7 +65,7 @@ on:
           - all
           - openclash
           - passwall
-          - nukki
+          - nikki
           - openclash-passwall-nikki
           - no-tunnel
       clean:
@@ -93,15 +93,8 @@ jobs:
       - name: Checking Tunnel Option
         id: tunnelopt
         run: |
-          if [[ ("$TUNNEL" == "nikki" || "$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "nikki-passwall" || "$TUNNEL" == "nikki-openclash" || "$TUNNEL" == "openclash-passwall-nikki") && "${RELEASE_BRANCH#*:}" == "21.02.7" ]]; then
-            echo "Cannot continue the process because the selected tunnel [$TUNNEL]"
-            echo "only support for newer branch with fw4 firewall!"
-            echo "status=failed" >> $GITHUB_OUTPUT
-            exit 1
-          else
-            echo "Selected tunnel option: [$TUNNEL]"
-            echo "status=success" >> $GITHUB_OUTPUT
-          fi
+          echo "Selected tunnel option: [$TUNNEL]"
+          echo "status=success" >> $GITHUB_OUTPUT
 
   build-firmware:
     name: Build ${{ inputs.target }}-${{ inputs.release_branch }}-${{ inputs.tunnel }}
