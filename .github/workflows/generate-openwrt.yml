@@ -182,50 +182,50 @@ jobs:
              echo "fiturs=$(jq -nc --arg f "${{ inputs.fiturs }}" '[$f]')" >> $GITHUB_OUTPUT
           fi
 
-      # - name: Send Initial Telegram Message
-      #   if: ${{ env.NOTIFY == 'true' && !cancelled() }}
-      #   id: telegram
-      #   env:
-      #     BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-      #     CHAT_ID: ${{ secrets.CHAT_ID }}
-      #   run: |
-      #     trap "exit" SIGTERM
-      #     sudo timedatectl set-timezone "$TZ"
-      #     THREAD_ID_BUILD=616
+      - name: Send Initial Telegram Message
+        if: ${{ env.NOTIFY == 'true' && !cancelled() }}
+        id: telegram
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          trap "exit" SIGTERM
+          sudo timedatectl set-timezone "$TZ"
+          THREAD_ID_BUILD=616
+          
+          devices='${{ steps.matrix.outputs.devices }}'
+          fiturs='${{ steps.matrix.outputs.fiturs }}'
 
-      #     devices='${{ steps.matrix.outputs.devices }}'
-      #     fiturs='${{ steps.matrix.outputs.fiturs }}'
+          create_build_status_message() {
+          cat << EOF
+          ━━━━━━━━━━━━━━━━━━━━━━
+          🚀 *RTA-WRT | Build Status*
+          ━━━━━━━━━━━━━━━━━━━━━━
+          📌 *Version*: ${{ inputs.releases_branch }}
+          🌿 *Branch*: ${{ github.ref_name }}
+          📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")
+          ━━━━━━━━━━━━━━━━━━━━━━
+          📋 *Device List*
+          EOF
 
-      #     create_build_status_message() {
-      #     cat << EOF
-      #     ━━━━━━━━━━━━━━━━━━━━━━
-      #     🚀 *RTA-WRT | Build Status*
-      #     ━━━━━━━━━━━━━━━━━━━━━━
-      #     📌 *Version*: ${{ inputs.releases_branch }}
-      #     🌿 *Branch*: ${{ github.ref_name }}
-      #     📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")
-      #     ━━━━━━━━━━━━━━━━━━━━━━
-      #     📋 *Device List*
-      #     EOF
+          while read -r device; do
+              while read -r fitur; do
+                echo "🔹 $device $fitur | ⏳ Building"
+              done < <(echo "$fiturs" | jq -r '.[]')
+          done < <(echo "$devices" | jq -r '.[]')
 
-      #     while read -r device; do
-      #         while read -r fitur; do
-      #           echo "🔹 $device $fitur | ⏳ Building"
-      #         done < <(echo "$fiturs" | jq -r '.[]')
-      #     done < <(echo "$devices" | jq -r '.[]')
+          echo "━━━━━━━━━━━━━━━━━━━━━━"
+          }
 
-      #     echo "━━━━━━━━━━━━━━━━━━━━━━"
-      #     }
-
-      #     BUILD_STATUS_MESSAGE=$(create_build_status_message)
-
-      #     RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-      #       -d chat_id=$CHAT_ID \
-      #       -d parse_mode=Markdown \
-      #       -d message_thread_id=$THREAD_ID_BUILD \
-      #       -d text="$BUILD_STATUS_MESSAGE")
-
-      #     echo "message_id=$(echo $RESPONSE | jq -r '.result.message_id')" >> $GITHUB_OUTPUT
+          BUILD_STATUS_MESSAGE=$(create_build_status_message)
+          
+          RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
+            -d chat_id=$CHAT_ID \
+            -d parse_mode=Markdown \
+            -d message_thread_id=$THREAD_ID_BUILD \
+            -d text="$BUILD_STATUS_MESSAGE")
+          
+          echo "message_id=$(echo $RESPONSE | jq -r '.result.message_id')" >> $GITHUB_OUTPUT
 
       - name: Setup Environment Variables
         id: setup
@@ -275,11 +275,16 @@ jobs:
           docker rmi $(docker images -q) 2>/dev/null
           [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
           sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
-          sudo -E apt-get -y update
-          sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
-          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
+          sudo swapoff -a
+          sudo rm -f /swapfile /mnt/swapfile
+          sudo apt-get update -qq
+          sudo apt-get install -y ${{ env.APT_PACKAGES }}
           sudo -E systemctl daemon-reload
-          sudo timedatectl set-timezone "${TZ}"
+          sudo -E apt-get -y autoremove --purge
+          sudo -E apt-get clean
+          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
+          sudo rm -rf ~/{.cargo,.dotnet,.rustup}
+          sudo timedatectl set-timezone "$TZ"
 
       - name: Prepare Before Build
         run: |
@@ -432,6 +437,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.PAT_TOKEN }}
+          repository: rizkikotet-dev/RTA-WRT
           tag_name: ${{ env.release_tag }}
           name: ${{ env.release_name }}
           files: firmware/*
@@ -466,8 +473,16 @@ jobs:
     if: always()
     runs-on: ubuntu-22.04
     steps:
-      # Cleanup artifacts and workspace
-      - name: Cleanup create_releases
+      - name: Download Build Status Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Update Telegram Message
+        if: ${{ env.NOTIFY == 'true' && !cancelled() }}
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
           echo "Disk usage before cleanup:"
           df -h
