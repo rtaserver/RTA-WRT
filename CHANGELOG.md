@@ -1,5 +1,21 @@
 # What's New!
 
+**Changelog Firmware** (18-02-2025)
+
+- Remove Theme Material 3
+- Add currentFitur to header template and adjust package list in imagebuilder
+- Update header template to include currentFitur in version and changelog URLs
+- Refactor package list in imagebuilder.sh to streamline PHP8 dependencies and improve readability
+- Remove obsolete AdGuardHome configuration files and scripts
+- Refactor package list in imagebuilder.sh to enhance readability and include additional modem and USB LAN drivers
+- Remove obsolete GPIO handling scripts and related service files
+
+**Changelog Firmware** (13-02-2025)
+
+- Add Extend Partition Script
+- Fix Netmonitor Auto Start / Play
+- Add Vnstati To Netmonitor
+
 **Changelog Firmware** (12-02-2025)
 
 - Fix Script Startup

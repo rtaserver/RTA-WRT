@@ -185,6 +185,7 @@ const CONFIG = {
         baseOpenwrt: 'null',
         currentBranch: 'null',
         currentVersion: 'null',
+        currentFitur: 'null',
         checkInterval: 5 * 60 * 1000, // 5 minutes
         offlineRetryInterval: 30 * 1000, // 30 seconds
         maxRetryAttempts: 3,
@@ -193,10 +194,10 @@ const CONFIG = {
     URLS: {
         info: 'https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/informasi.txt',
         getVersion() {
-            return `https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${this.APP.currentBranch}/${this.APP.baseOpenwrt}/version.txt`;
+            return `https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${this.APP.currentBranch}/${this.APP.baseOpenwrt}/${this.APP.currentFitur}/version.txt`;
         },
         getChangelog() {
-            return `https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${this.APP.currentBranch}/${this.APP.baseOpenwrt}/changelog.txt`;
+            return `https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${this.APP.currentBranch}/${this.APP.baseOpenwrt}/${this.APP.currentFitur}/changelog.txt`;
         },
         internetCheck: 'https://www.google.com/favicon.ico'
     },
@@ -329,7 +330,6 @@ class NetworkUtils {
         try {
             const response = await fetch(url, { cache: 'no-store' });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
             const text = await response.text();
             
             // Cek jika konten berubah sebelum menyimpan ke cache
@@ -378,7 +378,6 @@ class AlertSystem {
     }
 }
 
-
 // ====== Storage Utilities ======
 class StorageUtils {
     static save(key, value) {
@@ -414,7 +413,7 @@ class InformationManager {
         }
 
         const infoContent = await NetworkUtils.fetchText(CONFIG.URLS.info);
-        if (infoContent && infoContent !== state.cache.content) {
+        if (infoContent && infoContent !== state.cache.content && !this.isAlertShownToday()) {
             this.showInformationAlert(infoContent);
         }
     }
@@ -434,10 +433,17 @@ class InformationManager {
             cancelButtonText: '❌ Tutup',
             onConfirm: () => {
                 StorageUtils.save('lastInformation', infoContent);
+                StorageUtils.save('lastInformationDate', state.today);  // Save the date when the alert is shown
                 state.cache.content = infoContent;
                 state.cache.lastUpdate = new Date().toISOString();
             }
         });
+    }
+
+    static isAlertShownToday() {
+        const lastInformationDate = StorageUtils.get('lastInformationDate');
+        const state = StateManager.getInstance();
+        return lastInformationDate === state.today;
     }
 }
 

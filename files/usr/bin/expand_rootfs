@@ -1,0 +1,226 @@
+#!/bin/bash
+
+setup_colors() {
+    PURPLE="\033[95m"
+    BLUE="\033[94m"
+    GREEN="\033[92m"
+    YELLOW="\033[93m"
+    RED="\033[91m"
+    MAGENTA='\033[0;35m'
+    CYAN='\033[0;36m'
+    RESET="\033[0m"
+
+    STEPS="[${PURPLE} STEPS ${RESET}]"
+    INFO="[${BLUE} INFO ${RESET}]"
+    SUCCESS="[${GREEN} SUCCESS ${RESET}]"
+    WARNING="[${YELLOW} WARNING ${RESET}]"
+    ERROR="[${RED} ERROR ${RESET}]"
+
+    # Formatting
+    CL=$(echo "\033[m")
+    UL=$(echo "\033[4m")
+    BOLD=$(echo "\033[1m")
+    BFR="\\r\\033[K"
+    HOLD=" "
+    TAB="  "
+}
+
+spinner() {
+    local frames=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
+    local colors=("\033[31m" "\033[33m" "\033[32m" "\033[36m" "\033[34m" "\033[35m" "\033[91m" "\033[92m" "\033[93m" "\033[94m")
+    local spin_i=0
+    local color_i=0
+    local interval=0.1
+
+    if ! sleep $interval 2>/dev/null; then
+        interval=1
+    fi
+
+    printf "\e[?25l"
+
+    while true; do
+        local color="${colors[color_i]}"
+        printf "\r ${color}%s${CL}" "${frames[spin_i]}"
+
+        spin_i=$(( (spin_i + 1) % ${#frames[@]} ))
+        color_i=$(( (color_i + 1) % ${#colors[@]} ))
+
+        sleep "$interval" 2>/dev/null || sleep 1
+    done
+}
+
+setup_colors
+
+format_time() {
+  local total_seconds=$1
+  local hours=$((total_seconds / 3600))
+  local minutes=$(( (total_seconds % 3600) / 60 ))
+  local seconds=$((total_seconds % 60))
+  printf "%02d:%02d:%02d" $hours $minutes $seconds
+}
+
+cmdinstall() {
+    local cmd="$1"
+    local desc="${2:-$cmd}"
+
+    echo -ne "${TAB}${HOLD}${INFO} ${desc}${HOLD}"
+    spinner &
+    SPINNER_PID=$!
+    local start_time=$(date +%s)
+    local output=$($cmd 2>&1)
+    local exit_code=$?
+    local end_time=$(date +%s)
+    local elapsed_time=$((end_time - start_time))
+    local formatted_time=$(format_time $elapsed_time)
+
+    if [ $exit_code -eq 0 ]; then
+        if [ -n "$SPINNER_PID" ] && ps | grep $SPINNER_PID > /dev/null; then kill $SPINNER_PID > /dev/null; fi
+        printf "\e[?25h"
+        echo -e "${BFR}${SUCCESS} ${desc} ${BLUE}[$formatted_time]${RESET}"
+    else
+        if [ -n "$SPINNER_PID" ] && ps | grep $SPINNER_PID > /dev/null; then kill $SPINNER_PID > /dev/null; fi
+        printf "\e[?25h"
+        echo -e "${BFR}${ERROR} ${desc} ${BLUE}[$formatted_time]${RESET}"
+        echo "$output"
+        exit 1
+    fi
+}
+
+show_banner() {
+    echo -e "${BLUE}════════════════════════════════════════════════════════════${RESET}"
+    echo -e "${CYAN}"
+    echo '██████╗ ████████╗ █████╗ ██╗    ██╗██████╗ ████████╗'
+    echo '██╔══██╗╚══██╔══╝██╔══██╗██║    ██║██╔══██╗╚══██╔══╝'
+    echo '██████╔╝   ██║   ███████║██║ █╗ ██║██████╔╝   ██║   '
+    echo '██╔══██╗   ██║   ██╔══██║██║███╗██║██╔══██╗   ██║   '
+    echo '██║  ██║   ██║   ██║  ██║╚███╔███╔╝██║  ██║   ██║   '
+    echo '╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝   '
+    echo -e "${RESET}"
+    echo -e "${BLUE}════════════════════════════════════════════════════════════${RESET}"
+}
+
+check_dependencies() {
+    local required_packages=("parted" "losetup" "resize2fs")
+
+    for package in "${required_packages[@]}"; do
+        if [ -x "/bin/opkg" ]; then
+            if ! opkg list-installed | awk '{print $1}' | grep -q "^$package$"; then
+                cmdinstall "opkg update" "Update Package"
+                cmdinstall "opkg install $package" "Install $package"
+            fi
+        elif [ -x "/usr/bin/apk" ]; then
+            if ! apk info -e "$package" >/dev/null 2>&1; then
+                cmdinstall "apk update" "Update Package"
+                cmdinstall "apk add --allow-untrusted $package" "Install $package"
+            fi
+        else
+            echo "Error: Tidak dapat mendeteksi manajer paket yang didukung (opkg/apk)"
+            exit 1
+        fi
+    done
+}
+
+get_root_block() {
+    ROOT_BLK="$(readlink -f /sys/dev/block/"$(awk -e '$9=="/dev/root"{print $3}' /proc/self/mountinfo)")"
+    if [ -n "$ROOT_BLK" ]; then
+        echo "$ROOT_BLK"
+        return 0
+    fi
+    return 1
+}
+
+get_disk_info() {
+    for disk in /dev/sd* /dev/mmcblk*; do
+        if [ -b "$disk" ] && echo "$disk" | grep -q '[0-9]$'; then
+            continue
+        elif [ -b "$disk" ]; then
+            echo -e "${INFO} Ditemukan disk: $disk"
+            #fdisk -l "$disk"
+        fi
+    done
+}
+
+resize_partition() {
+    local ROOT_BLK="$1"
+    local ROOT_DISK="/dev/$(basename "${ROOT_BLK%/*}")"
+    local ROOT_PART="${ROOT_BLK##*[^0-9]}"
+    
+    echo -e "${INFO} Root disk: $ROOT_DISK"
+    echo -e "${INFO} Root partition: $ROOT_PART"
+    
+    local has_space=$(parted -s "$ROOT_DISK" print free | grep "Free Space")
+    if [ -n "$has_space" ]; then
+        echo -e "${INFO} Ditemukan free space, melakukan resize partisi..."
+        parted -f -s "$ROOT_DISK" resizepart "$ROOT_PART" 100%
+        return 0
+    else
+        echo -e "${WARNING} Tidak ada free space tersedia"
+        return 1
+    fi
+}
+
+resize_filesystem() {
+    local ROOT_BLK="$1"
+    local ROOT_DEV="/dev/${ROOT_BLK##*/}"
+
+    LOOP_DEV="$(awk -e '$5=="/overlay"{print $9}' /proc/self/mountinfo)"
+    
+    if [ -z "${LOOP_DEV}" ]; then
+        echo -e "${INFO} Tidak menggunakan overlay, resize langsung ke root device"
+        resize2fs "$ROOT_DEV"
+    else
+        echo -e "${INFO} Menggunakan overlay filesystem"
+        if [ ! -e "${LOOP_DEV}" ]; then
+            LOOP_DEV="$(losetup -f)"
+            losetup "${LOOP_DEV}" "${ROOT_DEV}"
+        fi
+        resize2fs -f "${LOOP_DEV}"
+    fi
+}
+
+main() {
+    AUTO_REBOOT=false
+
+    # Cek apakah argumen -y diberikan
+    if [ "$1" = "-y" ]; then
+        AUTO_REBOOT=true
+    fi
+
+    show_banner
+
+    echo -e "${STEPS} Memulai proses expand root filesystem..."
+    
+    check_dependencies
+    
+    echo -e "${INFO} Mengecek disk yang tersedia..."
+    get_disk_info
+    
+    ROOT_BLK=$(get_root_block)
+    if [ -z "$ROOT_BLK" ]; then
+        echo -e "${ERROR} Tidak dapat menemukan root block device"
+        exit 1
+    fi
+    
+    if resize_partition "$ROOT_BLK"; then
+        resize_filesystem "$ROOT_BLK"
+        echo -e "${SUCCESS} Proses resize selesai! Sistem perlu di-restart."
+
+        touch /etc/rootfs-resize
+
+        if $AUTO_REBOOT; then
+            echo -e "${SUCCESS} Opsi -y terdeteksi, sistem akan reboot otomatis..."
+            reboot
+        else
+            echo -e "${SUCCESS} Apakah Anda ingin restart sekarang? (y/n)"
+            read answer
+            case $answer in
+            y|Y) reboot ;;
+            *) echo -e "${INFO} Sistem tidak akan di-restart secara otomatis." ;;
+            esac
+        fi
+    else
+        echo -e "${WARNING} Tidak ada perubahan yang dilakukan"
+    fi
+}
+
+main "$@"

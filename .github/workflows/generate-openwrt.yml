@@ -83,7 +83,7 @@ env:
 
 jobs:
   prepare:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       devices: ${{ steps.matrix.outputs.devices }}
       fiturs: ${{ steps.matrix.outputs.fiturs }}
@@ -116,7 +116,7 @@ jobs:
           chf="${chf//'%'/'%25'}"
           chf="${chf//$'\n'/'%0A'}"
           chf="${chf//$'\r'/'%0D'}"  
-          echo "changelog_full=$chf" >> $GITHUB_OUTPUT 
+          echo "changelog_full=$chf" >> $GITHUB_OUTPUT
 
       - name: Add changelog Firmware
         id: changelog_firmware
@@ -126,7 +126,7 @@ jobs:
           chfr="${chfr//'%'/'%25'}"
           chfr="${chfr//$'\n'/'%0A'}"
           chfr="${chfr//$'\r'/'%0D'}"  
-          echo "changelog_firmware=$chfr" >> $GITHUB_OUTPUT 
+          echo "changelog_firmware=$chfr" >> $GITHUB_OUTPUT
 
       - name: Configure Build Matrix
         id: matrix
@@ -169,7 +169,7 @@ jobs:
           }
           EOJ
           )
-          
+
           if [ "${{ inputs.devices }}" = "all" ]; then
             echo "devices=$(echo "$DEVICES_JSON" | jq -c '.devices')" >> $GITHUB_OUTPUT
           else
@@ -236,20 +236,41 @@ jobs:
   build:
     name: ${{ matrix.device }}-${{ matrix.fitur }} release
     needs: prepare
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         device: ${{ fromJSON(needs.prepare.outputs.devices) }}
         fitur: ${{ fromJSON(needs.prepare.outputs.fiturs) }}
-  
+
     steps:
+      # Cleanup artifacts and workspace
+      - name: Cleanup prepare
+        run: |
+          echo "Disk usage before cleanup:"
+          df -h
+
+          sudo rm -rf ${GITHUB_WORKSPACE}/*
+          sudo rm -rf /home/runner/work/_temp/_github_workflow/prepare
+          sudo rm -rf /home/runner/work/_temp/_github_home/prepare
+
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+          echo "Disk usage after cleanup:"
+          df -h
+
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
 
       - name: Install Dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
           docker rmi $(docker images -q) 2>/dev/null
           [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
@@ -269,7 +290,7 @@ jobs:
         run: |
           DATETIME=$(date +'%d%m%Y')
           BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
-          
+
           case "${{ github.ref_name }}" in
               main) RELEASE_TAG="${BRANCH_TAG}-${{ matrix.fitur }}-main-${DATETIME}" ;;
               dev) RELEASE_TAG="${BRANCH_TAG}-${{ matrix.fitur }}-dev-${DATETIME}" ;;
@@ -280,6 +301,7 @@ jobs:
           sed -i -E "s|baseOpenwrt: 'null'|baseOpenwrt: '${OP_SOURCE}'|g" files/usr/share/ucode/luci/template/header.ut
           sed -i -E "s|currentBranch: 'null'|currentBranch: '${{ github.ref_name }}'|g" files/usr/share/ucode/luci/template/header.ut
           sed -i -E "s|currentVersion: 'null'|currentVersion: '${RELEASE_TAG}'|g" files/usr/share/ucode/luci/template/header.ut
+          sed -i -E "s|currentFitur: 'null'|currentFitur: '${{ matrix.fitur }}'|g" files/usr/share/ucode/luci/template/header.ut
 
       - name: Build Image
         id: build
@@ -293,6 +315,11 @@ jobs:
             echo "❌ Failed" > status.txt
             exit 1
           fi
+
+      - name: Before Upload
+        run: |
+          sudo find imagebuilder/out_firmware/ -type f ! -name "RTA-WRT*" -exec rm -rf {} +
+          ls -l imagebuilder/out_firmware/
 
       - name: Upload Build Status
         uses: actions/upload-artifact@v4
@@ -312,15 +339,35 @@ jobs:
 
       - name: Remove Build Artifacts
         run: |
-          rm -rf imagebuilder
+          sudo rm -rf imagebuilder
 
   create_releases:
     needs: [prepare, build]
-    runs-on: ubuntu-latest
+    if: always()
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         fitur: ${{ fromJSON(needs.prepare.outputs.fiturs) }}
     steps:
+      # Cleanup artifacts and workspace
+      - name: Cleanup build
+        run: |
+          echo "Disk usage before cleanup:"
+          df -h
+
+          sudo rm -rf ${GITHUB_WORKSPACE}/*
+          sudo rm -rf /home/runner/work/_temp/_github_workflow/build
+          sudo rm -rf /home/runner/work/_temp/_github_home/build
+
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+          echo "Disk usage after cleanup:"
+          df -h
+
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
@@ -352,18 +399,18 @@ jobs:
       - name: Setup Environment
         run: |
           sudo timedatectl set-timezone "${{ env.TZ }}"
-          
+
           DATETIME=$(date +'%d%m%Y')
           BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
-          
+
           case "${{ github.ref_name }}" in
               main) RELEASE_TAG="${BRANCH_TAG}-${{ matrix.fitur }}-main-${DATETIME}" ;;
               dev) RELEASE_TAG="${BRANCH_TAG}-${{ matrix.fitur }}-dev-${DATETIME}" ;;
               *) echo "Error: Branch tidak dikenali" >&2; exit 1 ;;
           esac
-          
+
           echo "release_tag=${RELEASE_TAG}" >> $GITHUB_ENV
-          
+
           # Generate release name
           source="${{ inputs.releases_branch }}"
           source_name="${source%:*}"
@@ -372,11 +419,11 @@ jobs:
               openwrt) source_name="OpenWrt" ;;
               immortalwrt) source_name="ImmortalWrt" ;;
           esac
-          
+
           release_type="${{ github.ref_name == 'main' && 'Stable' || 'Development' }}"
           fitur_name="${{ matrix.fitur == 'full-fitur' && 'Full Fitur' || 'Simpel' }}"
           tanggal=$(date +'%d-%m-%Y')
-          
+
           RELEASE_NAME="RTA-WRT - ${release_type} | ${fitur_name} | ${source_name}:${source_version} | ${tanggal}"
           echo "release_name=${RELEASE_NAME}" >> $GITHUB_ENV
 
@@ -397,10 +444,10 @@ jobs:
           files: firmware/*
           body: |
             # 🚀 RTA-WRT - Release Information
-            
+
             ## 📥 Download Statistics
             ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/${{ env.release_tag }}/total?style=for-the-badge&logo=Openwrt)
-            
+
             ## 📢 Support Channels
             [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt) [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/backup_rtawrt) [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/RizkiKotet)
 
@@ -409,22 +456,22 @@ jobs:
 
             ## 📝 Changelog Firmware
             ${{ steps.changelog_firmware.outputs.changelog_firmware }}
-          
-            ## 📝 Changelog Decices
+
+            ## 📝 Changelog Devices
             ${{ steps.changelog_devices.outputs.changelog_devices }}
           prerelease: ${{ github.ref_name == 'dev' }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Remove Artifact
-        run : |
-          rm -rf firmware
- 
+        run: |
+          sudo rm -rf firmware
+
   notify:
     needs: [prepare, build, create_releases]
     if: always()
-    runs-on: ubuntu-latest   
+    runs-on: ubuntu-22.04
     steps:
       - name: Download Build Status Artifacts
         uses: actions/download-artifact@v4
@@ -437,63 +484,95 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
-          sudo timedatectl set-timezone "${{ env.TZ }}"
-          trap "exit" SIGTERM
-          THREAD_ID_BUILD=616
+          echo "Disk usage before cleanup:"
+          df -h
 
-          devices='${{ needs.prepare.outputs.devices }}'
-          fiturs='${{ needs.prepare.outputs.fiturs }}'
+          sudo rm -rf ${GITHUB_WORKSPACE}/*
+          sudo rm -rf /home/runner/work/_temp/_github_workflow/create_releases
+          sudo rm -rf /home/runner/work/_temp/_github_home/create_releases
 
-          format_time() {
-            local total_seconds=$1
-            local hours=$((total_seconds / 3600))
-            local minutes=$(( (total_seconds % 3600) / 60 ))
-            local seconds=$((total_seconds % 60))
-            printf "%02d:%02d:%02d" $hours $minutes $seconds
-          }
-          
-          end_time=$(date +%s)
-          elapsed_time=$((end_time - ${{ needs.prepare.outputs.startbuildtime }}))
-          formatted_time=$(format_time $elapsed_time)
-  
-          create_build_status_message() {
-          cat << EOF
-          ━━━━━━━━━━━━━━━━━━━━━━
-          🚀 *RTA-WRT | Build Status*
-          ━━━━━━━━━━━━━━━━━━━━━━
-          📌 *Version*: ${{ inputs.releases_branch }}
-          🌿 *Branch*: ${{ github.ref_name }}
-          📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")
-          ━━━━━━━━━━━━━━━━━━━━━━
-          📋 *Device List*
-          EOF
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
-          while read -r device; do
-            while read -r fitur; do
-              status=$(cat "artifacts/build-status-$device-$fitur/status.txt" 2>/dev/null || echo "❓ Unknown")
-              echo "🔹 $device $fitur | $status"
-            done < <(echo "$fiturs" | jq -r '.[]')
-          done < <(echo "$devices" | jq -r '.[]')
+          echo "Disk usage after cleanup:"
+          df -h
 
-          cat << EOF
-          🎉━━━━━━━━━━━━━━━━━━━━━━🎉
-          ✨ *Build OpenWrt Selesai!* ✨
-          🕒 Waktu Build: $formatted_time
-          🎉━━━━━━━━━━━━━━━━━━━━━━🎉
-          👤 @RizkiKotet
-          ━━━━━━━━━━━━━━━━━━━━━━
-          EOF
-          }
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
 
-          BUILD_STATUS_MESSAGE=$(create_build_status_message)
-          
-          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
-            -d chat_id=$CHAT_ID \
-            -d message_id=${{ needs.prepare.outputs.message_id }} \
-            -d parse_mode=Markdown \
-            -d message_thread_id=$THREAD_ID_BUILD \
-            -d text="$BUILD_STATUS_MESSAGE"
-    
+      - name: Download Build Status Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      # - name: Update Telegram Message
+      #   if: ${{ env.NOTIFY == 'true' && !cancelled() }}
+      #   env:
+      #     BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      #     CHAT_ID: ${{ secrets.CHAT_ID }}
+      #   run: |
+      #     sudo timedatectl set-timezone "${{ env.TZ }}"
+      #     trap "exit" SIGTERM
+      #     THREAD_ID_BUILD=616
+
+      #     devices='${{ needs.prepare.outputs.devices }}'
+      #     fiturs='${{ needs.prepare.outputs.fiturs }}'
+
+      #     format_time() {
+      #       local total_seconds=$1
+      #       local hours=$((total_seconds / 3600))
+      #       local minutes=$(( (total_seconds % 3600) / 60 ))
+      #       local seconds=$((total_seconds % 60))
+      #       printf "%02d:%02d:%02d" $hours $minutes $seconds
+      #     }
+
+      #     end_time=$(date +%s)
+      #     elapsed_time=$((end_time - ${{ needs.prepare.outputs.startbuildtime }}))
+      #     formatted_time=$(format_time $elapsed_time)
+
+      #     create_build_status_message() {
+      #     cat << EOF
+      #     ━━━━━━━━━━━━━━━━━━━━━━
+      #     🚀 *RTA-WRT | Build Status*
+      #     ━━━━━━━━━━━━━━━━━━━━━━
+      #     📌 *Version*: ${{ inputs.releases_branch }}
+      #     🌿 *Branch*: ${{ github.ref_name }}
+      #     📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")
+      #     ━━━━━━━━━━━━━━━━━━━━━━
+      #     📋 *Device List*
+      #     EOF
+
+      #     while read -r device; do
+      #       while read -r fitur; do
+      #         status=$(cat "artifacts/build-status-$device-$fitur/status.txt" 2>/dev/null || echo "❓ Unknown")
+      #         echo "🔹 $device $fitur | $status"
+      #       done < <(echo "$fiturs" | jq -r '.[]')
+      #     done < <(echo "$devices" | jq -r '.[]')
+
+      #     cat << EOF
+      #     🎉━━━━━━━━━━━━━━━━━━━━━━🎉
+      #     ✨ *Build OpenWrt Selesai!* ✨
+      #     🕒 Waktu Build: $formatted_time
+      #     🎉━━━━━━━━━━━━━━━━━━━━━━🎉
+      #     👤 @RizkiKotet
+      #     ━━━━━━━━━━━━━━━━━━━━━━
+      #     EOF
+      #     }
+
+      #     BUILD_STATUS_MESSAGE=$(create_build_status_message)
+
+      #     curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
+      #       -d chat_id=$CHAT_ID \
+      #       -d message_id=${{ needs.prepare.outputs.message_id }} \
+      #       -d parse_mode=Markdown \
+      #       -d message_thread_id=$THREAD_ID_BUILD \
+      #       -d text="$BUILD_STATUS_MESSAGE"
+
       - name: Notify Telegram
         if: ${{ env.NOTIFY == 'true' && !cancelled() }}
         env:
@@ -502,7 +581,7 @@ jobs:
         run: |
           trap "exit" SIGTERM
           THREAD_ID_UPDATE=734
-          
+
           create_stable_message() {
           cat << EOF
           ━━━━━━━━━━━━━━━━━━━━━━
@@ -531,8 +610,6 @@ jobs:
           EOF
           }
 
-          STABLE_MESSAGE=$(create_stable_message)
-       
           create_dev_message() {
           cat << EOF
           ━━━━━━━━━━━━━━━━━━━━━━
@@ -562,8 +639,6 @@ jobs:
           EOF
           }
 
-          DEV_MESSAGE=$(create_dev_message)
-
           DATETIME=$(date +'%d%m%Y')
 
           BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
@@ -579,7 +654,7 @@ jobs:
                 ;;
               *) echo "Error: Branch tidak dikenali" >&2; exit 1 ;;
           esac
-        
+
 
           BUTTONS='['
           if [[ "${{ inputs.fiturs }}" == "all" ]]; then
@@ -597,7 +672,7 @@ jobs:
           BUTTONS+='
               [{"text": "📋 Status Build", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}]
           ]'
-          
+
           OPEWRT="${{ inputs.releases_branch }}"
           OP_SOURCE="${OPEWRT%:*}"
           if [ "$OP_SOURCE" == "immortalwrt" ]; then
@@ -607,28 +682,18 @@ jobs:
           fi
 
           if [ "${CURRENT_BRANCH}" == "main" ]; then
-            MSGID=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
-              -d "chat_id=$CHAT_ID" \
-              -d "caption=$STABLE_MESSAGE" \
-              -d "parse_mode=Markdown" \
-              -d "message_thread_id=$THREAD_ID_UPDATE" \
-              -d "reply_markup={\"inline_keyboard\":$BUTTONS}" | jq '.result.message_id')
-
-            curl -s -X POST "https://api.telegram.org/bot$TOKEN/pinChatMessage" \
-              -d "chat_id=$CHAT_ID" \
-              -d "photo=$IMGURL" \
-              -d "message_id=$MSGID" \
-              -d "message_thread_id=$THREAD_ID_UPDATE" \
-              -d "disable_notification=true"
+            TELEMSG=$(create_stable_message)
           else
-            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
-              -d "chat_id=$CHAT_ID" \
-              -d "photo=$IMGURL" \
-              -d "caption=$DEV_MESSAGE" \
-              -d "parse_mode=Markdown" \
-              -d "message_thread_id=$THREAD_ID_UPDATE" \
-              -d "reply_markup={\"inline_keyboard\":$BUTTONS}"
+            TELEMSG=$(create_dev_message)
           fi
+
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
+            -d "chat_id=$CHAT_ID" \
+            -d "photo=$IMGURL" \
+            -d "caption=$TELEMSG" \
+            -d "parse_mode=Markdown" \
+            -d "message_thread_id=$THREAD_ID_UPDATE" \
+            -d "reply_markup={\"inline_keyboard\":$BUTTONS}"
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -665,28 +730,28 @@ jobs:
               echo "${changelog_content}" > "${CURRENT_BRANCH}/${OP_SOURCE}/${fitur}/changelog.txt"
               cat "${CURRENT_BRANCH}/${OP_SOURCE}/${fitur}/changelog.txt"
             fi
-        
+
             VERSION_TAG="${BRANCH_TAG}-${fitur}-${CURRENT_BRANCH}-${DATETIME}"
             echo "${VERSION_TAG}" > "${CURRENT_BRANCH}/${OP_SOURCE}/${fitur}/version.txt"
           done < <(echo "$fiturs" | jq -r '.[]')
-          
+
           # Konfigurasi Git
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-      
+
           git add .
-      
+
           if ! git diff --cached --quiet; then
             git commit -m "Auto Release: $(date "+%d-%m-%Y %H:%M:%S")"
             git push || echo "Failed to push changes"
           else
             echo "No changes detected, skipping commit"
           fi
-        
+
   cleanup:
     needs: [build, notify]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Delete Old Workflow Runs
         uses: Mattraks/delete-workflow-runs@v2
