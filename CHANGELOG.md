@@ -1,6 +1,6 @@
 # What's New!
 
-**Changelog Firmware** (17-02-2025)
+**Changelog Firmware** (18-02-2025)
 
 - Remove Theme Material 3
 - Add currentFitur to header template and adjust package list in imagebuilder
@@ -8,6 +8,7 @@
 - Refactor package list in imagebuilder.sh to streamline PHP8 dependencies and improve readability
 - Remove obsolete AdGuardHome configuration files and scripts
 - Refactor package list in imagebuilder.sh to enhance readability and include additional modem and USB LAN drivers
+- Remove obsolete GPIO handling scripts and related service files
 
 **Changelog Firmware** (13-02-2025)
 
