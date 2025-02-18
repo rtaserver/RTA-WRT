@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./INCLUDE.sh
+. ./scripts/INCLUDE.sh
 
 echo "Start Builder Patch !"
 echo "Current Path: $PWD"
