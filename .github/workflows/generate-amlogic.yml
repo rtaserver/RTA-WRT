@@ -267,8 +267,8 @@ jobs:
         run: |
           cd $WORKING_DIR
           echo "Downloading external packages..."
-          chmod +x scripts/external-package-urls.sh
-          bash scripts/external-package-urls.sh
+          chmod +x scripts/PACKAGES.sh
+          bash scripts/PACKAGES.sh
 
           # Show package count for verification
           PACKAGE_COUNT=$(find packages -type f -name "*.ipk" | wc -l)
