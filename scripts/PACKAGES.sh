@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./INCLUDE.sh
+. ./scripts/INCLUDE.sh
 
 declare -a github_packages
 if [ "$TYPE" == "AMLOGIC" ]; then
