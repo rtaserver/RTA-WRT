@@ -19,38 +19,38 @@ nikki_api="https://api.github.com/repos/rizkikotet-dev/OpenWrt-nikki-Mod/release
 nikki_file_ipk="nikki_${ARCH_3}-openwrt-${CURVER}"
 nikki_file_ipk_down=$(curl -s "${nikki_api}" | grep "browser_download_url" | grep -oE "https.*${nikki_file_ipk}.*.tar.gz" | head -n 1)
 
+declare -a openclash_ipk=("luci-app-openclash|https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3/luci")
+declare -a passwall_ipk=("luci-app-passwall|https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3/luci")
 
 case "$1" in
     openclash)
         echo "Downloading Openclash packages"
-        download_packages "custom" "luci-app-openclash|https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3/luci"
+        download_packages "custom" openclash_ipk[@]
         ariadl "${clash_meta}" "files/etc/openclash/core/clash_meta.gz"
         gzip -d "files/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
         ;;
     passwall)
         echo "Downloading Passwall packages ipk"
-        download_packages "custom" "luci-app-passwall|https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3/luci"
+        download_packages "custom" passwall_ipk[@]
         ariadl "${passwall_core_file_zip_down}" "packages/passwall.zip"
         unzip -qq "packages/passwall.zip" -d packages && rm "packages/passwall.zip" || error_msg "Error: Failed to extract Passwall package."
         ;;
     nikki)
         echo "Downloading Nikki packages ipk"
-        download_packages "custom" "luci-app-passwall|https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3/luci"
         ariadl "${nikki_file_ipk_down}" "packages/nikki.tar.gz"
         tar -xzvf "packages/nikki.tar.gz" > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
         ;;
     openclash-passwall-nikki)
         echo "Installing Openclash, Passwall And Nikki"
         echo "Downloading Openclash packages"
-        download_packages "custom" "luci-app-openclash|https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3/luci"
+        download_packages "custom" openclash_ipk[@]
         ariadl "${clash_meta}" "files/etc/openclash/core/clash_meta.gz"
         gzip -d "files/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
         echo "Downloading Passwall packages ipk"
-        download_packages "custom" "luci-app-passwall|https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3/luci"
+        download_packages "custom" passwall_ipk[@]
         ariadl "${passwall_core_file_zip_down}" "packages/passwall.zip"
         unzip -qq "packages/passwall.zip" -d packages && rm "packages/passwall.zip" || error_msg "Error: Failed to extract Passwall package."
         echo "Downloading Nikki packages ipk"
-        download_packages "custom" "luci-app-passwall|https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3/luci"
         ariadl "${nikki_file_ipk_down}" "packages/nikki.tar.gz"
         tar -xzvf "packages/nikki.tar.gz" > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
         ;;
