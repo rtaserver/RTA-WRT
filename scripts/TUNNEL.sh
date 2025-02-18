@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./INCLUDE.sh
+. ./scripts/INCLUDE.sh
 
 # openclash_core
 if [[ "$ARCH_3" == "x86_64" ]]; then
