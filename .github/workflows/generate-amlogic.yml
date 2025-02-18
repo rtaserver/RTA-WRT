@@ -198,7 +198,7 @@ jobs:
           # Set base distribution info
           BASE="${RELEASE_BRANCH%:*}"
           BRANCH="${RELEASE_BRANCH#*:}"
-          VEROP="$(echo "${RELEASE_BRANCH}" | awk -F. '{print $1"."$2}')"
+          VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
           echo "BASE=$BASE" >> $GITHUB_ENV
           echo "BRANCH=$BRANCH" >> $GITHUB_ENV
           echo "VEROP=$VEROP" >> $GITHUB_ENV
