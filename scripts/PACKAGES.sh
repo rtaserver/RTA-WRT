@@ -39,7 +39,7 @@ declare -A package_categories=(
     "
     ["network"]="
         tailscale|https://downloads.openwrt.org/releases/packages-$VEROP/$ARCH_3/packages
-        python3-speedtest-cli|https://downloads.openwrt.org/releases/releases/packages-$VEROP/$ARCH_3/packages
+        python3-speedtest-cli|https://downloads.openwrt.org/releases/packages-$VEROP/$ARCH_3/packages
         dns2tcp|https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3/packages
     "
     ["themes"]="
