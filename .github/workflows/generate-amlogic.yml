@@ -103,43 +103,30 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          # Free up space first
-          docker rmi $(docker images -q) 2>/dev/null || true
-          [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}" || true
-          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null || true
-
-          # Swap management
+          docker rmi $(docker images -q) 2>/dev/null
+          [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
+          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
           sudo swapoff -a
           sudo rm -f /swapfile /mnt/swapfile
-
-          # System packages management
           sudo -E apt-get -y update
           sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
-          sudo -E apt-get -y install $(curl -fsSL https://is.gd/depend_ubuntu2204_openwrt)
+          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
           sudo -E systemctl daemon-reload
+          #sudo -E apt-get -y full-upgrade
           sudo -E apt-get -y autoremove --purge
           sudo -E apt-get clean
-
-          # Cleanup user environment
           sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
           sudo rm -rf ~/{.cargo,.dotnet,.rustup}
-
-          # Set timezone
           sudo timedatectl set-timezone "${TZ}"
-
           echo "status=success" >> ${GITHUB_OUTPUT}
-          df -h
 
       - name: Create simulated physical disk
         if: github.event.inputs.target == 'all'
         run: |
           mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
           root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
-
-          echo "Creating virtual disk with mnt_size=${mnt_size}G and root_size=${root_size}G"
-
-          sudo truncate -s "${mnt_size}G" /mnt/mnt.img
-          sudo truncate -s "${root_size}G" /root.img
+          sudo truncate -s "${mnt_size}"G /mnt/mnt.img
+          sudo truncate -s "${root_size}"G /root.img
           sudo losetup /dev/loop6 /mnt/mnt.img
           sudo losetup /dev/loop7 /root.img
           sudo pvcreate /dev/loop6
@@ -187,7 +174,7 @@ jobs:
           echo "VEROP=$VEROP" >> $GITHUB_ENV
 
           # Set directory and download info
-          echo "WORKING_DIR=${BASE}-imagebuilder-armsr-armv8.Linux-x86_64" >> $GITHUB_ENV
+          echo "WORKING_DIR=imagebuilder" >> $GITHUB_ENV
           echo "DOWNLOAD_BASE=https://downloads.${BASE}.org" >> $GITHUB_ENV
 
           # Set date variables
@@ -228,11 +215,11 @@ jobs:
           cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
 
           # Setup for "all" target build
-          if [ "$TARGET" == "all" ]; then
-             mkdir -p /builder/$WORKING_DIR
-             ln -sf /builder/$WORKING_DIR $GITHUB_WORKSPACE/$WORKING_DIR
-             ln -sf /builder/$WORKING_DIR /home/runner/work/_actions/ophub/amlogic-s9xxx-openwrt/main/openwrt
-          fi
+          # if [ "$TARGET" == "all" ]; then
+          #    mkdir -p /builder/$WORKING_DIR
+          #    ln -sf /builder/$WORKING_DIR $GITHUB_WORKSPACE/$WORKING_DIR
+          #    ln -sf /builder/$WORKING_DIR /home/runner/work/_actions/ophub/amlogic-s9xxx-openwrt/main/openwrt
+          # fi
 
           echo "Image builder prepared successfully"
           echo "status=success" >> $GITHUB_OUTPUT
