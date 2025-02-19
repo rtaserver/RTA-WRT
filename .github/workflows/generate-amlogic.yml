@@ -316,7 +316,7 @@ jobs:
             
             for file in compiled_images/*_${tunnel}.tar.gz; do
               if [ -f "$file" ]; then
-                mv "$file" amlogic-s9xxx-openwrt/openwrt-armvirt/
+                mv "$file" amlogic-s9xxx-openwrt/openwrt-armvirt/RTA-WRT_openwrt-armsr-armv8-generic-rootfs.tar.gz
                 cd amlogic-s9xxx-openwrt
                 sudo ./remake -b ${{ env.openwrt_board }} -k ${{ inputs.openwrt_kernel }} -s 1024
                 
