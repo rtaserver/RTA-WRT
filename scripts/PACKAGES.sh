@@ -37,6 +37,8 @@ declare -A package_categories=(
         modemmanager|https://downloads.openwrt.org/releases/packages-24.10/$ARCH_3/packages
         sms-tool|https://downloads.openwrt.org/releases/packages-$VEROP/$ARCH_3/packages
         luci-app-modeminfo|$KIDDIN9_REPO
+        modeminfo|$KIDDIN9_REPO
+        modeminfo-qmi|$KIDDIN9_REPO
     "
     ["network"]="
         tailscale|https://downloads.openwrt.org/releases/packages-$VEROP/$ARCH_3/packages
@@ -69,7 +71,6 @@ done
 
 # Additional utility packages
 package_categories["utils"]="
-    modeminfo-qmi|$KIDDIN9_REPO
     luci-app-diskman|$KIDDIN9_REPO
     luci-app-poweroff|$KIDDIN9_REPO
     xmm-modem|$KIDDIN9_REPO
