@@ -16,7 +16,7 @@ on:
       target:
         description: "Select device board"
         required: false
-        default: "s905x_s905x-b860h"
+        default: "all"
         type: choice
         options:
           - all
@@ -26,7 +26,7 @@ on:
       openwrt_kernel:
         description: "Select kernel version"
         required: false
-        default: "6.1.y_6.6.y"
+        default: "5.15.y_6.6.y"
         type: choice
         options:
           - 5.4.y
@@ -35,27 +35,7 @@ on:
           - 6.1.y
           - 6.6.y
           - 6.1.y_6.6.y
-          - 5.15.y_5.10.y
-      auto_kernel:
-        description: "Auto use the latest kernel"
-        required: false
-        default: true
-        type: boolean
-      kernel_repo:
-        description: "Set the kernel repository"
-        required: false
-        default: "ophub/kernel"
-        type: choice
-        options:
-          - ophub/kernel
-      kernel_usage:
-        description: "Set the tags of the stable kernel."
-        required: false
-        default: "stable"
-        type: choice
-        options:
-          - stable
-          - flippy
+          - 5.15.y_6.6.y
       tunnel:
         description: "Select VPN Client app:"
         required: true
@@ -338,7 +318,8 @@ jobs:
               for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do
                 if [ -f "$file" ]; then
                   echo "Moving $file to compiled_images"
-                  mv "$file" compiled_images/
+                  new_name="RTA-WRT_$(basename "$file" .tar.gz)_$t.tar.gz"
+                  mv "$file" compiled_images/$new_name
                 else
                   echo "Warning: Expected output file $file not found"
                 fi
@@ -362,7 +343,8 @@ jobs:
             for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do
               if [ -f "$file" ]; then
                 echo "Moving $file to compiled_images"
-                mv "$file" compiled_images/
+                new_name="RTA-WRT_$(basename "$file" .tar.gz)_$TUNNEL.tar.gz"
+                mv "$file" compiled_images/$new_name
               else
                 echo "Warning: Expected output file $file not found"
               fi
@@ -395,57 +377,62 @@ jobs:
       - name: Package Amlogic Images
         id: package
         if: steps.cleanup.outputs.status == 'success'
-        uses: ophub/amlogic-s9xxx-openwrt@main
-        with:
-          openwrt_path: ${{ env.WORKING_DIR }}/compiled_images/*rootfs.tar.gz
-          openwrt_board: ${{ env.openwrt_board }}
-          openwrt_kernel: ${{ inputs.openwrt_kernel }}
-          auto_kernel: ${{ inputs.auto_kernel }}
-          kernel_repo: ${{ inputs.kernel_repo }}
-          kernel_usage: ${{ inputs.kernel_usage }}
-          builder_name: RTA-WRT
-
-      - name: Prepare files for upload
-        id: prep_upload
-        if: env.PACKAGED_STATUS == 'success'
         run: |
-          cd $WORKING_DIR
+          if [[ "$TUNNEL" == "all" ]]; then
+            for t in openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki no-tunnel; do
+              echo "========================================================"
+              echo "Building with VPN Client: $t"
+              echo "========================================================"
+              
+              git clone --depth 1 https://github.com/ophub/amlogic-s9xxx-openwrt.git
+              cd amlogic-s9xxx-openwrt
+              mkdir -p openwrt-armvirt
 
-          # Move compiled rootfs to the packaged output path
-          for file in compiled_images/*rootfs.tar.gz; do
-            if [ -f "$file" ]; then
-              echo "Moving $file to ${{ env.PACKAGED_OUTPUTPATH }}"
-              mv "$file" ${{ env.PACKAGED_OUTPUTPATH }}/
-            fi
-          done
-
-          # Change to the packaged output path
-          cd ${{ env.PACKAGED_OUTPUTPATH }}
-
-          # Rename files with standardized naming convention
-          echo "Renaming files with standardized naming convention..."
-          for file in *.img.gz; do
-            new_name="RTA-WRT_$(basename "$file" .img.gz)_$TUNNEL.img.gz"
-            echo "Renaming $file to $new_name"
-            mv "$file" "$new_name"
-          done
-
-          for file in *rootfs.tar.gz; do
-            new_name="RTA-WRT_$(basename "$file" .tar.gz)_$TUNNEL.tar.gz"
-            echo "Renaming $file to $new_name"
-            mv "$file" "$new_name"
-          done
-
-          # Generate checksums
-          echo "Generating SHA256 checksums..."
-          rm -f *.sha
-          sha256sum *.gz > sha256sums
-
-          # List the final files
-          echo "Final files ready for upload:"
-          ls -la
-
-          echo "status=success" >> $GITHUB_OUTPUT
+              # Move output files
+              for file in ${{ env.WORKING_DIR }}/compiled_images/*_$t.tar.gz; do
+                if [ -f "$file" ]; then
+                  mv "$file" openwrt-armvirt/
+                  sudo ./remake -b ${{ env.openwrt_board }} -k ${{ inputs.openwrt_kernel }} -s 1024
+                  cd ${{ env.PACKAGED_OUTPUTPATH }}
+                  for file in *.img.gz; do
+                    new_name="RTA-WRT_$(basename "$file" .img.gz)_$TUNNEL.img.gz"
+                    echo "Renaming $file to $new_name"
+                    mv "$file" "${{ env.WORKING_DIR }}/compiled_images/$new_name"
+                  done
+                else
+                  echo "Warning: Expected output file $file not found"
+                fi
+              done
+              cd $WORKING_DIR
+              sudo rm -rf amlogic-s9xxx-openwrt
+            done
+          else
+            echo "========================================================"
+            echo "Building with VPN Client: $TUNNEL"
+            echo "========================================================"
+            
+            git clone --depth 1 https://github.com/ophub/amlogic-s9xxx-openwrt.git
+            cd amlogic-s9xxx-openwrt
+            mkdir -p openwrt-armvirt
+            
+            # Move output files
+            for file in ${{ env.WORKING_DIR }}/compiled_images/*_$TUNNEL.tar.gz; do
+              if [ -f "$file" ]; then
+                mv "$file" openwrt-armvirt/
+                sudo ./remake -b ${{ env.openwrt_board }} -k ${{ inputs.openwrt_kernel }} -s 1024
+                cd ${{ env.PACKAGED_OUTPUTPATH }}
+                for file in *.img.gz; do
+                  new_name="RTA-WRT_$(basename "$file" .img.gz)_$TUNNEL.img.gz"
+                  echo "Renaming $file to $new_name"
+                  mv "$file" "${{ env.WORKING_DIR }}/compiled_images/$new_name"
+                done
+              else
+                echo "Warning: Expected output file $file not found"
+              fi
+            done
+            cd $WORKING_DIR
+            sudo rm -rf amlogic-s9xxx-openwrt
+          fi
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -454,6 +441,6 @@ jobs:
         with:
           tag_name: amlogic
           name: RTA-WRT-Amlogic-${{ env.BRANCH }}-${{ env.TUNNEL }}-${{ env.DATE }}
-          files: ${{ env.PACKAGED_OUTPUTPATH }}/*.gz
+          files: ${{ env.WORKING_DIR }}/compiled_images/*.gz
           prerelease: true
           generate_release_notes: true
