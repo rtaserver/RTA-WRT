@@ -17,7 +17,7 @@ on:
         description: "Select device board"
         required: false
         default: "all"
-        type: combobox
+        type: environment
         options:
           - all
           - s905x
