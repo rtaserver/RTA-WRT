@@ -64,19 +64,26 @@ env:
   TUNNEL: ${{ inputs.tunnel }}
   CLEAN: ${{ inputs.clean }}
   TZ: Asia/Jakarta
+  WORKING_DIR: imagebuilder
+  DEBIAN_FRONTEND: noninteractive
+  PACKAGED_OUTPUTPATH: /opt/openwrt_packit
 
 jobs:
   check-compatibility:
     name: Check Compatibility
     runs-on: ubuntu-22.04
     outputs:
-      status: ${{ steps.tunnelopt.outputs.status }}
+      status: ${{ steps.compatibility.outputs.status }}
 
     steps:
-      - name: Checking Tunnel Option
-        id: tunnelopt
+      - name: Check System Requirements
+        id: compatibility
         run: |
-          echo "Selected tunnel option: [$TUNNEL]"
+          echo "Checking system requirements..."
+          echo "CPU Architecture: $(uname -m)"
+          echo "Available RAM: $(free -h)"
+          echo "Available Disk Space: $(df -h /)"
+          echo "Selected tunnel option: [${{ env.TUNNEL }}]"
           echo "status=success" >> $GITHUB_OUTPUT
 
   build-firmware:
@@ -86,91 +93,80 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Initialization environment (standard)
-        if: github.event.inputs.target != 'all'
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |
-          sudo apt-get -qq update
-          sudo apt-get -qq install build-essential libncurses5-dev libncursesw5-dev zlib1g-dev \
-            gawk git gettext libssl-dev xsltproc rsync wget unzip tar gzip qemu-utils mkisofs
-          sudo timedatectl set-timezone "$TZ"
-          df -h
-
-      - name: Initialization environment (extended)
+      - name: Initialize Build Environment
         id: init
-        if: github.event.inputs.target == 'all'
-        env:
-          DEBIAN_FRONTEND: noninteractive
         run: |
-          # Free up space first
+          # Clean up space
           docker rmi $(docker images -q) 2>/dev/null || true
-          [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}" || true
           sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null || true
-
-          # Swap management
           sudo swapoff -a
           sudo rm -f /swapfile /mnt/swapfile
 
-          # System packages management
+          # Update and install dependencies
           sudo -E apt-get -y update
-          sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
-          sudo -E apt-get -y install $(curl -fsSL https://is.gd/depend_ubuntu2204_openwrt)
-          sudo -E systemctl daemon-reload
+          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
+
+          # Additional build dependencies
+          sudo -E apt-get -y install \
+            build-essential libncurses5-dev libncursesw5-dev zlib1g-dev \
+            gawk git gettext libssl-dev xsltproc rsync wget unzip tar \
+            gzip qemu-utils mkisofs python3 python3-pip
+
+          # Cleanup
           sudo -E apt-get -y autoremove --purge
           sudo -E apt-get clean
 
-          # Cleanup user environment
-          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
-          sudo rm -rf ~/{.cargo,.dotnet,.rustup}
-
           # Set timezone
-          sudo timedatectl set-timezone "${TZ}"
+          sudo timedatectl set-timezone "${{ env.TZ }}"
 
-          echo "status=success" >> ${GITHUB_OUTPUT}
+          # Setup virtual disk for building
+          if [ "${{ inputs.target }}" == "all" ]; then
+            mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
+            root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
+            
+            sudo truncate -s "${mnt_size}G" /mnt/mnt.img
+            sudo truncate -s "${root_size}G" /root.img
+            sudo losetup /dev/loop6 /mnt/mnt.img
+            sudo losetup /dev/loop7 /root.img
+            sudo pvcreate /dev/loop6 /dev/loop7
+            sudo vgcreate github /dev/loop6 /dev/loop7
+            sudo lvcreate -n runner -l 100%FREE github
+            sudo mkfs.xfs /dev/github/runner
+            sudo mkdir -p /builder
+            sudo mount /dev/github/runner /builder
+            sudo chown -R runner:runner /builder
+          fi
+
+          echo "Build environment initialized successfully"
           df -h
+          echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Create simulated physical disk
-        if: github.event.inputs.target == 'all'
-        run: |
-          mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
-          root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
-
-          echo "Creating virtual disk with mnt_size=${mnt_size}G and root_size=${root_size}G"
-
-          sudo truncate -s "${mnt_size}G" /mnt/mnt.img
-          sudo truncate -s "${root_size}G" /root.img
-          sudo losetup /dev/loop6 /mnt/mnt.img
-          sudo losetup /dev/loop7 /root.img
-          sudo pvcreate /dev/loop6
-          sudo pvcreate /dev/loop7
-          sudo vgcreate github /dev/loop6 /dev/loop7
-          sudo lvcreate -n runner -l 100%FREE github
-          sudo mkfs.xfs /dev/github/runner
-          sudo mkdir -p /builder
-          sudo mount /dev/github/runner /builder
-          sudo chown -R runner.runner /builder
-          df -Th
-
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           path: origin
+          fetch-depth: 1
 
-      - name: Setup Environment Variables
+      - name: Setup Build Variables
+        id: variables
         run: |
-          # Set board variable based on target
-          if [ "$TARGET" == "all" ]; then
-            echo "openwrt_board=all" >> $GITHUB_ENV
-          elif [ "$TARGET" == "hg680p" ] || [ "$TARGET" == "b860h" ]; then
-            echo "openwrt_board=s905x" >> $GITHUB_ENV
-          elif [ "$TARGET" == "nanopi-r5s" ]; then
-            echo "openwrt_board=rk3568" >> $GITHUB_ENV
-          else
-            echo "openwrt_board=$TARGET" >> $GITHUB_ENV
-          fi
+          # Set board variable
+          case "${{ env.TARGET }}" in
+            "all")
+              echo "openwrt_board=all" >> $GITHUB_ENV
+              ;;
+            "hg680p"|"b860h")
+              echo "openwrt_board=s905x" >> $GITHUB_ENV
+              ;;
+            "nanopi-r5s")
+              echo "openwrt_board=rk3568" >> $GITHUB_ENV
+              ;;
+            *)
+              echo "openwrt_board=${{ env.TARGET }}" >> $GITHUB_ENV
+              ;;
+          esac
 
-          # Set architecture and target variables
+          # Set architecture variables
           echo "PROFILE=generic" >> $GITHUB_ENV
           echo "TARGET_SYSTEM=armsr/armv8" >> $GITHUB_ENV
           echo "TARGET_NAME=armsr-armv8" >> $GITHUB_ENV
@@ -182,12 +178,10 @@ jobs:
           BASE="${RELEASE_BRANCH%:*}"
           BRANCH="${RELEASE_BRANCH#*:}"
           VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
+
           echo "BASE=$BASE" >> $GITHUB_ENV
           echo "BRANCH=$BRANCH" >> $GITHUB_ENV
           echo "VEROP=$VEROP" >> $GITHUB_ENV
-
-          # Set directory and download info
-          echo "WORKING_DIR=${BASE}-imagebuilder-armsr-armv8.Linux-x86_64" >> $GITHUB_ENV
           echo "DOWNLOAD_BASE=https://downloads.${BASE}.org" >> $GITHUB_ENV
 
           # Set date variables
@@ -195,23 +189,23 @@ jobs:
           echo "DATETIME=$(date +'%Y.%m.%d-%H:%M:%S')" >> $GITHUB_ENV
           echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
 
-      - name: Download Image Builder
-        id: download
-        run: |
-          # Determine archive extension based on version
-          CURVER=$(echo "${RELEASE_BRANCH#*:}" | cut -d'.' -f1)
-          if [[ ${CURVER} == "24" ]]; then
-              archive_ext="tar.zst"
-          else
-              archive_ext="tar.xz"
-          fi
+          echo "Build variables configured successfully"
+          echo "status=success" >> $GITHUB_OUTPUT
 
-          # Download and extract image builder
-          RELEASE="$DOWNLOAD_BASE/releases/$BRANCH/targets/$TARGET_SYSTEM/$BASE-imagebuilder-$BRANCH-$TARGET_NAME.Linux-x86_64.$archive_ext"
+      - name: Download and Prepare Image Builder
+        id: download
+        if: steps.variables.outputs.status == 'success'
+        run: |
+          # Determine archive extension
+          CURVER=$(echo "${{ env.BRANCH }}" | cut -d'.' -f1)
+          archive_ext=$([ "${CURVER}" == "24" ] && echo "tar.zst" || echo "tar.xz")
+
+          # Download image builder
+          RELEASE="${{ env.DOWNLOAD_BASE }}/releases/${{ env.BRANCH }}/targets/${{ env.TARGET_SYSTEM }}/${{ env.BASE }}-imagebuilder-${{ env.BRANCH }}-${{ env.TARGET_NAME }}.Linux-x86_64.${archive_ext}"
           echo "Downloading from: $RELEASE"
           wget --progress=dot:giga "$RELEASE"
 
-          # Extract based on archive type
+          # Extract archive
           case "${archive_ext}" in
             tar.xz)
               tar -xJf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.xz
@@ -221,18 +215,9 @@ jobs:
               ;;
           esac
 
-          # Move extracted dir to working dir
-          mv *-imagebuilder-* $WORKING_DIR
-
-          # Copy custom files
-          cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/$WORKING_DIR
-
-          # Setup for "all" target build
-          if [ "$TARGET" == "all" ]; then
-             mkdir -p /builder/$WORKING_DIR
-             ln -sf /builder/$WORKING_DIR $GITHUB_WORKSPACE/$WORKING_DIR
-             ln -sf /builder/$WORKING_DIR /home/runner/work/_actions/ophub/amlogic-s9xxx-openwrt/main/openwrt
-          fi
+          # Setup working directory
+          mv *-imagebuilder-* ${{ env.WORKING_DIR }}
+          cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
 
           echo "Image builder prepared successfully"
           echo "status=success" >> $GITHUB_OUTPUT
@@ -241,201 +226,125 @@ jobs:
         id: packages
         if: steps.download.outputs.status == 'success'
         run: |
-          cd $WORKING_DIR
-          echo "Downloading external packages..."
+          cd ${{ env.WORKING_DIR }}
           chmod +x scripts/PACKAGES.sh
-          bash scripts/PACKAGES.sh
+          ./scripts/PACKAGES.sh
 
-          # Show package count for verification
           PACKAGE_COUNT=$(find packages -type f -name "*.ipk" | wc -l)
           echo "Downloaded $PACKAGE_COUNT external packages"
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Run Patch and DIY Scripts
-        id: scripts
+      - name: Apply Patches and Customizations
+        id: customize
         if: steps.packages.outputs.status == 'success'
         run: |
-          cd $WORKING_DIR
+          cd ${{ env.WORKING_DIR }}
 
           # Apply patches
-          echo "Applying patches..."
           chmod +x scripts/PATCH.sh
-          bash scripts/PATCH.sh
+          ./scripts/PATCH.sh
 
           # Apply miscellaneous changes
-          echo "Applying miscellaneous changes..."
           chmod +x scripts/MISC.sh
-          bash scripts/MISC.sh
+          ./scripts/MISC.sh
 
-          # Handle tunnel app selection
+          # Configure tunnel apps
           chmod +x scripts/TUNNEL.sh
-          if [[ "$TUNNEL" == "all" ]]; then 
-              echo "Setting up all VPN clients"
-              bash scripts/TUNNEL.sh openclash-passwall-nikki
-          elif [[ "$TUNNEL" == "openclash" || "$TUNNEL" == "passwall" || "$TUNNEL" == "nikki" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "nikki-passwall" || "$TUNNEL" == "nikki-openclash" || "$TUNNEL" == "openclash-passwall-nikki" ]]; then
-              echo "Setting up VPN client: $TUNNEL"
-              bash scripts/TUNNEL.sh "$TUNNEL"
-          else
-              echo "No VPN client selected or using default"
+          if [[ "${{ env.TUNNEL }}" == "all" ]]; then
+            ./scripts/TUNNEL.sh openclash-passwall-nikki
+          elif [[ "${{ env.TUNNEL }}" =~ ^(openclash|passwall|nikki|openclash-passwall|nikki-passwall|nikki-openclash|openclash-passwall-nikki)$ ]]; then
+            ./scripts/TUNNEL.sh "${{ env.TUNNEL }}"
           fi
 
-          # Count and list custom packages
-          PACKAGE_COUNT=$(find packages -type f -name "*.ipk" | wc -l)
-          echo "Total custom packages prepared: $PACKAGE_COUNT"
-          ls -la packages
-
-          # Report disk usage before compilation
-          echo "Server space usage before compilation:"
+          echo "Customizations applied successfully"
           df -hT ${PWD}
-
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Build Rootfs ${{ inputs.release_branch }}
-        id: compile
-        if: steps.scripts.outputs.status == 'success'
+      - name: Build Firmware Images
+        id: build
+        if: steps.customize.outputs.status == 'success'
         run: |
-          cd $WORKING_DIR
+          cd ${{ env.WORKING_DIR }}
           mkdir -p compiled_images
           chmod +x make-image.sh
 
-          # Handle different tunnel options
-          if [[ "$TUNNEL" == "all" ]]; then
-            for t in openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki no-tunnel; do
-              echo "========================================================"
-              echo "Building with VPN Client: $t"
-              echo "========================================================"
-              
-              # Clean if requested
-              if [ "$CLEAN" == "true" ]; then
-                echo "Starting 'make clean' before building images"
-                make clean
-              fi
-              
-              # Build image
-              time bash make-image.sh $PROFILE $t
-              
-              # Move output files
-              for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do
-                if [ -f "$file" ]; then
-                  echo "Moving $file to compiled_images"
-                  new_name="RTA-WRT_$(basename "$file" .tar.gz)_$t.tar.gz"
-                  mv "$file" compiled_images/$new_name
-                else
-                  echo "Warning: Expected output file $file not found"
-                fi
-              done
-            done
-          else
-            echo "========================================================"
-            echo "Building with VPN Client: $TUNNEL"
-            echo "========================================================"
+          build_image() {
+            local tunnel=$1
+            echo "Building with VPN Client: $tunnel"
             
             # Clean if requested
-            if [ "$CLEAN" == "true" ]; then
-              echo "Starting 'make clean' before building images"
+            if [ "${{ env.CLEAN }}" == "true" ]; then
               make clean
             fi
             
             # Build image
-            time bash make-image.sh $PROFILE $TUNNEL
+            time ./make-image.sh ${{ env.PROFILE }} $tunnel
             
-            # Move output files
-            for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do
+            # Move and rename output files
+            for file in bin/targets/"${{ env.TARGET_SYSTEM }}"/*rootfs.tar.gz; do
               if [ -f "$file" ]; then
-                echo "Moving $file to compiled_images"
-                new_name="RTA-WRT_$(basename "$file" .tar.gz)_$TUNNEL.tar.gz"
+                new_name="RTA-WRT_$(basename "$file" .tar.gz)_${tunnel}.tar.gz"
                 mv "$file" compiled_images/$new_name
-              else
-                echo "Warning: Expected output file $file not found"
               fi
             done
+          }
+
+          if [[ "${{ env.TUNNEL }}" == "all" ]]; then
+            for tunnel in openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki no-tunnel; do
+              build_image $tunnel
+            done
+          else
+            build_image ${{ env.TUNNEL }}
           fi
 
-          # List compiled images
-          echo "Compiled images:"
+          echo "Images built successfully:"
           ls -la compiled_images/
-
-          # Report disk usage after compilation
-          echo "Server space usage after compilation:"
-          df -hT ${PWD}
-
-          echo "status=success" >> $GITHUB_OUTPUT
-
-      - name: Clear unnecessary files
-        id: cleanup
-        if: steps.compile.outputs.status == 'success'
-        run: |
-          cd $WORKING_DIR
-          echo "Cleaning up unnecessary files to free space..."
-          ls . | grep -vE "^compiled_images$|^changelog_amlogic.md$" | xargs -I {} echo "Will delete: {}" || true
-
-          echo "Current disk usage:"
-          df -hT ${PWD}
-
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Package Amlogic Images
         id: package
-        if: steps.cleanup.outputs.status == 'success'
+        if: steps.build.outputs.status == 'success'
         run: |
-          cd $WORKING_DIR
-          if [[ "$TUNNEL" == "all" ]]; then
-            for t in openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki no-tunnel; do
-              echo "========================================================"
-              echo "Building with VPN Client: $t"
-              echo "========================================================"
-              
-              git clone --depth 1 https://github.com/ophub/amlogic-s9xxx-openwrt.git
-              cd amlogic-s9xxx-openwrt
-              mkdir -p openwrt-armvirt
+          cd ${{ env.WORKING_DIR }}
 
-              # Move output files
-              for file in ${{ env.WORKING_DIR }}/compiled_images/*_$t.tar.gz; do
-                if [ -f "$file" ]; then
-                  mv "$file" openwrt-armvirt/
-                  sudo ./remake -b ${{ env.openwrt_board }} -k ${{ inputs.openwrt_kernel }} -s 1024
-                  cd ${{ env.PACKAGED_OUTPUTPATH }}
-                  for file in *.img.gz; do
-                    new_name="RTA-WRT_$(basename "$file" .img.gz)_$TUNNEL.img.gz"
-                    echo "Renaming $file to $new_name"
-                    mv "$file" "${{ env.WORKING_DIR }}/compiled_images/$new_name"
-                  done
-                else
-                  echo "Warning: Expected output file $file not found"
-                fi
-              done
-              cd $WORKING_DIR
-              sudo rm -rf amlogic-s9xxx-openwrt
-            done
-          else
-            echo "========================================================"
-            echo "Building with VPN Client: $TUNNEL"
-            echo "========================================================"
+          package_image() {
+            local tunnel=$1
+            echo "Packaging images for: $tunnel"
             
             git clone --depth 1 https://github.com/ophub/amlogic-s9xxx-openwrt.git
-            cd amlogic-s9xxx-openwrt
-            mkdir -p openwrt-armvirt
+            mkdir -p amlogic-s9xxx-openwrt/openwrt-armvirt
             
-            # Move output files
-            for file in ${{ env.WORKING_DIR }}/compiled_images/*_$TUNNEL.tar.gz; do
+            for file in compiled_images/*_${tunnel}.tar.gz; do
               if [ -f "$file" ]; then
-                mv "$file" openwrt-armvirt/
+                mv "$file" amlogic-s9xxx-openwrt/openwrt-armvirt/RTA-WRT_openwrt-armsr-armv8-generic-rootfs.tar.gz
+                cd amlogic-s9xxx-openwrt
                 sudo ./remake -b ${{ env.openwrt_board }} -k ${{ inputs.openwrt_kernel }} -s 1024
+                
                 cd ${{ env.PACKAGED_OUTPUTPATH }}
-                for file in *.img.gz; do
-                  new_name="RTA-WRT_$(basename "$file" .img.gz)_$TUNNEL.img.gz"
-                  echo "Renaming $file to $new_name"
-                  mv "$file" "${{ env.WORKING_DIR }}/compiled_images/$new_name"
+                for img in *.img.gz; do
+                  new_name="RTA-WRT_$(basename "$img" .img.gz)_${tunnel}.img.gz"
+                  mv "$img" "$GITHUB_WORKSPACE/${{ env.WORKING_DIR }}/compiled_images/$new_name"
                 done
-              else
-                echo "Warning: Expected output file $file not found"
+                cd $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
               fi
             done
-            cd $WORKING_DIR
+            
             sudo rm -rf amlogic-s9xxx-openwrt
+          }
+
+          if [[ "${{ env.TUNNEL }}" == "all" ]]; then
+            for tunnel in openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki no-tunnel; do
+              package_image $tunnel
+            done
+          else
+            package_image ${{ env.TUNNEL }}
           fi
 
+          echo "Images packaged successfully"
+          echo "status=success" >> $GITHUB_OUTPUT
+
       - name: Create Release
+        if: steps.package.outputs.status == 'success'
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
