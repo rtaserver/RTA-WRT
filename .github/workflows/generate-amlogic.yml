@@ -316,7 +316,7 @@ jobs:
         run: |
           cd $WORKING_DIR
           mkdir -p compiled_images
-          chmod +x make-images.sh
+          chmod +x make-image.sh
 
           # Handle different tunnel options
           if [[ "$TUNNEL" == "all" ]]; then
@@ -332,7 +332,7 @@ jobs:
               fi
               
               # Build image
-              time bash make-images.sh $PROFILE $t
+              time bash make-image.sh $PROFILE $t
               
               # Move output files
               for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do
@@ -356,7 +356,7 @@ jobs:
             fi
             
             # Build image
-            time bash make-images.sh $PROFILE $TUNNEL
+            time bash make-image.sh $PROFILE $TUNNEL
             
             # Move output files
             for file in bin/targets/"$TARGET_SYSTEM"/*rootfs.tar.gz; do

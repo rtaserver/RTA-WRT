@@ -67,7 +67,7 @@ PACKAGES+=" librespeed-go python3-speedtest-cli iperf3 luci-app-netspeedtest"
 PACKAGES+=" luci-theme-material luci-theme-argon luci-app-argon-config"
 
 # PHP8
-PACKAGES+=" libc php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring coreutils-stat zoneinfo-asia"
+PACKAGES+=" php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring"
 
 # Misc and some custom .ipk files
 misc+=" luci-app-temp-status luci-app-cpu-status-mini luci-app-poweroff luci-app-log-viewer luci-app-ramfree"
@@ -83,7 +83,7 @@ if [ "$TYPE" == "AMLOGIC" ]; then
     EXCLUDED+=" -procd-ujail"
 fi
 
-PACKAGES+=" $misc zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-poweroff luci-app-log luci-app-ramfree htop bash curl wget wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
+PACKAGES+=" $misc zram-swap adb parted losetup resize2fs luci luci-ssl block-mount htop bash curl wget-ssl tar unzip unrar gzip jq nano httping screen openssh-sftp-server"
 
 # Exclude package (must use - before packages name)
 EXCLUDED+=" -dnsmasq"
