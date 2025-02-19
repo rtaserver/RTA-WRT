@@ -64,13 +64,16 @@ fi
 # NAS and Hard disk tools
 PACKAGES+=" luci-app-diskman luci-app-disks-info smartmontools kmod-usb-storage kmod-usb-storage-uas ntfs-3g"
 
+# Remote Services
+PACKAGES+=" luci-app-zerotier luci-app-cloudflared tailscale luci-app-tailscale"
+
 # Bandwidth And Network Monitoring
 PACKAGES+=" internet-detector luci-app-internet-detector internet-detector-mod-modem-restart nlbwmon luci-app-nlbwmon vnstat2 vnstati2 luci-app-vnstat2 netdata"
 
 # Speedtest
 PACKAGES+=" librespeed-go python3-speedtest-cli iperf3 luci-app-netspeedtest"
 
-# Argon Theme
+# Theme
 PACKAGES+=" luci-theme-material luci-theme-argon luci-app-argon-config"
 
 # PHP8
@@ -90,7 +93,7 @@ if [ "$TYPE" == "AMLOGIC" ]; then
     EXCLUDED+=" -procd-ujail"
 fi
 
-PACKAGES+=" $misc zram-swap adb parted losetup resize2fs luci luci-ssl block-mount htop bash curl wget-ssl tar unzip unrar gzip jq nano httping screen openssh-sftp-server"
+PACKAGES+=" $misc"
 
 # Exclude package (must use - before packages name)
 EXCLUDED+=" -dnsmasq"
