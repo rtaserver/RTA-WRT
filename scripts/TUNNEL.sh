@@ -2,92 +2,88 @@
 
 . ./scripts/INCLUDE.sh
 
-# openclash_core
+# openclash_core URL generation
 if [[ "$ARCH_3" == "x86_64" ]]; then
-    openclash_core=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-${ARCH_1}-compatible" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
+    meta_file="mihomo-linux-${ARCH_1}-compatible"
 else
-    openclash_core=$(meta_api="https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" && meta_file="mihomo-linux-${ARCH_1}" && curl -s "${meta_api}" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
+    meta_file="mihomo-linux-${ARCH_1}"
 fi
+openclash_core=$(curl -s "https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
 
-#passwall_core
-passwall_core_api="https://api.github.com/repos/xiaorouji/openwrt-passwall/releases"
+# passwall_core URL generation
 passwall_core_file_zip="passwall_packages_ipk_${ARCH_3}"
-passwall_core_file_zip_down=$(curl -s "${passwall_core_api}" | grep "browser_download_url" | grep -oE "https.*${passwall_core_file_zip}.*.zip" | head -n 1)
+passwall_core_file_zip_down=$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall/releases" | grep "browser_download_url" | grep -oE "https.*${passwall_core_file_zip}.*.zip" | head -n 1)
 
-# Nikki
-nikki_api="https://api.github.com/repos/rizkikotet-dev/OpenWrt-nikki-Mod/releases"
+# Nikki URL generation
 nikki_file_ipk="nikki_${ARCH_3}-openwrt-${CURVER}"
-nikki_file_ipk_down=$(curl -s "${nikki_api}" | grep "browser_download_url" | grep -oE "https.*${nikki_file_ipk}.*.tar.gz" | head -n 1)
+nikki_file_ipk_down=$(curl -s "https://api.github.com/repos/rizkikotet-dev/OpenWrt-nikki-Mod/releases" | grep "browser_download_url" | grep -oE "https.*${nikki_file_ipk}.*.tar.gz" | head -n 1)
 
+# Package repositories
 declare -a openclash_ipk=("luci-app-openclash|https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3/luci")
 declare -a passwall_ipk=("luci-app-passwall|https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3/luci")
 
+# Function to download and setup OpenClash
+setup_openclash() {
+    echo "Downloading OpenClash packages"
+    download_packages "custom" openclash_ipk[@]
+    ariadl "${openclash_core}" "files/etc/openclash/core/clash_meta.gz"
+    gzip -d "files/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
+}
+
+# Function to download and setup PassWall
+setup_passwall() {
+    echo "Downloading PassWall packages"
+    download_packages "custom" passwall_ipk[@]
+    ariadl "${passwall_core_file_zip_down}" "packages/passwall.zip"
+    unzip -qq "packages/passwall.zip" -d packages && rm "packages/passwall.zip" || error_msg "Error: Failed to extract PassWall package."
+}
+
+# Function to download and setup Nikki
+setup_nikki() {
+    echo "Downloading Nikki packages"
+    ariadl "${nikki_file_ipk_down}" "packages/nikki.tar.gz"
+    tar -xzvf "packages/nikki.tar.gz" -C packages > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
+}
+
+# Main installation logic
 case "$1" in
     openclash)
-        echo "Downloading Openclash packages"
-        download_packages "custom" openclash_ipk[@]
-        ariadl "${openclash_core}" "files/etc/openclash/core/clash_meta.gz"
-        gzip -d "files/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
+        setup_openclash
         ;;
     passwall)
-        echo "Downloading Passwall packages ipk"
-        download_packages "custom" passwall_ipk[@]
-        ariadl "${passwall_core_file_zip_down}" "packages/passwall.zip"
-        unzip -qq "packages/passwall.zip" -d packages && rm "packages/passwall.zip" || error_msg "Error: Failed to extract Passwall package."
+        setup_passwall
         ;;
     nikki)
-        echo "Downloading Nikki packages ipk"
-        ariadl "${nikki_file_ipk_down}" "packages/nikki.tar.gz"
-        tar -xzvf "packages/nikki.tar.gz" -C packages > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
+        setup_nikki
         ;;
     openclash-passwall)
-        echo "Downloading OpenClash Passwall packages ipk"
-        download_packages "custom" openclash_ipk[@]
-        ariadl "${openclash_core}" "files/etc/openclash/core/clash_meta.gz"
-        gzip -d "files/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
-        download_packages "custom" passwall_ipk[@]
-        ariadl "${passwall_core_file_zip_down}" "packages/passwall.zip"
-        unzip -qq "packages/passwall.zip" -d packages && rm "packages/passwall.zip" || error_msg "Error: Failed to extract Passwall package."
+        setup_openclash
+        setup_passwall
         ;;
     nikki-passwall)
-        echo "Downloading Nikki Passwall packages ipk"
-        ariadl "${nikki_file_ipk_down}" "packages/nikki.tar.gz"
-        tar -xzvf "packages/nikki.tar.gz" -C packages > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
-        download_packages "custom" passwall_ipk[@]
-        ariadl "${passwall_core_file_zip_down}" "packages/passwall.zip"
-        unzip -qq "packages/passwall.zip" -d packages && rm "packages/passwall.zip" || error_msg "Error: Failed to extract Passwall package."
+        setup_nikki
+        setup_passwall
         ;;
     nikki-openclash)
-        echo "Downloading Nikki OpenClash packages ipk"
-        ariadl "${nikki_file_ipk_down}" "packages/nikki.tar.gz"
-        tar -xzvf "packages/nikki.tar.gz" -C packages > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
-        download_packages "custom" openclash_ipk[@]
-        ariadl "${openclash_core}" "files/etc/openclash/core/clash_meta.gz"
-        gzip -d "files/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
+        setup_nikki
+        setup_openclash
         ;;
     openclash-passwall-nikki)
-        echo "Installing Openclash, Passwall And Nikki"
-        echo "Downloading Openclash packages"
-        download_packages "custom" openclash_ipk[@]
-        ariadl "${openclash_core}" "files/etc/openclash/core/clash_meta.gz"
-        gzip -d "files/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
-        echo "Downloading Passwall packages ipk"
-        download_packages "custom" passwall_ipk[@]
-        ariadl "${passwall_core_file_zip_down}" "packages/passwall.zip"
-        unzip -qq "packages/passwall.zip" -d packages && rm "packages/passwall.zip" || error_msg "Error: Failed to extract Passwall package."
-        echo "Downloading Nikki packages ipk"
-        ariadl "${nikki_file_ipk_down}" "packages/nikki.tar.gz"
-        tar -xzvf "packages/nikki.tar.gz" -C packages > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
+        echo "Installing OpenClash, PassWall and Nikki"
+        setup_openclash
+        setup_passwall
+        setup_nikki
         ;;
     *)
-        echo "Invalid option. Usage: $0 {openclash|passwall|nikki|openclash-passwall-nikki}"
+        echo "Invalid option. Usage: $0 {openclash|passwall|nikki|openclash-passwall|nikki-passwall|nikki-openclash|openclash-passwall-nikki}"
         exit 1
         ;;
-esac 
+esac
 
+# Check final status
 if [ "$?" -ne 0 ]; then
     echo "Error: Download or extraction failed."
     exit 1
 else
-    echo "Download complete."
+    echo "Download and installation completed successfully."
 fi
