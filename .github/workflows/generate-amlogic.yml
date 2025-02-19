@@ -447,18 +447,13 @@ jobs:
 
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Upload Firmware
-        uses: actions/upload-artifact@v4
-        if: steps.prep_upload.outputs.status == 'success'
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: fri-${{ env.openwrt_board }}-${{ env.BRANCH }}-${{ env.TUNNEL }}-${{ env.DATE }}
-          path: ${{ env.PACKAGED_OUTPUTPATH }}/*.gz
-          retention-days: 7
-
-      - name: Upload SHA256 Checksums
-        uses: actions/upload-artifact@v4
-        if: steps.prep_upload.outputs.status == 'success'
-        with:
-          name: fri-${{ env.openwrt_board }}-${{ env.BRANCH }}-${{ env.TUNNEL }}-${{ env.DATE }}-sha256
-          path: ${{ env.PACKAGED_OUTPUTPATH }}/sha256sums
-          retention-days: 7
+          tag_name: amlogic
+          name: RTA-WRT-${{ env.openwrt_board }}-${{ env.BRANCH }}-${{ env.TUNNEL }}-${{ env.DATE }}
+          files: ${{ env.PACKAGED_OUTPUTPATH }}/*.gz
+          prerelease: true
+          generate_release_notes: true
