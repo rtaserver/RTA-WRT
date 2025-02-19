@@ -15,9 +15,9 @@ on:
           - immortalwrt:23.05.4
       target:
         description: "Select device board"
-        #required: false
-        #default: "all"
-        type: environment
+        required: true
+        default: "s905x"
+        type: text
         options:
           - all
           - s905x
