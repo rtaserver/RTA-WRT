@@ -367,7 +367,7 @@ jobs:
         run: |
           cd $WORKING_DIR
           echo "Cleaning up unnecessary files to free space..."
-          rm -rf $(ls . | grep -vE "^compiled_images$|^changelog_amlogic.md$" | xargs) 2>/dev/null || true
+          ls . | grep -vE "^compiled_images$|^changelog_amlogic.md$" | xargs -I {} echo "Will delete: {}" || true
 
           echo "Current disk usage:"
           df -hT ${PWD}
@@ -378,6 +378,7 @@ jobs:
         id: package
         if: steps.cleanup.outputs.status == 'success'
         run: |
+          cd $WORKING_DIR
           if [[ "$TUNNEL" == "all" ]]; then
             for t in openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki no-tunnel; do
               echo "========================================================"
