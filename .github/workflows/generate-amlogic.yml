@@ -105,7 +105,7 @@ jobs:
           # Update and install dependencies
           sudo -E apt-get -y update
           sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
-          
+
           # Additional build dependencies
           sudo -E apt-get -y install \
             build-essential libncurses5-dev libncursesw5-dev zlib1g-dev \
@@ -115,10 +115,10 @@ jobs:
           # Cleanup
           sudo -E apt-get -y autoremove --purge
           sudo -E apt-get clean
-          
+
           # Set timezone
           sudo timedatectl set-timezone "${{ env.TZ }}"
-          
+
           # Setup virtual disk for building
           if [ "${{ inputs.target }}" == "all" ]; then
             mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
@@ -174,16 +174,16 @@ jobs:
           echo "ARCH_2=aarch64" >> $GITHUB_ENV
           echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
 
-          # Parse release branch
-          BASE="${{ env.RELEASE_BRANCH%:* }}"
-          BRANCH="${{ env.RELEASE_BRANCH#*: }}"
+          # Set base distribution info
+          BASE="${RELEASE_BRANCH%:*}"
+          BRANCH="${RELEASE_BRANCH#*:}"
           VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
-          
+
           echo "BASE=$BASE" >> $GITHUB_ENV
           echo "BRANCH=$BRANCH" >> $GITHUB_ENV
           echo "VEROP=$VEROP" >> $GITHUB_ENV
           echo "DOWNLOAD_BASE=https://downloads.${BASE}.org" >> $GITHUB_ENV
-          
+
           # Set date variables
           echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
           echo "DATETIME=$(date +'%Y.%m.%d-%H:%M:%S')" >> $GITHUB_ENV
@@ -199,12 +199,12 @@ jobs:
           # Determine archive extension
           CURVER=$(echo "${{ env.BRANCH }}" | cut -d'.' -f1)
           archive_ext=$([ "${CURVER}" == "24" ] && echo "tar.zst" || echo "tar.xz")
-          
+
           # Download image builder
           RELEASE="${{ env.DOWNLOAD_BASE }}/releases/${{ env.BRANCH }}/targets/${{ env.TARGET_SYSTEM }}/${{ env.BASE }}-imagebuilder-${{ env.BRANCH }}-${{ env.TARGET_NAME }}.Linux-x86_64.${archive_ext}"
           echo "Downloading from: $RELEASE"
           wget --progress=dot:giga "$RELEASE"
-          
+
           # Extract archive
           case "${archive_ext}" in
             tar.xz)
@@ -214,11 +214,11 @@ jobs:
               tar --use-compress-program=unzstd -xf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.zst
               ;;
           esac
-          
+
           # Setup working directory
           mv *-imagebuilder-* ${{ env.WORKING_DIR }}
           cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
-          
+
           echo "Image builder prepared successfully"
           echo "status=success" >> $GITHUB_OUTPUT
 
@@ -229,7 +229,7 @@ jobs:
           cd ${{ env.WORKING_DIR }}
           chmod +x scripts/PACKAGES.sh
           ./scripts/PACKAGES.sh
-          
+
           PACKAGE_COUNT=$(find packages -type f -name "*.ipk" | wc -l)
           echo "Downloaded $PACKAGE_COUNT external packages"
           echo "status=success" >> $GITHUB_OUTPUT
@@ -239,15 +239,15 @@ jobs:
         if: steps.packages.outputs.status == 'success'
         run: |
           cd ${{ env.WORKING_DIR }}
-          
+
           # Apply patches
           chmod +x scripts/PATCH.sh
           ./scripts/PATCH.sh
-          
+
           # Apply miscellaneous changes
           chmod +x scripts/MISC.sh
           ./scripts/MISC.sh
-          
+
           # Configure tunnel apps
           chmod +x scripts/TUNNEL.sh
           if [[ "${{ env.TUNNEL }}" == "all" ]]; then
@@ -255,7 +255,7 @@ jobs:
           elif [[ "${{ env.TUNNEL }}" =~ ^(openclash|passwall|nikki|openclash-passwall|nikki-passwall|nikki-openclash|openclash-passwall-nikki)$ ]]; then
             ./scripts/TUNNEL.sh "${{ env.TUNNEL }}"
           fi
-          
+
           echo "Customizations applied successfully"
           df -hT ${PWD}
           echo "status=success" >> $GITHUB_OUTPUT
@@ -267,7 +267,7 @@ jobs:
           cd ${{ env.WORKING_DIR }}
           mkdir -p compiled_images
           chmod +x make-image.sh
-          
+
           build_image() {
             local tunnel=$1
             echo "Building with VPN Client: $tunnel"
@@ -288,7 +288,7 @@ jobs:
               fi
             done
           }
-          
+
           if [[ "${{ env.TUNNEL }}" == "all" ]]; then
             for tunnel in openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki no-tunnel; do
               build_image $tunnel
@@ -296,7 +296,7 @@ jobs:
           else
             build_image ${{ env.TUNNEL }}
           fi
-          
+
           echo "Images built successfully:"
           ls -la compiled_images/
           echo "status=success" >> $GITHUB_OUTPUT
@@ -306,7 +306,7 @@ jobs:
         if: steps.build.outputs.status == 'success'
         run: |
           cd ${{ env.WORKING_DIR }}
-          
+
           package_image() {
             local tunnel=$1
             echo "Packaging images for: $tunnel"
@@ -331,7 +331,7 @@ jobs:
             
             sudo rm -rf amlogic-s9xxx-openwrt
           }
-          
+
           if [[ "${{ env.TUNNEL }}" == "all" ]]; then
             for tunnel in openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki no-tunnel; do
               package_image $tunnel
@@ -339,7 +339,7 @@ jobs:
           else
             package_image ${{ env.TUNNEL }}
           fi
-          
+
           echo "Images packaged successfully"
           echo "status=success" >> $GITHUB_OUTPUT
 
