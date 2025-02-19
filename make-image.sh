@@ -44,12 +44,19 @@ NIKKI+="nikki luci-app-nikki"
 PASSWALL+="chinadns-ng resolveip dns2socks dns2tcp ipt2socks microsocks tcping xray-core xray-plugin luci-app-passwall"
 NEKOCLASH+="kmod-tun bash curl jq mihomo sing-box php8 php8-mod-curl luci-app-neko"
 
+# openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki
 if [ "$2" == "openclash" ]; then
     PACKAGES+=" $OPENCLASH"
 elif [ "$2" == "passwall" ]; then
     PACKAGES+=" $PASSWALL"
 elif [ "$2" == "nikki" ]; then
     PACKAGES+=" $NIKKI"
+elif [ "$2" == "openclash-passwall" ]; then
+    PACKAGES+=" $OPENCLASH $PASSWALL"
+elif [ "$2" == "nikki-passwall" ]; then
+    PACKAGES+=" $NIKKI $PASSWALL"
+elif [ "$2" == "nikki-openclash" ]; then
+    PACKAGES+=" $NIKKI $OPENCLASH"
 elif [ "$2" == "openclash-passwall-nikki" ]; then
     PACKAGES+=" $OPENCLASH $PASSWALL $NIKKI"
 fi
@@ -67,7 +74,7 @@ PACKAGES+=" librespeed-go python3-speedtest-cli iperf3 luci-app-netspeedtest"
 PACKAGES+=" luci-theme-material luci-theme-argon luci-app-argon-config"
 
 # PHP8
-PACKAGES+=" libc php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring coreutils-stat zoneinfo-asia"
+PACKAGES+=" php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring"
 
 # Misc and some custom .ipk files
 misc+=" luci-app-temp-status luci-app-cpu-status-mini luci-app-poweroff luci-app-log-viewer luci-app-ramfree"
@@ -83,7 +90,7 @@ if [ "$TYPE" == "AMLOGIC" ]; then
     EXCLUDED+=" -procd-ujail"
 fi
 
-PACKAGES+=" $misc zram-swap adb parted losetup resize2fs luci luci-ssl block-mount luci-app-poweroff luci-app-log luci-app-ramfree htop bash curl wget wget-ssl tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server"
+PACKAGES+=" $misc zram-swap adb parted losetup resize2fs luci luci-ssl block-mount htop bash curl wget-ssl tar unzip unrar gzip jq nano httping screen openssh-sftp-server"
 
 # Exclude package (must use - before packages name)
 EXCLUDED+=" -dnsmasq"
