@@ -38,7 +38,7 @@ case "$1" in
     nikki)
         echo "Downloading Nikki packages ipk"
         ariadl "${nikki_file_ipk_down}" "packages/nikki.tar.gz"
-        tar -xzvf "packages/nikki.tar.gz" > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
+        tar -xzvf "packages/nikki.tar.gz" -C packages > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
         ;;
     openclash-passwall)
         echo "Downloading OpenClash Passwall packages ipk"
@@ -52,7 +52,7 @@ case "$1" in
     nikki-passwall)
         echo "Downloading Nikki Passwall packages ipk"
         ariadl "${nikki_file_ipk_down}" "packages/nikki.tar.gz"
-        tar -xzvf "packages/nikki.tar.gz" > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
+        tar -xzvf "packages/nikki.tar.gz" -C packages > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
         download_packages "custom" passwall_ipk[@]
         ariadl "${passwall_core_file_zip_down}" "packages/passwall.zip"
         unzip -qq "packages/passwall.zip" -d packages && rm "packages/passwall.zip" || error_msg "Error: Failed to extract Passwall package."
@@ -60,7 +60,7 @@ case "$1" in
     nikki-openclash)
         echo "Downloading Nikki OpenClash packages ipk"
         ariadl "${nikki_file_ipk_down}" "packages/nikki.tar.gz"
-        tar -xzvf "packages/nikki.tar.gz" > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
+        tar -xzvf "packages/nikki.tar.gz" -C packages > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
         download_packages "custom" openclash_ipk[@]
         ariadl "${openclash_core}" "files/etc/openclash/core/clash_meta.gz"
         gzip -d "files/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
@@ -77,7 +77,7 @@ case "$1" in
         unzip -qq "packages/passwall.zip" -d packages && rm "packages/passwall.zip" || error_msg "Error: Failed to extract Passwall package."
         echo "Downloading Nikki packages ipk"
         ariadl "${nikki_file_ipk_down}" "packages/nikki.tar.gz"
-        tar -xzvf "packages/nikki.tar.gz" > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
+        tar -xzvf "packages/nikki.tar.gz" -C packages > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
         ;;
     *)
         echo "Invalid option. Usage: $0 {openclash|passwall|nikki|openclash-passwall-nikki}"
