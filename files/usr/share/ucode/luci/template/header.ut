@@ -182,10 +182,6 @@ function showProfile() {
 const CONFIG = {
     APP: {
         name: 'RTA-WRT',
-        baseOpenwrt: 'null',
-        currentBranch: 'null',
-        currentVersion: 'null',
-        currentFitur: 'null',
         checkInterval: 5 * 60 * 1000, // 5 minutes
         offlineRetryInterval: 30 * 1000, // 30 seconds
         maxRetryAttempts: 3,
@@ -193,12 +189,6 @@ const CONFIG = {
     },
     URLS: {
         info: 'https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/informasi.txt',
-        getVersion() {
-            return `https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${this.APP.currentBranch}/${this.APP.baseOpenwrt}/${this.APP.currentFitur}/version.txt`;
-        },
-        getChangelog() {
-            return `https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/${this.APP.currentBranch}/${this.APP.baseOpenwrt}/${this.APP.currentFitur}/changelog.txt`;
-        },
         internetCheck: 'https://www.google.com/favicon.ico'
     },
     SOCIAL: {
@@ -213,8 +203,7 @@ class StateManager {
     constructor() {
         this.today = new Date().toDateString();
         this.cache = {
-            content: localStorage.getItem('lastInformation') || '',
-            lastUpdate: localStorage.getItem('lastUpdate') || ''
+            content: localStorage.getItem('lastInformation') || ''
         };
         this.alertQueue = [];
         this.isAlertShowing = false;
@@ -242,7 +231,6 @@ class StateManager {
 class CacheManager {
     static CACHE_KEYS = {
         INFO: 'cache_info',
-        VERSION: 'cache_version',
         CHANGELOG: 'cache_changelog',
         TIMESTAMPS: 'cache_timestamps'
     };
@@ -435,7 +423,6 @@ class InformationManager {
                 StorageUtils.save('lastInformation', infoContent);
                 StorageUtils.save('lastInformationDate', state.today);  // Save the date when the alert is shown
                 state.cache.content = infoContent;
-                state.cache.lastUpdate = new Date().toISOString();
             }
         });
     }
@@ -444,83 +431,6 @@ class InformationManager {
         const lastInformationDate = StorageUtils.get('lastInformationDate');
         const state = StateManager.getInstance();
         return lastInformationDate === state.today;
-    }
-}
-
-// ====== Update Manager ======
-class UpdateManager {
-    static formatChangelog(changelogRaw) {
-        if (!changelogRaw) return 'Tidak ada catatan perubahan.';
-        
-        const match = changelogRaw.match(/\*\*Changelog\*\* \((.*?)\)\n([\s\S]*?)(?=\*\*Changelog\*\*|$)/);
-        if (!match) return changelogRaw;
-        
-        return `<strong>Changelog (${match[1]})</strong><p>${match[2].trim().replace(/-\s/g, '• ').replace(/\n/g, '<br>')}</p>`;
-    }
-
-    static async checkForUpdates() {
-        const state = StateManager.getInstance();
-        if (StorageUtils.get('mdl_update') === state.today) return;
-
-        if (!await NetworkUtils.checkInternetConnection()) {
-            const [cachedVersion, cachedChangelog] = await Promise.all([
-                CacheManager.get(CONFIG.URLS.getVersion.call(CONFIG)),
-                CacheManager.get(CONFIG.URLS.getChangelog.call(CONFIG))
-            ]);
-            
-            if (cachedVersion && cachedVersion.trim() !== CONFIG.APP.currentVersion) {
-                await this.showUpdateAlert(cachedVersion.trim(), this.formatChangelog(cachedChangelog));
-            }
-            return;
-        }
-
-        try {
-            const [latestVersion, changelogRaw] = await Promise.all([
-                NetworkUtils.fetchText(CONFIG.URLS.getVersion.call(CONFIG)),
-                NetworkUtils.fetchText(CONFIG.URLS.getChangelog.call(CONFIG))
-            ]);
-
-            if (!latestVersion) {
-                console.log('No version information available');
-                return;
-            }
-
-            if (latestVersion.trim() === CONFIG.APP.currentVersion) {
-                console.log('Already on latest version');
-                return;
-            }
-
-            const changelog = this.formatChangelog(changelogRaw);
-            await this.showUpdateAlert(latestVersion.trim(), changelog);
-        } catch (error) {
-            console.error('Update check failed:', error);
-        }
-    }
-
-    static async showUpdateAlert(latestVersion, changelog) {
-        const state = StateManager.getInstance();
-        await AlertSystem.enqueueAlert({
-            title: '🚀 Update Tersedia!',
-            width: 400,
-            html: `
-                <div class="update-info" style="text-align: center;">
-                    <div class="changelog" style="margin-top: 15px; text-align: left;">
-                        <h4 style="color: #007BFF; background-color: #FFFFFF;">📋 Changelog:</h4>
-                        <div>${changelog}</div>
-                    </div>
-                </div>
-            `,
-            showCancelButton: true,
-            showDenyButton: true,
-            confirmButtonText: '🔄 Update',
-            denyButtonText: '⏳ Nanti',
-            cancelButtonText: '❌ Batal',
-            onConfirm: () => {
-                window.open('https://github.com/rizkikotet-dev/RTA-WRT/releases', '_blank');
-                StorageUtils.save('mdl_update', state.today);
-            },
-            onDenied: () => StorageUtils.save('mdl_update', state.today)
-        });
     }
 }
 
@@ -580,7 +490,6 @@ class AppController {
         // Initial checks if online
         if (ConnectionManager.isOnline) {
             await DailyModalManager.showDailyModal();
-            await UpdateManager.checkForUpdates();
             await AppController.startInformationChecker();
         }
     }
