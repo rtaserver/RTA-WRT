@@ -453,7 +453,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: amlogic
-          name: RTA-WRT-${{ env.openwrt_board }}-${{ env.BRANCH }}-${{ env.TUNNEL }}-${{ env.DATE }}
+          name: RTA-WRT-Amlogic-${{ env.BRANCH }}-${{ env.TUNNEL }}-${{ env.DATE }}
           files: ${{ env.PACKAGED_OUTPUTPATH }}/*.gz
           prerelease: true
           generate_release_notes: true
