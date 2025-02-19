@@ -44,12 +44,19 @@ NIKKI+="nikki luci-app-nikki"
 PASSWALL+="chinadns-ng resolveip dns2socks dns2tcp ipt2socks microsocks tcping xray-core xray-plugin luci-app-passwall"
 NEKOCLASH+="kmod-tun bash curl jq mihomo sing-box php8 php8-mod-curl luci-app-neko"
 
+# openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki
 if [ "$2" == "openclash" ]; then
     PACKAGES+=" $OPENCLASH"
 elif [ "$2" == "passwall" ]; then
     PACKAGES+=" $PASSWALL"
 elif [ "$2" == "nikki" ]; then
     PACKAGES+=" $NIKKI"
+elif [ "$2" == "openclash-passwall" ]; then
+    PACKAGES+=" $OPENCLASH $PASSWALL"
+elif [ "$2" == "nikki-passwall" ]; then
+    PACKAGES+=" $NIKKI $PASSWALL"
+elif [ "$2" == "nikki-openclash" ]; then
+    PACKAGES+=" $NIKKI $OPENCLASH"
 elif [ "$2" == "openclash-passwall-nikki" ]; then
     PACKAGES+=" $OPENCLASH $PASSWALL $NIKKI"
 fi
