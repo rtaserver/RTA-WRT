@@ -17,7 +17,7 @@ on:
         description: "Select device board"
         required: true
         default: "s905x"
-        type: text
+        type: choice
         options:
           - all
           - s905x
@@ -92,53 +92,45 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Initialize Build Environment
+      - name: Initialization environment
         id: init
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
-          # Clean up space
-          docker rmi $(docker images -q) 2>/dev/null || true
-          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null || true
+          docker rmi $(docker images -q) 2>/dev/null
+          [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
+          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
           sudo swapoff -a
           sudo rm -f /swapfile /mnt/swapfile
-
-          # Update and install dependencies
           sudo -E apt-get -y update
+          sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
           sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
-
-          # Additional build dependencies
-          sudo -E apt-get -y install \
-            build-essential libncurses5-dev libncursesw5-dev zlib1g-dev \
-            gawk git gettext libssl-dev xsltproc rsync wget unzip tar \
-            gzip qemu-utils mkisofs python3 python3-pip
-
-          # Cleanup
+          sudo -E systemctl daemon-reload
+          #sudo -E apt-get -y full-upgrade
           sudo -E apt-get -y autoremove --purge
           sudo -E apt-get clean
+          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
+          sudo rm -rf ~/{.cargo,.dotnet,.rustup}
+          sudo timedatectl set-timezone "${TZ}"
+          echo "status=success" >> ${GITHUB_OUTPUT}
 
-          # Set timezone
-          sudo timedatectl set-timezone "${{ env.TZ }}"
-
-          # Setup virtual disk for building
-          if [ "${{ inputs.target }}" == "all" ]; then
-            mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
-            root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
-            
-            sudo truncate -s "${mnt_size}G" /mnt/mnt.img
-            sudo truncate -s "${root_size}G" /root.img
-            sudo losetup /dev/loop6 /mnt/mnt.img
-            sudo losetup /dev/loop7 /root.img
-            sudo pvcreate /dev/loop6 /dev/loop7
-            sudo vgcreate github /dev/loop6 /dev/loop7
-            sudo lvcreate -n runner -l 100%FREE github
-            sudo mkfs.xfs /dev/github/runner
-            sudo mkdir -p /builder
-            sudo mount /dev/github/runner /builder
-            sudo chown -R runner:runner /builder
-          fi
-
-          echo "Build environment initialized successfully"
-          df -h
-          echo "status=success" >> $GITHUB_OUTPUT
+      - name: Create simulated physical disk
+        run: |
+          mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
+          root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
+          sudo truncate -s "${mnt_size}"G /mnt/mnt.img
+          sudo truncate -s "${root_size}"G /root.img
+          sudo losetup /dev/loop6 /mnt/mnt.img
+          sudo losetup /dev/loop7 /root.img
+          sudo pvcreate /dev/loop6
+          sudo pvcreate /dev/loop7
+          sudo vgcreate github /dev/loop6 /dev/loop7
+          sudo lvcreate -n runner -l 100%FREE github
+          sudo mkfs.xfs /dev/github/runner
+          sudo mkdir -p /builder
+          sudo mount /dev/github/runner /builder
+          sudo chown -R runner.runner /builder
+          df -Th
 
       - name: Checkout Repository
         uses: actions/checkout@v4
