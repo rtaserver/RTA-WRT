@@ -26,7 +26,7 @@ case "$1" in
     openclash)
         echo "Downloading Openclash packages"
         download_packages "custom" openclash_ipk[@]
-        ariadl "${clash_meta}" "files/etc/openclash/core/clash_meta.gz"
+        ariadl "${openclash_core}" "files/etc/openclash/core/clash_meta.gz"
         gzip -d "files/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
         ;;
     passwall)
@@ -44,7 +44,7 @@ case "$1" in
         echo "Installing Openclash, Passwall And Nikki"
         echo "Downloading Openclash packages"
         download_packages "custom" openclash_ipk[@]
-        ariadl "${clash_meta}" "files/etc/openclash/core/clash_meta.gz"
+        ariadl "${openclash_core}" "files/etc/openclash/core/clash_meta.gz"
         gzip -d "files/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
         echo "Downloading Passwall packages ipk"
         download_packages "custom" passwall_ipk[@]

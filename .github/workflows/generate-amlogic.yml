@@ -57,7 +57,7 @@ on:
           - stable
           - flippy
       tunnel:
-        description: "Select VPN Client app (!passwall only support for newer branch with fw4 firewall!):"
+        description: "Select VPN Client app:"
         required: true
         default: "openclash"
         type: choice
@@ -66,6 +66,9 @@ on:
           - openclash
           - passwall
           - nikki
+          - openclash-passwall
+          - nikki-passwall
+          - nikki-openclash
           - openclash-passwall-nikki
           - no-tunnel
       clean:
@@ -289,7 +292,7 @@ jobs:
           if [[ "$TUNNEL" == "all" ]]; then 
               echo "Setting up all VPN clients"
               bash scripts/TUNNEL.sh openclash-passwall-nikki
-          elif [[ "$TUNNEL" == "passwall" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "nikki-passwall" || "$TUNNEL" == "nikki-openclash" || "$TUNNEL" == "openclash-passwall-nikki" ]]; then
+          elif [[ "$TUNNEL" == "openclash" || "$TUNNEL" == "passwall" || "$TUNNEL" == "nikki" || "$TUNNEL" == "openclash-passwall" || "$TUNNEL" == "nikki-passwall" || "$TUNNEL" == "nikki-openclash" || "$TUNNEL" == "openclash-passwall-nikki" ]]; then
               echo "Setting up VPN client: $TUNNEL"
               bash scripts/TUNNEL.sh "$TUNNEL"
           else
@@ -317,7 +320,7 @@ jobs:
 
           # Handle different tunnel options
           if [[ "$TUNNEL" == "all" ]]; then
-            for t in openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki openclash passwall nikki no-tunnel; do
+            for t in openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki no-tunnel; do
               echo "========================================================"
               echo "Building with VPN Client: $t"
               echo "========================================================"
