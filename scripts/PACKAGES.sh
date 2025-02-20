@@ -67,7 +67,6 @@ declare -A package_categories=(
         luci-app-lite-watchdog|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9
         luci-theme-alpha|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9
         luci-app-adguardhome|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9
-        adguardhome|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9
         sing-box|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9
         mihomo|https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9
     "
