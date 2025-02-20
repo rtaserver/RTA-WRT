@@ -59,6 +59,9 @@ on:
 
 env:
   TYPE: AMLOGIC
+  TARGET: ${{ inputs.target }}
+  RELEASE_BRANCH: ${{ inputs.release_branch }}
+  CLEAN: ${{ inputs.clean }}
   TZ: Asia/Jakarta
   WORKING_DIR: imagebuilder
   DEBIAN_FRONTEND: noninteractive
@@ -106,7 +109,7 @@ jobs:
       matrix: ${{fromJson(needs.check-compatibility.outputs.matrix)}}
       fail-fast: false
 
-    name: Build ${{ inputs.release_branch }}-${{ matrix.tunnel }}-${{ matrix.target }}
+    name: Build ${{ inputs.release_branch }}-${{ matrix.tunnel }}
 
     steps:
       - name: Initialization environment
