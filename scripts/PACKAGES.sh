@@ -9,16 +9,16 @@ fi
 . ./scripts/INCLUDE.sh
 
 # Initialize package arrays based on target type
-declare -a github_packages
+declare -a packages_github
 if [ "$TYPE" == "AMLOGIC" ]; then
     log "INFO" "Adding Amlogic-specific packages..."
-    github_packages=(
-        "luci-app-amlogic|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest"
+    packages_github=(
+        "luci-app-amlogic_|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest"
     )
 fi
 
 # Add core GitHub packages
-github_packages+=(
+packages_github+=(
     "luci-app-alpha-config|https://api.github.com/repos/animegasan/luci-app-alpha-config/releases/latest"
     "luci-theme-material3|https://api.github.com/repos/AngelaCooljx/luci-theme-material3/releases/latest"
     "luci-app-neko|https://api.github.com/repos/nosignals/openwrt-neko/releases/latest"
@@ -35,105 +35,74 @@ REPOS=(
 )
 
 # Define package categories with improved structure
-declare -A package_categories=(
-    ["openwrt"]="
-        modemmanager-rpcd|${REPOS[OPENWRT]}/packages
-        luci-proto-modemmanager|${REPOS[OPENWRT]}/luci
-        libqmi|${REPOS[OPENWRT]}/packages
-        libmbim|${REPOS[OPENWRT]}/packages
-        modemmanager|${REPOS[OPENWRT]}/packages
-        sms-tool|${REPOS[OPENWRT]}/packages
-        tailscale|${REPOS[OPENWRT]}/packages
-        python3-speedtest-cli|${REPOS[OPENWRT]}/packages
-    "
-    ["kiddin9"]="
-        luci-app-tailscale|${REPOS[KIDDIN9]}
-        luci-app-diskman|${REPOS[KIDDIN9]}
-        modeminfo-serial-zte|${REPOS[KIDDIN9]}
-        modeminfo-serial-gosun|${REPOS[KIDDIN9]}
-        modeminfo-qmi|${REPOS[KIDDIN9]}
-        modeminfo-serial-yuge|${REPOS[KIDDIN9]}
-        modeminfo-serial-thales|${REPOS[KIDDIN9]}
-        modeminfo-serial-tw|${REPOS[KIDDIN9]}
-        modeminfo-serial-meig|${REPOS[KIDDIN9]}
-        modeminfo-serial-styx|${REPOS[KIDDIN9]}
-        modeminfo-serial-mikrotik|${REPOS[KIDDIN9]}
-        modeminfo-serial-dell|${REPOS[KIDDIN9]}
-        modeminfo-serial-sierra|${REPOS[KIDDIN9]}
-        modeminfo-serial-quectel|${REPOS[KIDDIN9]}
-        modeminfo-serial-huawei|${REPOS[KIDDIN9]}
-        modeminfo-serial-xmm|${REPOS[KIDDIN9]}
-        modeminfo-serial-telit|${REPOS[KIDDIN9]}
-        modeminfo-serial-fibocom|${REPOS[KIDDIN9]}
-        modeminfo-serial-simcom|${REPOS[KIDDIN9]}
-        modeminfo|${REPOS[KIDDIN9]}
-        luci-app-modeminfo|${REPOS[KIDDIN9]}
-        atinout|${REPOS[KIDDIN9]}
-        luci-app-poweroff|${REPOS[KIDDIN9]}
-        xmm-modem|${REPOS[KIDDIN9]}
-        luci-app-lite-watchdog|${REPOS[KIDDIN9]}
-        luci-theme-alpha|${REPOS[KIDDIN9]}
-        luci-app-adguardhome|${REPOS[KIDDIN9]}
-        sing-box|${REPOS[KIDDIN9]}
-        mihomo|${REPOS[KIDDIN9]}
-    "
-    ["immortalwrt"]="
-        luci-app-zerotier|${REPOS[IMMORTALWRT]}/luci
-        luci-app-ramfree|${REPOS[IMMORTALWRT]}/luci
-        luci-app-3ginfo-lite|${REPOS[IMMORTALWRT]}/luci
-        modemband|${REPOS[IMMORTALWRT]}/packages
-        luci-app-modemband|${REPOS[IMMORTALWRT]}/luci
-        luci-app-sms-tool-js|${REPOS[IMMORTALWRT]}/luci
-        dns2tcp|${REPOS[IMMORTALWRT]}/packages
-        luci-app-argon-config|${REPOS[IMMORTALWRT]}/luci
-        luci-theme-argon|${REPOS[IMMORTALWRT]}/luci
-        luci-app-openclash|${REPOS[IMMORTALWRT]}/luci
-        luci-app-passwall|${REPOS[IMMORTALWRT]}/luci
-    "
-    ["gSpotx2f"]="
-        luci-app-internet-detector|${REPOS[GSPOTX2F]}
-        internet-detector|${REPOS[GSPOTX2F]}
-        internet-detector-mod-modem-restart|${REPOS[GSPOTX2F]}
-        luci-app-cpu-status-mini|${REPOS[GSPOTX2F]}
-        luci-app-disks-info|${REPOS[GSPOTX2F]}
-        luci-app-log-viewer|${REPOS[GSPOTX2F]}
-        luci-app-temp-status|${REPOS[GSPOTX2F]}
-    "
-    ["etc"]="
-        luci-app-netspeedtest|${REPOS[FANTASTIC]}/luci
-    "
-)
+declare -a packages_custom=(
+    "modemmanager-rpcd|${REPOS[OPENWRT]}/packages"
+    "luci-proto-modemmanager|${REPOS[OPENWRT]}/luci"
+    "libqmi|${REPOS[OPENWRT]}/packages"
+    "libmbim|${REPOS[OPENWRT]}/packages"
+    "modemmanager|${REPOS[OPENWRT]}/packages"
+    "sms-tool|${REPOS[OPENWRT]}/packages"
+    "tailscale|${REPOS[OPENWRT]}/packages"
+    "python3-speedtest-cli|${REPOS[OPENWRT]}/packages"
 
-# Enhanced function to process package categories
-process_package_categories() {
-    local -a all_packages_custom=()
-    
-    for category in "${!package_categories[@]}"; do
-        log "INFO" "Processing $category packages..."
-        while IFS= read -r package_line; do
-            [[ -z "$package_line" ]] && continue
-            package_line=$(echo "$package_line" | xargs)  # Trim whitespace
-            [[ -n "$package_line" ]] && all_packages_custom+=("$package_line")
-        done <<< "${package_categories[$category]}"
-    done
-    
-    if ((${#all_packages_custom[@]} > 0)); then
-        log "INFO" "Downloading custom packages..."
-        if ! download_packages "custom" "${all_packages_custom[@]}"; then
-            log "ERROR" "Failed to download some custom packages"
-            return 1
-        fi
-    fi
-    
-    return 0
-}
+    "luci-app-tailscale|${REPOS[KIDDIN9]}"
+    "luci-app-diskman|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-zte|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-gosun|${REPOS[KIDDIN9]}"
+    "modeminfo-qmi|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-yuge|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-thales|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-tw|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-meig|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-styx|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-mikrotik|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-dell|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-sierra|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-quectel|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-huawei|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-xmm|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-telit|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-fibocom|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-simcom|${REPOS[KIDDIN9]}"
+    "modeminfo|${REPOS[KIDDIN9]}"
+    "luci-app-modeminfo|${REPOS[KIDDIN9]}"
+    "atinout|${REPOS[KIDDIN9]}"
+    "luci-app-poweroff|${REPOS[KIDDIN9]}"
+    "xmm-modem|${REPOS[KIDDIN9]}"
+    "luci-app-lite-watchdog|${REPOS[KIDDIN9]}"
+    "luci-theme-alpha|${REPOS[KIDDIN9]}"
+    "luci-app-adguardhome|${REPOS[KIDDIN9]}"
+    "sing-box|${REPOS[KIDDIN9]}"
+    "mihomo|${REPOS[KIDDIN9]}"
+
+    "luci-app-zerotier|${REPOS[IMMORTALWRT]}/luci"
+    "luci-app-ramfree|${REPOS[IMMORTALWRT]}/luci"
+    "luci-app-3ginfo-lite|${REPOS[IMMORTALWRT]}/luci"
+    "modemband|${REPOS[IMMORTALWRT]}/packages"
+    "luci-app-modemband|${REPOS[IMMORTALWRT]}/luci"
+    "luci-app-sms-tool-js|${REPOS[IMMORTALWRT]}/luci"
+    "dns2tcp|${REPOS[IMMORTALWRT]}/packages"
+    "luci-app-argon-config|${REPOS[IMMORTALWRT]}/luci"
+    "luci-theme-argon|${REPOS[IMMORTALWRT]}/luci"
+    "luci-app-openclash|${REPOS[IMMORTALWRT]}/luci"
+    "luci-app-passwall|${REPOS[IMMORTALWRT]}/luci"
+
+    "luci-app-internet-detector|${REPOS[GSPOTX2F]}"
+    "internet-detector|${REPOS[GSPOTX2F]}"
+    "internet-detector-mod-modem-restart|${REPOS[GSPOTX2F]}"
+    "luci-app-cpu-status-mini|${REPOS[GSPOTX2F]}"
+    "luci-app-disks-info|${REPOS[GSPOTX2F]}"
+    "luci-app-log-viewer|${REPOS[GSPOTX2F]}"
+    "luci-app-temp-status|${REPOS[GSPOTX2F]}"
+
+    "luci-app-netspeedtest|${REPOS[FANTASTIC]}/luci"
+)
 
 # Enhanced package verification function
 verify_packages() {
     local pkg_dir="packages"
     local -a failed_packages=()
-    shift
-    local -a package_list=("$@")
+    local -a package_list=("${!1}")  # Fixed parameter passing
     
     if [[ ! -d "$pkg_dir" ]]; then
         log "ERROR" "Package directory not found: $pkg_dir"
@@ -145,7 +114,7 @@ verify_packages() {
     
     for package in "${package_list[@]}"; do
         local pkg_name="${package%%|*}"
-        if ! find "$pkg_dir" \( -name "${pkg_name}*.ipk" -o -name "${pkg_name}*.apk" \) >/dev/null 2>&1; then
+        if ! find "$pkg_dir" \( -name "${pkg_name}*.ipk" -o -name "${pkg_name}*.apk" \) -print -quit | grep -q .; then
             failed_packages+=("$pkg_name")
         fi
     done
@@ -153,7 +122,7 @@ verify_packages() {
     local failed=${#failed_packages[@]}
     
     if ((failed > 0)); then
-        log "WARNING" "Failed packages:"
+        log "WARNING" "$failed packages failed to download:"
         printf '%s\n' "${failed_packages[@]}" | while read -r pkg; do
             log "WARNING" "  - $pkg"
         done
@@ -166,21 +135,28 @@ verify_packages() {
 
 # Main execution
 main() {
+    local rc=0
+    
     # Download GitHub packages
-    download_packages "github" github_packages[@]
+    log "INFO" "Downloading GitHub packages..."
+    download_packages "github" packages_github[@] || rc=1
     
-    # Process and download category packages
-    process_package_categories || log "WARNING" "Some category packages failed to download"
+    # Download Custom packages
+    log "INFO" "Downloading Custom packages..."
+    download_packages "custom" packages_custom[@] || rc=1
     
-    # Verify downloads
-    verify_packages || {
-        log "ERROR" "Package verification failed"
-        return 1
-    }
-
-    log "SUCCESS" "Package download completed"
+    # Verify all downloads
+    log "INFO" "Verifying all packages..."
+    verify_packages packages_github[@] || rc=1
+    verify_packages packages_custom[@] || rc=1
     
-    return 0
+    if [ $rc -eq 0 ]; then
+        log "SUCCESS" "Package download and verification completed successfully"
+    else
+        log "ERROR" "Package download or verification failed"
+    fi
+    
+    return $rc
 }
 
 # Run main function if script is not sourced

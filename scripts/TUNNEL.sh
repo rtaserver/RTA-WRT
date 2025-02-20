@@ -24,7 +24,7 @@ declare -a passwall_ipk=("luci-app-passwall|https://downloads.immortalwrt.org/re
 
 # Function to download and setup OpenClash
 setup_openclash() {
-    echo "Downloading OpenClash packages"
+    log "INFO" "Downloading OpenClash packages"
     download_packages "custom" openclash_ipk[@]
     ariadl "${openclash_core}" "files/etc/openclash/core/clash_meta.gz"
     gzip -d "files/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
@@ -32,7 +32,7 @@ setup_openclash() {
 
 # Function to download and setup PassWall
 setup_passwall() {
-    echo "Downloading PassWall packages"
+    log "INFO" "Downloading PassWall packages"
     download_packages "custom" passwall_ipk[@]
     ariadl "${passwall_core_file_zip_down}" "packages/passwall.zip"
     unzip -qq "packages/passwall.zip" -d packages && rm "packages/passwall.zip" || error_msg "Error: Failed to extract PassWall package."
@@ -40,7 +40,7 @@ setup_passwall() {
 
 # Function to download and setup Nikki
 setup_nikki() {
-    echo "Downloading Nikki packages"
+    log "INFO" "Downloading Nikki packages"
     ariadl "${nikki_file_ipk_down}" "packages/nikki.tar.gz"
     tar -xzvf "packages/nikki.tar.gz" -C packages > /dev/null 2>&1 && rm "packages/nikki.tar.gz" || error_msg "Error: Failed to extract Nikki package."
 }
@@ -69,21 +69,21 @@ case "$1" in
         setup_openclash
         ;;
     openclash-passwall-nikki)
-        echo "Installing OpenClash, PassWall and Nikki"
+        log "INFO" "Installing OpenClash, PassWall and Nikki"
         setup_openclash
         setup_passwall
         setup_nikki
         ;;
     *)
-        echo "Invalid option. Usage: $0 {openclash|passwall|nikki|openclash-passwall|nikki-passwall|nikki-openclash|openclash-passwall-nikki}"
+        log "INFO" "Invalid option. Usage: $0 {openclash|passwall|nikki|openclash-passwall|nikki-passwall|nikki-openclash|openclash-passwall-nikki}"
         exit 1
         ;;
 esac
 
 # Check final status
 if [ "$?" -ne 0 ]; then
-    echo "Error: Download or extraction failed."
+    log "ERROR" "Download or extraction failed."
     exit 1
 else
-    echo "Download and installation completed successfully."
+    log "INFO" "Download and installation completed successfully."
 fi

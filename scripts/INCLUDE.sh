@@ -24,37 +24,35 @@ trap cleanup EXIT
 
 # Enhanced color setup with dynamic terminal capability detection
 setup_colors() {
-    if [ -t 1 ] && tput colors &>/dev/null && [ "$(tput colors)" -ge 8 ]; then
-        PURPLE=$(tput setaf 5)
-        BLUE=$(tput setaf 4)
-        GREEN=$(tput setaf 2)
-        YELLOW=$(tput setaf 3)
-        RED=$(tput setaf 1)
-        MAGENTA=$(tput setaf 5)
-        CYAN=$(tput setaf 6)
-        RESET=$(tput sgr0)
-        BOLD=$(tput bold)
-        UL=$(tput smul)
-    else
-        PURPLE="" BLUE="" GREEN="" YELLOW="" RED="" MAGENTA="" CYAN="" RESET="" BOLD="" UL=""
-    fi
+    PURPLE="\033[95m"
+    BLUE="\033[94m"
+    GREEN="\033[92m"
+    YELLOW="\033[93m"
+    RED="\033[91m"
+    MAGENTA='\033[0;35m'
+    CYAN='\033[0;36m'
+    RESET="\033[0m"
 
-    # Export readonly variables for logging
-    readonly STEPS="[${PURPLE}STEPS${RESET}]"
-    readonly INFO="[${BLUE}INFO${RESET}]"
-    readonly SUCCESS="[${GREEN}SUCCESS${RESET}]"
-    readonly WARNING="[${YELLOW}WARNING${RESET}]"
-    readonly ERROR="[${RED}ERROR${RESET}]"
-    readonly BFR="\\r\\033[K"
-    readonly HOLD=" "
-    readonly TAB="  "
+    STEPS="[${PURPLE} STEPS ${RESET}]"
+    INFO="[${BLUE} INFO ${RESET}]"
+    SUCCESS="[${GREEN} SUCCESS ${RESET}]"
+    WARNING="[${YELLOW} WARNING ${RESET}]"
+    ERROR="[${RED} ERROR ${RESET}]"
+
+    # Formatting
+    CL=$(echo "\033[m")
+    UL=$(echo "\033[4m")
+    BOLD=$(echo "\033[1m")
+    BFR="\\r\\033[K"
+    HOLD=" "
+    TAB="  "
 }
 
 # Enhanced logging function
 log() {
     local level="$1"
     local message="$2"
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local timestamp=$(date '+%d-%m-%Y %H:%M:%S')
     
     # Output to console if not in quiet mode
     case "$level" in
@@ -154,11 +152,11 @@ check_dependencies() {
 # Enhanced download function with retry mechanism and better error handling
 ariadl() {
     if [ "$#" -lt 1 ]; then
-        echo -e "${ERROR} Usage: ariadl <URL> [OUTPUT_FILE]"
+        log "ERROR" "Usage: ariadl <URL> [OUTPUT_FILE]"
         return 1
     fi
 
-    echo -e "${STEPS} Aria2 Downloader"
+    log "STEPS" "Aria2 Downloader"
 
     local URL OUTPUT_FILE OUTPUT_DIR OUTPUT
     URL=$1
@@ -179,7 +177,7 @@ ariadl() {
     fi
 
     while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-        echo -e "${INFO} Downloading: $URL (Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
+        log "INFO" "Downloading: $URL (Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
         
         if [ -f "$OUTPUT_DIR/$OUTPUT_FILE" ]; then
             rm "$OUTPUT_DIR/$OUTPUT_FILE"
@@ -188,59 +186,94 @@ ariadl() {
         aria2c -q -d "$OUTPUT_DIR" -o "$OUTPUT_FILE" "$URL"
         
         if [ $? -eq 0 ]; then
-            echo -e "${SUCCESS} Downloaded: $OUTPUT_FILE"
+            log "SUCCESS" "Downloaded: $OUTPUT_FILE"
             return 0
         else
             RETRY_COUNT=$((RETRY_COUNT + 1))
             if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                echo -e "${ERROR} Download failed. Retrying..."
+                log "ERROR" "Download failed. Retrying..."
                 sleep 2
             fi
         fi
     done
 
-    echo -e "${ERROR} Failed to download: $OUTPUT_FILE after $MAX_RETRIES attempts"
+    log "ERROR" "Failed to download: $OUTPUT_FILE after $MAX_RETRIES attempts"
     return 1
 }
 
 # Enhanced package downloader with improved URL handling and validation
-# Enhanced download function with proper array handling
 download_packages() {
     local source="$1"
-    shift
-    local -a package_list=("$@")
+    local package_list=("${!2}")
+    local download_dir="packages"
     
-    if [ ${#package_list[@]} -eq 0 ]; then
-        log "ERROR" "No packages provided to download_packages"
+    # Create download directory
+    mkdir -p "$download_dir"
+    
+    # Helper function for downloading
+    download_file() {
+        local url="$1"
+        local output="$2"
+        local max_retries=3
+        local retry=0
+        
+        while [ $retry -lt $max_retries ]; do
+            if ariadl "$url" "$output"; then
+                return 0
+            fi
+            retry=$((retry + 1))
+            log "WARNING" "Retry $retry/$max_retries for $output"
+            sleep 2
+        done
         return 1
-    fi
-    
-    log "STEPS" "Downloading packages from $source..."
-    mkdir -p packages
-    
+    }
+
     case "$source" in
         github)
             for entry in "${package_list[@]}"; do
                 IFS="|" read -r filename base_url <<< "$entry"
-                unset IFS  # Kembalikan IFS ke default setelah digunakan
-            
-                file_urls=$(curl -s "$base_url" | jq -r '.assets[].browser_download_url' | grep -E '\.(ipk|apk)$' | grep "$filename" | head -1)
+                unset IFS
                 
-                if [ -z "$file_urls" ]; then
-                    error_msg "Failed to retrieve package info for [$filename] from $base_url"
+                if [[ -z "$filename" || -z "$base_url" ]]; then
+                    log "ERROR" "Invalid entry format: $entry"
                     continue
                 fi
-            
-                ariadl "$file_urls" "$(basename "$file_urls")"
+                
+                # Use jq with error handling
+                local file_urls
+                if ! file_urls=$(curl -sL "$base_url" | jq -r '.assets[].browser_download_url' 2>/dev/null); then
+                    log "ERROR" "Failed to parse JSON from $base_url"
+                    continue
+                fi
+                
+                # Find matching file
+                local download_url
+                download_url=$(echo "$file_urls" | grep -E '\.(ipk|apk)$' | grep -i "$filename" | sort -V | tail -1)
+                
+                if [ -z "$download_url" ]; then
+                    log "ERROR" "No matching package found for $filename"
+                    continue
+                fi
+                
+                local output_file="$download_dir/$(basename "$download_url")"
+                download_file "$download_url" "$output_file" || log "ERROR" "Failed to download $filename"
             done
             ;;
             
         custom)
             for entry in "${package_list[@]}"; do
                 IFS="|" read -r filename base_url <<< "$entry"
+                unset IFS
                 
                 if [[ -z "$filename" || -z "$base_url" ]]; then
-                    log "ERROR" "Invalid package entry: $entry"
+                    log "ERROR" "Invalid entry format: $entry"
+                    continue
+                fi
+                
+                # Download and process page content directly
+                local page_content
+                if ! page_content=$(curl -sL --max-time 30 --retry 3 --retry-delay 2 "$base_url"); then
+                    log "ERROR" "Failed to fetch page: $base_url"
                     continue
                 fi
                 
@@ -252,20 +285,20 @@ download_packages() {
                 
                 local found_url=""
                 for pattern in "${patterns[@]}"; do
-                    found_url=$(curl -sL "$base_url" | \
-                              grep -oP "(?<=\")${pattern}(?=\")" | \
-                              sort -V | \
-                              tail -n 1)
+                    found_url=$(echo "$page_content" | grep -oP "(?<=\")${pattern}(?=\")" | sort -V | tail -n 1)
                     
                     if [ -n "$found_url" ]; then
-                        if ! ariadl "${base_url}/${found_url}" "packages/${found_url}"; then
-                            log "ERROR" "Failed to download: $filename"
+                        local download_url="${base_url}/${found_url}"
+                        local output_file="$download_dir/${found_url}"
+                        
+                        if download_file "$download_url" "$output_file"; then
+                            log "INFO" "Successfully downloaded: $found_url"
+                            break
                         fi
-                        break
                     fi
                 done
                 
-                [ -z "$found_url" ] && log "ERROR" "No matching file found: $filename"
+                [ -z "$found_url" ] && log "ERROR" "No matching file found for $filename"
             done
             ;;
             
@@ -277,11 +310,11 @@ download_packages() {
     
     return 0
 }
+
 # Initialize the script
 setup_colors
 main() {
     check_dependencies || exit 1
-    # Add your main script logic here
 }
 
 # Run main function if script is not sourced
