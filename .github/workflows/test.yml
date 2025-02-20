@@ -210,6 +210,7 @@ jobs:
           mv *-imagebuilder-* ${{ env.WORKING_DIR }}
           cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
 
+          echo "Image builder prepared successfully"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Download External Packages
@@ -219,6 +220,9 @@ jobs:
           cd ${{ env.WORKING_DIR }}
           chmod +x scripts/PACKAGES.sh
           ./scripts/PACKAGES.sh
+
+          PACKAGE_COUNT=$(find packages -type f -name "*.ipk" | wc -l)
+          echo "Downloaded $PACKAGE_COUNT external packages"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Apply Patches and Customizations
