@@ -59,6 +59,7 @@ log() {
     # Output to console if not in quiet mode
     case "$level" in
         "ERROR")   echo -e "${ERROR} $message" >&2 ;;
+        "STEPS")   echo -e "${STEPS} $message" ;;
         "WARNING") echo -e "${WARNING} $message" ;;
         "SUCCESS") echo -e "${SUCCESS} $message" ;;
         "INFO")    echo -e "${INFO} $message" ;;
