@@ -16,12 +16,12 @@ build_mod_sdcard() {
     fi
 
     # Validate and set paths
-    if ! cd "${{ env.WORKING_DIR }}/compiled_images"; then
-        error_msg "Failed to change directory to ${{ env.WORKING_DIR }}/compiled_images"
+    if ! cd "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"; then
+        error_msg "Failed to change directory to $GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"
         return 1
     fi
 
-    local imgpath="${{ env.WORKING_DIR }}/compiled_images"
+    local imgpath="$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"
     local file_to_process="$image_path"
 
     cleanup() {
@@ -158,13 +158,14 @@ build_mod_sdcard() {
     cd ..
     cleanup
     echo -e "${SUCCESS} Successfully processed ${suffix}"
+    cd "$GITHUB_WORKSPACE/$WORKING_DIR"
     return 0
 }
 
 # Process HG680P images
-build_mod_sdcard "$(find "${{ env.WORKING_DIR }}/compiled_images" -name "*_s905x_k5.15*.img.gz")" "meson-gxl-s905x-p212.dtb" "HG680P"
-build_mod_sdcard "$(find "${{ env.WORKING_DIR }}/compiled_images" -name "*_s905x_k6.6*.img.gz")" "meson-gxl-s905x-p212.dtb" "HG680P"
+build_mod_sdcard "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x_k5.15*.img.gz")" "meson-gxl-s905x-p212.dtb" "HG680P"
+build_mod_sdcard "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x_k6.6*.img.gz")" "meson-gxl-s905x-p212.dtb" "HG680P"
 
 # Process B860H v1/v2 images
-build_mod_sdcard "$(find "${{ env.WORKING_DIR }}/compiled_images" -name "*_s905x-b860h_k5.15*.img.gz")" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
-build_mod_sdcard "$(find "${{ env.WORKING_DIR }}/compiled_images" -name "*_s905x-b860h_k6.6*.img.gz")" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
+build_mod_sdcard "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x-b860h_k5.15*.img.gz")" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
+build_mod_sdcard "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x-b860h_k6.6*.img.gz")" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
