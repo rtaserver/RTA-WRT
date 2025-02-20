@@ -24,37 +24,35 @@ trap cleanup EXIT
 
 # Enhanced color setup with dynamic terminal capability detection
 setup_colors() {
-    if [ -t 1 ] && tput colors &>/dev/null && [ "$(tput colors)" -ge 8 ]; then
-        PURPLE=$(tput setaf 5)
-        BLUE=$(tput setaf 4)
-        GREEN=$(tput setaf 2)
-        YELLOW=$(tput setaf 3)
-        RED=$(tput setaf 1)
-        MAGENTA=$(tput setaf 5)
-        CYAN=$(tput setaf 6)
-        RESET=$(tput sgr0)
-        BOLD=$(tput bold)
-        UL=$(tput smul)
-    else
-        PURPLE="" BLUE="" GREEN="" YELLOW="" RED="" MAGENTA="" CYAN="" RESET="" BOLD="" UL=""
-    fi
+    PURPLE="\033[95m"
+    BLUE="\033[94m"
+    GREEN="\033[92m"
+    YELLOW="\033[93m"
+    RED="\033[91m"
+    MAGENTA='\033[0;35m'
+    CYAN='\033[0;36m'
+    RESET="\033[0m"
 
-    # Export readonly variables for logging
-    readonly STEPS="[${PURPLE}STEPS${RESET}]"
-    readonly INFO="[${BLUE}INFO${RESET}]"
-    readonly SUCCESS="[${GREEN}SUCCESS${RESET}]"
-    readonly WARNING="[${YELLOW}WARNING${RESET}]"
-    readonly ERROR="[${RED}ERROR${RESET}]"
-    readonly BFR="\\r\\033[K"
-    readonly HOLD=" "
-    readonly TAB="  "
+    STEPS="[${PURPLE} STEPS ${RESET}]"
+    INFO="[${BLUE} INFO ${RESET}]"
+    SUCCESS="[${GREEN} SUCCESS ${RESET}]"
+    WARNING="[${YELLOW} WARNING ${RESET}]"
+    ERROR="[${RED} ERROR ${RESET}]"
+
+    # Formatting
+    CL=$(echo "\033[m")
+    UL=$(echo "\033[4m")
+    BOLD=$(echo "\033[1m")
+    BFR="\\r\\033[K"
+    HOLD=" "
+    TAB="  "
 }
 
 # Enhanced logging function
 log() {
     local level="$1"
     local message="$2"
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local timestamp=$(date '+%d-%m-%Y %H:%M:%S')
     
     # Output to console if not in quiet mode
     case "$level" in
