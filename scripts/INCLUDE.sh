@@ -240,7 +240,7 @@ download_packages() {
                 if [[ -z "$filename" || -z "$base_url" ]]; then
                     log "ERROR" "Invalid package entry: $entry"
                     continue
-                }
+                fi
                 
                 if [[ "$base_url" =~ ^https://api.github.com/repos/ ]]; then
                     local latest_url=$(curl -s -H "Accept: application/vnd.github.v3+json" "$base_url" | \
@@ -266,7 +266,7 @@ download_packages() {
                 if [[ -z "$filename" || -z "$base_url" ]]; then
                     log "ERROR" "Invalid package entry: $entry"
                     continue
-                }
+                fi
                 
                 local patterns=(
                     "${filename}[^\"]*\.(ipk|apk)"
