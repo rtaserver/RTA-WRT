@@ -2,170 +2,291 @@
 
 . ./scripts/INCLUDE.sh
 
+# Constants
+readonly REQUIRED_COMMANDS=("dd" "losetup" "mount" "gzip" "tar" "unzip" "sed")
+readonly MOD_BOOT_URL="https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip"
+readonly MAX_RETRIES=3
+readonly MOUNT_TIMEOUT=5
+
+# Helper functions
+check_dependencies() {
+    local missing_deps=()
+    for cmd in "${REQUIRED_COMMANDS[@]}"; do
+        if ! command -v "$cmd" &>/dev/null; then
+            missing_deps+=("$cmd")
+        fi
+    done
+    
+    if [ ${#missing_deps[@]} -ne 0 ]; then
+        log "ERROR" "Missing required dependencies: ${missing_deps[*]}"
+        return 1
+    fi
+    return 0
+}
+
+wait_for_device() {
+    local device="$1"
+    local timeout="$2"
+    local counter=0
+    
+    while [ ! -b "$device" ] && [ $counter -lt "$timeout" ]; do
+        sleep 1
+        counter=$((counter + 1))
+    done
+    
+    [ -b "$device" ]
+}
+
+safe_mount() {
+    local device="$1"
+    local mount_point="$2"
+    local retries=0
+    
+    while [ $retries -lt $MAX_RETRIES ]; do
+        if sudo mount "$device" "$mount_point"; then
+            return 0
+        fi
+        sleep 1
+        retries=$((retries + 1))
+    done
+    return 1
+}
+
 build_mod_sdcard() {
     local image_path="$1"
     local dtb="$2"
     local suffix="$3"
 
-    echo -e "${STEPS} Modifying boot files for Amlogic s905x devices..."
+    log "STEPS" "Modifying boot files for Amlogic s905x devices..."
     
-    # Validate input parameters
-    if [ -z "$suffix" ] || [ -z "$dtb" ] || [ -z "$image_path" ]; then
-        error_msg "Missing required parameters. Usage: build_mod_sdcard <image_path> <dtb> <image_suffix>"
+    # Parameter validation with detailed error messages
+    if [ -z "$image_path" ]; then
+        log "ERROR" "Image path parameter is missing"
+        return 1
+    elif [ -z "$dtb" ]; then
+        log "ERROR" "DTB parameter is missing"
+        return 1
+    elif [ -z "$suffix" ]; then
+        log "ERROR" "Suffix parameter is missing"
         return 1
     fi
 
-    # Validate and set paths
-    if ! cd "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"; then
-        error_msg "Failed to change directory to $GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"
+    # Check dependencies first
+    if ! check_dependencies; then
+        return 1
+    }
+
+    # Validate and set paths with error handling
+    local work_dir="$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"
+    if ! cd "$work_dir"; then
+        log "ERROR" "Failed to access working directory: $work_dir"
         return 1
     fi
 
-    local imgpath="$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"
     local file_to_process="$image_path"
 
+    # Enhanced cleanup function
     cleanup() {
-        echo -e "${INFO} Cleaning up temporary files..."
-        sudo umount boot 2>/dev/null || true
-        sudo losetup -D 2>/dev/null || true
-        [ -d "$suffix" ] && rm -rf "$suffix"
-        [ -d "mod-boot-sdcard-main" ] && rm -rf "mod-boot-sdcard-main"
+        log "INFO" "Performing cleanup..."
+        local mount_point="boot"
+        if mountpoint -q "$mount_point"; then
+            sudo umount "$mount_point" || log "ERROR" "Failed to unmount $mount_point"
+        fi
+        sudo losetup -D || log "ERROR" "Failed to detach all loop devices"
+        for dir in "$suffix" "mod-boot-sdcard-main"; do
+            [ -d "$dir" ] && rm -rf "$dir"
+        done
         [ -f "main.zip" ] && rm -f "main.zip"
     }
 
-    trap cleanup EXIT
+    trap cleanup EXIT ERR
 
-    if [ -z "$file_to_process" ] || [ ! -f "$file_to_process" ]; then
-        error_msg "Image file not found: ${file_to_process}"
+    # Validate input file
+    if [ ! -f "$file_to_process" ]; then
+        log "ERROR" "Image file not found: $file_to_process"
         return 1
     fi
 
-    # Download modification files
-    echo -e "${INFO} Downloading mod-boot-sdcard..."
-    if ! ariadl "https://github.com/rizkikotet-dev/mod-boot-sdcard/archive/refs/heads/main.zip" "main.zip"; then
-        error_msg "Failed to download mod-boot-sdcard"
+    # Download and extract with better error handling
+    log "INFO" "Downloading mod-boot-sdcard..."
+    if ! ariadl "$MOD_BOOT_URL" "main.zip"; then
+        log "ERROR" "Failed to download mod-boot-sdcard"
         return 1
     fi
 
-    # Extract files
-    echo -e "${INFO} Extracting mod-boot-sdcard..."
+    log "INFO" "Extracting mod-boot-sdcard..."
     if ! unzip -q main.zip; then
-        error_msg "Failed to extract mod-boot-sdcard"
+        log "ERROR" "Failed to extract mod-boot-sdcard"
+        rm -f main.zip
         return 1
     fi
     rm -f main.zip
-    echo -e "${SUCCESS} mod-boot-sdcard successfully extracted."
+    log "SUCCESS" "mod-boot-sdcard extracted successfully"
 
-    # Create working directory
+    # Prepare working directory
     mkdir -p "${suffix}/boot"
     
-    # Copy required files
-    echo -e "${INFO} Preparing image for ${suffix}..."
-    cp "$file_to_process" "${suffix}/"
-    if ! sudo cp mod-boot-sdcard-main/BootCardMaker/u-boot.bin \
-        mod-boot-sdcard-main/files/mod-boot-sdcard.tar.gz "${suffix}/"; then
-        error_msg "Failed to copy bootloader or modification files"
+    # Copy files with verification
+    log "INFO" "Preparing image for ${suffix}..."
+    if ! cp "$file_to_process" "${suffix}/"; then
+        log "ERROR" "Failed to copy image file"
         return 1
     fi
 
-    # Process the image
+    local bootloader="mod-boot-sdcard-main/BootCardMaker/u-boot.bin"
+    local modboot="mod-boot-sdcard-main/files/mod-boot-sdcard.tar.gz"
+    
+    for file in "$bootloader" "$modboot"; do
+        if ! [ -f "$file" ]; then
+            log "ERROR" "Required file not found: $file"
+            return 1
+        fi
+        if ! sudo cp "$file" "${suffix}/"; then
+            log "ERROR" "Failed to copy: $file"
+            return 1
+        fi
+    done
+
+    # Process image
     cd "${suffix}" || {
-        error_msg "Failed to change directory to ${suffix}"
+        log "ERROR" "Failed to enter working directory: ${suffix}"
         return 1
     }
 
     local file_name=$(basename "${file_to_process%.gz}")
 
-    # Decompress the OpenWRT image
+    # Decompress with progress
+    log "INFO" "Decompressing image..."
     if ! sudo gunzip "${file_name}.gz"; then
-        error_msg "Failed to decompress image"
+        log "ERROR" "Failed to decompress image"
         return 1
     fi
 
-    # Set up loop device
+    # Setup loop device with improved handling
+    log "INFO" "Setting up loop device..."
     local device
-    echo -e "${INFO} Setting up loop device..."
-    for i in {1..3}; do
-        device=$(sudo losetup -fP --show "${file_name}" 2>/dev/null)
-        [ -n "$device" ] && break
-        sleep 1
-    done
-
-    if [ -z "$device" ]; then
-        error_msg "Failed to set up loop device"
+    device=$(sudo losetup -fP --show "${file_name}" 2>/dev/null)
+    
+    if ! wait_for_device "$device" "$MOUNT_TIMEOUT"; then
+        log "ERROR" "Loop device setup failed or timed out"
         return 1
     fi
 
-    # Mount the image
-    echo -e "${INFO} Mounting the image..."
-    local attempts=0
-    while [ $attempts -lt 3 ]; do
-        if sudo mount "${device}p1" boot; then
-            break
-        fi
-        attempts=$((attempts + 1))
-        sleep 1
-    done
-
-    if [ $attempts -eq 3 ]; then
-        error_msg "Failed to mount image"
+    # Mount with improved error handling
+    log "INFO" "Mounting image..."
+    if ! safe_mount "${device}p1" boot; then
+        log "ERROR" "Failed to mount image after $MAX_RETRIES attempts"
         return 1
     fi
 
-    # Apply modifications
-    echo -e "${INFO} Applying boot modifications..."
+    # Apply modifications with verification
+    log "INFO" "Applying boot modifications..."
     if ! sudo tar -xzf mod-boot-sdcard.tar.gz -C boot; then
-        error_msg "Failed to extract boot modifications"
+        log "ERROR" "Failed to extract boot modifications"
         return 1
     fi
 
-    # Update configuration files
-    echo -e "${INFO} Updating configuration files..."
+    # Update configuration with backup
+    log "INFO" "Updating configuration files..."
+    for file in boot/uEnv.txt boot/extlinux/extlinux.conf boot/boot.ini; do
+        if [ ! -f "$file" ]; then
+            log "ERROR" "Required configuration file missing: $file"
+            return 1
+        fi
+        cp "$file" "${file}.backup"
+    done
+
     local uenv=$(sudo cat boot/uEnv.txt | grep APPEND | awk -F "root=" '{print $2}')
     local extlinux=$(sudo cat boot/extlinux/extlinux.conf | grep append | awk -F "root=" '{print $2}')
     local boot=$(sudo cat boot/boot.ini | grep dtb | awk -F "/" '{print $4}' | cut -d'"' -f1)
 
-    sudo sed -i "s|$extlinux|$uenv|g" boot/extlinux/extlinux.conf
-    sudo sed -i "s|$boot|$dtb|g" boot/boot.ini
-    sudo sed -i "s|$boot|$dtb|g" boot/extlinux/extlinux.conf
-    sudo sed -i "s|$boot|$dtb|g" boot/uEnv.txt
+    # Update configuration with error checking
+    update_config() {
+        local file="$1"
+        local old="$2"
+        local new="$3"
+        
+        if ! sudo sed -i "s|$old|$new|g" "$file"; then
+            log "ERROR" "Failed to update configuration in $file"
+            return 1
+        fi
+    }
+
+    update_config "boot/extlinux/extlinux.conf" "$extlinux" "$uenv"
+    update_config "boot/boot.ini" "$boot" "$dtb"
+    update_config "boot/extlinux/extlinux.conf" "$boot" "$dtb"
+    update_config "boot/uEnv.txt" "$boot" "$dtb"
 
     sync
     sudo umount boot
 
-    # Write bootloader
-    echo -e "${INFO} Writing bootloader..."
-    if ! sudo dd if=u-boot.bin of="${device}" bs=1 count=444 conv=fsync 2>/dev/null || \
-       ! sudo dd if=u-boot.bin of="${device}" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null; then
-        error_msg "Failed to write bootloader"
+    # Write bootloader with verification
+    log "INFO" "Writing bootloader..."
+    if ! sudo dd if=u-boot.bin of="${device}" bs=1 count=444 conv=fsync 2>/dev/null; then
+        log "ERROR" "Failed to write primary bootloader"
+        return 1
+    fi
+    if ! sudo dd if=u-boot.bin of="${device}" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null; then
+        log "ERROR" "Failed to write secondary bootloader"
         return 1
     fi
 
-    # Detach loop device and compress
+    # Cleanup and compress
     sudo losetup -d "${device}"
+    log "INFO" "Compressing final image..."
     if ! sudo gzip "${file_name}"; then
-        error_msg "Failed to compress image"
+        log "ERROR" "Failed to compress final image"
         return 1
     fi
 
-    # Move final image
-    [ -f "../${file_name}.gz" ] && rm -rf "../${file_name}.gz"
+    # Move final image with verification
+    [ -f "../${file_name}.gz" ] && rm -f "../${file_name}.gz"
     if ! mv "${file_name}.gz" "../${file_name}.gz"; then
-        error_msg "Failed to move final image"
+        log "ERROR" "Failed to move final image"
         return 1
     fi
 
     cd ..
     cleanup
-    echo -e "${SUCCESS} Successfully processed ${suffix}"
+    log "SUCCESS" "Successfully processed ${suffix}"
     cd "$GITHUB_WORKSPACE/$WORKING_DIR"
     return 0
 }
 
-# Process HG680P images
-build_mod_sdcard "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x_k5.15*.img.gz")" "meson-gxl-s905x-p212.dtb" "HG680P"
-build_mod_sdcard "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x_k6.6*.img.gz")" "meson-gxl-s905x-p212.dtb" "HG680P"
+# Process images with error handling
+process_images() {
+    local kernel_version="$1"
+    local dtb="$2"
+    local suffix="$3"
+    local pattern="*_${kernel_version}*.img.gz"
+    
+    local image_file
+    image_file=$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "$pattern")
+    
+    if [ -z "$image_file" ]; then
+        log "ERROR" "No matching image found for pattern: $pattern"
+        return 1
+    fi
+    
+    if ! build_mod_sdcard "$image_file" "$dtb" "$suffix"; then
+        log "ERROR" "Failed to process $suffix for kernel $kernel_version"
+        return 1
+    fi
+}
 
-# Process B860H v1/v2 images
-build_mod_sdcard "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x-b860h_k5.15*.img.gz")" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
-build_mod_sdcard "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x-b860h_k6.6*.img.gz")" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
+# Main execution
+main() {
+    local exit_code=0
+    
+    # Process HG680P images
+    process_images "s905x_k5.15" "meson-gxl-s905x-p212.dtb" "HG680P" || exit_code=1
+    process_images "s905x_k6.6" "meson-gxl-s905x-p212.dtb" "HG680P" || exit_code=1
+
+    # Process B860H v1/v2 images
+    process_images "s905x-b860h_k5.15" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2" || exit_code=1
+    process_images "s905x-b860h_k6.6" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2" || exit_code=1
+
+    return $exit_code
+}
+
+main
