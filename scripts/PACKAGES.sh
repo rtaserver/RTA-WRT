@@ -35,7 +35,7 @@ REPOS=(
 )
 
 # Define package categories with improved structure
-declare -A packages_custom=(
+declare -a packages_custom=(
     "modemmanager-rpcd|${REPOS[OPENWRT]}/packages"
     "luci-proto-modemmanager|${REPOS[OPENWRT]}/luci"
     "libqmi|${REPOS[OPENWRT]}/packages"
@@ -102,8 +102,7 @@ declare -A packages_custom=(
 verify_packages() {
     local pkg_dir="packages"
     local -a failed_packages=()
-    shift
-    local -a package_list=("$@")
+    local -a package_list=("${!1}")  # Fixed parameter passing
     
     if [[ ! -d "$pkg_dir" ]]; then
         log "ERROR" "Package directory not found: $pkg_dir"
@@ -115,7 +114,7 @@ verify_packages() {
     
     for package in "${package_list[@]}"; do
         local pkg_name="${package%%|*}"
-        if ! find "$pkg_dir" \( -name "${pkg_name}*.ipk" -o -name "${pkg_name}*.apk" \) >/dev/null 2>&1; then
+        if ! find "$pkg_dir" \( -name "${pkg_name}*.ipk" -o -name "${pkg_name}*.apk" \) -print -quit | grep -q .; then
             failed_packages+=("$pkg_name")
         fi
     done
@@ -123,7 +122,7 @@ verify_packages() {
     local failed=${#failed_packages[@]}
     
     if ((failed > 0)); then
-        log "WARNING" "Failed packages:"
+        log "WARNING" "$failed packages failed to download:"
         printf '%s\n' "${failed_packages[@]}" | while read -r pkg; do
             log "WARNING" "  - $pkg"
         done
@@ -136,21 +135,28 @@ verify_packages() {
 
 # Main execution
 main() {
+    local rc=0
+    
     # Download GitHub packages
-    download_packages "github" packages_github[@]
+    log "INFO" "Downloading GitHub packages..."
+    download_packages "github" packages_github[@] || rc=1
     
     # Download Custom packages
-    download_packages "github" packages_custom[@]
+    log "INFO" "Downloading Custom packages..."
+    download_packages "custom" packages_custom[@] || rc=1
     
-    # Verify downloads
-    verify_packages || {
-        log "ERROR" "Package verification failed"
-        return 1
-    }
-
-    log "SUCCESS" "Package download completed"
+    # Verify all downloads
+    log "INFO" "Verifying all packages..."
+    verify_packages packages_github[@] || rc=1
+    verify_packages packages_custom[@] || rc=1
     
-    return 0
+    if [ $rc -eq 0 ]; then
+        log "SUCCESS" "Package download and verification completed successfully"
+    else
+        log "ERROR" "Package download or verification failed"
+    fi
+    
+    return $rc
 }
 
 # Run main function if script is not sourced
