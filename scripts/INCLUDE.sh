@@ -21,7 +21,7 @@ sudo mkdir -p "${CONFIG[TEMP_DIR]}" "${CONFIG[LOG_DIR]}"
 # Cleanup function
 cleanup() {
     printf "\e[?25h"  # Ensure cursor is visible
-    rm -rf "${CONFIG[TEMP_DIR]}"
+    sudo rm -rf "${CONFIG[TEMP_DIR]}"
     kill $(jobs -p) 2>/dev/null || true
 }
 
