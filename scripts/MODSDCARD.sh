@@ -131,11 +131,31 @@ build_mod_sdcard() {
 # Main execution
 main() {
     local exit_code=0
+    local img_dir="$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"
     
-    build_mod_sdcard "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x_k5.15*.img.gz")" "meson-gxl-s905x-p212.dtb" "HG680P"
-    build_mod_sdcard "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x_k6.6*.img.gz")" "meson-gxl-s905x-p212.dtb" "HG680P"
-    build_mod_sdcard "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x-b860h_k5.15*.img.gz")" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
-    build_mod_sdcard "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x-b860h_k6.6*.img.gz")" "meson-gxl-s905x-b860h.dtb" "B860H_v1-v2"
+    # Array dengan format device:kernel:dtb:model
+    local builds=(
+        "s905x:k5.15:meson-gxl-s905x-p212.dtb:HG680P"
+        "s905x:k6.6:meson-gxl-s905x-p212.dtb:HG680P" 
+        "s905x-b860h:k5.15:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
+        "s905x-b860h:k6.6:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
+    )
+
+    for build in "${builds[@]}"; do
+        # Split string menjadi array
+        IFS=: read -r device kernel dtb model <<< "$build"
+        
+        # Cari image file
+        local image_file=$(find "$img_dir" -name "*_${device}_${kernel}*.img.gz")
+        
+        # Jika image ditemukan, proses dengan build_mod_sdcard
+        if [[ -n "$image_file" ]]; then
+            if ! build_mod_sdcard "$image_file" "$dtb" "$model"; then
+                log "ERROR" "Failed to process build for $model ($device $kernel)"
+                exit_code=1
+            fi
+        fi
+    done
 
     return $exit_code
 }
