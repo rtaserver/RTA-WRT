@@ -13,7 +13,7 @@ declare -a packages_github
 if [ "$TYPE" == "AMLOGIC" ]; then
     log "INFO" "Adding Amlogic-specific packages..."
     packages_github=(
-        "luci-app-amlogic|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest"
+        "luci-app-amlogic_|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest"
     )
 fi
 
