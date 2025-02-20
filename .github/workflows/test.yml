@@ -109,7 +109,7 @@ jobs:
       matrix: ${{fromJson(needs.check-compatibility.outputs.matrix)}}
       fail-fast: false
 
-    name: Build ${{ inputs.release_branch }}-${{ matrix.tunnel }}
+    name: Build ${{ inputs.release_branch }}-${{ matrix.tunnel }}-${{ matrix.target }}
 
     steps:
       - name: Initialization environment
@@ -293,13 +293,12 @@ jobs:
               sudo ./remake -b ${{ matrix.target }} -k ${{ inputs.openwrt_kernel }} -s 1024
               
               # Find output file and move it
-              FILE_PATH=$(find ./openwrt/out/ -name "*.img.gz")
-              if [ -n "$FILE_PATH" ]; then
-                NEW_NAME="RTA-WRT_$(basename "$FILE_PATH" .img.gz)_${{ matrix.tunnel }}.img.gz"
-                mv "$FILE_PATH" "$GITHUB_WORKSPACE/${{ env.WORKING_DIR }}/compiled_images/$NEW_NAME"
-              else
-                echo "Warning: No .img.gz file found"
-              fi
+              find ./openwrt/out/ -name "*.img.gz" | while read FILE_PATH; do
+                if [ -n "$FILE_PATH" ]; then
+                  NEW_NAME="RTA-WRT_$(basename "$FILE_PATH" .img.gz)_${{ matrix.tunnel }}.img.gz"
+                  mv "$FILE_PATH" "$GITHUB_WORKSPACE/${{ env.WORKING_DIR }}/compiled_images/$NEW_NAME"
+                fi
+              done
               
               cd $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
             fi
