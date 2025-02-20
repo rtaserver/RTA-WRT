@@ -15,7 +15,7 @@ passwall_core_file_zip="passwall_packages_ipk_${ARCH_3}"
 passwall_core_file_zip_down=$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall/releases" | grep "browser_download_url" | grep -oE "https.*${passwall_core_file_zip}.*.zip" | head -n 1)
 
 # Nikki URL generation
-nikki_file_ipk="nikki_${ARCH_3}-openwrt-${CURVER}"
+nikki_file_ipk="nikki_${ARCH_3}-openwrt-${VEROP}"
 nikki_file_ipk_down=$(curl -s "https://api.github.com/repos/rizkikotet-dev/OpenWrt-nikki-Mod/releases" | grep "browser_download_url" | grep -oE "https.*${nikki_file_ipk}.*.tar.gz" | head -n 1)
 
 # Package repositories
