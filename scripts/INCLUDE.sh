@@ -204,34 +204,78 @@ ariadl() {
 }
 
 # Enhanced package downloader with improved URL handling and validation
-# Enhanced download function with proper array handling
 download_packages() {
     local source="$1"
-    local package_list=("${!2}") 
+    local package_list=("${!2}")
+    local download_dir="packages"
+    
+    # Create download directory
+    mkdir -p "$download_dir"
+    
+    # Helper function for downloading
+    download_file() {
+        local url="$1"
+        local output="$2"
+        local max_retries=3
+        local retry=0
+        
+        while [ $retry -lt $max_retries ]; do
+            if ariadl "$url" "$output"; then
+                return 0
+            fi
+            retry=$((retry + 1))
+            log "WARNING" "Retry $retry/$max_retries for $output"
+            sleep 2
+        done
+        return 1
+    }
 
     case "$source" in
         github)
             for entry in "${package_list[@]}"; do
                 IFS="|" read -r filename base_url <<< "$entry"
-                unset IFS  # Kembalikan IFS ke default setelah digunakan
-            
-                file_urls=$(curl -s "$base_url" | jq -r '.assets[].browser_download_url' | grep -E '\.(ipk|apk)$' | grep "$filename" | head -1)
+                unset IFS
                 
-                if [ -z "$file_urls" ]; then
-                    error_msg "Failed to retrieve package info for [$filename] from $base_url"
+                if [[ -z "$filename" || -z "$base_url" ]]; then
+                    log "ERROR" "Invalid entry format: $entry"
                     continue
                 fi
-            
-                ariadl "$file_urls" "$(basename "$file_urls")"
+                
+                # Use jq with error handling
+                local file_urls
+                if ! file_urls=$(curl -sL "$base_url" | jq -r '.assets[].browser_download_url' 2>/dev/null); then
+                    log "ERROR" "Failed to parse JSON from $base_url"
+                    continue
+                fi
+                
+                # Find matching file
+                local download_url
+                download_url=$(echo "$file_urls" | grep -E '\.(ipk|apk)$' | grep -i "$filename" | sort -V | tail -1)
+                
+                if [ -z "$download_url" ]; then
+                    log "ERROR" "No matching package found for $filename"
+                    continue
+                fi
+                
+                local output_file="$download_dir/$(basename "$download_url")"
+                download_file "$download_url" "$output_file" || log "ERROR" "Failed to download $filename"
             done
             ;;
             
         custom)
             for entry in "${package_list[@]}"; do
                 IFS="|" read -r filename base_url <<< "$entry"
+                unset IFS
                 
                 if [[ -z "$filename" || -z "$base_url" ]]; then
-                    log "ERROR" "Invalid package entry: $entry"
+                    log "ERROR" "Invalid entry format: $entry"
+                    continue
+                fi
+                
+                # Download and process page content directly
+                local page_content
+                if ! page_content=$(curl -sL --max-time 30 --retry 3 --retry-delay 2 "$base_url"); then
+                    log "ERROR" "Failed to fetch page: $base_url"
                     continue
                 fi
                 
@@ -243,20 +287,20 @@ download_packages() {
                 
                 local found_url=""
                 for pattern in "${patterns[@]}"; do
-                    found_url=$(curl -sL "$base_url" | \
-                              grep -oP "(?<=\")${pattern}(?=\")" | \
-                              sort -V | \
-                              tail -n 1)
+                    found_url=$(echo "$page_content" | grep -oP "(?<=\")${pattern}(?=\")" | sort -V | tail -n 1)
                     
                     if [ -n "$found_url" ]; then
-                        if ! ariadl "${base_url}/${found_url}" "packages/${found_url}"; then
-                            log "ERROR" "Failed to download: $filename"
+                        local download_url="${base_url}/${found_url}"
+                        local output_file="$download_dir/${found_url}"
+                        
+                        if download_file "$download_url" "$output_file"; then
+                            log "INFO" "Successfully downloaded: $found_url"
+                            break
                         fi
-                        break
                     fi
                 done
                 
-                [ -z "$found_url" ] && log "ERROR" "No matching file found: $filename"
+                [ -z "$found_url" ] && log "ERROR" "No matching file found for $filename"
             done
             ;;
             
@@ -268,6 +312,7 @@ download_packages() {
     
     return 0
 }
+
 # Initialize the script
 setup_colors
 main() {
