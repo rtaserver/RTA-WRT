@@ -16,7 +16,7 @@ CONFIG=(
 )
 
 # Create necessary directories
-mkdir -p "${CONFIG[TEMP_DIR]}" "${CONFIG[LOG_DIR]}"
+sudo mkdir -p "${CONFIG[TEMP_DIR]}" "${CONFIG[LOG_DIR]}"
 
 # Cleanup function
 cleanup() {
@@ -64,7 +64,7 @@ log() {
     local log_file="${CONFIG[LOG_DIR]}/script.log"
     
     # Ensure log directory exists
-    mkdir -p "$(dirname "$log_file")"
+    sudo mkdir -p "$(dirname "$log_file")"
     
     # Write to log file
     echo "[$timestamp] [$level] $message" >> "$log_file"
@@ -200,7 +200,7 @@ ariadl() {
             
             # Verify download
             if [ -f "$temp_file" ] && [ -s "$temp_file" ]; then
-                mv "$temp_file" "$output"
+                sudo mv "$temp_file" "$output"
                 log "SUCCESS" "Download complete: ${output##*/}"
                 return 0
             fi
