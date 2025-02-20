@@ -115,24 +115,46 @@ download_packages "custom" all_packages[@]
 echo -e "${INFO} Verifying downloaded packages..."
 verify_packages() {
     local pkg_dir="packages"
-    local total_pkgs=$(find "$pkg_dir" -name "*.ipk" | wc -l)
+    local total_pkgs=0
+    local failed=0
+    
+    # Check directory exists
+    if [[ ! -d "$pkg_dir" ]]; then
+        echo -e "${ERROR} Package directory not found: $pkg_dir"
+        return 1
+    }
+    
+    # Count total packages (both .ipk and .apk)
+    total_pkgs=$(find "$pkg_dir" \( -name "*.ipk" -o -name "*.apk" \) | wc -l)
     echo -e "${INFO} Total packages downloaded: $total_pkgs"
     
     # List any failed downloads
     local failed=0
     for pkg in "${all_packages[@]}"; do
         local pkg_name="${pkg%%|*}"
-        if ! find "$pkg_dir" -name "${pkg_name}*.ipk" >/dev/null 2>&1; then
+        # Check for both .ipk and .apk files
+        if ! find "$pkg_dir" \( -name "${pkg_name}*.ipk" -o -name "${pkg_name}*.apk" \) >/dev/null 2>&1; then
             echo -e "${WARNING} Package not found: $pkg_name"
             ((failed++))
         fi
     done
     
+    # Calculate success rate
+    local success=$((${#all_packages[@]} - failed))
+    local success_rate=$((success * 100 / ${#all_packages[@]}))
+    
+    # Print summary
+    echo -e "\n${STEPS} Download Summary:"
+    echo -e "${INFO} Expected packages: ${#all_packages[@]}"
+    echo -e "${INFO} Successfully downloaded: $success ($success_rate%)"
+    
     if [ $failed -eq 0 ]; then
         echo -e "${SUCCESS} All packages downloaded successfully"
+        return 0
     else
         echo -e "${WARNING} $failed package(s) failed to download"
+        return 1
     fi
 }
 
-verify_packages
+verify_packages || error_msg "Package verification failed"
