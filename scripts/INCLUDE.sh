@@ -218,10 +218,16 @@ ariadl() {
 }
 
 # Enhanced package downloader with improved URL handling and validation
+# Enhanced download function with proper array handling
 download_packages() {
     local source="$1"
     shift
     local -a package_list=("$@")
+    
+    if [ ${#package_list[@]} -eq 0 ]; then
+        log "ERROR" "No packages provided to download_packages"
+        return 1
+    fi
     
     log "STEPS" "Downloading packages from $source..."
     mkdir -p packages
@@ -231,20 +237,24 @@ download_packages() {
             for entry in "${package_list[@]}"; do
                 IFS="|" read -r filename base_url <<< "$entry"
                 
-                # Use GitHub API if possible
-                if [[ "$base_url" =~ ^https://github.com ]]; then
-                    local api_url="${base_url/github.com/api.github.com/repos}/releases/latest"
-                    local latest_url=$(curl -s -H "Accept: application/vnd.github.v3+json" "$api_url" | \
+                if [[ -z "$filename" || -z "$base_url" ]]; then
+                    log "ERROR" "Invalid package entry: $entry"
+                    continue
+                }
+                
+                if [[ "$base_url" =~ ^https://api.github.com/repos/ ]]; then
+                    local latest_url=$(curl -s -H "Accept: application/vnd.github.v3+json" "$base_url" | \
                                      grep -oP '"browser_download_url": "\K[^"]*\.(?:ipk|apk)"' | \
                                      grep "$filename" | head -1)
                     
                     if [ -n "$latest_url" ]; then
-                        ariadl "$latest_url" "packages/$(basename "$latest_url")"
+                        ariadl "$latest_url" "packages/$(basename "$latest_url")" || \
+                            log "ERROR" "Failed to download: $filename"
                     else
                         log "ERROR" "No matching package found: $filename"
                     fi
                 else
-                    log "ERROR" "Invalid GitHub URL: $base_url"
+                    log "ERROR" "Invalid GitHub API URL: $base_url"
                 fi
             done
             ;;
@@ -253,7 +263,11 @@ download_packages() {
             for entry in "${package_list[@]}"; do
                 IFS="|" read -r filename base_url <<< "$entry"
                 
-                # Improved pattern matching
+                if [[ -z "$filename" || -z "$base_url" ]]; then
+                    log "ERROR" "Invalid package entry: $entry"
+                    continue
+                }
+                
                 local patterns=(
                     "${filename}[^\"]*\.(ipk|apk)"
                     "${filename}_.*\.(ipk|apk)"
@@ -268,7 +282,9 @@ download_packages() {
                               tail -n 1)
                     
                     if [ -n "$found_url" ]; then
-                        ariadl "${base_url}/${found_url}" "packages/$(basename "$found_url")"
+                        if ! ariadl "${base_url}/${found_url}" "packages/${found_url}"; then
+                            log "ERROR" "Failed to download: $filename"
+                        fi
                         break
                     fi
                 done
@@ -282,8 +298,9 @@ download_packages() {
             return 1
             ;;
     esac
+    
+    return 0
 }
-
 # Initialize the script
 setup_colors
 main() {
