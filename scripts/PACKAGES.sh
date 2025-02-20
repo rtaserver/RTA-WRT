@@ -174,7 +174,6 @@ process_package_categories() {
 verify_packages() {
     local pkg_dir="packages"
     local -a failed_packages=()
-    local total_expected=$1
     shift
     local -a package_list=("$@")
     
@@ -194,11 +193,8 @@ verify_packages() {
     done
     
     local failed=${#failed_packages[@]}
-    local success=$((total_expected - failed))
-    local success_rate=$((success * 100 / total_expected))
     
     log "STEPS" "Download Summary:"
-    log "INFO" "Expected packages: $total_expected"
     log "INFO" "Successfully downloaded: $success ($success_rate%)"
     
     if ((failed > 0)); then
