@@ -8,45 +8,53 @@ fi
 
 . ./scripts/INCLUDE.sh
 
-# Setup logging for this script
-readonly SCRIPT_LOG="${CONFIG[LOG_DIR]}/package-downloader.log"
-log "INFO" "Starting package download script"
-
-# Validate required variables
-required_vars=("TYPE" "ARCH_3" "VEROP")
-for var in "${required_vars[@]}"; do
-    if [[ -z "${!var}" ]]; then
-        log "ERROR" "Required variable $var is not set"
-        exit 1
+# Download GitHub packages function with proper array handling
+download_github_packages() {
+    log "INFO" "Downloading GitHub packages..."
+    local failed=0
+    local total=${#github_packages[@]}
+    
+    # Create temporary array for GitHub packages
+    local -a github_download_list=()
+    
+    for package in "${github_packages[@]}"; do
+        github_download_list+=("$package")
+    done
+    
+    if ((${#github_download_list[@]} > 0)); then
+        if ! download_packages "github" "${github_download_list[@]}"; then
+            log "ERROR" "Failed to download some GitHub packages"
+            return 1
+        fi
     fi
-done
+    
+    return 0
+}
 
-# Initialize arrays with type declarations
-declare -A REPOS
+# Initialize package arrays based on target type
 declare -a github_packages
+if [ "$TYPE" == "AMLOGIC" ]; then
+    log "INFO" "Adding Amlogic-specific packages..."
+    github_packages=(
+        "luci-app-amlogic|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest"
+    )
+fi
 
-# Define repositories
+# Add core GitHub packages
+github_packages+=(
+    "luci-app-alpha-config|https://api.github.com/repos/animegasan/luci-app-alpha-config/releases/latest"
+    "luci-theme-material3|https://api.github.com/repos/AngelaCooljx/luci-theme-material3/releases/latest"
+    "luci-app-neko|https://api.github.com/repos/nosignals/openwrt-neko/releases/latest"
+)
+
+# Define repositories with proper quoting
+declare -A REPOS
 REPOS=(
     ["KIDDIN9"]="https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
     ["IMMORTALWRT"]="https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3"
     ["OPENWRT"]="https://downloads.openwrt.org/releases/packages-$VEROP/$ARCH_3"
     ["GSPOTX2F"]="https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
     ["FANTASTIC"]="https://fantastic-packages.github.io/packages/releases/$VEROP/packages/x86_64"
-)
-
-# Initialize package arrays based on target type
-if [[ "$TYPE" == "AMLOGIC" ]]; then
-    log "INFO" "Adding Amlogic-specific packages..."
-    github_packages+=(
-        "luci-app-amlogic|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest"
-    )
-fi
-
-# Core GitHub packages
-github_packages+=(
-    "luci-app-alpha-config|https://api.github.com/repos/animegasan/luci-app-alpha-config/releases/latest"
-    "luci-theme-material3|https://api.github.com/repos/AngelaCooljx/luci-theme-material3/releases/latest"
-    "luci-app-neko|https://api.github.com/repos/nosignals/openwrt-neko/releases/latest"
 )
 
 # Define package categories with improved structure
@@ -140,24 +148,26 @@ download_github_packages() {
 
 # Enhanced function to process package categories
 process_package_categories() {
-    local -a all_packages
-    local total_categories=${#package_categories[@]}
-    local processed=0
+    local -a all_packages=()
     
     for category in "${!package_categories[@]}"; do
-        ((processed++))
-        log "INFO" "Processing $category packages ($processed/$total_categories)"
-        
-        while read -r package_line; do
+        log "INFO" "Processing $category packages..."
+        while IFS= read -r package_line; do
             [[ -z "$package_line" ]] && continue
-            all_packages+=("$package_line")
+            package_line=$(echo "$package_line" | xargs)  # Trim whitespace
+            [[ -n "$package_line" ]] && all_packages+=("$package_line")
         done <<< "${package_categories[$category]}"
     done
     
-    log "INFO" "Downloading custom packages..."
-    download_packages "custom" all_packages[@]
+    if ((${#all_packages[@]} > 0)); then
+        log "INFO" "Downloading custom packages..."
+        if ! download_packages "custom" "${all_packages[@]}"; then
+            log "ERROR" "Failed to download some custom packages"
+            return 1
+        fi
+    fi
     
-    echo "${all_packages[@]}"  # Return all packages for verification
+    return 0
 }
 
 # Enhanced package verification function
@@ -211,21 +221,21 @@ main() {
     mkdir -p "packages" "${CONFIG[TEMP_DIR]}" "${CONFIG[LOG_DIR]}"
     
     # Download GitHub packages
-    download_github_packages
+    download_github_packages || log "WARNING" "Some GitHub packages failed to download"
     
     # Process and download category packages
-    local all_packages=$(process_package_categories)
-    local total_packages=$((${#github_packages[@]} + $(echo "$all_packages" | wc -w)))
+    process_package_categories || log "WARNING" "Some category packages failed to download"
     
-    # Verify all downloads
-    if ! verify_packages "$total_packages" "${all_packages[@]}"; then
+    # Verify downloads
+    verify_packages || {
         log "ERROR" "Package verification failed"
         return 1
-    fi
+    }
     
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
     log "SUCCESS" "Package download completed in $(format_time $duration)"
+    
     return 0
 }
 
