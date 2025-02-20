@@ -74,7 +74,7 @@ build_mod_sdcard() {
     # Check dependencies first
     if ! check_dependencies; then
         return 1
-    }
+    fi
 
     # Validate and set paths with error handling
     local work_dir="$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"
