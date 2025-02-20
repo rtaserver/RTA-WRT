@@ -122,7 +122,7 @@ verify_packages() {
     if [[ ! -d "$pkg_dir" ]]; then
         echo -e "${ERROR} Package directory not found: $pkg_dir"
         return 1
-    }
+    fi
     
     # Count total packages (both .ipk and .apk)
     total_pkgs=$(find "$pkg_dir" \( -name "*.ipk" -o -name "*.apk" \) | wc -l)
