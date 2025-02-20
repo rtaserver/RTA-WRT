@@ -105,7 +105,9 @@ jobs:
           sudo rm -f /swapfile /mnt/swapfile
           fi
           sudo -E apt-get -y update
+          if [ "$TARGET" == "all" ]; then
           sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+          fi
           sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
           if [ "$TARGET" == "all" ]; then
           sudo -E systemctl daemon-reload
