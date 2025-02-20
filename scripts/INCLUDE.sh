@@ -207,17 +207,8 @@ ariadl() {
 # Enhanced download function with proper array handling
 download_packages() {
     local source="$1"
-    shift
     local package_list=("${!2}") 
-    
-    if [ ${#package_list[@]} -eq 0 ]; then
-        log "ERROR" "No packages provided to download_packages"
-        return 1
-    fi
-    
-    log "STEPS" "Downloading packages from $source..."
-    mkdir -p packages
-    
+
     case "$source" in
         github)
             for entry in "${package_list[@]}"; do
@@ -281,7 +272,6 @@ download_packages() {
 setup_colors
 main() {
     check_dependencies || exit 1
-    # Add your main script logic here
 }
 
 # Run main function if script is not sourced
