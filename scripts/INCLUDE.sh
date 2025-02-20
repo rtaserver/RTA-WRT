@@ -208,7 +208,7 @@ ariadl() {
 download_packages() {
     local source="$1"
     shift
-    local -a package_list=("$@")
+    local package_list=("${!2}") 
     
     if [ ${#package_list[@]} -eq 0 ]; then
         log "ERROR" "No packages provided to download_packages"
