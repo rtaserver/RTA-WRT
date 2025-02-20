@@ -11,17 +11,11 @@ CONFIG=(
     ["RETRY_DELAY"]=2
     ["SPINNER_INTERVAL"]=0.1
     ["DEBUG"]=false
-    ["TEMP_DIR"]="tmp/script-$$"  # Add process-specific temp directory
-    ["LOG_DIR"]="log/script"  # Add dedicated log directory
 )
-
-# Create necessary directories
-sudo mkdir -p "${CONFIG[TEMP_DIR]}" "${CONFIG[LOG_DIR]}"
 
 # Cleanup function
 cleanup() {
     printf "\e[?25h"  # Ensure cursor is visible
-    sudo rm -rf "${CONFIG[TEMP_DIR]}"
     kill $(jobs -p) 2>/dev/null || true
 }
 
@@ -61,13 +55,6 @@ log() {
     local level="$1"
     local message="$2"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    local log_file="${CONFIG[LOG_DIR]}/script.log"
-    
-    # Ensure log directory exists
-    sudo mkdir -p "$(dirname "$log_file")"
-    
-    # Write to log file
-    echo "[$timestamp] [$level] $message" >> "$log_file"
     
     # Output to console if not in quiet mode
     case "$level" in
@@ -103,12 +90,11 @@ spinner() {
 cmdinstall() {
     local cmd="$1"
     local desc="${2:-$cmd}"
-    local log_file="${CONFIG[TEMP_DIR]}/cmdinstall-$(date +%s).log"
     
     log "INFO" "Installing: $desc"
     
     # Run command in background and capture PID
-    eval "$cmd" > "$log_file" 2>&1 &
+    eval "$cmd" 2>&1 &
     local cmd_pid=$!
     
     # Start spinner
@@ -117,10 +103,9 @@ cmdinstall() {
     
     if [ $exit_code -eq 0 ]; then
         log "SUCCESS" "$desc installed successfully"
-        [ "${CONFIG[DEBUG]}" = true ] && cat "$log_file"
+        [ "${CONFIG[DEBUG]}" = true ]
     else
         log "ERROR" "Failed to install $desc"
-        cat "$log_file"
         return 1
     fi
 }
@@ -167,53 +152,53 @@ check_dependencies() {
 
 # Enhanced download function with retry mechanism and better error handling
 ariadl() {
-    local url="$1"
-    local output="${2:-$(basename "$url")}"
-    local output_dir="$(dirname "$output")"
-    local retry_count=0
-    local temp_file="${CONFIG[TEMP_DIR]}/$(basename "$output").tmp"
-    
-    # Validate URL
-    if ! curl --output /dev/null --silent --head --fail "$url"; then
-        log "ERROR" "Invalid URL: $url"
+    if [ "$#" -lt 1 ]; then
+        echo -e "${ERROR} Usage: ariadl <URL> [OUTPUT_FILE]"
         return 1
     fi
-    
-    # Create output directory
-    mkdir -p "$output_dir" || {
-        log "ERROR" "Failed to create output directory: $output_dir"
-        return 1
-    }
-    
-    log "STEPS" "Downloading ${url##*/}..."
-    
-    while [ $retry_count -lt "${CONFIG[MAX_RETRIES]}" ]; do
-        log "INFO" "Attempt $((retry_count + 1))/${CONFIG[MAX_RETRIES]}"
+
+    echo -e "${STEPS} Aria2 Downloader"
+
+    local URL OUTPUT_FILE OUTPUT_DIR OUTPUT
+    URL=$1
+    local RETRY_COUNT=0
+    local MAX_RETRIES=3
+
+    if [ "$#" -eq 1 ]; then
+        OUTPUT_FILE=$(basename "$URL")
+        OUTPUT_DIR="."
+    else
+        OUTPUT=$2
+        OUTPUT_DIR=$(dirname "$OUTPUT")
+        OUTPUT_FILE=$(basename "$OUTPUT")
+    fi
+
+    if [ ! -d "$OUTPUT_DIR" ]; then
+        mkdir -p "$OUTPUT_DIR"
+    fi
+
+    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+        echo -e "${INFO} Downloading: $URL (Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
         
-        if aria2c --quiet \
-                 --max-tries=3 \
-                 --retry-wait=3 \
-                 --dir="$(dirname "$temp_file")" \
-                 --out="$(basename "$temp_file")" \
-                 --continue=true \
-                 "$url"; then
-            
-            # Verify download
-            if [ -f "$temp_file" ] && [ -s "$temp_file" ]; then
-                sudo mv "$temp_file" "$output"
-                log "SUCCESS" "Download complete: ${output##*/}"
-                return 0
-            fi
+        if [ -f "$OUTPUT_DIR/$OUTPUT_FILE" ]; then
+            rm "$OUTPUT_DIR/$OUTPUT_FILE"
         fi
         
-        ((retry_count++))
-        [ $retry_count -lt "${CONFIG[MAX_RETRIES]}" ] && {
-            log "WARNING" "Retrying in ${CONFIG[RETRY_DELAY]} seconds..."
-            sleep "${CONFIG[RETRY_DELAY]}"
-        }
+        aria2c -q -d "$OUTPUT_DIR" -o "$OUTPUT_FILE" "$URL"
+        
+        if [ $? -eq 0 ]; then
+            echo -e "${SUCCESS} Downloaded: $OUTPUT_FILE"
+            return 0
+        else
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo -e "${ERROR} Download failed. Retrying..."
+                sleep 2
+            fi
+        fi
     done
-    
-    log "ERROR" "Failed to download after ${CONFIG[MAX_RETRIES]} attempts: ${url##*/}"
+
+    echo -e "${ERROR} Failed to download: $OUTPUT_FILE after $MAX_RETRIES attempts"
     return 1
 }
 
