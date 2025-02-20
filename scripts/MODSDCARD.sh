@@ -230,7 +230,7 @@ main() {
     fi
     
     # Process builds
-    if ! process_builds "$img_dir" "${{ env.TUNNEL }}" "${builds[@]}"; then
+    if ! process_builds "$img_dir" "${TUNNEL}" "${builds[@]}"; then
         exit_code=1
     fi
     
