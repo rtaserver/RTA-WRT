@@ -221,26 +221,16 @@ download_packages() {
         github)
             for entry in "${package_list[@]}"; do
                 IFS="|" read -r filename base_url <<< "$entry"
+                unset IFS  # Kembalikan IFS ke default setelah digunakan
+            
+                file_urls=$(curl -s "$base_url" | jq -r '.assets[].browser_download_url' | grep -E '\.(ipk|apk)$' | grep "$filename" | head -1)
                 
-                if [[ -z "$filename" || -z "$base_url" ]]; then
-                    log "ERROR" "Invalid package entry: $entry"
+                if [ -z "$file_urls" ]; then
+                    error_msg "Failed to retrieve package info for [$filename] from $base_url"
                     continue
                 fi
-                
-                if [[ "$base_url" =~ ^https://api.github.com/repos/ ]]; then
-                    local latest_url=$(curl -s -H "Accept: application/vnd.github.v3+json" "$base_url" | \
-                                     grep -oP '"browser_download_url": "\K[^"]*\.(?:ipk|apk)"' | \
-                                     grep "$filename" | head -1)
-                    
-                    if [ -n "$latest_url" ]; then
-                        ariadl "$latest_url" "packages/$(basename "$latest_url")" || \
-                            log "ERROR" "Failed to download: $filename"
-                    else
-                        log "ERROR" "No matching package found: $filename"
-                    fi
-                else
-                    log "ERROR" "Invalid GitHub API URL: $base_url"
-                fi
+            
+                ariadl "$file_urls" "$(basename "$file_urls")"
             done
             ;;
             
