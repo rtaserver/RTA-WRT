@@ -15,8 +15,8 @@ on:
           - immortalwrt:23.05.4
       target:
         description: "Select device board"
-        required: true
-        default: "s905x"
+        required: false
+        default: "all"
         type: choice
         options:
           - all
@@ -86,7 +86,7 @@ jobs:
           echo "status=success" >> $GITHUB_OUTPUT
 
   build-firmware:
-    name: Build ${{ inputs.target }}-${{ inputs.release_branch }}-${{ inputs.tunnel }}
+    name: Build ${{ inputs.release_branch }}-${{ inputs.tunnel }}
     needs: check-compatibility
     if: needs.check-compatibility.outputs.status == 'success'
     runs-on: ubuntu-22.04
@@ -144,7 +144,7 @@ jobs:
           # Set board variable
           case "${{ env.TARGET }}" in
             "all")
-              echo "openwrt_board=all" >> $GITHUB_ENV
+              echo "openwrt_board=s905_s905-beelink-mini_s905-mxqpro-plus_s905d_s905d-ki-pro_s905d-sml5442tw_s905l_s905l-aurora-1s_s905l-b860av21u_s905l-mg101_s905l2_s905l2-e900v21e_s905l2-wojia_s905l3_s905l3-cm211_s905l3-unt400g1_s905l3-unt402a_s905l3a_s905l3a-cm311_s905l3a-m401a_s905l3b_s905l3b-e900v21d_s905l3b-e900v22d_s905l3b-e900v22e_s905l3b-ip103h_s905l3b-rg020et-ca_s905l3b-unt403a_s905lb-ipbs9505_s905lb-q96-mini_s905lb-r3300l_s905mb_s905w_s905w-w95_s905w-x96-mini_s905w-x96w_s905x_s905x-b860h_s905x-nexbox-a95x_s905x-t95_s905x-tbee_s905x-tx9_s905x2_s905x2-km3_s905x2-x96max-2g_s905x3_s905x3-2101_s905x3-a100_s905x3-a95xf3_s905x3-a95xf3-gb_s905x3-b_s905x3-h96max_s905x3-hk1_s905x3-ip1001m_s905x3-q1_s905x3-q2_s905x3-tx3_s905x3-tx3-bz_s905x3-ugoosx3_s905x3-whale_s905x3-x88-pro-x3_s905x3-x96air_s905x3-x96air-gb_s905x3-x96max_s912_s912-h96pro-plus_s912-m8s-pro_s912-nexbox-a1_s912-nexbox-a2_s912-onecloudpro_s912-phicomm-t1_s912-t95z-plus_s912-tx8-max_s912-tx9-pro-2g_s912-tx9-pro-3g_s912-x92_s912-zyxq-fake_s922x_s922x-ct2000_s922x-gtking_s922x-gtkingpro-h_s922x-odroid-n2_s922x-reva_s922x-ugoos-am6" >> $GITHUB_ENV
               ;;
             "hg680p"|"b860h")
               echo "openwrt_board=s905x" >> $GITHUB_ENV
@@ -311,11 +311,16 @@ jobs:
                 cd amlogic-s9xxx-openwrt
                 sudo ./remake -b ${{ env.openwrt_board }} -k ${{ inputs.openwrt_kernel }} -s 1024
                 
-                cd ${{ env.PACKAGED_OUTPUTPATH }}
-                for img in *.img.gz; do
-                  new_name="RTA-WRT_$(basename "$img" .img.gz)_${tunnel}.img.gz"
-                  mv "$img" "$GITHUB_WORKSPACE/${{ env.WORKING_DIR }}/compiled_images/$new_name"
-                done
+                # Cari file output dan pindahkan
+                FILE_PATH=$(find ./openwrt/out/ -name "*.img.gz")
+                if [ -n "$FILE_PATH" ]; then
+                  NEW_NAME="RTA-WRT_$(basename "$FILE_PATH" .img.gz)_${tunnel}.img.gz"
+                  mv "$FILE_PATH" "$GITHUB_WORKSPACE/${{ env.WORKING_DIR }}/compiled_images/$NEW_NAME"
+                else
+                  echo "Warning: No .img.gz file found"
+                fi
+                
+                # Kembali ke directory awal
                 cd $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
               fi
             done
