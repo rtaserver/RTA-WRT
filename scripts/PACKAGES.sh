@@ -194,9 +194,6 @@ verify_packages() {
     
     local failed=${#failed_packages[@]}
     
-    log "STEPS" "Download Summary:"
-    log "INFO" "Successfully downloaded: $success ($success_rate%)"
-    
     if ((failed > 0)); then
         log "WARNING" "Failed packages:"
         printf '%s\n' "${failed_packages[@]}" | while read -r pkg; do
