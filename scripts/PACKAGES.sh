@@ -2,34 +2,11 @@
 
 # Source the include file containing common functions and variables
 if [[ ! -f "./scripts/INCLUDE.sh" ]]; then
-    echo "Error: INCLUDE.sh not found in ./scripts/"
+    log "ERROR" "INCLUDE.sh not found in ./scripts/"
     exit 1
 fi
 
 . ./scripts/INCLUDE.sh
-
-# Download GitHub packages function with proper array handling
-download_github_packages() {
-    log "INFO" "Downloading GitHub packages..."
-    local failed=0
-    local total=${#github_packages[@]}
-    
-    # Create temporary array for GitHub packages
-    local -a github_download_list=()
-    
-    for package in "${github_packages[@]}"; do
-        github_download_list+=("$package")
-    done
-    
-    if ((${#github_download_list[@]} > 0)); then
-        if ! download_packages "github" "${github_download_list[@]}"; then
-            log "ERROR" "Failed to download some GitHub packages"
-            return 1
-        fi
-    fi
-    
-    return 0
-}
 
 # Initialize package arrays based on target type
 declare -a github_packages
@@ -127,41 +104,22 @@ declare -A package_categories=(
     "
 )
 
-# Enhanced download function for GitHub packages
-download_github_packages() {
-    log "INFO" "Downloading GitHub packages..."
-    local failed=0
-    local total=${#github_packages[@]}
-    
-    for package in "${github_packages[@]}"; do
-        IFS="|" read -r name url <<< "$package"
-        if ! download_packages "github" "$name|$url"; then
-            ((failed++))
-            log "ERROR" "Failed to download GitHub package: $name"
-        fi
-    done
-    
-    local success=$((total - failed))
-    log "INFO" "GitHub packages: $success/$total successful"
-    return $((failed > 0))
-}
-
 # Enhanced function to process package categories
 process_package_categories() {
-    local -a all_packages=()
+    local -a all_packages_custom=()
     
     for category in "${!package_categories[@]}"; do
         log "INFO" "Processing $category packages..."
         while IFS= read -r package_line; do
             [[ -z "$package_line" ]] && continue
             package_line=$(echo "$package_line" | xargs)  # Trim whitespace
-            [[ -n "$package_line" ]] && all_packages+=("$package_line")
+            [[ -n "$package_line" ]] && all_packages_custom+=("$package_line")
         done <<< "${package_categories[$category]}"
     done
     
-    if ((${#all_packages[@]} > 0)); then
+    if ((${#all_packages_custom[@]} > 0)); then
         log "INFO" "Downloading custom packages..."
-        if ! download_packages "custom" "${all_packages[@]}"; then
+        if ! download_packages "custom" "${all_packages_custom[@]}"; then
             log "ERROR" "Failed to download some custom packages"
             return 1
         fi
@@ -208,10 +166,8 @@ verify_packages() {
 
 # Main execution
 main() {
-    local start_time=$(date +%s)
-    
     # Download GitHub packages
-    download_github_packages || log "WARNING" "Some GitHub packages failed to download"
+    download_packages "github" github_packages[@]
     
     # Process and download category packages
     process_package_categories || log "WARNING" "Some category packages failed to download"
@@ -221,10 +177,8 @@ main() {
         log "ERROR" "Package verification failed"
         return 1
     }
-    
-    local end_time=$(date +%s)
-    local duration=$((end_time - start_time))
-    log "SUCCESS" "Package download completed in $(format_time $duration)"
+
+    log "SUCCESS" "Package download completed"
     
     return 0
 }
