@@ -115,6 +115,7 @@ jobs:
           echo "status=success" >> ${GITHUB_OUTPUT}
 
       - name: Create simulated physical disk
+        if: github.event.inputs.target == 'all'
         run: |
           mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
           root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
