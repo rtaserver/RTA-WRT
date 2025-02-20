@@ -218,7 +218,7 @@ main() {
     local start_time=$(date +%s)
     
     # Create necessary directories
-    mkdir -p "packages" "${CONFIG[TEMP_DIR]}" "${CONFIG[LOG_DIR]}"
+    sudo mkdir -p "packages" "${CONFIG[TEMP_DIR]}" "${CONFIG[LOG_DIR]}"
     
     # Download GitHub packages
     download_github_packages || log "WARNING" "Some GitHub packages failed to download"
