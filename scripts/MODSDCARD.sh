@@ -18,7 +18,7 @@ check_dependencies() {
     done
     
     if [ ${#missing_deps[@]} -ne 0 ]; then
-        error_msg "Missing required dependencies: ${missing_deps[*]}"
+        log "ERROR" "Missing required dependencies: ${missing_deps[*]}"
         return 1
     fi
     return 0
@@ -57,17 +57,17 @@ build_mod_sdcard() {
     local dtb="$2"
     local suffix="$3"
 
-    echo -e "${STEPS} Modifying boot files for Amlogic s905x devices..."
+    log "STEPS" "Modifying boot files for Amlogic s905x devices..."
     
     # Parameter validation with detailed error messages
     if [ -z "$image_path" ]; then
-        error_msg "Image path parameter is missing"
+        log "ERROR" "Image path parameter is missing"
         return 1
     elif [ -z "$dtb" ]; then
-        error_msg "DTB parameter is missing"
+        log "ERROR" "DTB parameter is missing"
         return 1
     elif [ -z "$suffix" ]; then
-        error_msg "Suffix parameter is missing"
+        log "ERROR" "Suffix parameter is missing"
         return 1
     fi
 
@@ -79,7 +79,7 @@ build_mod_sdcard() {
     # Validate and set paths with error handling
     local work_dir="$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"
     if ! cd "$work_dir"; then
-        error_msg "Failed to access working directory: $work_dir"
+        log "ERROR" "Failed to access working directory: $work_dir"
         return 1
     fi
 
@@ -87,12 +87,12 @@ build_mod_sdcard() {
 
     # Enhanced cleanup function
     cleanup() {
-        echo -e "${INFO} Performing cleanup..."
+        log "INFO" "Performing cleanup..."
         local mount_point="boot"
         if mountpoint -q "$mount_point"; then
-            sudo umount "$mount_point" || error_msg "Failed to unmount $mount_point"
+            sudo umount "$mount_point" || log "ERROR" "Failed to unmount $mount_point"
         fi
-        sudo losetup -D || error_msg "Failed to detach all loop devices"
+        sudo losetup -D || log "ERROR" "Failed to detach all loop devices"
         for dir in "$suffix" "mod-boot-sdcard-main"; do
             [ -d "$dir" ] && rm -rf "$dir"
         done
@@ -103,33 +103,33 @@ build_mod_sdcard() {
 
     # Validate input file
     if [ ! -f "$file_to_process" ]; then
-        error_msg "Image file not found: $file_to_process"
+        log "ERROR" "Image file not found: $file_to_process"
         return 1
     fi
 
     # Download and extract with better error handling
-    echo -e "${INFO} Downloading mod-boot-sdcard..."
+    log "INFO" "Downloading mod-boot-sdcard..."
     if ! ariadl "$MOD_BOOT_URL" "main.zip"; then
-        error_msg "Failed to download mod-boot-sdcard"
+        log "ERROR" "Failed to download mod-boot-sdcard"
         return 1
     fi
 
-    echo -e "${INFO} Extracting mod-boot-sdcard..."
+    log "INFO" "Extracting mod-boot-sdcard..."
     if ! unzip -q main.zip; then
-        error_msg "Failed to extract mod-boot-sdcard"
+        log "ERROR" "Failed to extract mod-boot-sdcard"
         rm -f main.zip
         return 1
     fi
     rm -f main.zip
-    echo -e "${SUCCESS} mod-boot-sdcard extracted successfully"
+    log "SUCCESS" "mod-boot-sdcard extracted successfully"
 
     # Prepare working directory
     mkdir -p "${suffix}/boot"
     
     # Copy files with verification
-    echo -e "${INFO} Preparing image for ${suffix}..."
+    log "INFO" "Preparing image for ${suffix}..."
     if ! cp "$file_to_process" "${suffix}/"; then
-        error_msg "Failed to copy image file"
+        log "ERROR" "Failed to copy image file"
         return 1
     fi
 
@@ -138,59 +138,59 @@ build_mod_sdcard() {
     
     for file in "$bootloader" "$modboot"; do
         if ! [ -f "$file" ]; then
-            error_msg "Required file not found: $file"
+            log "ERROR" "Required file not found: $file"
             return 1
         fi
         if ! sudo cp "$file" "${suffix}/"; then
-            error_msg "Failed to copy: $file"
+            log "ERROR" "Failed to copy: $file"
             return 1
         fi
     done
 
     # Process image
     cd "${suffix}" || {
-        error_msg "Failed to enter working directory: ${suffix}"
+        log "ERROR" "Failed to enter working directory: ${suffix}"
         return 1
     }
 
     local file_name=$(basename "${file_to_process%.gz}")
 
     # Decompress with progress
-    echo -e "${INFO} Decompressing image..."
+    log "INFO" "Decompressing image..."
     if ! sudo gunzip "${file_name}.gz"; then
-        error_msg "Failed to decompress image"
+        log "ERROR" "Failed to decompress image"
         return 1
     fi
 
     # Setup loop device with improved handling
-    echo -e "${INFO} Setting up loop device..."
+    log "INFO" "Setting up loop device..."
     local device
     device=$(sudo losetup -fP --show "${file_name}" 2>/dev/null)
     
     if ! wait_for_device "$device" "$MOUNT_TIMEOUT"; then
-        error_msg "Loop device setup failed or timed out"
+        log "ERROR" "Loop device setup failed or timed out"
         return 1
     fi
 
     # Mount with improved error handling
-    echo -e "${INFO} Mounting image..."
+    log "INFO" "Mounting image..."
     if ! safe_mount "${device}p1" boot; then
-        error_msg "Failed to mount image after $MAX_RETRIES attempts"
+        log "ERROR" "Failed to mount image after $MAX_RETRIES attempts"
         return 1
     fi
 
     # Apply modifications with verification
-    echo -e "${INFO} Applying boot modifications..."
+    log "INFO" "Applying boot modifications..."
     if ! sudo tar -xzf mod-boot-sdcard.tar.gz -C boot; then
-        error_msg "Failed to extract boot modifications"
+        log "ERROR" "Failed to extract boot modifications"
         return 1
     fi
 
     # Update configuration with backup
-    echo -e "${INFO} Updating configuration files..."
+    log "INFO" "Updating configuration files..."
     for file in boot/uEnv.txt boot/extlinux/extlinux.conf boot/boot.ini; do
         if [ ! -f "$file" ]; then
-            error_msg "Required configuration file missing: $file"
+            log "ERROR" "Required configuration file missing: $file"
             return 1
         fi
         cp "$file" "${file}.backup"
@@ -207,7 +207,7 @@ build_mod_sdcard() {
         local new="$3"
         
         if ! sudo sed -i "s|$old|$new|g" "$file"; then
-            error_msg "Failed to update configuration in $file"
+            log "ERROR" "Failed to update configuration in $file"
             return 1
         fi
     }
@@ -221,34 +221,34 @@ build_mod_sdcard() {
     sudo umount boot
 
     # Write bootloader with verification
-    echo -e "${INFO} Writing bootloader..."
+    log "INFO" "Writing bootloader..."
     if ! sudo dd if=u-boot.bin of="${device}" bs=1 count=444 conv=fsync 2>/dev/null; then
-        error_msg "Failed to write primary bootloader"
+        log "ERROR" "Failed to write primary bootloader"
         return 1
     fi
     if ! sudo dd if=u-boot.bin of="${device}" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null; then
-        error_msg "Failed to write secondary bootloader"
+        log "ERROR" "Failed to write secondary bootloader"
         return 1
     fi
 
     # Cleanup and compress
     sudo losetup -d "${device}"
-    echo -e "${INFO} Compressing final image..."
+    log "INFO" "Compressing final image..."
     if ! sudo gzip "${file_name}"; then
-        error_msg "Failed to compress final image"
+        log "ERROR" "Failed to compress final image"
         return 1
     fi
 
     # Move final image with verification
     [ -f "../${file_name}.gz" ] && rm -f "../${file_name}.gz"
     if ! mv "${file_name}.gz" "../${file_name}.gz"; then
-        error_msg "Failed to move final image"
+        log "ERROR" "Failed to move final image"
         return 1
     fi
 
     cd ..
     cleanup
-    echo -e "${SUCCESS} Successfully processed ${suffix}"
+    log "SUCCESS" "Successfully processed ${suffix}"
     cd "$GITHUB_WORKSPACE/$WORKING_DIR"
     return 0
 }
@@ -264,12 +264,12 @@ process_images() {
     image_file=$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "$pattern")
     
     if [ -z "$image_file" ]; then
-        error_msg "No matching image found for pattern: $pattern"
+        log "ERROR" "No matching image found for pattern: $pattern"
         return 1
     fi
     
     if ! build_mod_sdcard "$image_file" "$dtb" "$suffix"; then
-        error_msg "Failed to process $suffix for kernel $kernel_version"
+        log "ERROR" "Failed to process $suffix for kernel $kernel_version"
         return 1
     fi
 }
