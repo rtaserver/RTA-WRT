@@ -11,8 +11,8 @@ CONFIG=(
     ["RETRY_DELAY"]=2
     ["SPINNER_INTERVAL"]=0.1
     ["DEBUG"]=false
-    ["TEMP_DIR"]="/tmp/script-$$"  # Add process-specific temp directory
-    ["LOG_DIR"]="/var/log/script"  # Add dedicated log directory
+    ["TEMP_DIR"]="tmp/script-$$"  # Add process-specific temp directory
+    ["LOG_DIR"]="log/script"  # Add dedicated log directory
 )
 
 # Create necessary directories
