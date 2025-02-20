@@ -157,6 +157,7 @@ jobs:
       - name: Setup Build Variables
         id: variables
         run: |
+          # Set architecture variables
           echo "PROFILE=generic" >> $GITHUB_ENV
           echo "TARGET_SYSTEM=armsr/armv8" >> $GITHUB_ENV
           echo "TARGET_NAME=armsr-armv8" >> $GITHUB_ENV
@@ -165,8 +166,8 @@ jobs:
           echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
 
           # Set base distribution info
-          BASE="${{ inputs.release_branch }%:*}"
-          BRANCH="${{ inputs.release_branch }#*:}"
+          BASE="${RELEASE_BRANCH%:*}"
+          BRANCH="${RELEASE_BRANCH#*:}"
           VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
 
           echo "BASE=$BASE" >> $GITHUB_ENV
@@ -179,6 +180,7 @@ jobs:
           echo "DATETIME=$(date +'%Y.%m.%d-%H:%M:%S')" >> $GITHUB_ENV
           echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
 
+          echo "Build variables configured successfully"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Download and Prepare Image Builder
