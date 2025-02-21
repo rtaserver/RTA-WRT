@@ -46,33 +46,57 @@ setup_nikki() {
 }
 
 # Main installation logic
+remove_icons() {
+    local icons=("$@")
+    local paths=(
+        "files/usr/share/ucode/luci/template/themes/material/header.ut"
+        "files/usr/lib/lua/luci/view/themes/argon/header.htm"
+    )
+    
+    for icon in "${icons[@]}"; do
+        for path in "${paths[@]}"; do
+            sed -i "/${icon}/d" "$path"
+        done
+    done
+}
+
 case "$1" in
     openclash)
         setup_openclash
+        remove_icons "passwall.png" "mihomo.png"
         ;;
     passwall)
         setup_passwall
+        remove_icons "clash.png" "mihomo.png"
         ;;
     nikki)
         setup_nikki
+        remove_icons "clash.png" "passwall.png"
         ;;
     openclash-passwall)
         setup_openclash
         setup_passwall
+        remove_icons "mihomo.png"
         ;;
     nikki-passwall)
         setup_nikki
         setup_passwall
+        remove_icons "clash.png"
         ;;
     nikki-openclash)
         setup_nikki
         setup_openclash
+        remove_icons "passwall.png"
         ;;
     openclash-passwall-nikki)
         log "INFO" "Installing OpenClash, PassWall and Nikki"
         setup_openclash
         setup_passwall
         setup_nikki
+        ;;
+    no-tunnel)
+        log "info" "Use No Tunnel"
+        remove_icons "clash.png" "passwall.png" "mihomo.png"
         ;;
     *)
         log "INFO" "Invalid option. Usage: $0 {openclash|passwall|nikki|openclash-passwall|nikki-passwall|nikki-openclash|openclash-passwall-nikki}"

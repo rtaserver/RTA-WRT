@@ -58,7 +58,6 @@ on:
         type: boolean
 
 env:
-  TYPE: AMLOGIC
   TARGET: ${{ inputs.target }}
   RELEASE_BRANCH: ${{ inputs.release_branch }}
   TUNNEL: ${{ inputs.tunnel }}
@@ -97,6 +96,8 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
+          TYPE="AMLOGIC"
+          echo "TYPE=$TYPE" >> $GITHUB_ENV
           if [ "$TARGET" == "all" ]; then
           docker rmi $(docker images -q) 2>/dev/null
           [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
@@ -176,8 +177,8 @@ jobs:
           echo "DOWNLOAD_BASE=https://downloads.${BASE}.org" >> $GITHUB_ENV
 
           # Set date variables
-          echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
-          echo "DATETIME=$(date +'%Y.%m.%d-%H:%M:%S')" >> $GITHUB_ENV
+          echo "DATE=$(date +'%d%m%Y')" >> $GITHUB_ENV
+          echo "DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')" >> $GITHUB_ENV
           echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
 
           echo "Build variables configured successfully"
@@ -243,7 +244,7 @@ jobs:
           chmod +x scripts/TUNNEL.sh
           if [[ "${{ env.TUNNEL }}" == "all" ]]; then
             ./scripts/TUNNEL.sh openclash-passwall-nikki
-          elif [[ "${{ env.TUNNEL }}" =~ ^(openclash|passwall|nikki|openclash-passwall|nikki-passwall|nikki-openclash|openclash-passwall-nikki)$ ]]; then
+          elif [[ "${{ env.TUNNEL }}" =~ ^(openclash|passwall|nikki|openclash-passwall|nikki-passwall|nikki-openclash|openclash-passwall-nikki|no-tunne)$ ]]; then
             ./scripts/TUNNEL.sh "${{ env.TUNNEL }}"
           fi
 
@@ -337,6 +338,7 @@ jobs:
 
           echo "Images packaged successfully"
           echo "status=success" >> $GITHUB_OUTPUT
+          ls -la compiled_images/
 
       - name: Mod SDCard
         id: modsdcard
@@ -345,7 +347,9 @@ jobs:
           cd ${{ env.WORKING_DIR }}
 
           chmod +x scripts/MODSDCARD.sh
-          ./scripts/MODSDCARD.sh
+          if [[ "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x_*.img.gz")" ]]; then
+            ./scripts/MODSDCARD.sh
+          fi
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Create Release
@@ -354,7 +358,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: amlogic
+          tag_name: "rtawrt-amlogic-${{ env.BRANCH }}"
           name: RTA-WRT-Amlogic-${{ env.BRANCH }}-${{ env.TUNNEL }}-${{ env.DATE }}
           files: ${{ env.WORKING_DIR }}/compiled_images/*.gz
           prerelease: true

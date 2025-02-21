@@ -152,11 +152,11 @@ check_dependencies() {
 # Enhanced download function with retry mechanism and better error handling
 ariadl() {
     if [ "$#" -lt 1 ]; then
-        log "ERROR" "Usage: ariadl <URL> [OUTPUT_FILE]"
+       log "ERROR" "Usage: ariadl <URL> [OUTPUT_FILE]"
         return 1
     fi
 
-    log "STEPS" "Aria2 Downloader"
+   log "STEPS" "Aria2 Downloader"
 
     local URL OUTPUT_FILE OUTPUT_DIR OUTPUT
     URL=$1
@@ -177,7 +177,7 @@ ariadl() {
     fi
 
     while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-        log "INFO" "Downloading: $URL (Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
+       log "INFO" "Downloading: $URL (Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
         
         if [ -f "$OUTPUT_DIR/$OUTPUT_FILE" ]; then
             rm "$OUTPUT_DIR/$OUTPUT_FILE"
@@ -186,18 +186,18 @@ ariadl() {
         aria2c -q -d "$OUTPUT_DIR" -o "$OUTPUT_FILE" "$URL"
         
         if [ $? -eq 0 ]; then
-            log "SUCCESS" "Downloaded: $OUTPUT_FILE"
+           log "SUCCESS" "Downloaded: $OUTPUT_FILE"
             return 0
         else
             RETRY_COUNT=$((RETRY_COUNT + 1))
             if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                log "ERROR" "Download failed. Retrying..."
+               log "ERROR" " Download failed. Retrying..."
                 sleep 2
             fi
         fi
     done
 
-    log "ERROR" "Failed to download: $OUTPUT_FILE after $MAX_RETRIES attempts"
+   log "ERROR" " Failed to download: $OUTPUT_FILE after $MAX_RETRIES attempts"
     return 1
 }
 

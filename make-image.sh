@@ -3,29 +3,6 @@
 # Exit on error
 set -e
 
-# Script configuration
-BUILD_LOG="build_$(date +%Y%m%d_%H%M%S).log"
-
-# Color definitions
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Logging functions
-log() {
-    echo -e "${GREEN}[INFO]${NC} $1" | tee -a "$BUILD_LOG"
-}
-
-warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1" | tee -a "$BUILD_LOG"
-}
-
-error() {
-    echo -e "${RED}[ERROR]${NC} $1" | tee -a "$BUILD_LOG"
-    exit 1
-}
-
 # Profile info
 make info
 
@@ -118,7 +95,7 @@ PACKAGES+=" luci-app-poweroff luci-app-log-viewer luci-app-ramfree"
 # Handle profile-specific packages
 handle_profile_packages() {
     if [ "$1" == "rpi-4" ]; then
-        PACKAGES+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio luci-app-oled"
+        PACKAGES+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio"
     elif [ "$ARCH_2" == "x86_64" ]; then
         PACKAGES+=" kmod-iwlwifi iw-full pciutils"
     fi
@@ -147,7 +124,7 @@ build_firmware() {
     local profile=$1
     local tunnel_option=$2
 
-    log "Starting build for profile: $profile"
+    log "INFO" "Starting build for profile: $profile"
     
     # Handle packages based on profile and tunnel option
     handle_profile_packages "$profile"
@@ -157,19 +134,19 @@ build_firmware() {
     # Custom Files
     FILES="files"
     
-    log "Building image..."
+    log "INFO" "Building image..."
     make image PROFILE="$profile" PACKAGES="$PACKAGES $EXCLUDED" FILES="$FILES" DISABLED_SERVICES="$DISABLED_SERVICES" 2>&1 | tee -a "$BUILD_LOG"
     
     if [ ${PIPESTATUS[0]} -eq 0 ]; then
-        log "Build completed successfully!"
+        log "INFO" "Build completed successfully!"
     else
-        error "Build failed. Check $BUILD_LOG for details."
+        log "ERROR" "Build failed. Check $BUILD_LOG for details."
     fi
 }
 
 # Main script execution
 if [ -z "$1" ]; then
-    error "Profile not specified"
+    log "ERROR" "Profile not specified"
 fi
 
 build_firmware "$1" "$2"

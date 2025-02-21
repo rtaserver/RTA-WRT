@@ -1,10 +1,10 @@
-name: Build OpenWrt v2
+name: Generate RTA-WRT Firmware
 
 on:
   workflow_dispatch:
     inputs:
-      releases_branch:
-        description: "Select the releases branch"
+      release_branch:
+        description: "Select the release branch:"
         required: true
         default: "openwrt:24.10.0"
         type: choice
@@ -13,750 +13,287 @@ on:
           - openwrt:23.05.5
           - immortalwrt:24.10.0
           - immortalwrt:23.05.4
-      devices:
-        description: "Select device target"
-        required: true
+      target:
+        description: "Select device board"
+        required: false
         default: "all"
         type: choice
         options:
           - all
-          - s905x
-          - s905x2
-          - s905x3
-          - s905x4
-          - s912
-          - h5-orangepi-zeroplus2
-          - h5-orangepi-zeroplus
-          - h5-orangepi-prime
-          - h5-orangepi-pc2
-          - h6-orangepi-lite2
-          - h6-orangepi-1plus
-          - h6-orangepi-3
-          - h6-orangepi-3lts
-          - h616-orangepi-zero2
-          - h618-orangepi-zero2w
-          - h618-orangepi-zero3
-          - rk3566-orangepi-3b
-          - rk3588s-orangepi-5
-          - bcm2710-rpi-3b
-          - bcm2711-rpi-4b
+          - Raspberry Pi 3B
+          - Raspberry Pi 4B
+          - NanoPi-R2S
+          - NanoPi-R5S
           - x86-64
-      fiturs:
-        description: "Select fitur"
+      tunnel:
+        description: "Select VPN Client app:"
         required: true
-        default: "all"
+        default: "openclash"
         type: choice
         options:
           - all
-          - full-fitur
-          - simpel
-      notify:
-        description: "Notify to Telegram"
-        required: true
-        default: false
+          - openclash
+          - passwall
+          - nikki
+          - openclash-passwall
+          - nikki-passwall
+          - nikki-openclash
+          - openclash-passwall-nikki
+          - no-tunnel
+      clean:
+        description: "Do 'make clean' for each run"
+        required: false
+        default: "true"
         type: boolean
 
 env:
+  TARGET: ${{ inputs.target }}
+  RELEASE_BRANCH: ${{ inputs.release_branch }}
+  TUNNEL: ${{ inputs.tunnel }}
+  CLEAN: ${{ inputs.clean }}
   TZ: Asia/Jakarta
-  NOTIFY: ${{ inputs.notify }}
-  IMAGEBUILDER_SH: imagebuilder.sh
+  WORKING_DIR: imagebuilder
   DEBIAN_FRONTEND: noninteractive
-  APT_PACKAGES: >-
-    build-essential
-    libncurses5-dev
-    zlib1g-dev
-    gawk
-    git
-    gettext
-    libssl-dev
-    rsync
-    wget
-    unzip
-    tar
-    gzip
-    qemu-utils
-    mkisofs
-    jq
-    python3
-    python3-pip
-  CURRENT_BRANCH: ${{ github.ref_name }}
 
 jobs:
-  prepare:
+  prebuild:
     runs-on: ubuntu-22.04
+    name: ${{ inputs.release_branch }}
     outputs:
-      devices: ${{ steps.matrix.outputs.devices }}
-      fiturs: ${{ steps.matrix.outputs.fiturs }}
-      message_id: ${{ steps.telegram.outputs.message_id }}
-      changelog_simpel: ${{ steps.changelog_simpel.outputs.changelog_simpel }}
-      changelog_full: ${{ steps.changelog_full.outputs.changelog_full }}
-      changelog_firmware: ${{ steps.changelog_firmware.outputs.changelog_firmware }}
-      startbuildtime: ${{ steps.setup.outputs.startbuildtime }}
+      target: ${{ steps.set-matrix.outputs.target }}
+      tunnel: ${{ steps.set-matrix.outputs.tunnel }}
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
-
-      - name: Add changelog SIMPEL
-        id: changelog_simpel
-        shell: bash
+      - name: Set Matrix Run
+        id: set-matrix
         run: |
-          chs=$(awk '/^\*\*Changelog Simpel\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG_SIMPEL.md)
-          chs="${chs//'%'/'%25'}"
-          chs="${chs//$'\n'/'%0A'}"
-          chs="${chs//$'\r'/'%0D'}"  
-          echo "changelog_simpel=$chs" >> $GITHUB_OUTPUT
-
-      - name: Add changelog FULL
-        id: changelog_full
-        shell: bash
-        run: |
-          chf=$(awk '/^\*\*Changelog Full\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG_FULL.md)
-          chf="${chf//'%'/'%25'}"
-          chf="${chf//$'\n'/'%0A'}"
-          chf="${chf//$'\r'/'%0D'}"  
-          echo "changelog_full=$chf" >> $GITHUB_OUTPUT
-
-      - name: Add changelog Firmware
-        id: changelog_firmware
-        shell: bash
-        run: |
-          chfr=$(awk '/^\*\*Changelog Firmware\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
-          chfr="${chfr//'%'/'%25'}"
-          chfr="${chfr//$'\n'/'%0A'}"
-          chfr="${chfr//$'\r'/'%0D'}"  
-          echo "changelog_firmware=$chfr" >> $GITHUB_OUTPUT
-
-      - name: Configure Build Matrix
-        id: matrix
-        run: |
-          DEVICES_JSON=$(cat << 'EOJ'
-          {
-            "devices": [
-              "s905x",
-              "s905x2",
-              "s905x3",
-              "s905x4",
-              "s912",
-              "h5-orangepi-zeroplus2",
-              "h5-orangepi-zeroplus",
-              "h5-orangepi-prime",
-              "h5-orangepi-pc2",
-              "h6-orangepi-lite2",
-              "h6-orangepi-1plus",
-              "h6-orangepi-3",
-              "h6-orangepi-3lts",
-              "h616-orangepi-zero2",
-              "h618-orangepi-zero2w",
-              "h618-orangepi-zero3",
-              "rk3566-orangepi-3b",
-              "rk3588s-orangepi-5",
-              "bcm2710-rpi-3b",
-              "bcm2711-rpi-4b",
-              "x86-64"
-            ]
-          }
-          EOJ
-          )
-
-          FITURS_JSON=$(cat << 'EOJ'
-          {
-            "fiturs": [
-              "full-fitur",
-              "simpel"
-            ]
-          }
-          EOJ
-          )
-
-          if [ "${{ inputs.devices }}" = "all" ]; then
-            echo "devices=$(echo "$DEVICES_JSON" | jq -c '.devices')" >> $GITHUB_OUTPUT
+          echo "Selected target option: [ $TARGET ]"
+          if [ "${{ inputs.target }}" == "all" ]; then
+             echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','x86-64']" >> $GITHUB_OUTPUT
           else
-            echo "devices=$(jq -nc --arg d "${{ inputs.devices }}" '[$d]')" >> $GITHUB_OUTPUT
+             echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
           fi
 
-          if [ "${{ inputs.fiturs }}" = "all" ]; then
-             echo "fiturs=$(echo "$FITURS_JSON" | jq -c '.fiturs')" >> $GITHUB_OUTPUT
+          echo "Selected tunnel option: [ $TUNNEL ]"
+          if [ "${{ inputs.tunnel }}" == "all" ]; then
+             echo "tunnel=['openclash','passwall','nikki','openclash-passwall','nikki-passwall','nikki-openclash','openclash-passwall-nikki','no-tunnel']" >> $GITHUB_OUTPUT
           else
-             echo "fiturs=$(jq -nc --arg f "${{ inputs.fiturs }}" '[$f]')" >> $GITHUB_OUTPUT
+             echo "tunnel=['${{ inputs.tunnel }}']" >> $GITHUB_OUTPUT
           fi
 
-      - name: Send Initial Telegram Message
-        if: ${{ env.NOTIFY == 'true' && !cancelled() }}
-        id: telegram
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
-        run: |
-          trap "exit" SIGTERM
-          sudo timedatectl set-timezone "$TZ"
-          THREAD_ID_BUILD=616
-          
-          devices='${{ steps.matrix.outputs.devices }}'
-          fiturs='${{ steps.matrix.outputs.fiturs }}'
-
-          create_build_status_message() {
-          cat << EOF
-          ━━━━━━━━━━━━━━━━━━━━━━
-          🚀 *RTA-WRT | Build Status*
-          ━━━━━━━━━━━━━━━━━━━━━━
-          📌 *Version*: ${{ inputs.releases_branch }}
-          🌿 *Branch*: ${{ github.ref_name }}
-          📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")
-          ━━━━━━━━━━━━━━━━━━━━━━
-          📋 *Device List*
-          EOF
-
-          while read -r device; do
-              while read -r fitur; do
-                echo "🔹 $device $fitur | ⏳ Building"
-              done < <(echo "$fiturs" | jq -r '.[]')
-          done < <(echo "$devices" | jq -r '.[]')
-
-          echo "━━━━━━━━━━━━━━━━━━━━━━"
-          }
-
-          BUILD_STATUS_MESSAGE=$(create_build_status_message)
-          
-          RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendMessage" \
-            -d chat_id=$CHAT_ID \
-            -d parse_mode=Markdown \
-            -d message_thread_id=$THREAD_ID_BUILD \
-            -d text="$BUILD_STATUS_MESSAGE")
-          
-          echo "message_id=$(echo $RESPONSE | jq -r '.result.message_id')" >> $GITHUB_OUTPUT
-
-      - name: Setup Environment Variables
-        id: setup
-        run: |
-          STARTBUILDTIME=$(date +%s)
-          echo "startbuildtime=${STARTBUILDTIME}" >> $GITHUB_OUTPUT
-
-  build:
-    name: ${{ matrix.device }}-${{ matrix.fitur }} release
-    needs: prepare
+  build-firmware:
+    name: Build ${{ matrix.target }}-${{ matrix.tunnel }}
+    needs: prebuild
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        device: ${{ fromJSON(needs.prepare.outputs.devices) }}
-        fitur: ${{ fromJSON(needs.prepare.outputs.fiturs) }}
+        target: ${{ fromJSON(needs.prebuild.outputs.target) }}
+        tunnel: ${{ fromJSON(needs.prebuild.outputs.tunnel) }}
 
     steps:
-      # Cleanup artifacts and workspace
-      - name: Cleanup prepare
+      - name: Initialization environment
+        id: init
         run: |
-          echo "Disk usage before cleanup:"
-          df -h
+          if [ "$TARGET" == "all" ]; then
+            docker rmi $(docker images -q) 2>/dev/null
+            [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
+            sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
+            sudo swapoff -a
+            sudo rm -f /swapfile /mnt/swapfile
+          fi
 
-          sudo rm -rf ${GITHUB_WORKSPACE}/*
-          sudo rm -rf /home/runner/work/_temp/_github_workflow/prepare
-          sudo rm -rf /home/runner/work/_temp/_github_home/prepare
+          sudo -E apt-get -y update
+          if [ "$TARGET" == "all" ]; then
+            sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+          fi
 
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          # Install build dependencies
+          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
 
-          echo "Disk usage after cleanup:"
-          df -h
+          if [ "$TARGET" == "all" ]; then
+            sudo -E systemctl daemon-reload
+            sudo -E apt-get -y autoremove --purge
+            sudo -E apt-get clean
+            sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
+            sudo rm -rf ~/{.cargo,.dotnet,.rustup}
+          fi
+
+          sudo timedatectl set-timezone "${TZ}"
+          echo "status=success" >> ${GITHUB_OUTPUT}
 
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref_name }}
+          path: origin
+          fetch-depth: 1
 
-      - name: Install Dependencies
-        env:
-          DEBIAN_FRONTEND: noninteractive
+      - name: Setup Build Variables
+        id: variables
         run: |
-          docker rmi $(docker images -q) 2>/dev/null
-          [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
-          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
-          sudo swapoff -a
-          sudo rm -f /swapfile /mnt/swapfile
-          sudo apt-get update -qq
-          sudo apt-get install -y ${{ env.APT_PACKAGES }}
-          sudo -E systemctl daemon-reload
-          sudo -E apt-get -y autoremove --purge
-          sudo -E apt-get clean
-          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
-          sudo rm -rf ~/{.cargo,.dotnet,.rustup}
-          sudo timedatectl set-timezone "$TZ"
+          TYPE="NON-AMLOGIC"
+          echo "TYPE=$TYPE" >> $GITHUB_ENV
+          MATRIXTARGET="${{ matrix.target }}"
+          echo "MATRIXTARGET=$MATRIXTARGET" >> $GITHUB_ENV
+          MATRIXTUNNEL="${{ matrix.tunnel }}"
+          echo "MATRIXTUNNEL=$MATRIXTUNNEL" >> $GITHUB_ENV
 
-      - name: Prepare Before Build
-        run: |
-          DATETIME=$(date +'%d%m%Y')
-          BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
-
-          case "${{ github.ref_name }}" in
-              main) RELEASE_TAG="${BRANCH_TAG}-${{ matrix.fitur }}-main-${DATETIME}" ;;
-              dev) RELEASE_TAG="${BRANCH_TAG}-${{ matrix.fitur }}-dev-${DATETIME}" ;;
-              *) echo "Error: Branch tidak dikenali" >&2; exit 1 ;;
+          # Target system configurations
+          case "$MATRIXTARGET" in
+            "Raspberry Pi 3B")
+              echo "PROFILE=rpi-3" >> $GITHUB_ENV
+              echo "TARGET_SYSTEM=bcm27xx/bcm2710" >> $GITHUB_ENV
+              echo "TARGET_NAME=bcm27xx-bcm2710" >> $GITHUB_ENV
+              echo "ARCH_1=armv7" >> $GITHUB_ENV
+              echo "ARCH_2=aarch64" >> $GITHUB_ENV
+              echo "ARCH_3=aarch64_cortex-a53" >> $GITHUB_ENV
+              ;;
+            "Raspberry Pi 4B")
+              echo "PROFILE=rpi-4" >> $GITHUB_ENV
+              echo "TARGET_SYSTEM=bcm27xx/bcm2711" >> $GITHUB_ENV
+              echo "TARGET_NAME=bcm27xx-bcm2711" >> $GITHUB_ENV
+              echo "ARCH_1=arm64" >> $GITHUB_ENV
+              echo "ARCH_2=aarch64" >> $GITHUB_ENV
+              echo "ARCH_3=aarch64_cortex-a72" >> $GITHUB_ENV
+              ;;
+            "NanoPi-R2S")
+              echo "PROFILE=friendlyarm_nanopi-r2s" >> $GITHUB_ENV
+              echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
+              echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
+              echo "ARCH_1=armv8" >> $GITHUB_ENV
+              echo "ARCH_2=aarch64" >> $GITHUB_ENV
+              echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
+              ;;
+            "NanoPi-R5S")
+              echo "PROFILE=friendlyarm_nanopi-r5s" >> $GITHUB_ENV
+              echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
+              echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
+              echo "ARCH_1=armv8" >> $GITHUB_ENV
+              echo "ARCH_2=aarch64" >> $GITHUB_ENV
+              echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
+              ;;
+            "x86-64")
+              echo "PROFILE=generic" >> $GITHUB_ENV
+              echo "TARGET_SYSTEM=x86/64" >> $GITHUB_ENV
+              echo "TARGET_NAME=x86-64" >> $GITHUB_ENV
+              echo "ARCH_1=amd64" >> $GITHUB_ENV
+              echo "ARCH_2=x86_64" >> $GITHUB_ENV
+              echo "ARCH_3=x86_64" >> $GITHUB_ENV
+              ;;
           esac
-          OPEWRT="${{ inputs.releases_branch }}"
-          OP_SOURCE="${OPEWRT%:*}"
-          sed -i -E "s|baseOpenwrt: 'null'|baseOpenwrt: '${OP_SOURCE}'|g" files/usr/share/ucode/luci/template/header.ut
-          sed -i -E "s|currentBranch: 'null'|currentBranch: '${{ github.ref_name }}'|g" files/usr/share/ucode/luci/template/header.ut
-          sed -i -E "s|currentVersion: 'null'|currentVersion: '${RELEASE_TAG}'|g" files/usr/share/ucode/luci/template/header.ut
-          sed -i -E "s|currentFitur: 'null'|currentFitur: '${{ matrix.fitur }}'|g" files/usr/share/ucode/luci/template/header.ut
 
-      - name: Build Image
+          # Set base distribution info
+          BASE="${RELEASE_BRANCH%:*}"
+          BRANCH="${RELEASE_BRANCH#*:}"
+          VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
+
+          echo "BASE=$BASE" >> $GITHUB_ENV
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+          echo "VEROP=$VEROP" >> $GITHUB_ENV
+          echo "DOWNLOAD_BASE=https://downloads.${BASE}.org" >> $GITHUB_ENV
+
+          # Set date variables
+          echo "DATE=$(date +'%d%m%Y')" >> $GITHUB_ENV
+          echo "DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')" >> $GITHUB_ENV
+          echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
+
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Download and Prepare Image Builder
+        id: download
+        if: steps.variables.outputs.status == 'success'
+        run: |
+          # Determine archive extension based on version
+          CURVER=$(echo "${{ env.BRANCH }}" | cut -d'.' -f1)
+          archive_ext=$([ "${CURVER}" == "24" ] && echo "tar.zst" || echo "tar.xz")
+
+          # Download image builder
+          RELEASE="${{ env.DOWNLOAD_BASE }}/releases/${{ env.BRANCH }}/targets/${{ env.TARGET_SYSTEM }}/${{ env.BASE }}-imagebuilder-${{ env.BRANCH }}-${{ env.TARGET_NAME }}.Linux-x86_64.${archive_ext}"
+          echo "Downloading from: $RELEASE"
+          wget --progress=dot:giga "$RELEASE"
+
+          # Extract archive based on extension
+          case "${archive_ext}" in
+            tar.xz)
+              tar -xJf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.xz
+              ;;
+            tar.zst)
+              tar --use-compress-program=unzstd -xf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.zst
+              ;;
+          esac
+
+          # Setup working directory
+          mv *-imagebuilder-* ${{ env.WORKING_DIR }}
+          cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
+
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Download External Packages
+        id: packages
+        if: steps.download.outputs.status == 'success'
+        run: |
+          cd ${{ env.WORKING_DIR }}
+          chmod +x scripts/PACKAGES.sh
+          ./scripts/PACKAGES.sh
+
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Apply Patches and Customizations
+        id: customize
+        if: steps.packages.outputs.status == 'success'
+        run: |
+          cd ${{ env.WORKING_DIR }}
+
+          # Apply patches
+          chmod +x scripts/PATCH.sh
+          ./scripts/PATCH.sh
+
+          # Apply miscellaneous changes
+          chmod +x scripts/MISC.sh
+          ./scripts/MISC.sh
+
+          # Configure tunnel apps
+          chmod +x scripts/TUNNEL.sh
+          ./scripts/TUNNEL.sh $MATRIXTUNNEL
+
+          df -hT ${PWD}
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Build Firmware Images
         id: build
+        if: steps.customize.outputs.status == 'success'
         run: |
-          chmod +x ${{ env.IMAGEBUILDER_SH }}
-          if sudo ./${{ env.IMAGEBUILDER_SH }} ${{ inputs.releases_branch }} "${{ matrix.device }}" "${{ matrix.fitur }}"; then
-            echo "status=✅ Success" >> $GITHUB_OUTPUT
-            echo "✅ Success" > status.txt
-          else
-            echo "status=❌ Failed" >> $GITHUB_OUTPUT
-            echo "❌ Failed" > status.txt
-            exit 1
+          cd ${{ env.WORKING_DIR }}
+          mkdir -p compiled_images
+          chmod +x make-image.sh
+
+          # Clean if requested
+          if [ "${{ env.CLEAN }}" == "true" ]; then
+            make clean
           fi
+            
+          # Build image
+          time ./make-image.sh ${{ env.PROFILE }} $MATRIXTUNNEL
+            
+          # Move and rename output files
+          for file in bin/targets/"${{ env.TARGET_SYSTEM }}"/*.img.gz; do
+            if [ -f "$file" ]; then
+              new_name="RTA-WRT_$(basename "$file" .img.gz)_${MATRIXTUNNEL}.img.gz"
+              mv "$file" compiled_images/$new_name
+            fi
+          done
 
-      - name: Before Upload
-        run: |
-          sudo find imagebuilder/out_firmware/ -type f ! -name "RTA-WRT*" -exec rm -rf {} +
-          ls -l imagebuilder/out_firmware/
-
-      - name: Upload Build Status
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: build-status-${{ matrix.device }}-${{ matrix.fitur }}
-          path: status.txt
-          retention-days: 5
-
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: firmware-${{ matrix.device }}-${{ matrix.fitur }}
-          path: imagebuilder/out_firmware/*
-          retention-days: 5
-
-      - name: Remove Build Artifacts
-        run: |
-          sudo rm -rf imagebuilder
-
-  create_releases:
-    needs: [prepare, build]
-    if: always()
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        fitur: ${{ fromJSON(needs.prepare.outputs.fiturs) }}
-    steps:
-      # Cleanup artifacts and workspace
-      - name: Cleanup build
-        run: |
-          echo "Disk usage before cleanup:"
-          df -h
-
-          sudo rm -rf ${GITHUB_WORKSPACE}/*
-          sudo rm -rf /home/runner/work/_temp/_github_workflow/build
-          sudo rm -rf /home/runner/work/_temp/_github_home/build
-
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-
-          echo "Disk usage after cleanup:"
-          df -h
-
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
-
-      - name: Extract Changelog Firmware
-        id: changelog_firmware
-        run: |
-          changelog_firmware=$(awk '/^\*\*Changelog Firmware\*\*/ {if(found) exit; found=1} found' CHANGELOG.md)
-          echo "changelog_firmware<<EOF" >> $GITHUB_OUTPUT
-          echo "$changelog_firmware" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Extract Changelog Devices
-        id: changelog_devices
-        run: |
-          if [[ ${{ matrix.fitur }} == "simpel" ]]; then
-            changelog_devices=$(awk '/^\*\*Changelog Simpel\*\*/ {if(found) exit; found=1} found' CHANGELOG_SIMPEL.md)
-            echo "changelog_devices<<EOF" >> $GITHUB_OUTPUT
-            echo "$changelog_devices" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          elif [[ ${{ matrix.fitur }} == "full-fitur" ]]; then
-            changelog_devices=$(awk '/^\*\*Changelog Full\*\*/ {if(found) exit; found=1} found' CHANGELOG_FULL.md)
-            echo "changelog_devices<<EOF" >> $GITHUB_OUTPUT
-            echo "$changelog_devices" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Setup Environment
-        run: |
-          sudo timedatectl set-timezone "${{ env.TZ }}"
-
-          DATETIME=$(date +'%d%m%Y')
-          BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
-
-          case "${{ github.ref_name }}" in
-              main) RELEASE_TAG="${BRANCH_TAG}-${{ matrix.fitur }}-main-${DATETIME}" ;;
-              dev) RELEASE_TAG="${BRANCH_TAG}-${{ matrix.fitur }}-dev-${DATETIME}" ;;
-              *) echo "Error: Branch tidak dikenali" >&2; exit 1 ;;
-          esac
-
-          echo "release_tag=${RELEASE_TAG}" >> $GITHUB_ENV
-
-          # Generate release name
-          source="${{ inputs.releases_branch }}"
-          source_name="${source%:*}"
-          source_version="${source#*:}"
-          case "$source_name" in
-              openwrt) source_name="OpenWrt" ;;
-              immortalwrt) source_name="ImmortalWrt" ;;
-          esac
-
-          release_type="${{ github.ref_name == 'main' && 'Stable' || 'Development' }}"
-          fitur_name="${{ matrix.fitur == 'full-fitur' && 'Full Fitur' || 'Simpel' }}"
-          tanggal=$(date +'%d-%m-%Y')
-
-          RELEASE_NAME="RTA-WRT - ${release_type} | ${fitur_name} | ${source_name}:${source_version} | ${tanggal}"
-          echo "release_name=${RELEASE_NAME}" >> $GITHUB_ENV
-
-      - name: Download Firmware Artifacts for Current Fitur
-        uses: actions/download-artifact@v4
-        with:
-          path: firmware
-          pattern: firmware-*-${{ matrix.fitur }}
-          merge-multiple: true
+          echo "Images built successfully:"
+          ls -la compiled_images/
+          echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Create Release
+        if: steps.build.outputs.status == 'success'
         uses: softprops/action-gh-release@v2
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          repository: rizkikotet-dev/RTA-WRT
-          tag_name: ${{ env.release_tag }}
-          name: ${{ env.release_name }}
-          files: firmware/*
-          body: |
-            # 🚀 RTA-WRT - Release Information
-
-            ## 📥 Download Statistics
-            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/${{ env.release_tag }}/total?style=for-the-badge&logo=Openwrt)
-
-            ## 📢 Support Channels
-            [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt) [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/backup_rtawrt) [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/RizkiKotet)
-
-            ## NOTES
-            `Amlogic s905x Support Mod SDCard`
-
-            ## 📝 Changelog Firmware
-            ${{ steps.changelog_firmware.outputs.changelog_firmware }}
-
-            ## 📝 Changelog Devices
-            ${{ steps.changelog_devices.outputs.changelog_devices }}
-          prerelease: ${{ github.ref_name == 'dev' }}
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Remove Artifact
-        run: |
-          sudo rm -rf firmware
-
-  notify:
-    needs: [prepare, build, create_releases]
-    if: always()
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Download Build Status Artifacts
-        uses: actions/download-artifact@v4
         with:
-          path: artifacts
-
-      - name: Update Telegram Message
-        if: ${{ env.NOTIFY == 'true' && !cancelled() }}
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
-        run: |
-          echo "Disk usage before cleanup:"
-          df -h
-
-          sudo rm -rf ${GITHUB_WORKSPACE}/*
-          sudo rm -rf /home/runner/work/_temp/_github_workflow/create_releases
-          sudo rm -rf /home/runner/work/_temp/_github_home/create_releases
-
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-
-          echo "Disk usage after cleanup:"
-          df -h
-
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
-
-      - name: Download Build Status Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      # - name: Update Telegram Message
-      #   if: ${{ env.NOTIFY == 'true' && !cancelled() }}
-      #   env:
-      #     BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-      #     CHAT_ID: ${{ secrets.CHAT_ID }}
-      #   run: |
-      #     sudo timedatectl set-timezone "${{ env.TZ }}"
-      #     trap "exit" SIGTERM
-      #     THREAD_ID_BUILD=616
-
-      #     devices='${{ needs.prepare.outputs.devices }}'
-      #     fiturs='${{ needs.prepare.outputs.fiturs }}'
-
-      #     format_time() {
-      #       local total_seconds=$1
-      #       local hours=$((total_seconds / 3600))
-      #       local minutes=$(( (total_seconds % 3600) / 60 ))
-      #       local seconds=$((total_seconds % 60))
-      #       printf "%02d:%02d:%02d" $hours $minutes $seconds
-      #     }
-
-      #     end_time=$(date +%s)
-      #     elapsed_time=$((end_time - ${{ needs.prepare.outputs.startbuildtime }}))
-      #     formatted_time=$(format_time $elapsed_time)
-
-      #     create_build_status_message() {
-      #     cat << EOF
-      #     ━━━━━━━━━━━━━━━━━━━━━━
-      #     🚀 *RTA-WRT | Build Status*
-      #     ━━━━━━━━━━━━━━━━━━━━━━
-      #     📌 *Version*: ${{ inputs.releases_branch }}
-      #     🌿 *Branch*: ${{ github.ref_name }}
-      #     📅 *Date*: $(date "+%d-%m-%Y %H:%M:%S")
-      #     ━━━━━━━━━━━━━━━━━━━━━━
-      #     📋 *Device List*
-      #     EOF
-
-      #     while read -r device; do
-      #       while read -r fitur; do
-      #         status=$(cat "artifacts/build-status-$device-$fitur/status.txt" 2>/dev/null || echo "❓ Unknown")
-      #         echo "🔹 $device $fitur | $status"
-      #       done < <(echo "$fiturs" | jq -r '.[]')
-      #     done < <(echo "$devices" | jq -r '.[]')
-
-      #     cat << EOF
-      #     🎉━━━━━━━━━━━━━━━━━━━━━━🎉
-      #     ✨ *Build OpenWrt Selesai!* ✨
-      #     🕒 Waktu Build: $formatted_time
-      #     🎉━━━━━━━━━━━━━━━━━━━━━━🎉
-      #     👤 @RizkiKotet
-      #     ━━━━━━━━━━━━━━━━━━━━━━
-      #     EOF
-      #     }
-
-      #     BUILD_STATUS_MESSAGE=$(create_build_status_message)
-
-      #     curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/editMessageText" \
-      #       -d chat_id=$CHAT_ID \
-      #       -d message_id=${{ needs.prepare.outputs.message_id }} \
-      #       -d parse_mode=Markdown \
-      #       -d message_thread_id=$THREAD_ID_BUILD \
-      #       -d text="$BUILD_STATUS_MESSAGE"
-
-      - name: Notify Telegram
-        if: ${{ env.NOTIFY == 'true' && !cancelled() }}
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
-        run: |
-          trap "exit" SIGTERM
-          THREAD_ID_UPDATE=734
-
-          create_stable_message() {
-          cat << EOF
-          ━━━━━━━━━━━━━━━━━━━━━━
-          🎯 *RTA-WRT Firmware Update*
-          ✅ _Stable Release_
-
-          🔹 *Versi:* ${{ inputs.releases_branch }}
-          🔹 *Tanggal:* $(date "+%d-%m-%Y %H:%M:%S")
-
-          📌 *Catatan:*
-          📢 Versi Stabil Telah Diterbitkan!
-          🔹 Disarankan untuk semua pengguna agar mendapatkan pengalaman terbaik!
-          🔹 Ini Hasil Dari Marge Branch Development
-          🔹 Dengan Fitur Baru Dan Perbaikan Bug
-          🔹 Pastikan Anda Menggunakan Versi Terbaru Untuk Mendapatkan Fitur Terbaru
-
-          ━━━━━━━━━━━━━━━━━━━━━━
-          📋 ${{ needs.prepare.outputs.changelog_firmware }}
-          ━━━━━━━━━━━━━━━━━━━━━━
-          ━━━━━━━━━━━━━━━━━━━━━━
-          📋 ${{ needs.prepare.outputs.changelog_full }}
-          ━━━━━━━━━━━━━━━━━━━━━━
-          ━━━━━━━━━━━━━━━━━━━━━━
-          📋 ${{ needs.prepare.outputs.changelog_simpel }}
-          ━━━━━━━━━━━━━━━━━━━━━━
-          EOF
-          }
-
-          create_dev_message() {
-          cat << EOF
-          ━━━━━━━━━━━━━━━━━━━━━━
-          🚀 *RTA-WRT Firmware Update*
-          🌟 _Development Release_
-
-          🔹 *Versi:* ${{ inputs.releases_branch }}
-          🔹 *Tanggal:* $(date "+%d-%m-%Y %H:%M:%S")
-
-          📌 *Catatan:*
-          📢 Ini Versi Pengembangan!
-          🔹 Silahkan Bagi Yang Mempunyai Devices Nganggur
-             Atau Sekedar Ingin Mencoba.
-             Jika Terdapat Error Atau Bug. Mohon Lapor
-             Karena Laporan Sangat Bermanfaat!
-             Untuk Membantu Kami Membuat Firmware
-             Yang Lebih Baik!
-
-          ━━━━━━━━━━━━━━━━━━━━━━
-          📋 ${{ needs.prepare.outputs.changelog_firmware }}
-          ━━━━━━━━━━━━━━━━━━━━━━
-          ━━━━━━━━━━━━━━━━━━━━━━
-          📋 ${{ needs.prepare.outputs.changelog_full }}
-          ━━━━━━━━━━━━━━━━━━━━━━
-          ━━━━━━━━━━━━━━━━━━━━━━
-          📋 ${{ needs.prepare.outputs.changelog_simpel }}
-          EOF
-          }
-
-          DATETIME=$(date +'%d%m%Y')
-
-          BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
-
-          case "${{ github.ref_name }}" in
-              main)
-                RELEASE_TAG_FULL="${BRANCH_TAG}-full-fitur-main-${DATETIME}"
-                RELEASE_TAG_SIMPEL="${BRANCH_TAG}-simpel-main-${DATETIME}"
-                ;;
-              dev)
-                RELEASE_TAG_FULL="${BRANCH_TAG}-full-fitur-dev-${DATETIME}"
-                RELEASE_TAG_SIMPEL="${BRANCH_TAG}-simpel-dev-${DATETIME}"
-                ;;
-              *) echo "Error: Branch tidak dikenali" >&2; exit 1 ;;
-          esac
-
-
-          BUTTONS='['
-          if [[ "${{ inputs.fiturs }}" == "all" ]]; then
-            BUTTONS+='
-              [{"text": "📥 Unduh Full Fiturs", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/'${RELEASE_TAG_FULL}'"}],
-              [{"text": "📥 Unduh Simpel", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/'${RELEASE_TAG_SIMPEL}'"}],'
-          elif [[ "${{ inputs.fiturs }}" == "full-fitur" ]]; then
-            BUTTONS+='
-              [{"text": "📥 Unduh Full Fiturs", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/'${RELEASE_TAG_FULL}'"}],'
-          elif [[ "${{ inputs.fiturs }}" == "simpel" ]]; then
-            BUTTONS+='
-              [{"text": "📥 Unduh Simpel", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/'${RELEASE_TAG_SIMPEL}'"}],'
-          fi
-
-          BUTTONS+='
-              [{"text": "📋 Status Build", "url": "https://t.me/backup_rtawrt/616/${{ needs.prepare.outputs.message_id }}"}]
-          ]'
-
-          OPEWRT="${{ inputs.releases_branch }}"
-          OP_SOURCE="${OPEWRT%:*}"
-          if [ "$OP_SOURCE" == "immortalwrt" ]; then
-            IMGURL="https://avatars.githubusercontent.com/u/53193414?s=200&v=4"
-          else
-            IMGURL="https://avatars.githubusercontent.com/u/2528830?s=200&v=4"
-          fi
-
-          if [ "${CURRENT_BRANCH}" == "main" ]; then
-            TELEMSG=$(create_stable_message)
-          else
-            TELEMSG=$(create_dev_message)
-          fi
-
-          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
-            -d "chat_id=$CHAT_ID" \
-            -d "photo=$IMGURL" \
-            -d "caption=$TELEMSG" \
-            -d "parse_mode=Markdown" \
-            -d "message_thread_id=$THREAD_ID_UPDATE" \
-            -d "reply_markup={\"inline_keyboard\":$BUTTONS}"
-
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: info
-
-      - name: Update Branch Info
-        id: update
-        env:
-          CURRENT_BRANCH: ${{ env.CURRENT_BRANCH }}
-        run: |
-          set -euo pipefail
-          DATETIME=$(date +'%d%m%Y')
-
-          fiturs='${{ needs.prepare.outputs.fiturs }}'
-          BRANCH_TAG=$(echo "${{ inputs.releases_branch }}" | tr ':' '_')
-          while read -r fitur; do
-            OPEWRT="${{ inputs.releases_branch }}"
-            OP_SOURCE="${OPEWRT%:*}"
-            mkdir -p "${CURRENT_BRANCH}/${OP_SOURCE}"
-
-            if [[ $fitur == "simpel" ]]; then
-              changelog_content=$(echo "${{ needs.prepare.outputs.changelog_simpel }}" | \
-                sed -e 's/%0A/\n/g' \
-                    -e 's/%0D/\r/g' \
-                    -e 's/%25/%/g')
-              echo "${changelog_content}" > "${CURRENT_BRANCH}/${OP_SOURCE}/${fitur}/changelog.txt"
-              cat "${CURRENT_BRANCH}/${OP_SOURCE}/${fitur}/changelog.txt"
-            elif [[ $fitur == "full-fitur" ]]; then
-              changelog_content=$(echo "${{ needs.prepare.outputs.changelog_full }}" | \
-                sed -e 's/%0A/\n/g' \
-                    -e 's/%0D/\r/g' \
-                    -e 's/%25/%/g')
-              echo "${changelog_content}" > "${CURRENT_BRANCH}/${OP_SOURCE}/${fitur}/changelog.txt"
-              cat "${CURRENT_BRANCH}/${OP_SOURCE}/${fitur}/changelog.txt"
-            fi
-
-            VERSION_TAG="${BRANCH_TAG}-${fitur}-${CURRENT_BRANCH}-${DATETIME}"
-            echo "${VERSION_TAG}" > "${CURRENT_BRANCH}/${OP_SOURCE}/${fitur}/version.txt"
-          done < <(echo "$fiturs" | jq -r '.[]')
-
-          # Konfigurasi Git
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-
-          git add .
-
-          if ! git diff --cached --quiet; then
-            git commit -m "Auto Release: $(date "+%d-%m-%Y %H:%M:%S")"
-            git push || echo "Failed to push changes"
-          else
-            echo "No changes detected, skipping commit"
-          fi
-
-  cleanup:
-    needs: [build, notify]
-    if: always()
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Delete Old Workflow Runs
-        uses: Mattraks/delete-workflow-runs@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          retain_days: 0
-          keep_minimum_runs: 0
+          tag_name: "rtawrt-${{ env.BRANCH }}"
+          name: RTA-WRT-${{ env.BRANCH }}-${{ env.DATE }}
+          files: ${{ env.WORKING_DIR }}/compiled_images/*.gz
+          prerelease: true
+          generate_release_notes: true
