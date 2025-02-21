@@ -54,63 +54,91 @@ env:
   TZ: Asia/Jakarta
   WORKING_DIR: imagebuilder
   DEBIAN_FRONTEND: noninteractive
+  ARTIFACTS_DIR: artifacts
+  BUILD_LOG_PATH: build_logs
 
 jobs:
   prebuild:
     runs-on: ubuntu-22.04
-    name: ${{ inputs.release_branch }}
+    name: ${{ inputs.release_branch }} Setup
     outputs:
       target: ${{ steps.set-matrix.outputs.target }}
+      tunnel: ${{ steps.set-matrix.outputs.tunnel }}
     steps:
       - name: Set Matrix Run
         id: set-matrix
         run: |
+          echo "::group::Setting up build matrix"
           if [ "${{ inputs.target }}" == "all" ]; then
-             echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','x86-64']" >> $GITHUB_OUTPUT
+            echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','x86-64']" >> $GITHUB_OUTPUT
           else
-             echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
+            echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
           fi
-
-      - name: Checking Tunnel Option
-        run: |
-          echo "Selected tunnel option: [ $TUNNEL ]"
+          
+          if [ "${{ inputs.tunnel }}" == "all" ]; then
+            echo "tunnel=['openclash','passwall','nikki','openclash-passwall','nikki-passwall','nikki-openclash','openclash-passwall-nikki','no-tunnel']" >> $GITHUB_OUTPUT
+          else
+            echo "tunnel=['${{ inputs.tunnel }}']" >> $GITHUB_OUTPUT
+          fi
+          echo "::endgroup::"
 
   build-firmware:
-    name: "Build ${{ matrix.target }} ${{ inputs.tunnel }}"
+    name: "Build ${{ matrix.target }} ${{ matrix.tunnel }}"
     needs: prebuild
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         target: ${{fromJSON(needs.prebuild.outputs.target)}}
+        tunnel: ${{fromJSON(needs.prebuild.outputs.tunnel)}}
 
     steps:
       - name: Initialization environment
         id: init
-        env:
-          DEBIAN_FRONTEND: noninteractive
         run: |
+          echo "::group::System preparation"
           if [ "$TARGET" == "all" ]; then
-          docker rmi $(docker images -q) 2>/dev/null
-          [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
-          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
-          sudo swapoff -a
-          sudo rm -f /swapfile /mnt/swapfile
+            echo "Cleaning up system resources..."
+            docker rmi $(docker images -q) 2>/dev/null || true
+            [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
+            sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
+            sudo swapoff -a
+            sudo rm -f /swapfile /mnt/swapfile
           fi
+
+          echo "Installing dependencies..."
           sudo -E apt-get -y update
           if [ "$TARGET" == "all" ]; then
-          sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+            sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
           fi
-          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
+          
+          # Install build dependencies with retry mechanism
+          for i in {1..3}; do
+            if sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt); then
+              break
+            fi
+            echo "Attempt $i failed. Retrying..."
+            sleep 5
+          done
+
           if [ "$TARGET" == "all" ]; then
-          sudo -E systemctl daemon-reload
-          sudo -E apt-get -y autoremove --purge
-          sudo -E apt-get clean
-          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
-          sudo rm -rf ~/{.cargo,.dotnet,.rustup}
+            echo "Cleaning up unnecessary packages..."
+            sudo -E systemctl daemon-reload
+            sudo -E apt-get -y autoremove --purge
+            sudo -E apt-get clean
+            sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
+            sudo rm -rf ~/{.cargo,.dotnet,.rustup}
           fi
+
           sudo timedatectl set-timezone "${TZ}"
+          
+          # Create necessary directories
+          mkdir -p ${{ env.ARTIFACTS_DIR }}
+          mkdir -p ${{ env.BUILD_LOG_PATH }}
+          echo "::endgroup::"
+          
           echo "status=success" >> ${GITHUB_OUTPUT}
+        continue-on-error: false
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -121,79 +149,55 @@ jobs:
       - name: Setup Build Variables
         id: variables
         run: |
-          if [ "$TARGET" == "Raspberry Pi 3B" ]; then
-            echo "PROFILE=rpi-3" >> $GITHUB_ENV
-            echo "TARGET_SYSTEM=bcm27xx/bcm2710" >> $GITHUB_ENV
-            echo "TARGET_NAME=bcm27xx-bcm2710" >> $GITHUB_ENV
-            TARGET_NAME="bcm27xx-bcm2710"
-            echo "ARCH_1=armv7" >> $GITHUB_ENV
-            echo "ARCH_2=aarch64" >> $GITHUB_ENV
-            echo "ARCH_3=aarch64_cortex-a53" >> $GITHUB_ENV
-          elif [ "$TARGET" == "Raspberry Pi 4B" ]; then
-            echo "PROFILE=rpi-4" >> $GITHUB_ENV
-            echo "TARGET_SYSTEM=bcm27xx/bcm2711" >> $GITHUB_ENV
-            echo "TARGET_NAME=bcm27xx-bcm2711" >> $GITHUB_ENV
-            TARGET_NAME="bcm27xx-bcm2711"
-            echo "ARCH_1=arm64" >> $GITHUB_ENV
-            echo "ARCH_2=aarch64" >> $GITHUB_ENV
-            echo "ARCH_3=aarch64_cortex-a72" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi-R2S" ]; then
-            echo "PROFILE=friendlyarm_nanopi-r2s" >> $GITHUB_ENV
-            echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
-            echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
-            TARGET_NAME="rockchip-armv8"
-            echo "ARCH_1=armv8" >> $GITHUB_ENV
-            echo "ARCH_2=aarch64" >> $GITHUB_ENV
-            echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
-          elif [ "$TARGET" == "NanoPi-R5S" ]; then
-            echo "PROFILE=friendlyarm_nanopi-r5s" >> $GITHUB_ENV
-            echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
-            echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
-            TARGET_NAME="rockchip-armv8"
-            echo "ARCH_1=armv8" >> $GITHUB_ENV
-            echo "ARCH_2=aarch64" >> $GITHUB_ENV
-            echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
-          elif [ "$TARGET" == "x86-64" ]; then
-            echo "PROFILE=generic" >> $GITHUB_ENV
-            echo "TARGET_SYSTEM=x86/64" >> $GITHUB_ENV
-            echo "TARGET_NAME=x86-64" >> $GITHUB_ENV
-            TARGET_NAME="x86-64"
-            echo "ARCH_1=amd64" >> $GITHUB_ENV
-            echo "ARCH_2=x86_64" >> $GITHUB_ENV
-            echo "ARCH_3=x86_64" >> $GITHUB_ENV
-          fi
-
-          # Set base distribution info
+          echo "::group::Setting up build variables"
+          MATRIXTARGET="${{ matrix.target }}"
+          MATRIXTUNNEL="${{ matrix.tunnel }}"
+          
+          # Load target-specific configurations
+          source scripts/target_configs.sh
+          setup_target_config "$MATRIXTARGET"
+          
+          # Set distribution info
           BASE="${RELEASE_BRANCH%:*}"
           BRANCH="${RELEASE_BRANCH#*:}"
           VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
-
-          echo "BASE=$BASE" >> $GITHUB_ENV
-          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
-          echo "VEROP=$VEROP" >> $GITHUB_ENV
-          echo "DOWNLOAD_BASE=https://downloads.${BASE}.org" >> $GITHUB_ENV
-
-          # Set date variables
-          echo "DATE=$(date +'%d%m%Y')" >> $GITHUB_ENV
-          echo "DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')" >> $GITHUB_ENV
-          echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
-
-          echo "Build variables configured successfully"
+          
+          # Export all variables
+          {
+            echo "BASE=$BASE"
+            echo "BRANCH=$BRANCH"
+            echo "VEROP=$VEROP"
+            echo "DOWNLOAD_BASE=https://downloads.${BASE}.org"
+            echo "DATE=$(date +'%d%m%Y')"
+            echo "DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')"
+            echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')"
+          } >> $GITHUB_ENV
+          
+          echo "::endgroup::"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Download and Prepare Image Builder
         id: download
         if: steps.variables.outputs.status == 'success'
         run: |
-          # Determine archive extension
+          echo "::group::Downloading and preparing image builder"
+          
+          # Determine archive format based on version
           CURVER=$(echo "${{ env.BRANCH }}" | cut -d'.' -f1)
           archive_ext=$([ "${CURVER}" == "24" ] && echo "tar.zst" || echo "tar.xz")
-
-          # Download image builder
+          
+          # Download with retry mechanism
           RELEASE="${{ env.DOWNLOAD_BASE }}/releases/${{ env.BRANCH }}/targets/${{ env.TARGET_SYSTEM }}/${{ env.BASE }}-imagebuilder-${{ env.BRANCH }}-${{ env.TARGET_NAME }}.Linux-x86_64.${archive_ext}"
           echo "Downloading from: $RELEASE"
-          wget --progress=dot:giga "$RELEASE"
-
+          
+          for i in {1..3}; do
+            if wget --progress=dot:giga "$RELEASE"; then
+              break
+            fi
+            echo "Download attempt $i failed. Retrying..."
+            sleep 5
+          done
+          
           # Extract archive
           case "${archive_ext}" in
             tar.xz)
@@ -203,60 +207,71 @@ jobs:
               tar --use-compress-program=unzstd -xf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.zst
               ;;
           esac
-
+          
           # Setup working directory
           mv *-imagebuilder-* ${{ env.WORKING_DIR }}
           cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
-
-          echo "Image builder prepared successfully"
+          
+          echo "::endgroup::"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Download External Packages
         id: packages
         if: steps.download.outputs.status == 'success'
         run: |
+          echo "::group::Downloading external packages"
           cd ${{ env.WORKING_DIR }}
+          
+          # Download packages with logging
           chmod +x scripts/PACKAGES.sh
-          ./scripts/PACKAGES.sh
-
+          ./scripts/PACKAGES.sh 2>&1 | tee ${{ env.BUILD_LOG_PATH }}/packages.log
+          
+          # Verify downloads
           PACKAGE_COUNT=$(find packages -type f -name "*.ipk" | wc -l)
           echo "Downloaded $PACKAGE_COUNT external packages"
+          
+          if [ $PACKAGE_COUNT -eq 0 ]; then
+            echo "Error: No packages were downloaded"
+            exit 1
+          fi
+          
+          echo "::endgroup::"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Apply Patches and Customizations
         id: customize
         if: steps.packages.outputs.status == 'success'
         run: |
+          echo "::group::Applying patches and customizations"
           cd ${{ env.WORKING_DIR }}
-
+          
           # Apply patches
           chmod +x scripts/PATCH.sh
-          ./scripts/PATCH.sh
-
+          ./scripts/PATCH.sh 2>&1 | tee ${{ env.BUILD_LOG_PATH }}/patch.log
+          
           # Apply miscellaneous changes
           chmod +x scripts/MISC.sh
-          ./scripts/MISC.sh
-
+          ./scripts/MISC.sh 2>&1 | tee ${{ env.BUILD_LOG_PATH }}/misc.log
+          
           # Configure tunnel apps
           chmod +x scripts/TUNNEL.sh
-          if [[ "${{ env.TUNNEL }}" == "all" ]]; then
-            ./scripts/TUNNEL.sh openclash-passwall-nikki
-          elif [[ "${{ env.TUNNEL }}" =~ ^(openclash|passwall|nikki|openclash-passwall|nikki-passwall|nikki-openclash|openclash-passwall-nikki)$ ]]; then
-            ./scripts/TUNNEL.sh "${{ env.TUNNEL }}"
-          fi
-
-          echo "Customizations applied successfully"
+          ./scripts/TUNNEL.sh ${{ matrix.tunnel }} 2>&1 | tee ${{ env.BUILD_LOG_PATH }}/tunnel.log
+          
+          echo "Available disk space:"
           df -hT ${PWD}
+          
+          echo "::endgroup::"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Build Firmware Images
         id: build
         if: steps.customize.outputs.status == 'success'
         run: |
+          echo "::group::Building firmware"
           cd ${{ env.WORKING_DIR }}
           mkdir -p compiled_images
           chmod +x make-image.sh
-
+          
           build_image() {
             local tunnel=$1
             echo "Building with VPN Client: $tunnel"
@@ -266,38 +281,63 @@ jobs:
               make clean
             fi
             
-            # Build image
-            time ./make-image.sh ${{ env.PROFILE }} $tunnel
+            # Build image with logging
+            time ./make-image.sh ${{ env.PROFILE }} $tunnel 2>&1 | tee ${{ env.BUILD_LOG_PATH }}/build_${tunnel}.log
             
-            # Move and rename output files
+            # Process output files
             for file in bin/targets/"${{ env.TARGET_SYSTEM }}"/*.img.gz; do
               if [ -f "$file" ]; then
-                new_name="RTA-WRT_$(basename "$file" .img.gz)_${tunnel}.img.gz"
+                new_name="RTA-WRT_$(basename "$file" .img.gz)_${tunnel}_${{ env.DATE }}.img.gz"
                 mv "$file" compiled_images/$new_name
+                echo "Created: $new_name"
+                
+                # Generate SHA256 checksum
+                sha256sum "compiled_images/$new_name" > "compiled_images/$new_name.sha256"
               fi
             done
           }
-
-          if [[ "${{ env.TUNNEL }}" == "all" ]]; then
-            for tunnel in openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki no-tunnel; do
-              build_image $tunnel
-            done
-          else
-            build_image ${{ env.TUNNEL }}
+          
+          build_image ${{ matrix.tunnel }}
+          
+          # Verify build results
+          if [ ! "$(ls -A compiled_images/)" ]; then
+            echo "Error: No firmware images were generated"
+            exit 1
           fi
-
-          echo "Images built successfully:"
+          
+          echo "Build completed. Generated images:"
           ls -la compiled_images/
+          
+          echo "::endgroup::"
           echo "status=success" >> $GITHUB_OUTPUT
 
+      - name: Upload Build Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ matrix.target }}-${{ matrix.tunnel }}
+          path: ${{ env.BUILD_LOG_PATH }}
+          retention-days: 7
+
       - name: Create Release
-        if: steps.modsdcard.outputs.status == 'success'
+        if: steps.build.outputs.status == 'success'
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "rtawrt-${{ env.BRANCH }}"
-          name: RTA-WRT-Amlogic-${{ env.BRANCH }}-${{ env.TUNNEL }}-${{ env.DATE }}
-          files: ${{ env.WORKING_DIR }}/compiled_images/*.gz
+          tag_name: "rtawrt-${{ env.BRANCH }}-${{ env.DATE }}"
+          name: RTA-WRT-${{ env.BRANCH }}-${{ env.DATE }}
+          files: |
+            ${{ env.WORKING_DIR }}/compiled_images/*.img.gz
+            ${{ env.WORKING_DIR }}/compiled_images/*.sha256
+          body: |
+            ## RTA-WRT Firmware Release
+            - **Branch:** ${{ env.BRANCH }}
+            - **Build Date:** ${{ env.DATE }}
+            
+            ### SHA256 Checksums
+            ```
+            $(cat ${{ env.WORKING_DIR }}/compiled_images/*.sha256)
+            ```
           prerelease: true
           generate_release_notes: true
