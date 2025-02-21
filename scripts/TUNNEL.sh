@@ -74,6 +74,9 @@ case "$1" in
         setup_passwall
         setup_nikki
         ;;
+    no-tunnel)
+        log "info" "Use No Tunnel"
+        ;;
     *)
         echo "Invalid option. Usage: $0 {openclash|passwall|nikki|openclash-passwall|nikki-passwall|nikki-openclash|openclash-passwall-nikki}"
         exit 1
