@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. ./scripts/INCLUDE.sh
+
 # Exit on error
 set -e
 

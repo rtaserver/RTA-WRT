@@ -9,6 +9,7 @@
 - Remove obsolete AdGuardHome configuration files and scripts
 - Refactor package list in imagebuilder.sh to enhance readability and include additional modem and USB LAN drivers
 - Remove obsolete GPIO handling scripts and related service files
+- Include script dependencies in make-image.sh for improved modularity
 
 **Changelog Firmware** (13-02-2025)
 
