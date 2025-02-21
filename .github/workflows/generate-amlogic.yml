@@ -58,7 +58,6 @@ on:
         type: boolean
 
 env:
-  TYPE: AMLOGIC
   TARGET: ${{ inputs.target }}
   RELEASE_BRANCH: ${{ inputs.release_branch }}
   TUNNEL: ${{ inputs.tunnel }}
@@ -97,6 +96,8 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
+          TYPE="AMLOGIC"
+          echo "TYPE=$TYPE" >> $GITHUB_ENV
           if [ "$TARGET" == "all" ]; then
           docker rmi $(docker images -q) 2>/dev/null
           [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
