@@ -194,7 +194,7 @@ jobs:
               s912
               s912-h96pro-plus
               s912-x92
-              EOF
+          EOF
               )
               echo "openwrt_board=$openwrt_board" >> $GITHUB_ENV
               ;;
