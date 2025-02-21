@@ -382,5 +382,5 @@ jobs:
             [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt) [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/backup_rtawrt) [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/RizkiKotet)
 
             ## 📝 Changelog Firmware
-            ${{ needs.prebuild.outputs.changelog }}
+            [**Changelog Firmware**](https://github.com/rizkikotet-dev/RTA-WRT/blob/main/CHANGELOG.md "**Changelog Firmware**")
           generate_release_notes: true
