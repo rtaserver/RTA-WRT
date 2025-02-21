@@ -1,6 +1,6 @@
 # What's New!
 
-**Changelog Firmware** (18-02-2025)
+**Changelog Firmware** (21-02-2025)
 
 - Remove Theme Material 3
 - Add currentFitur to header template and adjust package list in imagebuilder

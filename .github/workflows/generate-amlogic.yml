@@ -145,6 +145,16 @@ jobs:
           path: origin
           fetch-depth: 1
 
+      - name: Add changelog Firmware
+        id: changelog
+        shell: bash
+        run: |
+          chfr=$(awk '/^\*\*Changelog Firmware\*\*/ {if(found) exit; found=1} found' ${PWD}/CHANGELOG.md)
+          chfr="${chfr//'%'/'%25'}"
+          chfr="${chfr//$'\n'/'%0A'}"
+          chfr="${chfr//$'\r'/'%0D'}"  
+          echo "changelog=$chfr" >> $GITHUB_OUTPUT
+
       - name: Setup Build Variables
         id: variables
         run: |
@@ -358,8 +368,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "rtawrt-amlogic-${{ env.BRANCH }}"
-          name: RTA-WRT-Amlogic-${{ env.BRANCH }}-${{ env.TUNNEL }}-${{ env.DATE }}
+          tag_name: "rtawrt-amlogic-${{ env.BRANCH }}-${{ env.DATE }}"
+          name: RTA-WRT-Amlogic-${{ env.BRANCH }}-${{ env.DATE }}
           files: ${{ env.WORKING_DIR }}/compiled_images/*.gz
-          prerelease: true
+          prerelease: ${{ github.ref_name == 'dev' }}
+          body: |
+            # 🚀 RTA-WRT - Release Information
+
+            ## 📥 Download Statistics
+            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/rtawrt-amlogic-${{ env.BRANCH }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+
+            ## 📢 Support Channels
+            [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt) [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/backup_rtawrt) [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/RizkiKotet)
+
+            ## NOTES
+            `Amlogic s905x Support Mod SDCard`
+
+            ## 📝 Changelog Firmware
+            ${{ steps.changelog.outputs.changelog }}
           generate_release_notes: true
