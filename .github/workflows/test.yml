@@ -130,6 +130,8 @@ jobs:
       - name: Setup Build Variables
         id: variables
         run: |
+          TYPE="NON-AMLOGIC"
+          echo "TYPE=$TYPE" >> $GITHUB_ENV
           MATRIXTARGET="${{ matrix.target }}"
           echo "MATRIXTARGET=$MATRIXTARGET" >> $GITHUB_ENV
           MATRIXTUNNEL="${{ matrix.tunnel }}"
