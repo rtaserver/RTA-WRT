@@ -7,7 +7,7 @@ on:
         description: "Select the release branch:"
         required: true
         default: "openwrt:24.10.0"
-        type: select
+        type: choice
         options:
           - openwrt:24.10.0
           - openwrt:23.05.5
@@ -17,7 +17,7 @@ on:
         description: "Select device board"
         required: false
         default: "all"
-        type: select
+        type: choice
         options:
           - all
           - Raspberry Pi 3B
@@ -29,7 +29,7 @@ on:
         description: "Select VPN Client app:"
         required: true
         default: "openclash"
-        type: select
+        type: choice
         options:
           - all
           - openclash
