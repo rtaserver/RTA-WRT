@@ -7,7 +7,7 @@ on:
         description: "Select the release branch:"
         required: true
         default: "openwrt:24.10.0"
-        type: choice
+        type: select
         options:
           - openwrt:24.10.0
           - openwrt:23.05.5
@@ -17,7 +17,7 @@ on:
         description: "Select device board"
         required: false
         default: "all"
-        type: choice
+        type: select
         options:
           - all
           - Raspberry Pi 3B
@@ -29,7 +29,7 @@ on:
         description: "Select VPN Client app:"
         required: true
         default: "openclash"
-        type: choice
+        type: select
         options:
           - all
           - openclash
@@ -68,18 +68,18 @@ jobs:
         run: |
           echo "Selected target option: [ $TARGET ]"
           if [ "${{ inputs.target }}" == "all" ]; then
-             echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','x86-64']" >> $GITHUB_OUTPUT
+             echo "target=[\"Raspberry Pi 3B\",\"Raspberry Pi 4B\",\"x86-64\"]" >> $GITHUB_OUTPUT
           else
-             echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
+             echo "target=[\"${{ inputs.target }}\"]" >> $GITHUB_OUTPUT
           fi
 
       - name: Checking Tunnel Option
         run: |
           echo "Selected tunnel option: [ $TUNNEL ]"
           if [ "${{ inputs.tunnel }}" == "all" ]; then
-             echo "tunnel=['openclash','passwall','nikki','openclash-passwall','nikki-passwall','nikki-openclash','openclash-passwall-nikki','no-tunnel']" >> $GITHUB_OUTPUT
+             echo "tunnel=[\"openclash\",\"passwall\",\"nikki\",\"openclash-passwall\",\"nikki-passwall\",\"nikki-openclash\",\"openclash-passwall-nikki\",\"no-tunnel\"]" >> $GITHUB_OUTPUT
           else
-             echo "tunnel=['${{ inputs.tunnel }}']" >> $GITHUB_OUTPUT
+             echo "tunnel=[\"${{ inputs.tunnel }}\"]" >> $GITHUB_OUTPUT
           fi
 
   build-firmware:
@@ -98,27 +98,27 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          if [ "$TARGET" == "all" ]; then
-          docker rmi $(docker images -q) 2>/dev/null
-          [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
-          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
-          sudo swapoff -a
-          sudo rm -f /swapfile /mnt/swapfile
+          if [ "${{ env.TARGET }}" == "all" ]; then
+            docker rmi $(docker images -q) 2>/dev/null
+            [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
+            sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
+            sudo swapoff -a
+            sudo rm -f /swapfile /mnt/swapfile
           fi
           sudo -E apt-get -y update
-          if [ "$TARGET" == "all" ]; then
-          sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+          if [ "${{ env.TARGET }}" == "all" ]; then
+            sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
           fi
           sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
-          if [ "$TARGET" == "all" ]; then
-          sudo -E systemctl daemon-reload
-          sudo -E apt-get -y autoremove --purge
-          sudo -E apt-get clean
-          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
-          sudo rm -rf ~/{.cargo,.dotnet,.rustup}
+          if [ "${{ env.TARGET }}" == "all" ]; then
+            sudo -E systemctl daemon-reload
+            sudo -E apt-get -y autoremove --purge
+            sudo -E apt-get clean
+            sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
+            sudo rm -rf ~/{.cargo,.dotnet,.rustup}
           fi
-          sudo timedatectl set-timezone "${TZ}"
-          echo "status=success" >> ${GITHUB_OUTPUT}
+          sudo timedatectl set-timezone "${{ env.TZ }}"
+          echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -138,7 +138,6 @@ jobs:
             echo "PROFILE=rpi-3" >> $GITHUB_ENV
             echo "TARGET_SYSTEM=bcm27xx/bcm2710" >> $GITHUB_ENV
             echo "TARGET_NAME=bcm27xx-bcm2710" >> $GITHUB_ENV
-            TARGET_NAME="bcm27xx-bcm2710"
             echo "ARCH_1=armv7" >> $GITHUB_ENV
             echo "ARCH_2=aarch64" >> $GITHUB_ENV
             echo "ARCH_3=aarch64_cortex-a53" >> $GITHUB_ENV
@@ -146,7 +145,6 @@ jobs:
             echo "PROFILE=rpi-4" >> $GITHUB_ENV
             echo "TARGET_SYSTEM=bcm27xx/bcm2711" >> $GITHUB_ENV
             echo "TARGET_NAME=bcm27xx-bcm2711" >> $GITHUB_ENV
-            TARGET_NAME="bcm27xx-bcm2711"
             echo "ARCH_1=arm64" >> $GITHUB_ENV
             echo "ARCH_2=aarch64" >> $GITHUB_ENV
             echo "ARCH_3=aarch64_cortex-a72" >> $GITHUB_ENV
@@ -154,7 +152,6 @@ jobs:
             echo "PROFILE=friendlyarm_nanopi-r2s" >> $GITHUB_ENV
             echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
             echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
-            TARGET_NAME="rockchip-armv8"
             echo "ARCH_1=armv8" >> $GITHUB_ENV
             echo "ARCH_2=aarch64" >> $GITHUB_ENV
             echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
@@ -162,7 +159,6 @@ jobs:
             echo "PROFILE=friendlyarm_nanopi-r5s" >> $GITHUB_ENV
             echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
             echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
-            TARGET_NAME="rockchip-armv8"
             echo "ARCH_1=armv8" >> $GITHUB_ENV
             echo "ARCH_2=aarch64" >> $GITHUB_ENV
             echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
@@ -170,7 +166,6 @@ jobs:
             echo "PROFILE=generic" >> $GITHUB_ENV
             echo "TARGET_SYSTEM=x86/64" >> $GITHUB_ENV
             echo "TARGET_NAME=x86-64" >> $GITHUB_ENV
-            TARGET_NAME="x86-64"
             echo "ARCH_1=amd64" >> $GITHUB_ENV
             echo "ARCH_2=x86_64" >> $GITHUB_ENV
             echo "ARCH_3=x86_64" >> $GITHUB_ENV
@@ -294,7 +289,7 @@ jobs:
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        if: steps.modsdcard.outputs.status == 'success'
+        if: steps.build.outputs.status == 'success'
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
