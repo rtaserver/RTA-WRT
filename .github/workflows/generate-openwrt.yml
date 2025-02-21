@@ -150,9 +150,9 @@ jobs:
           fi
 
           # Escape special characters
-          chfr="${chfr//'%'/'%25'}"
-          chfr="${chfr//$'\n'/'%0A'}"
-          chfr="${chfr//$'\r'/'%0D'}"
+          # chfr="${chfr//'%'/'%25'}"
+          # chfr="${chfr//$'\n'/'%0A'}"
+          # chfr="${chfr//$'\r'/'%0D'}"
 
           echo "changelog=$chfr" >> $GITHUB_OUTPUT
 
