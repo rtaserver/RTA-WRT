@@ -11,6 +11,7 @@ make info
 # Main configuration name
 PROFILE=""
 PACKAGES=""
+DISABLED_SERVICES=""
 
 # Base packages
 PACKAGES+=" -dnsmasq dnsmasq-full cgi-io libiwinfo libiwinfo-data libiwinfo-lua liblua \
@@ -137,12 +138,12 @@ build_firmware() {
     FILES="files"
     
     log "INFO" "Building image..."
-    make image PROFILE="$profile" PACKAGES="$PACKAGES $EXCLUDED" FILES="$FILES" DISABLED_SERVICES="$DISABLED_SERVICES" 2>&1 | tee -a "$BUILD_LOG"
+    make image PROFILE="$profile" PACKAGES="$PACKAGES $EXCLUDED" FILES="$FILES" DISABLED_SERVICES="$DISABLED_SERVICES" 2>&1
     
     if [ ${PIPESTATUS[0]} -eq 0 ]; then
         log "INFO" "Build completed successfully!"
     else
-        log "ERROR" "Build failed. Check $BUILD_LOG for details."
+        log "ERROR" "Build failed. Check log for details."
     fi
 }
 
