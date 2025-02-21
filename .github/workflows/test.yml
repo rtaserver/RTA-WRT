@@ -284,14 +284,6 @@ jobs:
           ls -la compiled_images/
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Upload Firmware Artifacts
-        uses: actions/upload-artifact@v3
-        if: steps.build.outputs.status == 'success'
-        with:
-          name: firmware-${{ matrix.target }}-${{ matrix.tunnel }}
-          path: ${{ env.WORKING_DIR }}/compiled_images/*.gz
-          retention-days: 7
-
       - name: Create Release
         if: steps.build.outputs.status == 'success'
         uses: softprops/action-gh-release@v2
