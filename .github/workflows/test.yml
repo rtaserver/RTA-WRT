@@ -68,57 +68,58 @@ jobs:
         run: |
           echo "Selected target option: [ $TARGET ]"
           if [ "${{ inputs.target }}" == "all" ]; then
-             echo "target=[\"Raspberry Pi 3B\",\"Raspberry Pi 4B\",\"x86-64\"]" >> $GITHUB_OUTPUT
+             echo "target=['Raspberry Pi 3B','Raspberry Pi 4B','x86-64']" >> $GITHUB_OUTPUT
           else
-             echo "target=[\"${{ inputs.target }}\"]" >> $GITHUB_OUTPUT
+             echo "target=['${{ inputs.target }}']" >> $GITHUB_OUTPUT
           fi
 
-      - name: Checking Tunnel Option
-        run: |
           echo "Selected tunnel option: [ $TUNNEL ]"
           if [ "${{ inputs.tunnel }}" == "all" ]; then
-             echo "tunnel=[\"openclash\",\"passwall\",\"nikki\",\"openclash-passwall\",\"nikki-passwall\",\"nikki-openclash\",\"openclash-passwall-nikki\",\"no-tunnel\"]" >> $GITHUB_OUTPUT
+             echo "tunnel=['openclash','passwall','nikki','openclash-passwall','nikki-passwall','nikki-openclash','openclash-passwall-nikki','no-tunnel']" >> $GITHUB_OUTPUT
           else
-             echo "tunnel=[\"${{ inputs.tunnel }}\"]" >> $GITHUB_OUTPUT
+             echo "tunnel=['${{ inputs.tunnel }}']" >> $GITHUB_OUTPUT
           fi
 
   build-firmware:
-    name: "Build ${{ matrix.target }} ${{ matrix.tunnel }}"
+    name: Build ${{ matrix.target }}-${{ matrix.tunnel }}
     needs: prebuild
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        target: ${{fromJSON(needs.prebuild.outputs.target)}}
-        tunnel: ${{fromJSON(needs.prebuild.outputs.tunnel)}}
+        target: ${{ fromJSON(needs.prebuild.outputs.target) }}
+        tunnel: ${{ fromJSON(needs.prebuild.outputs.tunnel) }}
 
     steps:
       - name: Initialization environment
         id: init
-        env:
-          DEBIAN_FRONTEND: noninteractive
         run: |
-          if [ "${{ env.TARGET }}" == "all" ]; then
+          if [ "$TARGET" == "all" ]; then
             docker rmi $(docker images -q) 2>/dev/null
             [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
             sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
             sudo swapoff -a
             sudo rm -f /swapfile /mnt/swapfile
           fi
+          
           sudo -E apt-get -y update
-          if [ "${{ env.TARGET }}" == "all" ]; then
+          if [ "$TARGET" == "all" ]; then
             sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
           fi
+          
+          # Install build dependencies
           sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
-          if [ "${{ env.TARGET }}" == "all" ]; then
+          
+          if [ "$TARGET" == "all" ]; then
             sudo -E systemctl daemon-reload
             sudo -E apt-get -y autoremove --purge
             sudo -E apt-get clean
             sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
             sudo rm -rf ~/{.cargo,.dotnet,.rustup}
           fi
-          sudo timedatectl set-timezone "${{ env.TZ }}"
-          echo "status=success" >> $GITHUB_OUTPUT
+          
+          sudo timedatectl set-timezone "${TZ}"
+          echo "status=success" >> ${GITHUB_OUTPUT}
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -134,42 +135,49 @@ jobs:
           MATRIXTUNNEL="${{ matrix.tunnel }}"
           echo "MATRIXTUNNEL=$MATRIXTUNNEL" >> $GITHUB_ENV
 
-          if [ "$MATRIXTARGET" == "Raspberry Pi 3B" ]; then
-            echo "PROFILE=rpi-3" >> $GITHUB_ENV
-            echo "TARGET_SYSTEM=bcm27xx/bcm2710" >> $GITHUB_ENV
-            echo "TARGET_NAME=bcm27xx-bcm2710" >> $GITHUB_ENV
-            echo "ARCH_1=armv7" >> $GITHUB_ENV
-            echo "ARCH_2=aarch64" >> $GITHUB_ENV
-            echo "ARCH_3=aarch64_cortex-a53" >> $GITHUB_ENV
-          elif [ "$MATRIXTARGET" == "Raspberry Pi 4B" ]; then
-            echo "PROFILE=rpi-4" >> $GITHUB_ENV
-            echo "TARGET_SYSTEM=bcm27xx/bcm2711" >> $GITHUB_ENV
-            echo "TARGET_NAME=bcm27xx-bcm2711" >> $GITHUB_ENV
-            echo "ARCH_1=arm64" >> $GITHUB_ENV
-            echo "ARCH_2=aarch64" >> $GITHUB_ENV
-            echo "ARCH_3=aarch64_cortex-a72" >> $GITHUB_ENV
-          elif [ "$MATRIXTARGET" == "NanoPi-R2S" ]; then
-            echo "PROFILE=friendlyarm_nanopi-r2s" >> $GITHUB_ENV
-            echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
-            echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
-            echo "ARCH_1=armv8" >> $GITHUB_ENV
-            echo "ARCH_2=aarch64" >> $GITHUB_ENV
-            echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
-          elif [ "$MATRIXTARGET" == "NanoPi-R5S" ]; then
-            echo "PROFILE=friendlyarm_nanopi-r5s" >> $GITHUB_ENV
-            echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
-            echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
-            echo "ARCH_1=armv8" >> $GITHUB_ENV
-            echo "ARCH_2=aarch64" >> $GITHUB_ENV
-            echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
-          elif [ "$MATRIXTARGET" == "x86-64" ]; then
-            echo "PROFILE=generic" >> $GITHUB_ENV
-            echo "TARGET_SYSTEM=x86/64" >> $GITHUB_ENV
-            echo "TARGET_NAME=x86-64" >> $GITHUB_ENV
-            echo "ARCH_1=amd64" >> $GITHUB_ENV
-            echo "ARCH_2=x86_64" >> $GITHUB_ENV
-            echo "ARCH_3=x86_64" >> $GITHUB_ENV
-          fi
+          # Target system configurations
+          case "$MATRIXTARGET" in
+            "Raspberry Pi 3B")
+              echo "PROFILE=rpi-3" >> $GITHUB_ENV
+              echo "TARGET_SYSTEM=bcm27xx/bcm2710" >> $GITHUB_ENV
+              echo "TARGET_NAME=bcm27xx-bcm2710" >> $GITHUB_ENV
+              echo "ARCH_1=armv7" >> $GITHUB_ENV
+              echo "ARCH_2=aarch64" >> $GITHUB_ENV
+              echo "ARCH_3=aarch64_cortex-a53" >> $GITHUB_ENV
+              ;;
+            "Raspberry Pi 4B")
+              echo "PROFILE=rpi-4" >> $GITHUB_ENV
+              echo "TARGET_SYSTEM=bcm27xx/bcm2711" >> $GITHUB_ENV
+              echo "TARGET_NAME=bcm27xx-bcm2711" >> $GITHUB_ENV
+              echo "ARCH_1=arm64" >> $GITHUB_ENV
+              echo "ARCH_2=aarch64" >> $GITHUB_ENV
+              echo "ARCH_3=aarch64_cortex-a72" >> $GITHUB_ENV
+              ;;
+            "NanoPi-R2S")
+              echo "PROFILE=friendlyarm_nanopi-r2s" >> $GITHUB_ENV
+              echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
+              echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
+              echo "ARCH_1=armv8" >> $GITHUB_ENV
+              echo "ARCH_2=aarch64" >> $GITHUB_ENV
+              echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
+              ;;
+            "NanoPi-R5S")
+              echo "PROFILE=friendlyarm_nanopi-r5s" >> $GITHUB_ENV
+              echo "TARGET_SYSTEM=rockchip/armv8" >> $GITHUB_ENV
+              echo "TARGET_NAME=rockchip-armv8" >> $GITHUB_ENV
+              echo "ARCH_1=armv8" >> $GITHUB_ENV
+              echo "ARCH_2=aarch64" >> $GITHUB_ENV
+              echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
+              ;;
+            "x86-64")
+              echo "PROFILE=generic" >> $GITHUB_ENV
+              echo "TARGET_SYSTEM=x86/64" >> $GITHUB_ENV
+              echo "TARGET_NAME=x86-64" >> $GITHUB_ENV
+              echo "ARCH_1=amd64" >> $GITHUB_ENV
+              echo "ARCH_2=x86_64" >> $GITHUB_ENV
+              echo "ARCH_3=x86_64" >> $GITHUB_ENV
+              ;;
+          esac
 
           # Set base distribution info
           BASE="${RELEASE_BRANCH%:*}"
@@ -186,14 +194,13 @@ jobs:
           echo "DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')" >> $GITHUB_ENV
           echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
 
-          echo "Build variables configured successfully"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Download and Prepare Image Builder
         id: download
         if: steps.variables.outputs.status == 'success'
         run: |
-          # Determine archive extension
+          # Determine archive extension based on version
           CURVER=$(echo "${{ env.BRANCH }}" | cut -d'.' -f1)
           archive_ext=$([ "${CURVER}" == "24" ] && echo "tar.zst" || echo "tar.xz")
 
@@ -202,7 +209,7 @@ jobs:
           echo "Downloading from: $RELEASE"
           wget --progress=dot:giga "$RELEASE"
 
-          # Extract archive
+          # Extract archive based on extension
           case "${archive_ext}" in
             tar.xz)
               tar -xJf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.xz
@@ -216,7 +223,6 @@ jobs:
           mv *-imagebuilder-* ${{ env.WORKING_DIR }}
           cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
 
-          echo "Image builder prepared successfully"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Download External Packages
@@ -227,8 +233,6 @@ jobs:
           chmod +x scripts/PACKAGES.sh
           ./scripts/PACKAGES.sh
 
-          PACKAGE_COUNT=$(find packages -type f -name "*.ipk" | wc -l)
-          echo "Downloaded $PACKAGE_COUNT external packages"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Apply Patches and Customizations
@@ -249,7 +253,6 @@ jobs:
           chmod +x scripts/TUNNEL.sh
           ./scripts/TUNNEL.sh $MATRIXTUNNEL
 
-          echo "Customizations applied successfully"
           df -hT ${PWD}
           echo "status=success" >> $GITHUB_OUTPUT
 
@@ -261,32 +264,33 @@ jobs:
           mkdir -p compiled_images
           chmod +x make-image.sh
 
-          build_image() {
-            local tunnel=$1
-            echo "Building with VPN Client: $tunnel"
+          # Clean if requested
+          if [ "${{ env.CLEAN }}" == "true" ]; then
+            make clean
+          fi
             
-            # Clean if requested
-            if [ "${{ env.CLEAN }}" == "true" ]; then
-              make clean
+          # Build image
+          time ./make-image.sh ${{ env.PROFILE }} $MATRIXTUNNEL
+            
+          # Move and rename output files
+          for file in bin/targets/"${{ env.TARGET_SYSTEM }}"/*.img.gz; do
+            if [ -f "$file" ]; then
+              new_name="RTA-WRT_$(basename "$file" .img.gz)_${MATRIXTUNNEL}.img.gz"
+              mv "$file" compiled_images/$new_name
             fi
-            
-            # Build image
-            time ./make-image.sh ${{ env.PROFILE }} $tunnel
-            
-            # Move and rename output files
-            for file in bin/targets/"${{ env.TARGET_SYSTEM }}"/*.img.gz; do
-              if [ -f "$file" ]; then
-                new_name="RTA-WRT_$(basename "$file" .img.gz)_${tunnel}.img.gz"
-                mv "$file" compiled_images/$new_name
-              fi
-            done
-          }
-
-          build_image $MATRIXTUNNEL
+          done
 
           echo "Images built successfully:"
           ls -la compiled_images/
           echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Upload Firmware Artifacts
+        uses: actions/upload-artifact@v3
+        if: steps.build.outputs.status == 'success'
+        with:
+          name: firmware-${{ matrix.target }}-${{ matrix.tunnel }}
+          path: ${{ env.WORKING_DIR }}/compiled_images/*.gz
+          retention-days: 7
 
       - name: Create Release
         if: steps.build.outputs.status == 'success'
