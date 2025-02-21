@@ -15,7 +15,7 @@ on:
           - immortalwrt:23.05.4
       target:
         description: "Select device board"
-        required: false
+        required: true
         default: "all"
         type: choice
         options:
@@ -48,7 +48,7 @@ on:
           - s912-x92
       openwrt_kernel:
         description: "Select kernel version"
-        required: false
+        required: true
         default: "5.15.y_6.6.y"
         type: choice
         options:
@@ -62,7 +62,7 @@ on:
       tunnel:
         description: "Select VPN Client app:"
         required: true
-        default: "openclash"
+        default: "openclash-passwall-nikki"
         type: choice
         options:
           - all
@@ -76,7 +76,7 @@ on:
           - no-tunnel
       clean:
         description: "Do 'make clean' for each run"
-        required: false
+        required: true
         default: "true"
         type: boolean
 

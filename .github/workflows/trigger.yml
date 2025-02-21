@@ -1,0 +1,162 @@
+name: Trigger Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_branch:
+        description: "Select the release branch:"
+        required: true
+        default: "openwrt:24.10.0"
+        type: choice
+        options:
+          - openwrt:24.10.0
+          - openwrt:23.05.5
+          - immortalwrt:24.10.0
+          - immortalwrt:23.05.4
+jobs:
+  trigger-and-wait:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Amlogic OpenClash
+        uses: dragoscops/workflow-trigger-wait@v3
+        with:
+          credentials: |
+            {
+              "token": "${{ secrets.GITHUB_TOKEN }}"
+            }
+          repo: "rizkikotet-dev/RTA-WRT"
+          workflow_id: "generate-amlogic.yml"
+          ref: "main"
+          action: "trigger-and-wait"
+          inputs: |
+            {
+              "release_branch": "${{ inputs.release_branch }}",
+              "target": "all",
+              "tunnel": "openclash"
+            }
+
+      - name: Trigger Amlogic Passwall
+        uses: dragoscops/workflow-trigger-wait@v3
+        with:
+          credentials: |
+            {
+              "token": "${{ secrets.GITHUB_TOKEN }}"
+            }
+          repo: "rizkikotet-dev/RTA-WRT"
+          workflow_id: "generate-amlogic.yml"
+          ref: "main"
+          action: "trigger-and-wait"
+          inputs: |
+            {
+              "release_branch": "${{ inputs.release_branch }}",
+              "target": "all",
+              "tunnel": "passwall"
+            }
+
+      - name: Trigger Amlogic Nikki
+        uses: dragoscops/workflow-trigger-wait@v3
+        with:
+          credentials: |
+            {
+              "token": "${{ secrets.GITHUB_TOKEN }}"
+            }
+          repo: "rizkikotet-dev/RTA-WRT"
+          workflow_id: "generate-amlogic.yml"
+          ref: "main"
+          action: "trigger-and-wait"
+          inputs: |
+            {
+              "release_branch": "${{ inputs.release_branch }}",
+              "target": "all",
+              "tunnel": "nikki"
+            }
+
+      - name: Trigger Amlogic OpenClash Passwall
+        uses: dragoscops/workflow-trigger-wait@v3
+        with:
+          credentials: |
+            {
+              "token": "${{ secrets.GITHUB_TOKEN }}"
+            }
+          repo: "rizkikotet-dev/RTA-WRT"
+          workflow_id: "generate-amlogic.yml"
+          ref: "main"
+          action: "trigger-and-wait"
+          inputs: |
+            {
+              "release_branch": "${{ inputs.release_branch }}",
+              "target": "all",
+              "tunnel": "openclash-passwall"
+            }
+
+      - name: Trigger Amlogic Nikki Passwall
+        uses: dragoscops/workflow-trigger-wait@v3
+        with:
+          credentials: |
+            {
+              "token": "${{ secrets.GITHUB_TOKEN }}"
+            }
+          repo: "rizkikotet-dev/RTA-WRT"
+          workflow_id: "generate-amlogic.yml"
+          ref: "main"
+          action: "trigger-and-wait"
+          inputs: |
+            {
+              "release_branch": "${{ inputs.release_branch }}",
+              "target": "all",
+              "tunnel": "nikki-passwall"
+            }
+
+      - name: Trigger Amlogic Nikki OpenClash
+        uses: dragoscops/workflow-trigger-wait@v3
+        with:
+          credentials: |
+            {
+              "token": "${{ secrets.GITHUB_TOKEN }}"
+            }
+          repo: "rizkikotet-dev/RTA-WRT"
+          workflow_id: "generate-amlogic.yml"
+          ref: "main"
+          action: "trigger-and-wait"
+          inputs: |
+            {
+              "release_branch": "${{ inputs.release_branch }}",
+              "target": "all",
+              "tunnel": "nikki-openclash"
+            }
+
+      - name: Trigger Amlogic All Tunnel
+        uses: dragoscops/workflow-trigger-wait@v3
+        with:
+          credentials: |
+            {
+              "token": "${{ secrets.GITHUB_TOKEN }}"
+            }
+          repo: "rizkikotet-dev/RTA-WRT"
+          workflow_id: "generate-amlogic.yml"
+          ref: "main"
+          action: "trigger-and-wait"
+          inputs: |
+            {
+              "release_branch": "${{ inputs.release_branch }}",
+              "target": "all",
+              "tunnel": "openclash-passwall-nikki"
+            }
+
+      - name: Trigger Amlogic No Tunnel
+        uses: dragoscops/workflow-trigger-wait@v3
+        with:
+          credentials: |
+            {
+              "token": "${{ secrets.GITHUB_TOKEN }}"
+            }
+          repo: "rizkikotet-dev/RTA-WRT"
+          workflow_id: "generate-amlogic.yml"
+          ref: "main"
+          action: "trigger-and-wait"
+          inputs: |
+            {
+              "release_branch": "${{ inputs.release_branch }}",
+              "target": "all",
+              "tunnel": "no-tunnel"
+            }
