@@ -153,261 +153,183 @@
 
 <script>
 
-// ====== Global Functions ======
-function enqueueAlert(alertConfig) {
-    AlertSystem.enqueueAlert(alertConfig);
-}
-
-function showProfile() {
-    enqueueAlert({
-        width: 400,
-        title: "About Me!",
-        text: "Halo! Saya Rizki Kotet, seorang programmer pemula yang belajar C# dan PHP. Saya memiliki pemahaman dasar tentang front-end dan back-end. Saat ini, saya sedang mengerjakan proyek Custom OpenWrt dan ImmortalWrt. Saya selalu bersemangat untuk belajar hal baru di dunia teknologi!",
-        imageUrl: "{{ resource }}/Profile.jpeg",
-        imageWidth: 200,
-        imageHeight: 200,
-        imageAlt: "Profile",
-        allowOutsideClick: false,
-        footer: `
-            <p style="text-align: center;">
-                <a href="https://t.me/rtawrt"><img alt="Channel" src="{{ resource }}/Channel.svg" width="110" height="30"></a>
-                <a href="https://t.me/backup_rtawrt"><img alt="Group" src="{{ resource }}/Group.svg" width="110" height="30"></a>
-                <a href="https://t.me/RizkiKotet"><img alt="Personal" src="{{ resource }}/Personal.svg" width="110" height="30"></a>
-            </p>
-        `
-    });
-}
-
-// ====== Constants ======
+// ====== Global Configuration ======
 const CONFIG = {
     APP: {
         name: 'RTA-WRT',
-        checkInterval: 5 * 60 * 1000, // 5 minutes
-        offlineRetryInterval: 30 * 1000, // 30 seconds
+        checkInterval: 15 * 60 * 1000, // Increased to 15 minutes
+        offlineRetryInterval: 60 * 1000, // Increased to 1 minute
         maxRetryAttempts: 3,
-        cacheExpiration: 24 * 60 * 60 * 1000, // 24 hours
+        cacheExpiration: 24 * 60 * 60 * 1000,
+        minRetryDelay: 1000,
+        maxRetryDelay: 10000
     },
     URLS: {
-        info: 'https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/informasi.txt',
+        info: 'https://api.allorigins.win/raw?url=https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/informasi.txt',
         internetCheck: 'https://www.google.com/favicon.ico'
     },
     SOCIAL: {
         channel: 'https://t.me/rtawrt',
         group: 'https://t.me/backup_rtawrt',
         personal: 'https://t.me/RizkiKotet'
+    },
+    STORAGE_KEYS: {
+        LAST_INFO: 'lastInformation',
+        LAST_INFO_DATE: 'lastInformationDate',
+        MODAL_KEY: 'mdl_Saweria'
     }
 };
 
-// ====== State Management ======
-class StateManager {
-    constructor() {
-        this.today = new Date().toDateString();
-        this.cache = {
-            content: localStorage.getItem('lastInformation') || ''
+// ====== Utility Functions ======
+const debounce = (func, wait) => {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
         };
-        this.alertQueue = [];
-        this.isAlertShowing = false;
-        this.checkTimer = null;
-        this.connectionState = {
-            isOnline: true,
-            lastCheck: Date.now()
-        };
-    }
-
-    static getInstance() {
-        if (!StateManager.instance) {
-            StateManager.instance = new StateManager();
-        }
-        return StateManager.instance;
-    }
-
-    updateConnectionState(isOnline) {
-        this.connectionState.isOnline = isOnline;
-        this.connectionState.lastCheck = Date.now();
-    }
-}
-
-// ====== Cache Manager ======
-class CacheManager {
-    static CACHE_KEYS = {
-        INFO: 'cache_info',
-        CHANGELOG: 'cache_changelog',
-        TIMESTAMPS: 'cache_timestamps'
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
     };
+};
 
-    static async get(key) {
-        const cacheData = StorageUtils.get(key);
-        const timestamps = JSON.parse(StorageUtils.get(this.CACHE_KEYS.TIMESTAMPS) || '{}');
-        
-        if (!cacheData || !timestamps[key]) return null;
-        
-        // Check if cache has expired
-        if (Date.now() - timestamps[key] > CONFIG.APP.cacheExpiration) {
-            this.remove(key);
-            return null;
-        }
-        
-        return cacheData;
-    }
+// ====== Storage Manager ======
+class StorageManager {
+    static #memoryCache = new Map();
 
-    static set(key, value) {
-        StorageUtils.save(key, value);
-        const timestamps = JSON.parse(StorageUtils.get(this.CACHE_KEYS.TIMESTAMPS) || '{}');
-        timestamps[key] = Date.now();
-        StorageUtils.save(this.CACHE_KEYS.TIMESTAMPS, JSON.stringify(timestamps));
-    }
-
-    static remove(key) {
-        StorageUtils.remove(key);
-        const timestamps = JSON.parse(StorageUtils.get(this.CACHE_KEYS.TIMESTAMPS) || '{}');
-        delete timestamps[key];
-        StorageUtils.save(this.CACHE_KEYS.TIMESTAMPS, JSON.stringify(timestamps));
-    }
-}
-
-// ====== Connection Manager ======
-class ConnectionManager {
-    static retryCount = 0;
-    static isOnline = true;
-
-    static async checkConnection() {
-        try {
-            await fetch(CONFIG.URLS.internetCheck, { 
-                mode: "no-cors",
-                cache: 'no-store',
-                timeout: 5000
-            });
-            this.retryCount = 0;
-            if (!this.isOnline) {
-                this.isOnline = true;
-                ConnectionManager.dispatchConnectionChange(true);
-            }
-            return true;
-        } catch {
-            if (this.isOnline) {
-                this.isOnline = false;
-                ConnectionManager.dispatchConnectionChange(false);
-            }
-            return false;
-        }
-    }
-
-    static dispatchConnectionChange(isOnline) {
-        window.dispatchEvent(new CustomEvent('connectionChange', { 
-            detail: { isOnline } 
-        }));
-    }
-
-    static async retryWithBackoff(operation, maxRetries = CONFIG.APP.maxRetryAttempts) {
-        for (let i = 0; i < maxRetries; i++) {
-            try {
-                return await operation();
-            } catch (error) {
-                if (i === maxRetries - 1) throw error;
-                await new Promise(resolve => 
-                    setTimeout(resolve, Math.min(1000 * Math.pow(2, i), 10000))
-                );
-            }
-        }
-    }
-}
-
-// ====== Network Utilities ======
-class NetworkUtils {
-    static async fetchText(url, useCache = true) {
-        try {
-            const response = await fetch(url, { cache: 'no-store' });
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const text = await response.text();
-            
-            // Cek jika konten berubah sebelum menyimpan ke cache
-            const cachedData = await CacheManager.get(url);
-            if (cachedData !== text) {
-                CacheManager.set(url, text);
-            }
-
-            return text;
-        } catch (error) {
-            console.error(`Error fetching ${url}:`, error);
-            return useCache ? await CacheManager.get(url) : null;
-        }
-    }
-
-    static async checkInternetConnection() {
-        return ConnectionManager.checkConnection();
-    }
-}
-
-// ====== Alert System ======
-class AlertSystem {
-    static async enqueueAlert(alertConfig) {
-        const state = StateManager.getInstance();
-        state.alertQueue.push(alertConfig);
-        await this.processQueue();
-    }
-
-    static async processQueue() {
-        const state = StateManager.getInstance();
-        if (state.isAlertShowing || state.alertQueue.length === 0) return;
-
-        state.isAlertShowing = true;
-        const alertConfig = state.alertQueue.shift();
-
-        try {
-            const result = await Swal.fire(alertConfig);
-            if (result.isConfirmed && alertConfig.onConfirm) await alertConfig.onConfirm(result);
-            if (result.isDenied && alertConfig.onDenied) await alertConfig.onDenied(result);
-        } catch (error) {
-            console.error('Error processing alert:', error);
-        } finally {
-            state.isAlertShowing = false;
-            await this.processQueue();
-        }
-    }
-}
-
-// ====== Storage Utilities ======
-class StorageUtils {
     static save(key, value) {
         try {
+            this.#memoryCache.set(key, value);
             localStorage.setItem(key, value);
             return true;
         } catch (error) {
-            console.error(`Storage error: ${error}`);
+            console.warn(`Storage error: ${error}`);
             return false;
         }
     }
 
     static get(key) {
-        return localStorage.getItem(key);
+        if (this.#memoryCache.has(key)) {
+            return this.#memoryCache.get(key);
+        }
+        const value = localStorage.getItem(key);
+        if (value) this.#memoryCache.set(key, value);
+        return value;
     }
 
     static remove(key) {
+        this.#memoryCache.delete(key);
         localStorage.removeItem(key);
+    }
+
+    static clear() {
+        this.#memoryCache.clear();
+        localStorage.clear();
+    }
+}
+
+// ====== Connection Manager ======
+class ConnectionManager {
+    static #isOnline = navigator.onLine;
+    static #retryCount = 0;
+
+    static get isOnline() {
+        return this.#isOnline;
+    }
+
+    static async checkConnection() {
+        if (!navigator.onLine) {
+            this.#isOnline = false;
+            return false;
+        }
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            await fetch(CONFIG.URLS.internetCheck, {
+                mode: "no-cors",
+                cache: 'no-store',
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+            this.#retryCount = 0;
+            this.#updateConnectionState(true);
+            return true;
+        } catch {
+            this.#updateConnectionState(false);
+            return false;
+        }
+    }
+
+    static #updateConnectionState(isOnline) {
+        if (this.#isOnline !== isOnline) {
+            this.#isOnline = isOnline;
+            window.dispatchEvent(new CustomEvent('connectionChange', { 
+                detail: { isOnline } 
+            }));
+        }
+    }
+
+    static async retryWithBackoff(operation) {
+        const baseDelay = CONFIG.APP.minRetryDelay;
+        const maxDelay = CONFIG.APP.maxRetryDelay;
+
+        for (let i = 0; i < CONFIG.APP.maxRetryAttempts; i++) {
+            try {
+                return await operation();
+            } catch (error) {
+                if (i === CONFIG.APP.maxRetryAttempts - 1) throw error;
+                const delay = Math.min(baseDelay * Math.pow(2, i), maxDelay);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
     }
 }
 
 // ====== Information Manager ======
 class InformationManager {
+    static #lastCheck = 0;
+    static #checkThrottle = 5000; // 5 seconds minimum between checks
+
     static async checkInformation() {
-        const state = StateManager.getInstance();
-        
-        if (!await NetworkUtils.checkInternetConnection()) {
-            const cachedInfo = await CacheManager.get(CONFIG.URLS.info);
-            if (cachedInfo && cachedInfo !== state.cache.content) {
-                this.showInformationAlert(cachedInfo);
-            }
+        const now = Date.now();
+        if (now - this.#lastCheck < this.#checkThrottle) return;
+        this.#lastCheck = now;
+
+        if (!ConnectionManager.isOnline) {
+            const cachedInfo = StorageManager.get(CONFIG.STORAGE_KEYS.LAST_INFO);
+            if (cachedInfo) this.#processInformation(cachedInfo);
             return;
         }
 
-        const infoContent = await NetworkUtils.fetchText(CONFIG.URLS.info);
-        if (infoContent && infoContent !== state.cache.content && !this.isAlertShownToday()) {
-            this.showInformationAlert(infoContent);
+        try {
+            const response = await fetch(CONFIG.URLS.info, {
+                cache: 'no-store'
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const infoContent = await response.text();
+            StorageManager.save('lastModified', response.headers.get('Last-Modified'));
+            this.#processInformation(infoContent);
+        } catch (error) {
+            console.warn('Failed to fetch information:', error);
         }
     }
 
-    static async showInformationAlert(infoContent) {
-        const state = StateManager.getInstance();
+    static #processInformation(infoContent) {
+        const currentContent = StorageManager.get(CONFIG.STORAGE_KEYS.LAST_INFO);
+        const today = new Date().toDateString();
+        
+        if (infoContent !== currentContent && 
+            StorageManager.get(CONFIG.STORAGE_KEYS.LAST_INFO_DATE) !== today) {
+            this.#showInformationAlert(infoContent, today);
+        }
+    }
+
+    static async #showInformationAlert(infoContent, today) {
         await AlertSystem.enqueueAlert({
             title: '🚀 Informasi',
             width: 400,
@@ -420,25 +342,70 @@ class InformationManager {
             confirmButtonText: 'Mengerti',
             cancelButtonText: '❌ Tutup',
             onConfirm: () => {
-                StorageUtils.save('lastInformation', infoContent);
-                StorageUtils.save('lastInformationDate', state.today);  // Save the date when the alert is shown
-                state.cache.content = infoContent;
+                StorageManager.save(CONFIG.STORAGE_KEYS.LAST_INFO, infoContent);
+                StorageManager.save(CONFIG.STORAGE_KEYS.LAST_INFO_DATE, today);
             }
         });
     }
+}
 
-    static isAlertShownToday() {
-        const lastInformationDate = StorageUtils.get('lastInformationDate');
-        const state = StateManager.getInstance();
-        return lastInformationDate === state.today;
+
+// ====== Alert System ======
+class AlertSystem {
+    static #queue = [];
+    static #isShowing = false;
+
+    static async enqueueAlert(alertConfig) {
+        this.#queue.push(alertConfig);
+        await this.#processQueue();
     }
+
+    static async #processQueue() {
+        if (this.#isShowing || this.#queue.length === 0) return;
+
+        this.#isShowing = true;
+        const alertConfig = this.#queue.shift();
+
+        try {
+            const result = await Swal.fire(alertConfig);
+            if (result.isConfirmed && alertConfig.onConfirm) {
+                await alertConfig.onConfirm(result);
+            }
+        } catch (error) {
+            console.warn('Alert error:', error);
+        } finally {
+            this.#isShowing = false;
+            await this.#processQueue();
+        }
+    }
+}
+
+// ====== Profile Manager ======
+function showProfile() {
+    AlertSystem.enqueueAlert({
+        width: 400,
+        title: "About Me!",
+        text: "Halo! Saya Rizki Kotet, seorang programmer pemula yang belajar C# dan PHP. Saya memiliki pemahaman dasar tentang front-end dan back-end. Saat ini, saya sedang mengerjakan proyek Custom OpenWrt dan ImmortalWrt. Saya selalu bersemangat untuk belajar hal baru di dunia teknologi!",
+        imageUrl: "{{ resource }}/Profile.jpeg",
+        imageWidth: 200,
+        imageHeight: 200,
+        imageAlt: "Profile",
+        allowOutsideClick: false,
+        footer: `
+            <p style="text-align: center;">
+                <a href="${CONFIG.SOCIAL.channel}"><img alt="Channel" src="{{ resource }}/Channel.svg" width="110" height="30"></a>
+                <a href="${CONFIG.SOCIAL.group}"><img alt="Group" src="{{ resource }}/Group.svg" width="110" height="30"></a>
+                <a href="${CONFIG.SOCIAL.personal}"><img alt="Personal" src="{{ resource }}/Personal.svg" width="110" height="30"></a>
+            </p>
+        `
+    });
 }
 
 // ====== Daily Modal Manager ======
 class DailyModalManager {
     static async showDailyModal() {
-        const state = StateManager.getInstance();
-        if (StorageUtils.get('mdl_Saweria') === state.today) return;
+        const today = new Date().toDateString();
+        if (StorageManager.get(CONFIG.STORAGE_KEYS.MODAL_KEY) === today) return;
 
         await AlertSystem.enqueueAlert({
             title: `🚀 Welcome To ${CONFIG.APP.name}`,
@@ -455,9 +422,6 @@ class DailyModalManager {
                 </p>
                 <div style="margin-top: 10px; text-align: center;">
                     <input type="checkbox" id="noShowToday">
-                    <style>
-                        #noShowToday:checked { background-color: #5e72e4 !important; }
-                    </style>
                     <label for="noShowToday">Jangan tampilkan lagi hari ini</label>
                 </div>
             `,
@@ -466,9 +430,9 @@ class DailyModalManager {
             didOpen: () => {
                 document.getElementById('noShowToday').addEventListener('change', event => {
                     if (event.target.checked) {
-                        StorageUtils.save('mdl_Saweria', state.today);
+                        StorageManager.save(CONFIG.STORAGE_KEYS.MODAL_KEY, today);
                     } else {
-                        StorageUtils.remove('mdl_Saweria');
+                        StorageManager.remove(CONFIG.STORAGE_KEYS.MODAL_KEY);
                     }
                 });
             }
@@ -478,65 +442,53 @@ class DailyModalManager {
 
 // ====== Application Controller ======
 class AppController {
+    static #checkTimer = null;
+
     static async initialize() {
-        const state = StateManager.getInstance();
-        
-        // Pastikan fungsi setupConnectionHandling tersedia
-        await AppController.setupConnectionHandling();  
-        
         // Setup event listeners
-        AppController.setupEventListeners();
+        window.addEventListener('online', this.#handleConnectionChange.bind(this));
+        window.addEventListener('offline', this.#handleConnectionChange.bind(this));
+        document.addEventListener('visibilitychange', this.#handleVisibilityChange.bind(this));
         
-        // Initial checks if online
+        // Initial setup
+        await ConnectionManager.checkConnection();
         if (ConnectionManager.isOnline) {
             await DailyModalManager.showDailyModal();
-            await AppController.startInformationChecker();
+            await this.#startInformationChecker();
         }
     }
 
-    static async setupConnectionHandling() {
-        await ConnectionManager.checkConnection();
-        
-        // Setup periodic connection checking
-        setInterval(async () => {
-            if (!ConnectionManager.isOnline) {
-                const isNowOnline = await ConnectionManager.checkConnection();
-                if (isNowOnline) {
-                    await AppController.startInformationChecker();
-                }
-            }
-        }, CONFIG.APP.offlineRetryInterval);
+    static async #handleConnectionChange() {
+        const isOnline = await ConnectionManager.checkConnection();
+        if (isOnline) {
+            await this.#startInformationChecker();
+        } else {
+            this.#stopInformationChecker();
+        }
     }
 
-    static async startInformationChecker() {
-        const state = StateManager.getInstance();
-        if (state.checkTimer) clearInterval(state.checkTimer);
-        
+    static #handleVisibilityChange() {
+        if (document.visibilityState === 'visible' && ConnectionManager.isOnline) {
+            this.#startInformationChecker();
+        } else {
+            this.#stopInformationChecker();
+        }
+    }
+
+    static async #startInformationChecker() {
+        this.#stopInformationChecker();
         await InformationManager.checkInformation();
-        state.checkTimer = setInterval(
+        this.#checkTimer = setInterval(
             () => InformationManager.checkInformation(),
             CONFIG.APP.checkInterval
         );
     }
 
-    static setupEventListeners() {
-        // Handle visibility change
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && ConnectionManager.isOnline) {
-                AppController.startInformationChecker();
-            } else {
-                clearInterval(StateManager.getInstance().checkTimer);
-            }
-        });
-
-        // Handle connection changes
-        window.addEventListener('connectionChange', async (event) => {
-            if (event.detail.isOnline) {
-                await AppController.startInformationChecker();
-            } else {
-                clearInterval(StateManager.getInstance().checkTimer);
-            }
-        });
+    static #stopInformationChecker() {
+        if (this.#checkTimer) {
+            clearInterval(this.#checkTimer);
+            this.#checkTimer = null;
+        }
     }
 }
 

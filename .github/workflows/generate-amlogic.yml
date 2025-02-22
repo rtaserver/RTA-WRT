@@ -363,7 +363,7 @@ jobs:
                     if [ ! -f "$FILE_PATH" ]; then
                         echo "Warning: File $FILE_PATH not found, skipping..."
                         continue
-                    }
+                    fi
 
                     # Extract base name without .img.gz extension
                     BASE_NAME=$(basename "$FILE_PATH" .img.gz)
