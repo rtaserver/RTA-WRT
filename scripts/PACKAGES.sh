@@ -10,7 +10,7 @@ fi
 
 # Define repositories with proper quoting
 declare -A REPOS
-REPOS=(
+REPOS+=(
     ["KIDDIN9"]="https://dl.openwrt.ai/releases/24.10/packages/$ARCH_3/kiddin9"
     ["IMMORTALWRT"]="https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3"
     ["OPENWRT"]="https://downloads.openwrt.org/releases/packages-$VEROP/$ARCH_3"
@@ -20,7 +20,7 @@ REPOS=(
 
 # Define package categories with improved structure
 declare -a packages_custom
-packages_custom=(
+packages_custom+=(
     "modemmanager-rpcd_|${REPOS[OPENWRT]}/packages"
     "luci-proto-modemmanager_|${REPOS[OPENWRT]}/luci"
     "libqmi_|${REPOS[OPENWRT]}/packages"
@@ -98,7 +98,7 @@ fi
 verify_packages() {
     local pkg_dir="packages"
     local -a failed_packages=()
-    local -a package_list=("${!1}")  # Fixed parameter passing
+    local -a package_list=("${!1}")
     
     if [[ ! -d "$pkg_dir" ]]; then
         log "ERROR" "Package directory not found: $pkg_dir"
@@ -119,8 +119,8 @@ verify_packages() {
     
     if ((failed > 0)); then
         log "WARNING" "$failed packages failed to download:"
-        printf '%s\n' "${failed_packages[@]}" | while read -r pkg; do
-            log "WARNING" "  - $pkg"
+        for pkg in "${failed_packages[@]}"; do
+            log "WARNING" "- $pkg"
         done
         return 1
     fi
@@ -135,11 +135,11 @@ main() {
     
     # Download Custom packages
     log "INFO" "Downloading Custom packages..."
-    download_packages packages_custom[@] || rc=1
+    download_packages packages_custom || rc=1
     
     # Verify all downloads
     log "INFO" "Verifying all packages..."
-    verify_packages packages_custom[@] || rc=1
+    verify_packages packages_custom || rc=1
     
     if [ $rc -eq 0 ]; then
         log "SUCCESS" "Package download and verification completed successfully"
