@@ -253,7 +253,7 @@ download_packages() {
         
         # Cari URL dengan format file yang diinginkan
         local download_url
-        download_url=$(echo "$file_urls" | grep -E '\.(ipk|apk)$' | grep -i "\b$filename\b" | sort -V | tail -1)
+        download_url=$(echo "$file_urls" | grep -E '\.(ipk|apk)$' | grep -i "$filename" | sort -V | tail -1)
         
         if [ -z "$download_url" ]; then
             log "ERROR" "No matching package found for $filename"
