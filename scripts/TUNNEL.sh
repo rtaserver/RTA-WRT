@@ -25,7 +25,7 @@ declare -a passwall_ipk=("luci-app-passwall|https://downloads.immortalwrt.org/re
 # Function to download and setup OpenClash
 setup_openclash() {
     log "INFO" "Downloading OpenClash packages"
-    download_packages "custom" openclash_ipk[@]
+    download_packages openclash_ipk[@]
     ariadl "${openclash_core}" "files/etc/openclash/core/clash_meta.gz"
     gzip -d "files/etc/openclash/core/clash_meta.gz" || error_msg "Error: Failed to extract OpenClash package."
 }
@@ -33,7 +33,7 @@ setup_openclash() {
 # Function to download and setup PassWall
 setup_passwall() {
     log "INFO" "Downloading PassWall packages"
-    download_packages "custom" passwall_ipk[@]
+    download_packages passwall_ipk[@]
     ariadl "${passwall_core_file_zip_down}" "packages/passwall.zip"
     unzip -qq "packages/passwall.zip" -d packages && rm "packages/passwall.zip" || error_msg "Error: Failed to extract PassWall package."
 }

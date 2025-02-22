@@ -19,7 +19,8 @@ REPOS=(
 )
 
 # Define package categories with improved structure
-declare -a packages_custom=(
+declare -a packages_custom
+packages_custom=(
     "modemmanager-rpcd_|${REPOS[OPENWRT]}/packages"
     "luci-proto-modemmanager_|${REPOS[OPENWRT]}/luci"
     "libqmi_|${REPOS[OPENWRT]}/packages"
@@ -88,7 +89,7 @@ declare -a packages_custom=(
 
 if [ "$TYPE" == "AMLOGIC" ]; then
     log "INFO" "Adding Amlogic-specific packages..."
-    packages_custom=(
+    packages_custom+=(
         "luci-app-amlogic_|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest"
     )
 fi
