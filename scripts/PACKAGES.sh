@@ -36,7 +36,7 @@ REPOS=(
 
 # Define package categories with improved structure
 declare -a packages_custom=(
-    "modemmanager-rpcd|${REPOS[OPENWRT]}/packages"
+    "modemmanager-rpcd_|${REPOS[OPENWRT]}/packages"
     "luci-proto-modemmanager|${REPOS[OPENWRT]}/luci"
     "libqmi|${REPOS[OPENWRT]}/packages"
     "libmbim|${REPOS[OPENWRT]}/packages"
