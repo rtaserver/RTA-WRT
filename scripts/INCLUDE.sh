@@ -203,25 +203,29 @@ ariadl() {
 
 # Enhanced package downloader with improved URL handling and validation
 download_packages() {
-    local package_list=("${!1}")
+    local -n package_list="$1"
     local download_dir="packages"
-    
-    # Buat direktori jika belum ada
+
     mkdir -p "$download_dir"
-    
-    # Fungsi bantu untuk mengunduh file
+
     download_file() {
         local url="$1"
         local output="$2"
         local max_retries=3
         local retry=0
-        
+
         while [ $retry -lt $max_retries ]; do
-            if ariadl "$url" "$output"; then
-                return 0
+            log "INFO" "Downloading: $url -> $output"
+            if curl -fsSL -o "$output" "$url"; then
+                if [ -s "$output" ]; then
+                    log "SUCCESS" "Download successful: $output"
+                    return 0
+                fi
+                log "WARNING" "Downloaded file is empty, retrying..."
+            else
+                log "WARNING" "Failed to download $url, retrying..."
             fi
             retry=$((retry + 1))
-            log "WARNING" "Retry $retry/$max_retries for $output"
             sleep 2
         done
         return 1
@@ -234,36 +238,51 @@ download_packages() {
         IFS=$OLDIFS
 
         if [[ -z "$filename" || -z "$base_url" ]]; then
-            log "ERROR" "Invalid entry format: $entry"
+            log "WARNING" "Invalid entry format: $entry"
             continue
         fi
-        
-        # Ambil URL menggunakan jq atau curl sebagai fallback
+
+        log "INFO" "Fetching package list from: $base_url"
+
         local file_urls=""
-        if ! file_urls=$(curl -sL "$base_url" | jq -r '.assets[].browser_download_url' 2>/dev/null); then
-            log "WARNING" "SERVER 1 | Failed to fetch page: $base_url"
-            log "INFO" "Try With Another Site"
+        if [[ "$base_url" == *"github.com"* ]]; then
+            file_urls=$(curl -sL --max-time 30 --retry 3 --retry-delay 2 "$base_url" | jq -r '.assets[].browser_download_url' | grep -E '\.(ipk|apk)$')
+        else
             file_urls=$(curl -sL --max-time 30 --retry 3 --retry-delay 2 "$base_url")
+            file_urls=$(echo "$file_urls" | grep -oP '(?<=<a href=")[^"\s]+\.(ipk|apk)')
         fi
 
         if [ -z "$file_urls" ]; then
-            log "ERROR" "SERVER 2 | Failed to fetch page: $base_url"
+            log "WARNING" "Failed to fetch package list: $base_url"
             continue
         fi
-        
-        # Cari URL dengan format file yang diinginkan
+
+        local full_urls=()
+        while IFS= read -r file; do
+            if [[ "$file" != http* ]]; then
+                file="${base_url%/}/$file"
+            fi
+            full_urls+=("$file")
+        done <<< "$file_urls"
+
         local download_url
-        download_url=$(echo "$file_urls" | grep -E '\.(ipk|apk)$' | grep -i "$filename" | sort -V | tail -1)
-        
+        download_url=$(printf "%s\n" "${full_urls[@]}" | grep -i "$filename" | sort -V | tail -n 1)
+
         if [ -z "$download_url" ]; then
-            log "ERROR" "No matching package found for $filename"
+            log "WARNING" "No matching package found for $filename"
             continue
         fi
-        
+
         local output_file="$download_dir/$(basename "$download_url")"
-        download_file "$download_url" "$output_file" || log "ERROR" "Failed to download $filename"
+
+        if wget --spider "$download_url" 2>/dev/null; then
+            download_file "$download_url" "$output_file" || log "WARNING" "Failed to download $filename"
+        else
+            log "ERROR" "Error: $download_url is not accessible"
+            exit 1
+        fi
     done
-    
+
     return 0
 }
 
