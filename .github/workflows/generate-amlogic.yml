@@ -359,7 +359,7 @@ jobs:
                       sudo mv "$FILE_PATH" "$GITHUB_WORKSPACE/${{ env.WORKING_DIR }}/compiled_images/$NEW_NAME"
                       echo "Renamed: $FILE_PATH -> $NEW_NAME"
                   fi
-              done
+                done
                               
                 # Kembali ke directory awal
                 cd $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
