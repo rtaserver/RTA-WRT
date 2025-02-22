@@ -347,7 +347,7 @@ jobs:
             
             for file in compiled_images/*_${tunnel}.tar.gz; do
               if [ -f "$file" ]; then
-                mv "$file" amlogic-s9xxx-openwrt/openwrt-armvirt/RTA-WRT_openwrt-armsr-armv8-generic-rootfs.tar.gz
+                mv "$file" amlogic-s9xxx-openwrt/openwrt-armvirt/${{ env.BASE }}-armsr-armv8-generic-rootfs.tar.gz
                 cd amlogic-s9xxx-openwrt
                 sudo ./remake -b ${{ env.openwrt_board }} -k ${{ inputs.openwrt_kernel }} -s 1024
                 
@@ -419,15 +419,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "rtawrt-amlogic-${{ env.BRANCH }}-${{ env.DATE }}"
-          name: RTA-WRT-Amlogic-${{ env.BRANCH }}-${{ env.DATE }}
+          tag_name: "rtawrt-amlogic-${{ env.BASE }}-${{ env.BRANCH }}-${{ env.DATE }}"
+          name: RTA-WRT-Amlogic-${{ env.BASE }}-${{ env.BRANCH }}-${{ env.DATE }}
           files: ${{ env.WORKING_DIR }}/compiled_images/*.gz
           prerelease: ${{ github.ref_name == 'dev' }}
           body: |
             # 🚀 RTA-WRT - Release Information
 
             ## 📥 Download Statistics
-            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/rtawrt-amlogic-${{ env.BRANCH }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/rtawrt-amlogic-${{ env.BASE }}-${{ env.BRANCH }}-${{ env.DATE }}/total?style=for-the-badge&logo=Openwrt)
 
             ## 📢 Support Channels
             [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt) [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/backup_rtawrt) [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/RizkiKotet)
