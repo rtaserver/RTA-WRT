@@ -203,86 +203,84 @@ ariadl() {
 
 # Enhanced package downloader with improved URL handling and validation
 download_packages() {
-    local -n package_list="$1"
+    local -n package_list="$1"  # Use nameref for array reference
     local download_dir="packages"
-
+    
+    # Create download directory
     mkdir -p "$download_dir"
-
+    
+    # Helper function for downloading
     download_file() {
         local url="$1"
         local output="$2"
         local max_retries=3
         local retry=0
-
+        
         while [ $retry -lt $max_retries ]; do
-            log "INFO" "Downloading: $url -> $output"
-            if curl -fsSL -o "$output" "$url"; then
-                if [ -s "$output" ]; then
-                    log "SUCCESS" "Download successful: $output"
-                    return 0
-                fi
-                log "WARNING" "Downloaded file is empty, retrying..."
-            else
-                log "WARNING" "Failed to download $url, retrying..."
+            if ariadl "$url" "$output"; then
+                return 0
             fi
             retry=$((retry + 1))
+            log "WARNING" "Retry $retry/$max_retries for $output"
             sleep 2
         done
         return 1
     }
 
     for entry in "${package_list[@]}"; do
-        OLDIFS=$IFS
-        IFS="|"
-        read -r filename base_url <<< "$entry"
-        IFS=$OLDIFS
-
+        IFS="|" read -r filename base_url <<< "$entry"
+        unset IFS
+        
         if [[ -z "$filename" || -z "$base_url" ]]; then
-            log "WARNING" "Invalid entry format: $entry"
+            log "ERROR" "Invalid entry format: $entry"
             continue
         fi
 
-        log "INFO" "Fetching package list from: $base_url"
-
-        local file_urls=""
-        if [[ "$base_url" == *"github.com"* ]]; then
-            file_urls=$(curl -sL --max-time 30 --retry 3 --retry-delay 2 "$base_url" | jq -r '.assets[].browser_download_url' | grep -E '\.(ipk|apk)$')
-        else
-            file_urls=$(curl -sL --max-time 30 --retry 3 --retry-delay 2 "$base_url")
-            file_urls=$(echo "$file_urls" | grep -oP '(?<=<a href=")[^"\s]+\.(ipk|apk)')
-        fi
-
-        if [ -z "$file_urls" ]; then
-            log "WARNING" "Failed to fetch package list: $base_url"
-            continue
-        fi
-
-        local full_urls=()
-        while IFS= read -r file; do
-            if [[ "$file" != http* ]]; then
-                file="${base_url%/}/$file"
+        local download_url=""
+        
+        # Handling GitHub source
+        if [[ "$base_url" == *"api.github.com"* ]]; then
+            # Use jq to fetch asset URLs from GitHub
+            if ! file_urls=$(curl -sL "$base_url" | jq -r '.assets[].browser_download_url' 2>/dev/null); then
+                log "ERROR" "Failed to parse JSON from $base_url"
+                continue
             fi
-            full_urls+=("$file")
-        done <<< "$file_urls"
-
-        local download_url
-        download_url=$(printf "%s\n" "${full_urls[@]}" | grep -i "$filename" | sort -V | tail -n 1)
+            download_url=$(echo "$file_urls" | grep -E '\.(ipk|apk)$' | grep -i "$filename" | sort -V | tail -1)
+        fi
+        
+        # Handling Custom source
+        if [[ "$base_url" != *"api.github.com"* ]]; then
+            # Download and process page content directly
+            local page_content
+            if ! page_content=$(curl -sL --max-time 30 --retry 3 --retry-delay 2 "$base_url"); then
+                log "ERROR" "Failed to fetch page: $base_url"
+                continue
+            fi
+            
+            local patterns=(
+                "${filename}[^\"]*\.(ipk|apk)"
+                "${filename}_.*\.(ipk|apk)"
+                "${filename}.*\.(ipk|apk)"
+            )
+            
+            for pattern in "${patterns[@]}"; do
+                download_url=$(echo "$page_content" | grep -oP "(?<=\")${pattern}(?=\")" | sort -V | tail -n 1)
+                if [ -n "$download_url" ]; then
+                    download_url="${base_url}/${download_url}"
+                    break
+                fi
+            done
+        fi
 
         if [ -z "$download_url" ]; then
-            log "WARNING" "No matching package found for $filename"
+            log "ERROR" "No matching package found for $filename"
             continue
         fi
-
+        
         local output_file="$download_dir/$(basename "$download_url")"
-
-        if wget --spider "$download_url" 2>/dev/null; then
-            download_file "$download_url" "$output_file" || log "WARNING" "Failed to download $filename"
-        else
-            log "ERROR" "Error: $download_url is not accessible"
-            exit 1
-        fi
+        download_file "$download_url" "$output_file" || log "ERROR" "Failed to download $filename"
     done
-
+    
     return 0
 }
 
