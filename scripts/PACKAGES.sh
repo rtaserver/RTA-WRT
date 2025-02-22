@@ -8,22 +8,6 @@ fi
 
 . ./scripts/INCLUDE.sh
 
-# Initialize package arrays based on target type
-declare -a packages_github
-if [ "$TYPE" == "AMLOGIC" ]; then
-    log "INFO" "Adding Amlogic-specific packages..."
-    packages_github=(
-        "luci-app-amlogic_|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest"
-    )
-fi
-
-# Add core GitHub packages
-packages_github+=(
-    "luci-app-alpha-config|https://api.github.com/repos/animegasan/luci-app-alpha-config/releases/latest"
-    "luci-theme-material3|https://api.github.com/repos/AngelaCooljx/luci-theme-material3/releases/latest"
-    "luci-app-neko|https://api.github.com/repos/nosignals/openwrt-neko/releases/latest"
-)
-
 # Define repositories with proper quoting
 declare -A REPOS
 REPOS=(
@@ -37,66 +21,77 @@ REPOS=(
 # Define package categories with improved structure
 declare -a packages_custom=(
     "modemmanager-rpcd_|${REPOS[OPENWRT]}/packages"
-    "luci-proto-modemmanager|${REPOS[OPENWRT]}/luci"
-    "libqmi|${REPOS[OPENWRT]}/packages"
-    "libmbim|${REPOS[OPENWRT]}/packages"
-    "modemmanager|${REPOS[OPENWRT]}/packages"
-    "sms-tool|${REPOS[OPENWRT]}/packages"
-    "tailscale|${REPOS[OPENWRT]}/packages"
-    "python3-speedtest-cli|${REPOS[OPENWRT]}/packages"
+    "luci-proto-modemmanager_|${REPOS[OPENWRT]}/luci"
+    "libqmi_|${REPOS[OPENWRT]}/packages"
+    "libmbim_|${REPOS[OPENWRT]}/packages"
+    "modemmanager_|${REPOS[OPENWRT]}/packages"
+    "sms-tool_|${REPOS[OPENWRT]}/packages"
+    "tailscale_|${REPOS[OPENWRT]}/packages"
+    "python3-speedtest-cli_|${REPOS[OPENWRT]}/packages"
 
-    "luci-app-tailscale|${REPOS[KIDDIN9]}"
-    "luci-app-diskman|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-zte|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-gosun|${REPOS[KIDDIN9]}"
-    "modeminfo-qmi|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-yuge|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-thales|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-tw|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-meig|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-styx|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-mikrotik|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-dell|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-sierra|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-quectel|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-huawei|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-xmm|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-telit|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-fibocom|${REPOS[KIDDIN9]}"
-    "modeminfo-serial-simcom|${REPOS[KIDDIN9]}"
-    "modeminfo|${REPOS[KIDDIN9]}"
-    "luci-app-modeminfo|${REPOS[KIDDIN9]}"
-    "atinout|${REPOS[KIDDIN9]}"
-    "luci-app-poweroff|${REPOS[KIDDIN9]}"
-    "xmm-modem|${REPOS[KIDDIN9]}"
-    "luci-app-lite-watchdog|${REPOS[KIDDIN9]}"
-    "luci-theme-alpha|${REPOS[KIDDIN9]}"
-    "luci-app-adguardhome|${REPOS[KIDDIN9]}"
-    "sing-box|${REPOS[KIDDIN9]}"
-    "mihomo|${REPOS[KIDDIN9]}"
+    "luci-app-tailscale_|${REPOS[KIDDIN9]}"
+    "luci-app-diskman_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-zte_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-gosun_|${REPOS[KIDDIN9]}"
+    "modeminfo-qmi_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-yuge_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-thales_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-tw_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-meig_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-styx_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-mikrotik_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-dell_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-sierra_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-quectel_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-huawei_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-xmm_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-telit_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-fibocom_|${REPOS[KIDDIN9]}"
+    "modeminfo-serial-simcom_|${REPOS[KIDDIN9]}"
+    "modeminfo_|${REPOS[KIDDIN9]}"
+    "luci-app-modeminfo_|${REPOS[KIDDIN9]}"
+    "atinout_|${REPOS[KIDDIN9]}"
+    "luci-app-poweroff_|${REPOS[KIDDIN9]}"
+    "xmm-modem_|${REPOS[KIDDIN9]}"
+    "luci-app-lite-watchdog_|${REPOS[KIDDIN9]}"
+    "luci-theme-alpha_|${REPOS[KIDDIN9]}"
+    "luci-app-adguardhome_|${REPOS[KIDDIN9]}"
+    "sing-box_|${REPOS[KIDDIN9]}"
+    "mihomo_|${REPOS[KIDDIN9]}"
 
-    "luci-app-zerotier|${REPOS[IMMORTALWRT]}/luci"
-    "luci-app-ramfree|${REPOS[IMMORTALWRT]}/luci"
-    "luci-app-3ginfo-lite|${REPOS[IMMORTALWRT]}/luci"
-    "modemband|${REPOS[IMMORTALWRT]}/packages"
-    "luci-app-modemband|${REPOS[IMMORTALWRT]}/luci"
-    "luci-app-sms-tool-js|${REPOS[IMMORTALWRT]}/luci"
-    "dns2tcp|${REPOS[IMMORTALWRT]}/packages"
-    "luci-app-argon-config|${REPOS[IMMORTALWRT]}/luci"
-    "luci-theme-argon|${REPOS[IMMORTALWRT]}/luci"
-    "luci-app-openclash|${REPOS[IMMORTALWRT]}/luci"
-    "luci-app-passwall|${REPOS[IMMORTALWRT]}/luci"
+    "luci-app-zerotier_|${REPOS[IMMORTALWRT]}/luci"
+    "luci-app-ramfree_|${REPOS[IMMORTALWRT]}/luci"
+    "luci-app-3ginfo-lite_|${REPOS[IMMORTALWRT]}/luci"
+    "modemband_|${REPOS[IMMORTALWRT]}/packages"
+    "luci-app-modemband_|${REPOS[IMMORTALWRT]}/luci"
+    "luci-app-sms-tool-js_|${REPOS[IMMORTALWRT]}/luci"
+    "dns2tcp_|${REPOS[IMMORTALWRT]}/packages"
+    "luci-app-argon-config_|${REPOS[IMMORTALWRT]}/luci"
+    "luci-theme-argon_|${REPOS[IMMORTALWRT]}/luci"
+    "luci-app-openclash_|${REPOS[IMMORTALWRT]}/luci"
+    "luci-app-passwall_|${REPOS[IMMORTALWRT]}/luci"
 
-    "luci-app-internet-detector|${REPOS[GSPOTX2F]}"
-    "internet-detector|${REPOS[GSPOTX2F]}"
-    "internet-detector-mod-modem-restart|${REPOS[GSPOTX2F]}"
-    "luci-app-cpu-status-mini|${REPOS[GSPOTX2F]}"
-    "luci-app-disks-info|${REPOS[GSPOTX2F]}"
-    "luci-app-log-viewer|${REPOS[GSPOTX2F]}"
-    "luci-app-temp-status|${REPOS[GSPOTX2F]}"
+    "luci-app-internet-detector_|${REPOS[GSPOTX2F]}"
+    "internet-detector_|${REPOS[GSPOTX2F]}"
+    "internet-detector-mod-modem-restart_|${REPOS[GSPOTX2F]}"
+    "luci-app-cpu-status-mini_|${REPOS[GSPOTX2F]}"
+    "luci-app-disks-info_|${REPOS[GSPOTX2F]}"
+    "luci-app-log-viewer_|${REPOS[GSPOTX2F]}"
+    "luci-app-temp-status_|${REPOS[GSPOTX2F]}"
 
-    "luci-app-netspeedtest|${REPOS[FANTASTIC]}/luci"
+    "luci-app-netspeedtest_|${REPOS[FANTASTIC]}/luci"
+
+    "luci-app-alpha-config_|https://api.github.com/repos/animegasan/luci-app-alpha-config/releases/latest"
+    "luci-theme-material3_|https://api.github.com/repos/AngelaCooljx/luci-theme-material3/releases/latest"
+    "luci-app-neko_|https://api.github.com/repos/nosignals/openwrt-neko/releases/latest"
 )
+
+if [ "$TYPE" == "AMLOGIC" ]; then
+    log "INFO" "Adding Amlogic-specific packages..."
+    packages_custom=(
+        "luci-app-amlogic_|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest"
+    )
+fi
 
 # Enhanced package verification function
 verify_packages() {
@@ -137,17 +132,12 @@ verify_packages() {
 main() {
     local rc=0
     
-    # Download GitHub packages
-    log "INFO" "Downloading GitHub packages..."
-    download_packages "github" packages_github[@] || rc=1
-    
     # Download Custom packages
     log "INFO" "Downloading Custom packages..."
-    download_packages "custom" packages_custom[@] || rc=1
+    download_packages packages_custom[@] || rc=1
     
     # Verify all downloads
     log "INFO" "Verifying all packages..."
-    verify_packages packages_github[@] || rc=1
     verify_packages packages_custom[@] || rc=1
     
     if [ $rc -eq 0 ]; then

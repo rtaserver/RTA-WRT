@@ -203,14 +203,13 @@ ariadl() {
 
 # Enhanced package downloader with improved URL handling and validation
 download_packages() {
-    local source="$1"
-    local package_list=("${!2}")
+    local package_list=("${!1}")
     local download_dir="packages"
     
-    # Create download directory
+    # Buat direktori jika belum ada
     mkdir -p "$download_dir"
     
-    # Helper function for downloading
+    # Fungsi bantu untuk mengunduh file
     download_file() {
         local url="$1"
         local output="$2"
@@ -228,85 +227,42 @@ download_packages() {
         return 1
     }
 
-    case "$source" in
-        github)
-            for entry in "${package_list[@]}"; do
-                IFS="|" read -r filename base_url <<< "$entry"
-                unset IFS
-                
-                if [[ -z "$filename" || -z "$base_url" ]]; then
-                    log "ERROR" "Invalid entry format: $entry"
-                    continue
-                fi
-                
-                # Use jq with error handling
-                local file_urls
-                if ! file_urls=$(curl -sL "$base_url" | jq -r '.assets[].browser_download_url' 2>/dev/null); then
-                    log "ERROR" "Failed to parse JSON from $base_url"
-                    continue
-                fi
-                
-                # Find matching file
-                local download_url
-                download_url=$(echo "$file_urls" | grep -E '\.(ipk|apk)$' | grep -i "$filename" | sort -V | tail -1)
-                
-                if [ -z "$download_url" ]; then
-                    log "ERROR" "No matching package found for $filename"
-                    continue
-                fi
-                
-                local output_file="$download_dir/$(basename "$download_url")"
-                download_file "$download_url" "$output_file" || log "ERROR" "Failed to download $filename"
-            done
-            ;;
-            
-        custom)
-            for entry in "${package_list[@]}"; do
-                IFS="|" read -r filename base_url <<< "$entry"
-                unset IFS
-                
-                if [[ -z "$filename" || -z "$base_url" ]]; then
-                    log "ERROR" "Invalid entry format: $entry"
-                    continue
-                fi
-                
-                # Download and process page content directly
-                local page_content
-                if ! page_content=$(curl -sL --max-time 30 --retry 3 --retry-delay 2 "$base_url"); then
-                    log "ERROR" "Failed to fetch page: $base_url"
-                    continue
-                fi
-                
-                local patterns=(
-                    "${filename}[^\"]*\.(ipk|apk)"
-                    "${filename}_.*\.(ipk|apk)"
-                    "${filename}.*\.(ipk|apk)"
-                )
-                
-                local found_url=""
-                for pattern in "${patterns[@]}"; do
-                    found_url=$(echo "$page_content" | grep -oP "(?<=\")${pattern}(?=\")" | sort -V | tail -n 1)
-                    
-                    if [ -n "$found_url" ]; then
-                        local download_url="${base_url}/${found_url}"
-                        local output_file="$download_dir/${found_url}"
-                        
-                        if download_file "$download_url" "$output_file"; then
-                            log "INFO" "Successfully downloaded: $found_url"
-                            break
-                        fi
-                    fi
-                done
-                
-                [ -z "$found_url" ] && log "ERROR" "No matching file found for $filename"
-            done
-            ;;
-            
-        *)
-            log "ERROR" "Invalid source: $source"
-            return 1
-            ;;
-    esac
+    for entry in "${package_list[@]}"; do
+        OLDIFS=$IFS
+        IFS="|"
+        read -r filename base_url <<< "$entry"
+        IFS=$OLDIFS
+
+        if [[ -z "$filename" || -z "$base_url" ]]; then
+            log "ERROR" "Invalid entry format: $entry"
+            continue
+        fi
+        
+        # Ambil URL menggunakan jq atau curl sebagai fallback
+        local file_urls=""
+        if ! file_urls=$(curl -sL "$base_url" | jq -r '.assets[].browser_download_url' 2>/dev/null); then
+            log "WARNING" "SERVER 1 | Failed to fetch page: $base_url"
+            log "INFO" "Try With Another Site"
+            file_urls=$(curl -sL --max-time 30 --retry 3 --retry-delay 2 "$base_url")
+        fi
+
+        if [ -z "$file_urls" ]; then
+            log "ERROR" "SERVER 2 | Failed to fetch page: $base_url"
+            continue
+        fi
+        
+        # Cari URL dengan format file yang diinginkan
+        local download_url
+        download_url=$(echo "$file_urls" | grep -E '\.(ipk|apk)$' | grep -i "\b$filename\b" | sort -V | tail -1)
+        
+        if [ -z "$download_url" ]; then
+            log "ERROR" "No matching package found for $filename"
+            continue
+        fi
+        
+        local output_file="$download_dir/$(basename "$download_url")"
+        download_file "$download_url" "$output_file" || log "ERROR" "Failed to download $filename"
+    done
     
     return 0
 }
