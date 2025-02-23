@@ -403,7 +403,7 @@ jobs:
               echo "Using kernel: $kernel"
               echo "Tunnel type: $tunnel"
               
-              if ! REPACKWRT.sh "$builder" "$device" "$kernel" "$tunnel"; then
+              if ! ./scripts/REPACKWRT.sh "$builder" "$device" "$kernel" "$tunnel"; then
                   echo "ERROR: Build failed for device: $device, kernel: $kernel, tunnel: $tunnel"
                   return 1
               fi
