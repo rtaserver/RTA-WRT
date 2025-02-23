@@ -47,7 +47,7 @@ build_mod_sdcard() {
         return 1
     fi
     rm -f main.zip
-    echo -e "${SUCCESS} mod-boot-sdcard successfully extracted."
+    log "SUCCESS" "mod-boot-sdcard successfully extracted."
     sleep 3
 
     # Create working directory
@@ -154,7 +154,7 @@ build_mod_sdcard() {
     rm -rf "${suffix}"
     rm -rf mod-boot-sdcard-main
     cleanup
-    echo -e "${SUCCESS} Successfully processed ${suffix}"
+    log "SUCCESS" "Successfully processed ${suffix}"
     return 0
 }
 
@@ -179,31 +179,31 @@ process_builds() {
     if [[ "$tunnel_mode" == "all" ]]; then
         for tunnel in "${tunnel_types[@]}"; do
             for build in "${builds[@]}"; do
-                IFS=: read -r device kernel dtb model <<< "$build"
-                local image_file=$(find "$img_dir" -name "*_${device}_${kernel}*.img.gz")
+                IFS=: read -r device dtb model <<< "$build"
+                local image_file=$(find "$img_dir" -name "*${device}*.img.gz")
                 
                 if [[ -n "$image_file" ]]; then
                     if ! build_mod_sdcard "$image_file" "$dtb" "$model"; then
-                        log "ERROR" "Failed to process build for $model ($device $kernel) with tunnel: $tunnel"
+                        log "ERROR" "Failed to process build for $model ($device) with tunnel: $tunnel"
                         exit_code=1
                     fi
                 else
-                    log "WARNING" "No image file found for $model ($device $kernel)"
+                    log "WARNING" "No image file found for $model ($device)"
                 fi
             done
         done
     else
         for build in "${builds[@]}"; do
-            IFS=: read -r device kernel dtb model <<< "$build"
-            local image_file=$(find "$img_dir" -name "*_${device}_${kernel}*.img.gz")
+            IFS=: read -r device dtb model <<< "$build"
+            local image_file=$(find "$img_dir" -name "*${device}*.img.gz")
             
             if [[ -n "$image_file" ]]; then
                 if ! build_mod_sdcard "$image_file" "$dtb" "$model"; then
-                    log "ERROR" "Failed to process build for $model ($device $kernel)"
+                    log "ERROR" "Failed to process build for $model ($device)"
                     exit_code=1
                 fi
             else
-                log "WARNING" "No image file found for $model ($device $kernel)"
+                log "WARNING" "No image file found for $model ($device)"
             fi
         done
     fi
@@ -215,12 +215,14 @@ main() {
     local exit_code=0
     local img_dir="$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"
     
-    # Configuration array with format device:kernel:dtb:model
+    # Configuration array with format device:dtb:model
     local builds=(
-        "s905x:k5.15:meson-gxl-s905x-p212.dtb:HG680P"
-        "s905x:k6.6:meson-gxl-s905x-p212.dtb:HG680P" 
-        "s905x-b860h:k5.15:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
-        "s905x-b860h:k6.6:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
+        "_s905x_k5.15:meson-gxl-s905x-p212.dtb:HG680P"
+        "_s905x_k6.6:meson-gxl-s905x-p212.dtb:HG680P"
+        "-s905x-:meson-gxl-s905x-p212.dtb:HG680P"
+        "_s905x-b860h_k5.15:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
+        "_s905x-b860h_k6.6:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
+        "-s905x-:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
     )
     
     # Validate environment
