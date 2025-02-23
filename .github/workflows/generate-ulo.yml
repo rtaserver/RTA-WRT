@@ -60,6 +60,7 @@ on:
         type: boolean
 
 env:
+  PACKNAME: ulo
   TARGET: ${{ inputs.target }}
   RELEASE_BRANCH: ${{ inputs.release_branch }}
   TUNNEL: ${{ inputs.tunnel }}
@@ -413,9 +414,9 @@ jobs:
 
           # Main build function
           main() {
-              local devices="${DEVICES:-all}"
-              local tunnel="${TUNNEL:-all}"
-              local builder="${BUILD:-ulo}"
+              local devices="${{ env.TARGET }}"
+              local tunnel="${{ env.TUNNEL }}"
+              local builder="${{ env.PACKNAME }}"
               
               # All supported devices
               local all_devices=(
