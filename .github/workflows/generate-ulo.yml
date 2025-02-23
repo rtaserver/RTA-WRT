@@ -478,10 +478,10 @@ jobs:
         run: |
           cd ${{ env.WORKING_DIR }}
 
-          # chmod +x scripts/MODSDCARD.sh
-          # if [[ "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x_*.img.gz")" ]]; then
-          #   ./scripts/MODSDCARD.sh
-          # fi
+          chmod +x scripts/MODSDCARD.sh
+          if [[ "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x_*.img.gz")" ]]; then
+            ./scripts/MODSDCARD.sh
+          fi
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Create Release
