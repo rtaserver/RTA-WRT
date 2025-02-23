@@ -60,7 +60,6 @@ jobs:
     outputs:
       target: ${{ steps.set-matrix.outputs.target }}
       tunnel: ${{ steps.set-matrix.outputs.tunnel }}
-      changelog: ${{ steps.changelog.outputs.changelog }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -110,51 +109,6 @@ jobs:
           else
              echo "tunnel=$(jq -nc --arg d "${{ inputs.tunnel }}" '[$d]')" >> $GITHUB_OUTPUT
           fi
-
-      - name: Add changelog Firmware
-        id: changelog
-        shell: bash
-        run: |
-          # Try multiple possible locations
-          POSSIBLE_PATHS=(
-            "${PWD}/CHANGELOG.md"
-            "${PWD}/origin/CHANGELOG.md"
-            "${GITHUB_WORKSPACE}/CHANGELOG.md"
-            "../CHANGELOG.md"
-          )
-
-          CHANGELOG_FILE=""
-
-          # Find the first existing changelog file
-          for path in "${POSSIBLE_PATHS[@]}"; do
-            if [ -f "$path" ]; then
-              CHANGELOG_FILE="$path"
-              echo "Found CHANGELOG.md at: $path"
-              break
-            fi
-          done
-
-          if [ -z "$CHANGELOG_FILE" ]; then
-            echo "Error: CHANGELOG.md not found in any of these locations:"
-            printf '%s\n' "${POSSIBLE_PATHS[@]}"
-            exit 1
-          fi
-
-          # Extract and process changelog
-          chfr=$(awk '/^\*\*Changelog Firmware\*\*/ {if(found) exit; found=1} found' "$CHANGELOG_FILE" || echo "")
-
-          if [ -z "$chfr" ]; then
-            echo "Warning: No 'Changelog Firmware' section found in $CHANGELOG_FILE"
-            echo "changelog=" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Escape special characters
-          # chfr="${chfr//'%'/'%25'}"
-          # chfr="${chfr//$'\n'/'%0A'}"
-          # chfr="${chfr//$'\r'/'%0D'}"
-
-          echo "changelog=$chfr" >> $GITHUB_OUTPUT
 
   build-firmware:
     name: Build ${{ matrix.target }}-${{ matrix.tunnel }}
