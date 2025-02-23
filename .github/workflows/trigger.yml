@@ -181,7 +181,7 @@ jobs:
               "token": "${{ secrets.GITHUB_TOKEN }}"
             }
           repo: "rizkikotet-dev/RTA-WRT"
-          workflow_id: "generate-openwrt.yml"
+          workflow_id: "generate-ulo.yml"
           ref: "${{ github.ref_name }}"
           action: "trigger-and-wait"
           inputs: |
