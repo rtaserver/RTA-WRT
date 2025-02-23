@@ -178,15 +178,3 @@ jobs:
               "target": "all",
               "tunnel": "all"
             }
-
-      - name: Trigger Up Pages
-        uses: dragoscops/workflow-trigger-wait@v3
-        with:
-          credentials: |
-            {
-              "token": "${{ secrets.GITHUB_TOKEN }}"
-            }
-          repo: "rizkikotet-dev/RTA-WRT"
-          workflow_id: "updatepages.yml"
-          ref: "main"
-          action: "trigger-and-wait"
