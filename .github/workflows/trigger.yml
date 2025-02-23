@@ -26,7 +26,7 @@ jobs:
             }
           repo: "rizkikotet-dev/RTA-WRT"
           workflow_id: "generate-amlogic.yml"
-          ref: "main"
+          ref: "${{ github.ref_name }}"
           action: "trigger-and-wait"
           inputs: |
             {
@@ -44,7 +44,7 @@ jobs:
             }
           repo: "rizkikotet-dev/RTA-WRT"
           workflow_id: "generate-amlogic.yml"
-          ref: "main"
+          ref: "${{ github.ref_name }}"
           action: "trigger-and-wait"
           inputs: |
             {
@@ -62,7 +62,7 @@ jobs:
             }
           repo: "rizkikotet-dev/RTA-WRT"
           workflow_id: "generate-amlogic.yml"
-          ref: "main"
+          ref: "${{ github.ref_name }}"
           action: "trigger-and-wait"
           inputs: |
             {
@@ -80,7 +80,7 @@ jobs:
             }
           repo: "rizkikotet-dev/RTA-WRT"
           workflow_id: "generate-amlogic.yml"
-          ref: "main"
+          ref: "${{ github.ref_name }}"
           action: "trigger-and-wait"
           inputs: |
             {
@@ -98,7 +98,7 @@ jobs:
             }
           repo: "rizkikotet-dev/RTA-WRT"
           workflow_id: "generate-amlogic.yml"
-          ref: "main"
+          ref: "${{ github.ref_name }}"
           action: "trigger-and-wait"
           inputs: |
             {
@@ -116,7 +116,7 @@ jobs:
             }
           repo: "rizkikotet-dev/RTA-WRT"
           workflow_id: "generate-amlogic.yml"
-          ref: "main"
+          ref: "${{ github.ref_name }}"
           action: "trigger-and-wait"
           inputs: |
             {
@@ -134,7 +134,7 @@ jobs:
             }
           repo: "rizkikotet-dev/RTA-WRT"
           workflow_id: "generate-amlogic.yml"
-          ref: "main"
+          ref: "${{ github.ref_name }}"
           action: "trigger-and-wait"
           inputs: |
             {
@@ -152,7 +152,7 @@ jobs:
             }
           repo: "rizkikotet-dev/RTA-WRT"
           workflow_id: "generate-amlogic.yml"
-          ref: "main"
+          ref: "${{ github.ref_name }}"
           action: "trigger-and-wait"
           inputs: |
             {
@@ -170,7 +170,7 @@ jobs:
             }
           repo: "rizkikotet-dev/RTA-WRT"
           workflow_id: "generate-openwrt.yml"
-          ref: "main"
+          ref: "${{ github.ref_name }}"
           action: "trigger-and-wait"
           inputs: |
             {
@@ -178,3 +178,94 @@ jobs:
               "target": "all",
               "tunnel": "all"
             }
+
+      - name: Notify Telegram
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          THREAD_ID_UPDATE: 734
+        run: |
+          # Handle termination signal
+          trap "exit" SIGTERM
+
+          create_stable_message() {
+            cat << 'EOF'
+            ━━━━━━━━━━━━━━━━━━━━━━
+            🎯 *RTA-WRT Firmware Update*
+            ✅ _Stable Release_
+
+            🔹 *Versi:* ${{ inputs.release_branch }}
+            🔹 *Tanggal:* $(date "+%d-%m-%Y %H:%M:%S")
+
+            📌 *Catatan:*
+            📢 Versi Stabil Telah Diterbitkan!
+            • Disarankan untuk semua pengguna
+            • Hasil merge dari branch Development
+            • Includes fitur baru dan perbaikan bug
+            • Update ke versi terbaru untuk mendapatkan semua fitur
+            ━━━━━━━━━━━━━━━━━━━━━━
+            EOF
+          }
+
+          create_dev_message() {
+            cat << 'EOF'
+            ━━━━━━━━━━━━━━━━━━━━━━
+            🚀 *RTA-WRT Firmware Update*
+            🌟 _Development Release_
+
+            🔹 *Versi:* ${{ inputs.release_branch }}
+            🔹 *Tanggal:* $(date "+%d-%m-%Y %H:%M:%S")
+
+            📌 *Catatan:*
+            📢 Versi Development:
+            • Cocok untuk pengujian pada perangkat test
+            • Silakan mencoba dan berikan feedback
+            • Laporkan bug atau error yang ditemukan
+            • Feedback Anda membantu pengembangan firmware
+            ━━━━━━━━━━━━━━━━━━━━━━
+            EOF
+          }
+
+          # Process branch information
+          BRANCH_TAG=$(echo "${{ inputs.release_branch }}" | tr ':' '_')
+          OPEWRT="${{ inputs.release_branch }}"
+          OP_SOURCE="${OPEWRT%:*}"
+
+          # Define download buttons
+          BUTTONS='[
+            [
+              {
+                "text": "📥 Download Via Releases",
+                "url": "https://github.com/rtaserver/RTA-WRT/releases"
+              }
+            ],
+            [
+              {
+                "text": "📥 Download Via Mirror",
+                "url": "https://rizkikotet-dev.github.io/posts/firmware-openwrt/#-download"
+              }
+            ]
+          ]'
+
+          # Set image URL based on OpenWrt source
+          if [ "$OPENWRT_SOURCE" = "immortalwrt" ]; then
+            IMGURL="https://avatars.githubusercontent.com/u/53193414?s=200&v=4"
+          else
+            IMGURL="https://avatars.githubusercontent.com/u/2528830?s=200&v=4"
+          fi
+
+          # Select message template based on branch
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            TELEMSG=$(create_stable_message)
+          else
+            TELEMSG=$(create_dev_message)
+          fi
+
+          # Send Telegram message
+          curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
+            -d "chat_id=$CHAT_ID" \
+            -d "photo=$IMGURL" \
+            -d "caption=$TELEMSG" \
+            -d "parse_mode=Markdown" \
+            -d "message_thread_id=$THREAD_ID_UPDATE" \
+            -d "reply_markup={\"inline_keyboard\":$BUTTONS}"
