@@ -10,6 +10,7 @@
 - Refactor package list in imagebuilder.sh to enhance readability and include additional modem and USB LAN drivers
 - Remove obsolete GPIO handling scripts and related service files
 - Include script dependencies in make-image.sh for improved modularity
+- Enhance Openclash and Nikki configuration by adding executable permissions for GeoIP and GeoSite files; refactor alert system to streamline alert display logic.
 
 **Changelog Firmware** (13-02-2025)
 

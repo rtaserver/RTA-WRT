@@ -157,16 +157,8 @@
 const CONFIG = {
     APP: {
         name: 'RTA-WRT',
-        checkInterval: 15 * 60 * 1000, // Increased to 15 minutes
-        offlineRetryInterval: 60 * 1000, // Increased to 1 minute
-        maxRetryAttempts: 3,
-        cacheExpiration: 24 * 60 * 60 * 1000,
-        minRetryDelay: 1000,
-        maxRetryDelay: 10000
-    },
-    URLS: {
-        info: 'https://api.allorigins.win/raw?url=https://raw.githubusercontent.com/rizkikotet-dev/RTA-WRT/refs/heads/info/informasi.txt',
-        internetCheck: 'https://www.google.com/favicon.ico'
+        checkInterval: 15 * 60 * 1000, // 15 menit
+        cacheExpiration: 24 * 60 * 60 * 1000 // 24 jam
     },
     SOCIAL: {
         channel: 'https://t.me/rtawrt',
@@ -174,8 +166,6 @@ const CONFIG = {
         personal: 'https://t.me/RizkiKotet'
     },
     STORAGE_KEYS: {
-        LAST_INFO: 'lastInformation',
-        LAST_INFO_DATE: 'lastInformationDate',
         MODAL_KEY: 'mdl_Saweria'
     }
 };
@@ -183,13 +173,9 @@ const CONFIG = {
 // ====== Utility Functions ======
 const debounce = (func, wait) => {
     let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
+    return function (...args) {
         clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+        timeout = setTimeout(() => func(...args), wait);
     };
 };
 
@@ -200,11 +186,9 @@ class StorageManager {
     static save(key, value) {
         try {
             this.#memoryCache.set(key, value);
-            localStorage.setItem(key, value);
-            return true;
+            localStorage.setItem(key, JSON.stringify(value));
         } catch (error) {
             console.warn(`Storage error: ${error}`);
-            return false;
         }
     }
 
@@ -213,179 +197,37 @@ class StorageManager {
             return this.#memoryCache.get(key);
         }
         const value = localStorage.getItem(key);
-        if (value) this.#memoryCache.set(key, value);
-        return value;
+        if (value) {
+            const parsedValue = JSON.parse(value);
+            this.#memoryCache.set(key, parsedValue);
+            return parsedValue;
+        }
+        return null;
     }
 
     static remove(key) {
         this.#memoryCache.delete(key);
         localStorage.removeItem(key);
     }
-
-    static clear() {
-        this.#memoryCache.clear();
-        localStorage.clear();
-    }
 }
-
-// ====== Connection Manager ======
-class ConnectionManager {
-    static #isOnline = navigator.onLine;
-    static #retryCount = 0;
-
-    static get isOnline() {
-        return this.#isOnline;
-    }
-
-    static async checkConnection() {
-        if (!navigator.onLine) {
-            this.#isOnline = false;
-            return false;
-        }
-
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-            await fetch(CONFIG.URLS.internetCheck, {
-                mode: "no-cors",
-                cache: 'no-store',
-                signal: controller.signal
-            });
-
-            clearTimeout(timeoutId);
-            this.#retryCount = 0;
-            this.#updateConnectionState(true);
-            return true;
-        } catch {
-            this.#updateConnectionState(false);
-            return false;
-        }
-    }
-
-    static #updateConnectionState(isOnline) {
-        if (this.#isOnline !== isOnline) {
-            this.#isOnline = isOnline;
-            window.dispatchEvent(new CustomEvent('connectionChange', { 
-                detail: { isOnline } 
-            }));
-        }
-    }
-
-    static async retryWithBackoff(operation) {
-        const baseDelay = CONFIG.APP.minRetryDelay;
-        const maxDelay = CONFIG.APP.maxRetryDelay;
-
-        for (let i = 0; i < CONFIG.APP.maxRetryAttempts; i++) {
-            try {
-                return await operation();
-            } catch (error) {
-                if (i === CONFIG.APP.maxRetryAttempts - 1) throw error;
-                const delay = Math.min(baseDelay * Math.pow(2, i), maxDelay);
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-        }
-    }
-}
-
-// ====== Information Manager ======
-class InformationManager {
-    static #lastCheck = 0;
-    static #checkThrottle = 5000; // 5 seconds minimum between checks
-
-    static async checkInformation() {
-        const now = Date.now();
-        if (now - this.#lastCheck < this.#checkThrottle) return;
-        this.#lastCheck = now;
-
-        if (!ConnectionManager.isOnline) {
-            const cachedInfo = StorageManager.get(CONFIG.STORAGE_KEYS.LAST_INFO);
-            if (cachedInfo) this.#processInformation(cachedInfo);
-            return;
-        }
-
-        try {
-            const response = await fetch(CONFIG.URLS.info, {
-                cache: 'no-store'
-            });
-
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-            const infoContent = await response.text();
-            StorageManager.save('lastModified', response.headers.get('Last-Modified'));
-            this.#processInformation(infoContent);
-        } catch (error) {
-            console.warn('Failed to fetch information:', error);
-        }
-    }
-
-    static #processInformation(infoContent) {
-        const currentContent = StorageManager.get(CONFIG.STORAGE_KEYS.LAST_INFO);
-        const today = new Date().toDateString();
-        
-        if (infoContent !== currentContent && 
-            StorageManager.get(CONFIG.STORAGE_KEYS.LAST_INFO_DATE) !== today) {
-            this.#showInformationAlert(infoContent, today);
-        }
-    }
-
-    static async #showInformationAlert(infoContent, today) {
-        await AlertSystem.enqueueAlert({
-            title: '🚀 Informasi',
-            width: 400,
-            html: `
-                <div class="changelog" style="margin-top: 15px; text-align: left; white-space: pre-line;">
-                    <div>${infoContent}</div>
-                </div>
-            `,
-            icon: 'info',
-            confirmButtonText: 'Mengerti',
-            cancelButtonText: '❌ Tutup',
-            onConfirm: () => {
-                StorageManager.save(CONFIG.STORAGE_KEYS.LAST_INFO, infoContent);
-                StorageManager.save(CONFIG.STORAGE_KEYS.LAST_INFO_DATE, today);
-            }
-        });
-    }
-}
-
 
 // ====== Alert System ======
 class AlertSystem {
-    static #queue = [];
-    static #isShowing = false;
-
-    static async enqueueAlert(alertConfig) {
-        this.#queue.push(alertConfig);
-        await this.#processQueue();
-    }
-
-    static async #processQueue() {
-        if (this.#isShowing || this.#queue.length === 0) return;
-
-        this.#isShowing = true;
-        const alertConfig = this.#queue.shift();
-
+    static async showAlert(config) {
         try {
-            const result = await Swal.fire(alertConfig);
-            if (result.isConfirmed && alertConfig.onConfirm) {
-                await alertConfig.onConfirm(result);
-            }
+            await Swal.fire(config);
         } catch (error) {
             console.warn('Alert error:', error);
-        } finally {
-            this.#isShowing = false;
-            await this.#processQueue();
         }
     }
 }
 
 // ====== Profile Manager ======
 function showProfile() {
-    AlertSystem.enqueueAlert({
+    AlertSystem.showAlert({
         width: 400,
         title: "About Me!",
-        text: "Halo! Saya Rizki Kotet, seorang programmer pemula yang belajar C# dan PHP. Saya memiliki pemahaman dasar tentang front-end dan back-end. Saat ini, saya sedang mengerjakan proyek Custom OpenWrt dan ImmortalWrt. Saya selalu bersemangat untuk belajar hal baru di dunia teknologi!",
+        text: "Halo! Saya Rizki Kotet, seorang programmer pemula yang belajar C# dan PHP...",
         imageUrl: "{{ resource }}/Profile.jpeg",
         imageWidth: 200,
         imageHeight: 200,
@@ -407,7 +249,7 @@ class DailyModalManager {
         const today = new Date().toDateString();
         if (StorageManager.get(CONFIG.STORAGE_KEYS.MODAL_KEY) === today) return;
 
-        await AlertSystem.enqueueAlert({
+        await AlertSystem.showAlert({
             title: `🚀 Welcome To ${CONFIG.APP.name}`,
             width: 400,
             imageUrl: "{{ resource }}/Saweria.png",
@@ -442,53 +284,8 @@ class DailyModalManager {
 
 // ====== Application Controller ======
 class AppController {
-    static #checkTimer = null;
-
     static async initialize() {
-        // Setup event listeners
-        window.addEventListener('online', this.#handleConnectionChange.bind(this));
-        window.addEventListener('offline', this.#handleConnectionChange.bind(this));
-        document.addEventListener('visibilitychange', this.#handleVisibilityChange.bind(this));
-        
-        // Initial setup
-        await ConnectionManager.checkConnection();
-        if (ConnectionManager.isOnline) {
-            await DailyModalManager.showDailyModal();
-            await this.#startInformationChecker();
-        }
-    }
-
-    static async #handleConnectionChange() {
-        const isOnline = await ConnectionManager.checkConnection();
-        if (isOnline) {
-            await this.#startInformationChecker();
-        } else {
-            this.#stopInformationChecker();
-        }
-    }
-
-    static #handleVisibilityChange() {
-        if (document.visibilityState === 'visible' && ConnectionManager.isOnline) {
-            this.#startInformationChecker();
-        } else {
-            this.#stopInformationChecker();
-        }
-    }
-
-    static async #startInformationChecker() {
-        this.#stopInformationChecker();
-        await InformationManager.checkInformation();
-        this.#checkTimer = setInterval(
-            () => InformationManager.checkInformation(),
-            CONFIG.APP.checkInterval
-        );
-    }
-
-    static #stopInformationChecker() {
-        if (this.#checkTimer) {
-            clearInterval(this.#checkTimer);
-            this.#checkTimer = null;
-        }
+        await DailyModalManager.showDailyModal();
     }
 }
 

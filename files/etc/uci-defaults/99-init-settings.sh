@@ -148,6 +148,9 @@ if opkg list-installed | grep luci-app-openclash > /dev/null; then
   echo "Openclash Detected!"
   echo "Configuring Core..."
   chmod +x /etc/openclash/core/clash_meta
+  chmod +x /etc/openclash/GeoIP.dat
+  chmod +x /etc/openclash/GeoSite.dat
+  chmod +x /etc/openclash/Country.mmdb
   chmod +x /usr/bin/patchoc.sh
   echo "Patching Openclash Overview"
   bash /usr/bin/patchoc.sh
@@ -169,6 +172,8 @@ fi
 # configurating Nikki
 if opkg list-installed | grep luci-app-nikki > /dev/null; then
   echo "setup complete!"
+  chmod +x /etc/nikki/run/GeoIP.dat
+  chmod +x /etc/nikki/run/GeoSite.dat
 else
   echo "No Nikki Detected."
   rm -rf /etc/config/nikki
