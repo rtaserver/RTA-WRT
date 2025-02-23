@@ -65,6 +65,17 @@ log() {
     esac
 }
 
+error_msg() {
+    local line_number=${2:-${BASH_LINENO[0]}}
+    echo -e "${ERROR} ${1} (Line: ${line_number})" >&2
+    echo "Call stack:" >&2
+    local frame=0
+    while caller $frame; do
+        ((frame++))
+    done >&2
+    exit 1
+}
+
 # Enhanced spinner with better process management
 spinner() {
     local pid=$1
@@ -104,7 +115,7 @@ cmdinstall() {
         log "SUCCESS" "$desc installed successfully"
         [ "${CONFIG[DEBUG]}" = true ]
     else
-        log "ERROR" "Failed to install $desc"
+        error_msg "Failed to install $desc"
         return 1
     fi
 }
@@ -125,7 +136,7 @@ check_dependencies() {
     
     # Update package lists with error handling
     if ! sudo apt-get update -qq &>/dev/null; then
-        log "ERROR" "Failed to update package lists"
+        error_msg "Failed to update package lists"
         return 1
     fi
     
@@ -136,7 +147,7 @@ check_dependencies() {
         if ! installed_version=$(eval "$version_cmd" 2>/dev/null); then
             log "WARNING" "Installing $pkg..."
             if ! sudo apt-get install -y "$pkg" &>/dev/null; then
-                log "ERROR" "Failed to install $pkg"
+                error_msg "Failed to install $pkg"
                 return 1
             fi
             installed_version=$(eval "$version_cmd")
@@ -152,7 +163,7 @@ check_dependencies() {
 # Enhanced download function with retry mechanism and better error handling
 ariadl() {
     if [ "$#" -lt 1 ]; then
-       log "ERROR" "Usage: ariadl <URL> [OUTPUT_FILE]"
+       error_msg "Usage: ariadl <URL> [OUTPUT_FILE]"
         return 1
     fi
 
@@ -191,13 +202,13 @@ ariadl() {
         else
             RETRY_COUNT=$((RETRY_COUNT + 1))
             if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-               log "ERROR" " Download failed. Retrying..."
+               error_msg " Download failed. Retrying..."
                 sleep 2
             fi
         fi
     done
 
-   log "ERROR" " Failed to download: $OUTPUT_FILE after $MAX_RETRIES attempts"
+   error_msg " Failed to download: $OUTPUT_FILE after $MAX_RETRIES attempts"
     return 1
 }
 
@@ -232,7 +243,7 @@ download_packages() {
         unset IFS
         
         if [[ -z "$filename" || -z "$base_url" ]]; then
-            log "ERROR" "Invalid entry format: $entry"
+            error_msg "Invalid entry format: $entry"
             continue
         fi
 
@@ -242,7 +253,7 @@ download_packages() {
         if [[ "$base_url" == *"api.github.com"* ]]; then
             # Use jq to fetch asset URLs from GitHub
             if ! file_urls=$(curl -sL "$base_url" | jq -r '.assets[].browser_download_url' 2>/dev/null); then
-                log "ERROR" "Failed to parse JSON from $base_url"
+                error_msg "Failed to parse JSON from $base_url"
                 continue
             fi
             download_url=$(echo "$file_urls" | grep -E '\.(ipk|apk)$' | grep -i "$filename" | sort -V | tail -1)
@@ -253,7 +264,7 @@ download_packages() {
             # Download and process page content directly
             local page_content
             if ! page_content=$(curl -sL --max-time 30 --retry 3 --retry-delay 2 "$base_url"); then
-                log "ERROR" "Failed to fetch page: $base_url"
+                error_msg "Failed to fetch page: $base_url"
                 continue
             fi
             
@@ -273,12 +284,12 @@ download_packages() {
         fi
 
         if [ -z "$download_url" ]; then
-            log "ERROR" "No matching package found for $filename"
+            error_msg "No matching package found for $filename"
             continue
         fi
         
         local output_file="$download_dir/$(basename "$download_url")"
-        download_file "$download_url" "$output_file" || log "ERROR" "Failed to download $filename"
+        download_file "$download_url" "$output_file" || error_msg "Failed to download $filename"
     done
     
     return 0

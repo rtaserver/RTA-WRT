@@ -11,13 +11,13 @@ build_mod_sdcard() {
     
     # Validate input parameters
     if [ -z "$suffix" ] || [ -z "$dtb" ] || [ -z "$image_path" ]; then
-        log "ERROR" "Missing required parameters. Usage: build_mod_sdcard <image_path> <dtb> <image_suffix>"
+        error_msg "Missing required parameters. Usage: build_mod_sdcard <image_path> <dtb> <image_suffix>"
         return 1
     fi
 
     # Validate and set paths
     if ! cd "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"; then
-        log "ERROR" "Failed to change directory to $GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"
+        error_msg "Failed to change directory to $GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"
         return 1
     fi
 
@@ -33,7 +33,7 @@ build_mod_sdcard() {
     trap cleanup EXIT
 
     if [ -z "$file_to_process" ] || [ ! -f "$file_to_process" ]; then
-        log "ERROR" "Image file not found: ${file_to_process}"
+        error_msg "Image file not found: ${file_to_process}"
         return 1
     fi
 
@@ -43,7 +43,7 @@ build_mod_sdcard() {
     # Extract files
     log "INFO" "Extracting mod-boot-sdcard..."
     if ! unzip -q main.zip; then
-        log "ERROR" "Failed to extract mod-boot-sdcard"
+        error_msg "Failed to extract mod-boot-sdcard"
         return 1
     fi
     rm -f main.zip
@@ -58,13 +58,13 @@ build_mod_sdcard() {
     cp "$file_to_process" "${suffix}/"
     if ! sudo cp mod-boot-sdcard-main/BootCardMaker/u-boot.bin \
         mod-boot-sdcard-main/files/mod-boot-sdcard.tar.gz "${suffix}/"; then
-        log "ERROR" "Failed to copy bootloader or modification files"
+        error_msg "Failed to copy bootloader or modification files"
         return 1
     fi
 
     # Process the image
     cd "${suffix}" || {
-        log "ERROR" "Failed to change directory to ${suffix}"
+        error_msg "Failed to change directory to ${suffix}"
         return 1
     }
 
@@ -72,7 +72,7 @@ build_mod_sdcard() {
 
     # Decompress the OpenWRT image
     if ! sudo gunzip "${file_name}.gz"; then
-        log "ERROR" "Failed to decompress image"
+        error_msg "Failed to decompress image"
         return 1
     fi
 
@@ -86,7 +86,7 @@ build_mod_sdcard() {
     done
 
     if [ -z "$device" ]; then
-        log "ERROR" "Failed to set up loop device"
+        error_msg "Failed to set up loop device"
         return 1
     fi
 
@@ -102,14 +102,14 @@ build_mod_sdcard() {
     done
 
     if [ $attempts -eq 3 ]; then
-        log "ERROR" "Failed to mount image"
+        error_msg "Failed to mount image"
         return 1
     fi
 
     # Apply modifications
     log "INFO" "Applying boot modifications..."
     if ! sudo tar -xzf mod-boot-sdcard.tar.gz -C boot; then
-        log "ERROR" "Failed to extract boot modifications"
+        error_msg "Failed to extract boot modifications"
         return 1
     fi
 
@@ -131,14 +131,14 @@ build_mod_sdcard() {
     log "INFO" "Writing bootloader..."
     if ! sudo dd if=u-boot.bin of="${device}" bs=1 count=444 conv=fsync 2>/dev/null || \
        ! sudo dd if=u-boot.bin of="${device}" bs=512 skip=1 seek=1 conv=fsync 2>/dev/null; then
-        log "ERROR" "Failed to write bootloader"
+        error_msg "Failed to write bootloader"
         return 1
     fi
 
     # Detach loop device and compress
     sudo losetup -d "${device}"
     if ! sudo gzip "${file_name}"; then
-        log "ERROR" "Failed to compress image"
+        error_msg "Failed to compress image"
         return 1
     fi
 
@@ -146,7 +146,7 @@ build_mod_sdcard() {
         rm -rf "../${file_name}.gz"
     fi
     mv "${file_name}.gz" "../${file_name}.gz" || {
-        log "ERROR" "Failed to rename image file"
+        error_msg "Failed to rename image file"
         return 1
     }
 
@@ -184,7 +184,7 @@ process_builds() {
                 
                 if [[ -n "$image_file" ]]; then
                     if ! build_mod_sdcard "$image_file" "$dtb" "$model"; then
-                        log "ERROR" "Failed to process build for $model ($device) with tunnel: $tunnel"
+                        error_msg "Failed to process build for $model ($device) with tunnel: $tunnel"
                         exit_code=1
                     fi
                 else
@@ -199,7 +199,7 @@ process_builds() {
             
             if [[ -n "$image_file" ]]; then
                 if ! build_mod_sdcard "$image_file" "$dtb" "$model"; then
-                    log "ERROR" "Failed to process build for $model ($device)"
+                    error_msg "Failed to process build for $model ($device)"
                     exit_code=1
                 fi
             else
@@ -227,7 +227,7 @@ main() {
     
     # Validate environment
     if [[ ! -d "$img_dir" ]]; then
-        log "ERROR" "Image directory not found: $img_dir"
+        error_msg "Image directory not found: $img_dir"
         return 1
     fi
     

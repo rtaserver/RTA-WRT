@@ -106,7 +106,7 @@ esac
 
 # Check final status
 if [ "$?" -ne 0 ]; then
-    log "ERROR" "Download or extraction failed."
+    error_msg "Download or extraction failed."
     exit 1
 else
     log "INFO" "Download and installation completed successfully."

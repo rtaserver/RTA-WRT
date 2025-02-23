@@ -28,7 +28,7 @@ repackwrt() {
                 shift 2
                 ;;
             *)
-                log "ERROR" "Unknown option: $1"
+                error_msg "Unknown option: $1"
                 exit 1
                 ;;
         esac
@@ -36,22 +36,22 @@ repackwrt() {
 
     # Validate required parameters
     if [[ -z "$builder_type" ]]; then
-        log "ERROR" "Builder type (--ophub or --ulo) is required"
+        error_msg "Builder type (--ophub or --ulo) is required"
         exit 1
     fi
     
     if [[ -z "$target_board" ]]; then
-        log "ERROR" "Target board (-t) is required"
+        error_msg "Target board (-t) is required"
         exit 1
     fi
     
     if [[ -z "$target_kernel" ]]; then
-        log "ERROR" "Target kernel (-k) is required"
+        error_msg "Target kernel (-k) is required"
         exit 1
     fi
 
     if [[ -z "$tunnel_type" ]]; then
-        log "ERROR" "Tunnel type (-tn) is required"
+        error_msg "Tunnel type (-tn) is required"
         exit 1
     fi
 
@@ -76,18 +76,18 @@ repackwrt() {
 
     # Navigate to working directory
     if ! cd "${work_dir}"; then
-        log "ERROR" "Failed to access working directory: ${work_dir}"
+        error_msg "Failed to access working directory: ${work_dir}"
         exit 1
     fi
 
     # Download and extract builder
     if ! ariadl "${repo_url}" "main.zip"; then
-        log "ERROR" "Failed to download builder"
+        error_msg "Failed to download builder"
         exit 1
     fi
 
     if ! unzip -q main.zip; then
-        log "ERROR" "Failed to extract builder archive"
+        error_msg "Failed to extract builder archive"
         rm -f main.zip
         exit 1
     fi
@@ -103,7 +103,7 @@ repackwrt() {
     # Find and validate rootfs file
     local rootfs_files=("${work_dir}/compiled_images/"*"_${tunnel_type}.tar.gz")
     if [[ ${#rootfs_files[@]} -ne 1 ]]; then
-        log "ERROR" "Expected exactly one rootfs file, found ${#rootfs_files[@]}"
+        error_msg "Expected exactly one rootfs file, found ${#rootfs_files[@]}"
         exit 1
     fi
     local rootfs_file="${rootfs_files[0]}"
@@ -118,13 +118,13 @@ repackwrt() {
     fi
 
     if ! cp -f "${rootfs_file}" "${target_path}"; then
-        log "ERROR" "Failed to copy rootfs file"
+        error_msg "Failed to copy rootfs file"
         exit 1
     fi
 
     # Change to builder directory
     if ! cd "${builder_dir}"; then
-        log "ERROR" "Failed to access builder directory: ${builder_dir}"
+        error_msg "Failed to access builder directory: ${builder_dir}"
         exit 1
     fi
 
@@ -133,7 +133,7 @@ repackwrt() {
     if [[ "$builder_type" == "--ophub" ]]; then
         log "INFO" "Running OphubBuilder..."
         if ! sudo ./remake -b "${target_board}" -k "${target_kernel}" -s 1024; then
-            log "ERROR" "OphubBuilder execution failed"
+            error_msg "OphubBuilder execution failed"
             exit 1
         fi
         device_output_dir="./openwrt/out"
@@ -155,7 +155,7 @@ repackwrt() {
         log "INFO" "Running UloBuilder..."
         local readonly rootfs_basename=$(basename "${rootfs_file}")
         if ! sudo ./ulo -y -m "${target_board}" -r "${rootfs_basename}" -k "${target_kernel}" -s 1024; then
-            log "ERROR" "UloBuilder execution failed"
+            error_msg "UloBuilder execution failed"
             exit 1
         fi
         device_output_dir="./out/${target_board}"
@@ -163,19 +163,19 @@ repackwrt() {
 
     # Verify and copy output files
     if [[ ! -d "${device_output_dir}" ]]; then
-        log "ERROR" "Builder output directory not found: ${device_output_dir}"
+        error_msg "Builder output directory not found: ${device_output_dir}"
         exit 1
     fi
 
     log "INFO" "Copying firmware files to output directory..."
     if ! cp -rf "${device_output_dir}"/* "${output_dir}/"; then
-        log "ERROR" "Failed to copy firmware files to output directory"
+        error_msg "Failed to copy firmware files to output directory"
         exit 1
     fi
 
     # Verify output files exist
     if ! ls "${output_dir}"/* >/dev/null 2>&1; then
-        log "ERROR" "No firmware files found in output directory"
+        error_msg "No firmware files found in output directory"
         exit 1
     fi
 

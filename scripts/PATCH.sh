@@ -2,6 +2,8 @@
 
 . ./scripts/INCLUDE.sh
 
+set -x
+
 # Initialize environment
 init_environment() {
     log "INFO" "Start Builder Patch!"

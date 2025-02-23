@@ -2,7 +2,7 @@
 
 # Source the include file containing common functions and variables
 if [[ ! -f "./scripts/INCLUDE.sh" ]]; then
-    log "ERROR" "INCLUDE.sh not found in ./scripts/"
+    error_msg "INCLUDE.sh not found in ./scripts/"
     exit 1
 fi
 
@@ -101,7 +101,7 @@ verify_packages() {
     local -a package_list=("${!1}")
     
     if [[ ! -d "$pkg_dir" ]]; then
-        log "ERROR" "Package directory not found: $pkg_dir"
+        error_msg "Package directory not found: $pkg_dir"
         return 1
     fi
     
@@ -144,7 +144,7 @@ main() {
     if [ $rc -eq 0 ]; then
         log "SUCCESS" "Package download and verification completed successfully"
     else
-        log "ERROR" "Package download or verification failed"
+        error_msg "Package download or verification failed"
     fi
     
     return $rc
