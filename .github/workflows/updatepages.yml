@@ -1,0 +1,20 @@
+name: Trigger Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  trigger-and-wait:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger To Update Pages
+        uses: dragoscops/workflow-trigger-wait@v3
+        with:
+          credentials: |
+            {
+              "token": "${{ secrets.GITHUB_TOKEN }}"
+            }
+          repo: "rizkikotet-dev/rizkikotet-dev.github.io"
+          workflow_id: "updatedate.yml"
+          ref: "main"
+          action: "trigger-and-wait"
