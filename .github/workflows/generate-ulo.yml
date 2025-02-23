@@ -316,6 +316,7 @@ jobs:
         if: steps.build.outputs.status == 'success'
         run: |
           cd ${{ env.WORKING_DIR }}
+          chmod +x scripts/REPACKWRT.sh
 
           # Define supported devices and their kernel versions
           declare -A KERNEL_VERSIONS=(
