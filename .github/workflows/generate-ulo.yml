@@ -38,19 +38,6 @@ on:
           - rk3566-orangepi-3b
           - rk3588-orangepi-5plus
           - rk3588s-orangepi-5
-      openwrt_kernel:
-        description: "Select kernel version"
-        required: true
-        default: "5.15.y_6.6.y"
-        type: choice
-        options:
-          - 5.4.y
-          - 5.10.y
-          - 5.15.y
-          - 6.1.y
-          - 6.6.y
-          - 6.1.y_6.6.y
-          - 5.15.y_6.6.y
       tunnel:
         description: "Select VPN Client app:"
         required: true
@@ -490,10 +477,10 @@ jobs:
         run: |
           cd ${{ env.WORKING_DIR }}
 
-          chmod +x scripts/MODSDCARD.sh
-          if [[ "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x_*.img.gz")" ]]; then
-            ./scripts/MODSDCARD.sh
-          fi
+          # chmod +x scripts/MODSDCARD.sh
+          # if [[ "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x_*.img.gz")" ]]; then
+          #   ./scripts/MODSDCARD.sh
+          # fi
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Create Release

@@ -161,6 +161,24 @@ jobs:
               "tunnel": "no-tunnel"
             }
 
+      - name: Trigger All ULO
+        uses: dragoscops/workflow-trigger-wait@v3
+        with:
+          credentials: |
+            {
+              "token": "${{ secrets.GITHUB_TOKEN }}"
+            }
+          repo: "rizkikotet-dev/RTA-WRT"
+          workflow_id: "generate-openwrt.yml"
+          ref: "${{ github.ref_name }}"
+          action: "trigger-and-wait"
+          inputs: |
+            {
+              "release_branch": "${{ inputs.release_branch }}",
+              "target": "all",
+              "tunnel": "all"
+            }
+
       - name: Trigger All Non Amlogic
         uses: dragoscops/workflow-trigger-wait@v3
         with:
