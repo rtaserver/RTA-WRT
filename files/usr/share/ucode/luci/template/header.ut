@@ -158,7 +158,9 @@ const CONFIG = {
     APP: {
         name: 'RTA-WRT',
         checkInterval: 15 * 60 * 1000, // 15 menit
-        cacheExpiration: 24 * 60 * 60 * 1000 // 24 jam
+        cacheExpiration: 24 * 60 * 60 * 1000, // 24 jam
+        offlineMode: false, // Flag untuk mode offline
+        useLegacyMode: false // Untuk browser yang tidak mendukung API modern
     },
     SOCIAL: {
         channel: 'https://t.me/rtawrt',
@@ -166,9 +168,40 @@ const CONFIG = {
         personal: 'https://t.me/RizkiKotet'
     },
     STORAGE_KEYS: {
-        MODAL_KEY: 'mdl_Saweria'
-    }
+        MODAL_KEY: 'mdl_Saweria',
+        RESOURCES_CACHE: 'resources_cache',
+        NETWORK_STATUS: 'network_status',
+        CACHED_IMAGES: 'cached_images'
+    },
+    RESOURCES: [
+        '{{ resource }}/Profile.jpeg',
+        '{{ resource }}/Channel.svg',
+        '{{ resource }}/Group.svg',
+        '{{ resource }}/Personal.svg',
+        '{{ resource }}/Saweria.png'
+    ]
 };
+
+// ====== Feature Detection ======
+const FEATURES = {
+    serviceWorker: 'serviceWorker' in navigator,
+    cacheAPI: 'caches' in window,
+    localStorage: (() => {
+        try {
+            localStorage.setItem('test', 'test');
+            localStorage.removeItem('test');
+            return true;
+        } catch (e) {
+            return false;
+        }
+    })(),
+    indexedDB: 'indexedDB' in window
+};
+
+// Determine if we need to use legacy mode
+CONFIG.APP.useLegacyMode = !FEATURES.serviceWorker && !FEATURES.cacheAPI;
+// console.log('Feature detection:', FEATURES);
+// console.log('Using legacy mode:', CONFIG.APP.useLegacyMode);
 
 // ====== Utility Functions ======
 const debounce = (func, wait) => {
@@ -179,35 +212,263 @@ const debounce = (func, wait) => {
     };
 };
 
+// Network status detection with fallback
+const checkNetworkStatus = () => {
+    let isOnline = true;
+    
+    // Primary method: navigator.onLine
+    if ('onLine' in navigator) {
+        isOnline = navigator.onLine;
+    } else {
+        // Fallback: Try to fetch a tiny resource
+        try {
+            const img = new Image();
+            img.onerror = () => {
+                CONFIG.APP.offlineMode = true;
+                // console.log('Network check failed: Offline');
+            };
+            img.onload = () => {
+                CONFIG.APP.offlineMode = false;
+                // console.log('Network check passed: Online');
+            };
+            const cacheBuster = Date.now();
+            img.src = `data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=?_=${cacheBuster}`;
+        } catch (e) {
+            // If even this fails, assume we're offline
+            isOnline = false;
+        }
+    }
+    
+    CONFIG.APP.offlineMode = !isOnline;
+    
+    // Try to save the status if storage is available
+    try {
+        if (FEATURES.localStorage) {
+            localStorage.setItem(CONFIG.STORAGE_KEYS.NETWORK_STATUS, JSON.stringify({
+                isOnline,
+                timestamp: Date.now()
+            }));
+        }
+    } catch (e) {
+        // console.warn('Could not save network status');
+    }
+    
+    return isOnline;
+};
+
+// Image preloader that works without Cache API
+const preloadImage = (url) => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(url);
+        img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+        img.src = url;
+    });
+};
+
+// Convert image to Data URL (for legacy cache)
+const imageToDataURL = (url) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = () => {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const dataURL = canvas.toDataURL('image/png');
+                    resolve({ url, dataURL });
+                } catch (e) {
+                    reject(e);
+                }
+            };
+            img.onerror = () => reject(new Error(`Failed to convert image: ${url}`));
+            img.src = url;
+        } catch (e) {
+            reject(e);
+        }
+    });
+};
+
 // ====== Storage Manager ======
 class StorageManager {
     static #memoryCache = new Map();
 
     static save(key, value) {
         try {
+            // Always save to memory cache
             this.#memoryCache.set(key, value);
-            localStorage.setItem(key, JSON.stringify(value));
+            
+            // Try localStorage if available
+            if (FEATURES.localStorage) {
+                localStorage.setItem(key, JSON.stringify(value));
+            }
+            return true;
         } catch (error) {
-            console.warn(`Storage error: ${error}`);
+            // console.warn(`Storage error: ${error}`);
+            return false;
         }
     }
 
     static get(key) {
+        // Check memory cache first
         if (this.#memoryCache.has(key)) {
             return this.#memoryCache.get(key);
         }
-        const value = localStorage.getItem(key);
-        if (value) {
-            const parsedValue = JSON.parse(value);
-            this.#memoryCache.set(key, parsedValue);
-            return parsedValue;
+        
+        // Try localStorage if available
+        if (FEATURES.localStorage) {
+            try {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    const parsedValue = JSON.parse(value);
+                    this.#memoryCache.set(key, parsedValue);
+                    return parsedValue;
+                }
+            } catch (error) {
+                // console.warn(`Error retrieving from storage: ${error}`);
+            }
         }
+        
         return null;
     }
 
     static remove(key) {
         this.#memoryCache.delete(key);
-        localStorage.removeItem(key);
+        if (FEATURES.localStorage) {
+            try {
+                localStorage.removeItem(key);
+            } catch (error) {
+                // console.warn(`Error removing from storage: ${error}`);
+            }
+        }
+        return true;
+    }
+}
+
+// ====== Resource Manager ======
+class ResourceManager {
+    static async preloadResources() {
+        // console.log('Starting resource preloading...');
+        
+        // Skip if offline
+        if (CONFIG.APP.offlineMode) {
+            // console.log('Skipping preload in offline mode');
+            return;
+        }
+        
+        // Check cache timestamp first
+        const cachedResources = StorageManager.get(CONFIG.STORAGE_KEYS.RESOURCES_CACHE);
+        const now = Date.now();
+        
+        if (cachedResources && (now - cachedResources.timestamp < CONFIG.APP.cacheExpiration)) {
+            // console.log('Using cached resources (not expired yet)');
+            return;
+        }
+        
+        // Different strategies based on browser support
+        if (FEATURES.cacheAPI) {
+            // Modern browsers with Cache API
+            try {
+                const cache = await caches.open('rta-wrt-resources');
+                
+                const cachePromises = CONFIG.RESOURCES.map(async url => {
+                    try {
+                        const response = await fetch(url, { mode: 'no-cors' });
+                        await cache.put(url, response.clone());
+                        return url;
+                    } catch (error) {
+                        // console.warn(`Failed to cache resource: ${url}`, error);
+                        return null;
+                    }
+                });
+                
+                const results = await Promise.allSettled(cachePromises);
+                const successCount = results.filter(r => r.status === 'fulfilled' && r.value).length;
+                
+                // console.log(`Cached ${successCount}/${CONFIG.RESOURCES.length} resources with Cache API`);
+                
+                StorageManager.save(CONFIG.STORAGE_KEYS.RESOURCES_CACHE, {
+                    timestamp: now,
+                    count: successCount,
+                    method: 'cacheAPI'
+                });
+            } catch (error) {
+                // console.warn('Cache API failed:', error);
+                await this.#legacyPreload();
+            }
+        } else {
+            // Legacy browsers without Cache API
+            await this.#legacyPreload();
+        }
+    }
+    
+    static async #legacyPreload() {
+        // console.log('Using legacy preload method');
+        
+        try {
+            // Basic preload - just load images into browser cache
+            const preloadPromises = CONFIG.RESOURCES.map(url => preloadImage(url));
+            const results = await Promise.allSettled(preloadPromises);
+            const successCount = results.filter(r => r.status === 'fulfilled').length;
+            
+            // console.log(`Preloaded ${successCount}/${CONFIG.RESOURCES.length} resources with legacy method`);
+            
+            // Optionally, for extra robustness, try to convert images to data URLs and cache them in localStorage
+            // Note: This might fail for larger images or if localStorage quota is exceeded
+            if (FEATURES.localStorage) {
+                try {
+                    const dataURLPromises = CONFIG.RESOURCES.map(url => imageToDataURL(url));
+                    const dataURLResults = await Promise.allSettled(dataURLPromises);
+                    const dataURLs = {};
+                    
+                    dataURLResults
+                        .filter(r => r.status === 'fulfilled')
+                        .forEach(r => {
+                            const { url, dataURL } = r.value;
+                            dataURLs[url] = dataURL;
+                        });
+                    
+                    StorageManager.save(CONFIG.STORAGE_KEYS.CACHED_IMAGES, dataURLs);
+                    // console.log(`Saved ${Object.keys(dataURLs).length} images as data URLs`);
+                } catch (e) {
+                    // console.warn('Failed to save images as data URLs:', e);
+                }
+            }
+            
+            StorageManager.save(CONFIG.STORAGE_KEYS.RESOURCES_CACHE, {
+                timestamp: Date.now(),
+                count: successCount,
+                method: 'legacy'
+            });
+        } catch (error) {
+            // console.warn('Legacy preload failed:', error);
+        }
+    }
+
+    static getResourceUrl(url) {
+        // If offline, try to get from our various caches
+        if (CONFIG.APP.offlineMode) {
+            // First check if we have a dataURL cache
+            const cachedImages = StorageManager.get(CONFIG.STORAGE_KEYS.CACHED_IMAGES);
+            if (cachedImages && cachedImages[url]) {
+                // console.log(`Using data URL cache for ${url}`);
+                return cachedImages[url];
+            }
+            
+            // If Cache API is available, the original URL should work (service worker will intercept)
+            if (FEATURES.cacheAPI) {
+                return url;
+            }
+            
+            // Last resort - return url anyway and hope browser cache works
+            // console.log(`No offline version available for ${url}`);
+        }
+        
+        return url;
     }
 }
 
@@ -215,10 +476,57 @@ class StorageManager {
 class AlertSystem {
     static async showAlert(config) {
         try {
-            await Swal.fire(config);
+            // Process any image URLs for offline support
+            if (config.imageUrl) {
+                config.imageUrl = ResourceManager.getResourceUrl(config.imageUrl);
+            }
+            
+            // Create offline-friendly footer if needed
+            if (config.footer && CONFIG.APP.offlineMode) {
+                config.footer = config.footer.replace(/src="([^"]+)"/g, (match, url) => {
+                    return `src="${ResourceManager.getResourceUrl(url)}"`;
+                });
+            }
+            
+            // Same for HTML content
+            if (config.html && CONFIG.APP.offlineMode) {
+                config.html = config.html.replace(/src="([^"]+)"/g, (match, url) => {
+                    return `src="${ResourceManager.getResourceUrl(url)}"`;
+                });
+            }
+            
+            // Check if SweetAlert is available
+            if (typeof Swal !== 'undefined') {
+                await Swal.fire(config);
+            } else {
+                // Fallback to basic alert
+                // console.warn('SweetAlert not available, using fallback alert');
+                this.#showFallbackAlert(config);
+            }
         } catch (error) {
-            console.warn('Alert error:', error);
+            // console.warn('Alert error:', error);
+            // Fallback alert
+            this.#showFallbackAlert(config);
         }
+    }
+    
+    static #showFallbackAlert(config) {
+        let message = '';
+        
+        if (config.title) {
+            message += config.title + '\n\n';
+        }
+        
+        if (config.text) {
+            message += config.text;
+        } else if (config.html) {
+            // Strip HTML tags for plain alert
+            const div = document.createElement('div');
+            div.innerHTML = config.html;
+            message += div.textContent || div.innerText || '';
+        }
+        
+        alert(message);
     }
 }
 
@@ -228,17 +536,18 @@ function showProfile() {
         width: 400,
         title: "About Me!",
         text: "Halo! Saya Rizki Kotet, seorang programmer pemula yang belajar C# dan PHP...",
-        imageUrl: "{{ resource }}/Profile.jpeg",
+        imageUrl: ResourceManager.getResourceUrl("{{ resource }}/Profile.jpeg"),
         imageWidth: 200,
         imageHeight: 200,
         imageAlt: "Profile",
         allowOutsideClick: false,
         footer: `
             <p style="text-align: center;">
-                <a href="${CONFIG.SOCIAL.channel}"><img alt="Channel" src="{{ resource }}/Channel.svg" width="110" height="30"></a>
-                <a href="${CONFIG.SOCIAL.group}"><img alt="Group" src="{{ resource }}/Group.svg" width="110" height="30"></a>
-                <a href="${CONFIG.SOCIAL.personal}"><img alt="Personal" src="{{ resource }}/Personal.svg" width="110" height="30"></a>
+                <a href="${CONFIG.SOCIAL.channel}" ${CONFIG.APP.offlineMode ? 'disabled' : ''}><img alt="Channel" src="${ResourceManager.getResourceUrl("{{ resource }}/Channel.svg")}" width="110" height="30"></a>
+                <a href="${CONFIG.SOCIAL.group}" ${CONFIG.APP.offlineMode ? 'disabled' : ''}><img alt="Group" src="${ResourceManager.getResourceUrl("{{ resource }}/Group.svg")}" width="110" height="30"></a>
+                <a href="${CONFIG.SOCIAL.personal}" ${CONFIG.APP.offlineMode ? 'disabled' : ''}><img alt="Personal" src="${ResourceManager.getResourceUrl("{{ resource }}/Personal.svg")}" width="110" height="30"></a>
             </p>
+            ${CONFIG.APP.offlineMode ? '<p style="color: #f44336; text-align: center;">Anda sedang dalam mode offline</p>' : ''}
         `
     });
 }
@@ -252,16 +561,17 @@ class DailyModalManager {
         await AlertSystem.showAlert({
             title: `🚀 Welcome To ${CONFIG.APP.name}`,
             width: 400,
-            imageUrl: "{{ resource }}/Saweria.png",
+            imageUrl: ResourceManager.getResourceUrl("{{ resource }}/Saweria.png"),
             imageWidth: 200,
             imageHeight: 200,
             imageAlt: "Saweria",
             html: `
                 <p style="text-align: center;">
-                    <a href="${CONFIG.SOCIAL.channel}" target="_blank"><img alt="Channel" src="{{ resource }}/Channel.svg" width="110" height="20"></a>
-                    <a href="${CONFIG.SOCIAL.group}" target="_blank"><img alt="Group" src="{{ resource }}/Group.svg" width="110" height="20"></a>
-                    <a href="${CONFIG.SOCIAL.personal}" target="_blank"><img alt="Personal" src="{{ resource }}/Personal.svg" width="110" height="20"></a>
+                    <a href="${CONFIG.SOCIAL.channel}" target="_blank" ${CONFIG.APP.offlineMode ? 'disabled' : ''}><img alt="Channel" src="${ResourceManager.getResourceUrl("{{ resource }}/Channel.svg")}" width="110" height="20"></a>
+                    <a href="${CONFIG.SOCIAL.group}" target="_blank" ${CONFIG.APP.offlineMode ? 'disabled' : ''}><img alt="Group" src="${ResourceManager.getResourceUrl("{{ resource }}/Group.svg")}" width="110" height="20"></a>
+                    <a href="${CONFIG.SOCIAL.personal}" target="_blank" ${CONFIG.APP.offlineMode ? 'disabled' : ''}><img alt="Personal" src="${ResourceManager.getResourceUrl("{{ resource }}/Personal.svg")}" width="110" height="20"></a>
                 </p>
+                ${CONFIG.APP.offlineMode ? '<p style="color: #f44336; text-align: center;">Anda sedang dalam mode offline</p>' : ''}
                 <div style="margin-top: 10px; text-align: center;">
                     <input type="checkbox" id="noShowToday">
                     <label for="noShowToday">Jangan tampilkan lagi hari ini</label>
@@ -270,27 +580,217 @@ class DailyModalManager {
             confirmButtonText: 'OK',
             allowOutsideClick: false,
             didOpen: () => {
-                document.getElementById('noShowToday').addEventListener('change', event => {
-                    if (event.target.checked) {
-                        StorageManager.save(CONFIG.STORAGE_KEYS.MODAL_KEY, today);
-                    } else {
-                        StorageManager.remove(CONFIG.STORAGE_KEYS.MODAL_KEY);
-                    }
-                });
+                const checkbox = document.getElementById('noShowToday');
+                if (checkbox) {
+                    checkbox.addEventListener('change', event => {
+                        if (event.target.checked) {
+                            StorageManager.save(CONFIG.STORAGE_KEYS.MODAL_KEY, today);
+                        } else {
+                            StorageManager.remove(CONFIG.STORAGE_KEYS.MODAL_KEY);
+                        }
+                    });
+                }
             }
         });
     }
 }
 
-// ====== Application Controller ======
-class AppController {
-    static async initialize() {
-        await DailyModalManager.showDailyModal();
+// ====== Service Worker Manager (with proper feature detection) ======
+class ServiceWorkerManager {
+    static async register() {
+        // Skip if not supported
+        if (!FEATURES.serviceWorker) {
+            // console.log('Service Worker not supported by this browser');
+            return false;
+        }
+
+        try {
+            // Check if we already registered
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            if (registrations.length > 0) {
+                // console.log('Service Worker already registered');
+                return true;
+            }
+
+            // Create inline service worker
+            const swBlob = new Blob([`
+                // Service Worker for RTA-WRT
+                const CACHE_NAME = 'rta-wrt-v1';
+                
+                // Install event - cache critical assets
+                self.addEventListener('install', (event) => {
+                  event.waitUntil(
+                    caches.open(CACHE_NAME).then((cache) => {
+                      return cache.addAll([
+                        '/',
+                        '/index.html'
+                      ]);
+                    })
+                  );
+                });
+                
+                // Fetch event - serve from cache if available, otherwise fetch and cache
+                self.addEventListener('fetch', (event) => {
+                  event.respondWith(
+                    caches.match(event.request).then((cachedResponse) => {
+                      if (cachedResponse) {
+                        return cachedResponse;
+                      }
+                      
+                      return fetch(event.request)
+                        .then((response) => {
+                          // Don't cache if not a valid response
+                          if (!response || response.status !== 200 || response.type !== 'basic') {
+                            return response;
+                          }
+                          
+                          // Clone the response
+                          const responseToCache = response.clone();
+                          
+                          caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseToCache);
+                          });
+                          
+                          return response;
+                        })
+                        .catch(() => {
+                          // If offline and resource not in cache, try to serve the offline page
+                          if (event.request.mode === 'navigate') {
+                            return caches.match('/offline.html');
+                          }
+                        });
+                    })
+                  );
+                });
+            `], { type: 'text/javascript' });
+            
+            const swUrl = URL.createObjectURL(swBlob);
+            const registration = await navigator.serviceWorker.register(swUrl);
+            // console.log('Service Worker registered successfully', registration);
+            return true;
+        } catch (error) {
+            // console.warn('Service Worker registration failed:', error);
+            return false;
+        }
     }
 }
 
-// ====== Initialize Application ======
-document.addEventListener('DOMContentLoaded', () => AppController.initialize());
+// ====== Application Controller ======
+class AppController {
+    static #isInitialized = false;
+
+    static async initialize() {
+        if (this.#isInitialized) return;
+        
+        try {
+            // console.log('Initializing application...');
+            
+            // First check network status
+            checkNetworkStatus();
+            // console.log(`Network status: ${CONFIG.APP.offlineMode ? 'Offline' : 'Online'}`);
+            
+            // Enable legacy mode if needed
+            if (CONFIG.APP.useLegacyMode) {
+                // console.log('Legacy mode active - using fallback methods');
+            }
+            
+            // Try to register service worker if supported
+            if (FEATURES.serviceWorker) {
+                try {
+                    await ServiceWorkerManager.register();
+                } catch (e) {
+                    // console.warn('Service Worker registration skipped:', e);
+                }
+            } else {
+                // console.log('Service Worker not supported - skipping registration');
+            }
+            
+            // Preload resources with appropriate method
+            try {
+                await ResourceManager.preloadResources();
+            } catch (e) {
+                // console.warn('Resource preloading issue:', e);
+            }
+            
+            // Now show daily modal
+            try {
+                await DailyModalManager.showDailyModal();
+            } catch (e) {
+                // console.warn('Daily modal issue:', e);
+            }
+            
+            // Set up network status listeners if supported
+            if ('onLine' in navigator) {
+                window.addEventListener('online', this.#handleNetworkChange);
+                window.addEventListener('offline', this.#handleNetworkChange);
+            } else {
+                // Fallback: periodically check network status
+                setInterval(() => {
+                    checkNetworkStatus();
+                }, CONFIG.APP.checkInterval);
+            }
+            
+            this.#isInitialized = true;
+            // console.log('Application initialized successfully');
+        } catch (error) {
+            // console.warn('Initialization error:', error);
+            // Still mark as initialized to prevent repeated tries
+            this.#isInitialized = true;
+            
+            // Try to at least show the modal
+            try {
+                await DailyModalManager.showDailyModal();
+            } catch (e) {
+                // console.error('Critical error: Could not show modal', e);
+            }
+        }
+    }
+    
+    static #handleNetworkChange = () => {
+        const isOnline = checkNetworkStatus();
+        // console.log(`Network status changed: ${isOnline ? 'online' : 'offline'}`);
+        
+        // If coming back online, try to preload resources
+        if (isOnline) {
+            ResourceManager.preloadResources();
+        }
+    }
+}
+
+// ====== Bootstrap Application (with maximum safety) ======
+const bootstrapApp = () => {
+    try {
+        // console.log('Bootstrapping application...');
+        
+        // Detect features first
+        // console.log('Browser features:', FEATURES);
+        
+        // Initialize app
+        AppController.initialize().catch(error => {
+            // console.error('Initialization promise rejected:', error);
+        });
+    } catch (error) {
+        // console.error('Bootstrap error:', error);
+        // Last resort - try to show modal
+        try {
+            DailyModalManager.showDailyModal();
+        } catch (e) {
+            // Nothing we can do here
+            // console.error('Fatal application error', e);
+        }
+    }
+};
+
+// Try to initialize as early as possible, but with fallbacks
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrapApp);
+} else {
+    // Document already loaded
+    bootstrapApp();
+}
+
+// Also listen for load event as a fallback
+window.addEventListener('load', bootstrapApp);
 
 </script>
 
