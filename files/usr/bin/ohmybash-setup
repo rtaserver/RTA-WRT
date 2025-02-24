@@ -1,0 +1,126 @@
+#!/bin/bash
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Configuration
+INSTALL_DIR="/usr/share/.oh-my-bash"
+BACKUP_DIR="/usr/share/.oh-my-bash.backup"
+REPO_URL="https://github.com/ohmybash/oh-my-bash.git"
+
+# Check if script is run as root
+check_root() {
+    if [ "$(id -u)" != "0" ]; then
+        echo -e "${RED}Error: This script must be run as root${NC}"
+        exit 1
+    fi
+}
+
+# Print banner
+print_banner() {
+    echo -e "${GREEN}"
+    echo "╔═══════════════════════════════════════╗"
+    echo "║         Oh-My-Bash Installer          ║"
+    echo "╚═══════════════════════════════════════╝"
+    echo -e "${NC}"
+}
+
+# Backup existing installation
+backup_existing() {
+    if [ -d "$INSTALL_DIR" ]; then
+        echo -e "${YELLOW}Backing up existing installation...${NC}"
+        mv "$INSTALL_DIR" "$BACKUP_DIR"
+    fi
+}
+
+# Install Oh-My-Bash
+install() {
+    print_banner
+    check_root
+    
+    echo -e "${GREEN}Starting installation...${NC}"
+    
+    # Backup existing installation
+    backup_existing
+    
+    # Clone repository
+    if git clone "$REPO_URL" "$INSTALL_DIR"; then
+        echo -e "${GREEN}Repository cloned successfully${NC}"
+    else
+        echo -e "${RED}Failed to clone repository${NC}"
+        exit 1
+    fi
+    
+    # Copy and configure .bashrc
+    cp "$INSTALL_DIR/templates/bashrc.osh-template" "$INSTALL_DIR/.bashrc"
+    
+    # Update configurations
+    sed -i "s|export OSH=~/.oh-my-bash|export OSH=$INSTALL_DIR|g" "$INSTALL_DIR/.bashrc"
+    sed -i "s|OSH_THEME=\"font\"|OSH_THEME=\"kitsune\"|g" "$INSTALL_DIR/.bashrc"
+    
+    # Add to global profile
+    if ! grep -q "source $INSTALL_DIR/.bashrc" /etc/profile; then
+        echo "source $INSTALL_DIR/.bashrc" >> /etc/profile
+    fi
+    
+    echo -e "${GREEN}Installation completed successfully!${NC}"
+    echo -e "${YELLOW}Please log out and log back in to apply changes${NC}"
+}
+
+# Uninstall Oh-My-Bash
+uninstall() {
+    print_banner
+    check_root
+    
+    echo -e "${YELLOW}Starting uninstallation...${NC}"
+    
+    # Remove source line from profile
+    sed -i "\|source $INSTALL_DIR/.bashrc|d" /etc/profile
+    
+    # Remove installation directory
+    if [ -d "$INSTALL_DIR" ]; then
+        rm -rf "$INSTALL_DIR"
+        echo -e "${GREEN}Oh-My-Bash has been removed${NC}"
+    else
+        echo -e "${YELLOW}Oh-My-Bash installation not found${NC}"
+    fi
+    
+    # Remove backup if exists
+    if [ -d "$BACKUP_DIR" ]; then
+        rm -rf "$BACKUP_DIR"
+        echo -e "${GREEN}Backup directory removed${NC}"
+    fi
+    
+    echo -e "${GREEN}Uninstallation completed successfully!${NC}"
+    echo -e "${YELLOW}Please log out and log back in to complete the process${NC}"
+}
+
+# Show help message
+show_help() {
+    echo "Usage: $0 [option]"
+    echo "Options:"
+    echo "  install    Install Oh-My-Bash"
+    echo "  uninstall  Remove Oh-My-Bash"
+    echo "  help       Show this help message"
+}
+
+# Main script logic
+case "$1" in
+    "install")
+        install
+        ;;
+    "uninstall")
+        uninstall
+        ;;
+    "help"|"")
+        show_help
+        ;;
+    *)
+        echo -e "${RED}Invalid option: $1${NC}"
+        show_help
+        exit 1
+        ;;
+esac

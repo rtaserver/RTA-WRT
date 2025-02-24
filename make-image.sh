@@ -16,7 +16,7 @@ DISABLED_SERVICES=""
 # Base packages
 PACKAGES+=" -dnsmasq dnsmasq-full cgi-io libiwinfo libiwinfo-data libiwinfo-lua liblua \
 luci-base luci-lib-base luci-lib-ip luci-lib-jsonc luci-lib-nixio luci-mod-admin-full \
-cpusage ttyd dmesg kmod-tun luci-lib-ipkg \
+cpusage ttyd dmesg kmod-tun luci-lib-ipkg git git-http \
 zram-swap adb parted losetup resize2fs luci luci-ssl block-mount htop bash curl wget-ssl \
 tar unzip unrar gzip jq luci-app-ttyd nano httping screen openssh-sftp-server \
 liblucihttp liblucihttp-lua libubus-lua lua luci-app-firewall luci-app-opkg \
