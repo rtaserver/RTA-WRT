@@ -173,6 +173,7 @@ jobs:
           echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
 
           KERNEL="6.6.y"
+          echo "KERNEL=$KERNEL" >> $GITHUB_ENV
 
           # Set base distribution info
           BASE="${RELEASE_BRANCH%:*}"

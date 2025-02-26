@@ -171,12 +171,15 @@ jobs:
           case "$MATRIXTARGET" in
             h5-*|h616-*|h618-*|h6-*)
                 KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
                 ;;
             s905*)
                 KERNEL="6.1.66-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
                 ;;
             rk*)
                 KERNEL="5.10.160-rk35v-dbai"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
                 ;;
           esac
 
