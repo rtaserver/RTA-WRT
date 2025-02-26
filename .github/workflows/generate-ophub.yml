@@ -1,4 +1,4 @@
-name: Generate RTA-WRT Amlogic OPHUB Firmware
+name: Generate RTA-WRT OPHUB Firmware
 
 on:
   workflow_dispatch:

@@ -1,4 +1,4 @@
-name: Generate RTA-WRT Firmware
+name: Generate RTA-WRT ULO Firmware
 
 on:
   workflow_dispatch:
