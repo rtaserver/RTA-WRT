@@ -161,14 +161,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          name: ${{ env.RELEASE_NAME }}
-          prerelease: ${{ github.ref_name == 'dev' }}
+          tag_name: ${RELEASE_TAG}
+          name: ${RELEASE_NAME}
+          prerelease: ${{ github.ref_name == 'dev'}
           body: |
             # 🚀 RTA-WRT - Release Information
 
             ## 📥 Download Statistics
-            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/${{ env.RELEASE_TAG }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository}/${RELEASE_TAG}/total?style=for-the-badge&logo=Openwrt)
 
             ## 📢 Support Channels
             [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt)
@@ -241,11 +241,11 @@ jobs:
         if: steps.variables.outputs.status == 'success'
         run: |
           # Determine archive extension based on version
-          CURVER=$(echo "${{ env.BRANCH }}" | cut -d'.' -f1)
+          CURVER=$(echo "${BRANCH}" | cut -d'.' -f1)
           archive_ext=$([ "${CURVER}" == "24" ] && echo "tar.zst" || echo "tar.xz")
 
           # Download image builder
-          RELEASE="${{ env.DOWNLOAD_BASE }}/releases/${{ env.BRANCH }}/targets/${{ env.TARGET_SYSTEM }}/${{ env.BASE }}-imagebuilder-${{ env.BRANCH }}-${{ env.TARGET_NAME }}.Linux-x86_64.${archive_ext}"
+          RELEASE="${DOWNLOAD_BASE}/releases/${BRANCH}/targets/${TARGET_SYSTEM}/${BASE}-imagebuilder-${BRANCH}-${TARGET_NAME}.Linux-x86_64.${archive_ext}"
           echo "Downloading from: $RELEASE"
           wget --progress=dot:giga "$RELEASE"
 
@@ -260,8 +260,8 @@ jobs:
           esac
 
           # Setup working directory
-          mv *-imagebuilder-* ${{ env.WORKING_DIR }}
-          cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
+          mv *-imagebuilder-* ${WORKING_DIR}
+          cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/${WORKING_DIR}
 
           echo "status=success" >> $GITHUB_OUTPUT
 
@@ -269,7 +269,7 @@ jobs:
         id: packages
         if: steps.download.outputs.status == 'success'
         run: |
-          cd ${{ env.WORKING_DIR }}
+          cd ${WORKING_DIR}
           chmod +x scripts/PACKAGES.sh
           ./scripts/PACKAGES.sh
 
@@ -279,7 +279,7 @@ jobs:
         id: customize
         if: steps.packages.outputs.status == 'success'
         run: |
-          cd ${{ env.WORKING_DIR }}
+          cd ${WORKING_DIR}
 
           # Apply patches
           chmod +x scripts/PATCH.sh
@@ -300,20 +300,20 @@ jobs:
         id: build
         if: steps.customize.outputs.status == 'success'
         run: |
-          cd ${{ env.WORKING_DIR }}
+          cd ${WORKING_DIR}
           mkdir -p compiled_images
           chmod +x make-image.sh
 
           # Clean if requested
-          if [ "${{ env.CLEAN }}" == "true" ]; then
+          if [ "${CLEAN}" == "true" ]; then
             make clean
           fi
             
           # Build image
-          time ./make-image.sh ${{ env.PROFILE }} $TUNNEL
+          time ./make-image.sh ${PROFILE} $TUNNEL
             
           # Move and rename output files
-          for file in bin/targets/"${{ env.TARGET_SYSTEM }}"/*-rootfs.tar.gz; do
+          for file in bin/targets/"${TARGET_SYSTEM}"/*-rootfs.tar.gz; do
             if [ -f "$file" ]; then
               new_name="RTA-WRT_$(basename "$file" -rootfs.tar.gz)_${TUNNEL}-rootfs.tar.gz"
               mv "$file" compiled_images/$new_name
@@ -328,7 +328,7 @@ jobs:
         id: repack
         if: steps.build.outputs.status == 'success'
         run: |
-          cd ${{ env.WORKING_DIR }}
+          cd ${WORKING_DIR}
           chmod +x scripts/REPACKWRT.sh
           ./scripts/REPACKWRT.sh "ophub" "$MATRIXTARGET" "$KERNEL" "$TUNNEL"
           echo "status=success" >> $GITHUB_OUTPUT
@@ -337,7 +337,7 @@ jobs:
         id: modsdcard
         if: steps.repack.outputs.status == 'success'
         run: |
-          cd ${{ env.WORKING_DIR }}
+          cd ${WORKING_DIR}
           chmod +x scripts/MODSDCARD.sh
           ./scripts/MODSDCARD.sh
           echo "status=success" >> $GITHUB_OUTPUT
@@ -346,8 +346,8 @@ jobs:
         id: beforeupload
         if: steps.modsdcard.outputs.status == 'success'
         run: |
-          cd ${{ env.WORKING_DIR }}
-          for file in "${{ env.WORKING_DIR }}"/compiled_images/*.img.gz; do
+          cd ${WORKING_DIR}
+          for file in "${WORKING_DIR}"/compiled_images/*.img.gz; do
             if [ -f "$file" ]; then
               new_name="RTA-WRT_$(basename "$file" .img.gz)_${TUNNEL}.img.gz"
               mv "$file" compiled_images/$new_name
@@ -361,7 +361,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          name: ${{ env.RELEASE_NAME }}
-          files: ${{ env.WORKING_DIR }}/compiled_images/*.img.gz
+          tag_name: ${RELEASE_TAG}
+          name: ${RELEASE_NAME}
+          files: ${WORKING_DIR}/compiled_images/*.img.gz
           prerelease: ${{ github.ref_name == 'dev' }}
