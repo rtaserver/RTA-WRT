@@ -3,24 +3,24 @@
 . ./scripts/INCLUDE.sh
 
 # openclash_core URL generation
-if [[ "$ARCH_3" == "x86_64" ]]; then
-    meta_file="mihomo-linux-${ARCH_1}-compatible"
+if [[ "${{ env.ARCH_3 }}" == "x86_64" ]]; then
+    meta_file="mihomo-linux-${{ env.ARCH_1 }}-compatible"
 else
-    meta_file="mihomo-linux-${ARCH_1}"
+    meta_file="mihomo-linux-${{ env.ARCH_1 }}"
 fi
 openclash_core=$(curl -s "https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" | grep "browser_download_url" | grep -oE "https.*${meta_file}-v[0-9]+\.[0-9]+\.[0-9]+\.gz" | head -n 1)
 
 # passwall_core URL generation
-passwall_core_file_zip="passwall_packages_ipk_${ARCH_3}"
+passwall_core_file_zip="passwall_packages_ipk_${{ env.ARCH_3 }}"
 passwall_core_file_zip_down=$(curl -s "https://api.github.com/repos/xiaorouji/openwrt-passwall/releases" | grep "browser_download_url" | grep -oE "https.*${passwall_core_file_zip}.*.zip" | head -n 1)
 
 # Nikki URL generation
-nikki_file_ipk="nikki_${ARCH_3}-openwrt-${VEROP}"
+nikki_file_ipk="nikki_${{ env.ARCH_3 }}-openwrt-${{ env.VEROP }}"
 nikki_file_ipk_down=$(curl -s "https://api.github.com/repos/rizkikotet-dev/OpenWrt-nikki-Mod/releases" | grep "browser_download_url" | grep -oE "https.*${nikki_file_ipk}.*.tar.gz" | head -n 1)
 
 # Package repositories
-declare -a openclash_ipk=("luci-app-openclash|https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3/luci")
-declare -a passwall_ipk=("luci-app-passwall|https://downloads.immortalwrt.org/releases/packages-$VEROP/$ARCH_3/luci")
+declare -a openclash_ipk=("luci-app-openclash|https://downloads.immortalwrt.org/releases/packages-${{ env.VEROP }}/${{ env.ARCH_3 }}/luci")
+declare -a passwall_ipk=("luci-app-passwall|https://downloads.immortalwrt.org/releases/packages-${{ env.VEROP }}/${{ env.ARCH_3 }}/luci")
 
 # Function to download and setup OpenClash
 setup_openclash() {

@@ -2,7 +2,6 @@
 
 . ./scripts/INCLUDE.sh
 
-set -x
 
 # Initialize environment
 init_environment() {
@@ -14,7 +13,7 @@ init_environment() {
 
 # Apply distribution-specific patches
 apply_distro_patches() {
-    case "${RELEASE_BRANCH%:*}" in
+    case "${{ env.BASE }}" in
         "openwrt")
             log "INFO" "Applying OpenWrt specific patches"
             ;;
@@ -24,7 +23,7 @@ apply_distro_patches() {
             sed -i "/luci-app-cpufreq/d" include/target.mk
             ;;
         *)
-            log "INFO" "Unknown distribution: ${RELEASE_BRANCH%:*}"
+            log "INFO" "Unknown distribution: ${{ env.BASE }}"
             ;;
     esac
 }
@@ -51,7 +50,7 @@ configure_partitions() {
 
 # Apply Amlogic-specific configurations
 configure_amlogic() {
-    if [ "$TYPE" == "AMLOGIC" ]; then
+    if [ "${{ env.TYPE }}" == "AMLOGIC" ]; then
         log "INFO" "Applying Amlogic-specific configurations"
         local configs=(
             "CONFIG_TARGET_ROOTFS_CPIOGZ"
@@ -68,7 +67,7 @@ configure_amlogic() {
 
 # Apply x86_64-specific configurations
 configure_x86_64() {
-    if [ "$ARCH_2" == "x86_64" ]; then
+    if [ "${{ env.ARCH_2 }}" == "x86_64" ]; then
         log "INFO" "Applying x86_64-specific configurations"
         # Disable ISO images generation
         sed -i "s/CONFIG_ISO_IMAGES=y/# CONFIG_ISO_IMAGES is not set/" .config

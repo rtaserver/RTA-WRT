@@ -125,12 +125,23 @@ jobs:
         id: setuprelease
         run: |
           sudo timedatectl set-timezone "${TZ}"
+
+          TYPE="ULO"
+          echo "TYPE=$TYPE" >> $GITHUB_ENV
+
           BASE="${RELEASE_BRANCH%:*}"
           BRANCH="${RELEASE_BRANCH#*:}"
+          VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
+
+          echo "BASE=$BASE" >> $GITHUB_ENV
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+          echo "VEROP=$VEROP" >> $GITHUB_ENV
+          echo "DOWNLOAD_BASE=https://downloads.${BASE}.org" >> $GITHUB_ENV
+
           DATE=$(date +'%d%m%Y')
           DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')
           DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')
-          # Set date variables
+
           echo "DATE=$DATE" >> $GITHUB_ENV
           echo "DATETIME=$DATETIME" >> $GITHUB_ENV
           echo "DATEMONTH=$DATEMONTH" >> $GITHUB_ENV
@@ -209,8 +220,6 @@ jobs:
       - name: Setup Build Variables
         id: variables
         run: |
-          TYPE="AMLOGIC"
-          echo "TYPE=$TYPE" >> $GITHUB_ENV
           MATRIXTARGET="${{ matrix.target }}"
           echo "MATRIXTARGET=$MATRIXTARGET" >> $GITHUB_ENV
 
@@ -224,16 +233,6 @@ jobs:
 
           KERNEL="5.15.y_6.1.y"
           echo "KERNEL=$KERNEL" >> $GITHUB_ENV
-
-          # Set base distribution info
-          BASE="${RELEASE_BRANCH%:*}"
-          BRANCH="${RELEASE_BRANCH#*:}"
-          VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
-
-          echo "BASE=$BASE" >> $GITHUB_ENV
-          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
-          echo "VEROP=$VEROP" >> $GITHUB_ENV
-          echo "DOWNLOAD_BASE=https://downloads.${BASE}.org" >> $GITHUB_ENV
 
           echo "status=success" >> $GITHUB_OUTPUT
 

@@ -160,53 +160,23 @@ build_mod_sdcard() {
 
 process_builds() {
     local img_dir="$1"
-    local tunnel_mode="$2"
-    local builds=("${@:3}")
+    local builds=("${@:2}")
     local exit_code=0
     
-    local tunnel_types=(
-        "openclash"
-        "passwall"
-        "nikki"
-        "openclash-passwall"
-        "nikki-passwall"
-        "nikki-openclash"
-        "all-tunnel"
-        "no-tunnel"
-    )
-    
     # Process builds based on tunnel mode
-    if [[ "$tunnel_mode" == "all" ]]; then
-        for tunnel in "${tunnel_types[@]}"; do
-            for build in "${builds[@]}"; do
-                IFS=: read -r device dtb model <<< "$build"
-                local image_file=$(find "$img_dir" -name "*${device}*.img.gz")
-                
-                if [[ -n "$image_file" ]]; then
-                    if ! build_mod_sdcard "$image_file" "$dtb" "$model"; then
-                        error_msg "Failed to process build for $model ($device) with tunnel: $tunnel"
-                        exit_code=1
-                    fi
-                else
-                    log "WARNING" "No image file found for $model ($device)"
-                fi
-            done
-        done
-    else
-        for build in "${builds[@]}"; do
-            IFS=: read -r device dtb model <<< "$build"
-            local image_file=$(find "$img_dir" -name "*${device}*.img.gz")
-            
-            if [[ -n "$image_file" ]]; then
-                if ! build_mod_sdcard "$image_file" "$dtb" "$model"; then
-                    error_msg "Failed to process build for $model ($device)"
-                    exit_code=1
-                fi
-            else
-                log "WARNING" "No image file found for $model ($device)"
+    for build in "${builds[@]}"; do
+        IFS=: read -r device dtb model <<< "$build"
+        local image_file=$(find "$img_dir" -name "*${device}*.img.gz")
+        
+        if [[ -n "$image_file" ]]; then
+            if ! build_mod_sdcard "$image_file" "$dtb" "$model"; then
+                error_msg "Failed to process build for $model ($device)"
+                exit_code=1
             fi
-        done
-    fi
+        else
+            log "WARNING" "No image file found for $model ($device)"
+        fi
+    done
     
     return $exit_code
 }
@@ -232,7 +202,7 @@ main() {
     fi
     
     # Process builds
-    if ! process_builds "$img_dir" "${TUNNEL}" "${builds[@]}"; then
+    if ! process_builds "$img_dir" "${builds[@]}"; then
         exit_code=1
     fi
     

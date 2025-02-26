@@ -87,16 +87,23 @@ jobs:
 
           echo "Selected tunnel option: [ $TUNNEL ]"
 
-      - name: Setup Release Environment
-        id: setuprelease
+      - name: Setup Environment
+        id: setupenv
         run: |
           sudo timedatectl set-timezone "${TZ}"
           BASE="${RELEASE_BRANCH%:*}"
           BRANCH="${RELEASE_BRANCH#*:}"
+          VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
+
+          echo "BASE=$BASE" >> $GITHUB_ENV
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+          echo "VEROP=$VEROP" >> $GITHUB_ENV
+          echo "DOWNLOAD_BASE=https://downloads.${BASE}.org" >> $GITHUB_ENV
+
           DATE=$(date +'%d%m%Y')
           DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')
           DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')
-          # Set date variables
+
           echo "DATE=$DATE" >> $GITHUB_ENV
           echo "DATETIME=$DATETIME" >> $GITHUB_ENV
           echo "DATEMONTH=$DATEMONTH" >> $GITHUB_ENV
@@ -111,7 +118,7 @@ jobs:
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        if: steps.setuprelease.outputs.status == 'success'
+        if: steps.setupenv.outputs.status == 'success'
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -221,16 +228,6 @@ jobs:
               echo "ARCH_3=x86_64" >> $GITHUB_ENV
               ;;
           esac
-
-          # Set base distribution info
-          BASE="${RELEASE_BRANCH%:*}"
-          BRANCH="${RELEASE_BRANCH#*:}"
-          VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
-
-          echo "BASE=$BASE" >> $GITHUB_ENV
-          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
-          echo "VEROP=$VEROP" >> $GITHUB_ENV
-          echo "DOWNLOAD_BASE=https://downloads.${BASE}.org" >> $GITHUB_ENV
 
           echo "status=success" >> $GITHUB_OUTPUT
 
