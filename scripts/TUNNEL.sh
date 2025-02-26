@@ -88,7 +88,7 @@ case "$1" in
         setup_openclash
         remove_icons "passwall.png"
         ;;
-    openclash-passwall-nikki)
+    all-tunnel)
         log "INFO" "Installing OpenClash, PassWall and Nikki"
         setup_openclash
         setup_passwall
@@ -99,7 +99,7 @@ case "$1" in
         remove_icons "clash.png" "passwall.png" "mihomo.png"
         ;;
     *)
-        log "INFO" "Invalid option. Usage: $0 {openclash|passwall|nikki|openclash-passwall|nikki-passwall|nikki-openclash|openclash-passwall-nikki}"
+        log "INFO" "Invalid option. Usage: $0 {openclash|passwall|nikki|openclash-passwall|nikki-passwall|nikki-openclash|all-tunnel}"
         exit 1
         ;;
 esac

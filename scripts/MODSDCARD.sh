@@ -171,7 +171,7 @@ process_builds() {
         "openclash-passwall"
         "nikki-passwall"
         "nikki-openclash"
-        "openclash-passwall-nikki"
+        "all-tunnel"
         "no-tunnel"
     )
     

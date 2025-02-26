@@ -71,7 +71,7 @@ handle_tunnel_option() {
         "nikki-openclash")
             PACKAGES+=" $NIKKI $OPENCLASH"
             ;;
-        "openclash-passwall-nikki")
+        "all-tunnel")
             PACKAGES+=" $OPENCLASH $PASSWALL $NIKKI"
             ;;
     esac

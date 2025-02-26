@@ -1,4 +1,4 @@
-name: Generate RTA-WRT ULO Firmware
+name: Generate RTA-WRT Firmware
 
 on:
   workflow_dispatch:
@@ -15,11 +15,11 @@ on:
           - immortalwrt:23.05.4
       target:
         description: "Select device board"
-        required: true
-        default: "all"
+        required: false
+        default: "all-device"
         type: choice
         options:
-          - all
+          - all-device
           - s905x
           - s905x2
           - s905x3
@@ -41,26 +41,24 @@ on:
       tunnel:
         description: "Select VPN Client app:"
         required: true
-        default: "openclash-passwall-nikki"
+        default: "all-tunnel"
         type: choice
         options:
-          - all
           - openclash
           - passwall
           - nikki
           - openclash-passwall
           - nikki-passwall
           - nikki-openclash
-          - openclash-passwall-nikki
+          - all-tunnel
           - no-tunnel
       clean:
         description: "Do 'make clean' for each run"
-        required: true
+        required: false
         default: "true"
         type: boolean
 
 env:
-  PACKNAME: ulo
   TARGET: ${{ inputs.target }}
   RELEASE_BRANCH: ${{ inputs.release_branch }}
   TUNNEL: ${{ inputs.tunnel }}
@@ -70,37 +68,68 @@ env:
   DEBIAN_FRONTEND: noninteractive
 
 jobs:
-  check-compatibility:
-    name: Check Compatibility
+  prebuild:
     runs-on: ubuntu-22.04
+    name: ${{ inputs.release_branch }}
     outputs:
-      status: ${{ steps.compatibility.outputs.status }}
-
+      target: ${{ steps.set-matrix.outputs.target }}
     steps:
-      - name: Check System Requirements
-        id: compatibility
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Set Matrix Run
+        id: set-matrix
         run: |
-          echo "Checking system requirements..."
-          echo "CPU Architecture: $(uname -m)"
-          echo "Available RAM: $(free -h)"
-          echo "Available Disk Space: $(df -h /)"
-          echo "Selected tunnel option: [${{ env.TUNNEL }}]"
-          echo "status=success" >> $GITHUB_OUTPUT
+          echo "Selected target option: [ $TARGET ]"
+          TARGET_JSON=$(cat << 'EOJ'
+          {
+            "target": [
+              "s905x",
+              "s905x2",
+              "s905x3",
+              "s905x4",
+              "h5-orangepi-zeroplus2",
+              "h5-orangepi-zeroplus",
+              "h5-orangepi-prime",
+              "h5-orangepi-pc2",
+              "h6-orangepi-lite2",
+              "h6-orangepi-1plus",
+              "h6-orangepi-3",
+              "h6-orangepi-3lts",
+              "h616-orangepi-zero2",
+              "h618-orangepi-zero2w",
+              "h618-orangepi-zero3",
+              "rk3566-orangepi-3b",
+              "rk3588-orangepi-5plus",
+              "rk3588s-orangepi-5"
+            ]
+          }
+          EOJ
+          )
+
+          if [ "${{ inputs.target }}" == "all-device" ]; then
+            echo "target=$(echo "$TARGET_JSON" | jq -c '.target')" >> $GITHUB_OUTPUT
+          else
+            echo "target=$(jq -nc --arg d "${{ inputs.target }}" '[$d]')" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Selected tunnel option: [ $TUNNEL ]"
 
   build-firmware:
-    name: Build ${{ inputs.release_branch }}-${{ inputs.tunnel }}
-    needs: check-compatibility
-    if: needs.check-compatibility.outputs.status == 'success'
+    name: Build ${{ matrix.target }}-${{ matrix.tunnel }}
+    needs: prebuild
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.prebuild.outputs.target) }}
 
     steps:
       - name: Initialization environment
         id: init
-        env:
-          DEBIAN_FRONTEND: noninteractive
         run: |
-          TYPE="AMLOGIC"
-          echo "TYPE=$TYPE" >> $GITHUB_ENV
           docker rmi $(docker images -q) 2>/dev/null
           [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
           sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
@@ -117,25 +146,6 @@ jobs:
           sudo timedatectl set-timezone "${TZ}"
           echo "status=success" >> ${GITHUB_OUTPUT}
 
-      - name: Create simulated physical disk
-        if: github.event.inputs.target == 'all'
-        run: |
-          mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
-          root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
-          sudo truncate -s "${mnt_size}"G /mnt/mnt.img
-          sudo truncate -s "${root_size}"G /root.img
-          sudo losetup /dev/loop6 /mnt/mnt.img
-          sudo losetup /dev/loop7 /root.img
-          sudo pvcreate /dev/loop6
-          sudo pvcreate /dev/loop7
-          sudo vgcreate github /dev/loop6 /dev/loop7
-          sudo lvcreate -n runner -l 100%FREE github
-          sudo mkfs.xfs /dev/github/runner
-          sudo mkdir -p /builder
-          sudo mount /dev/github/runner /builder
-          sudo chown -R runner.runner /builder
-          df -Th
-
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
@@ -145,45 +155,30 @@ jobs:
       - name: Setup Build Variables
         id: variables
         run: |
-          case "${{ env.TARGET }}" in
-            "all")
-              openwrt_board=$(cat << 'EOF' | tr -d ' ' | paste -sd "_"
-              s905
-              s905-beelink-mini
-              s905-mxqpro-plus
-              s905w
-              s905w-w95
-              s905w-x96-mini
-              s905w-x96w
-              s905x
-              s905x-b860h
-              s905x-nexbox-a95x
-              s905x2
-              s905x2-km3
-              s905x2-x96max-2g
-              s905x3
-              s905x3-h96max
-              s905x3-hk1
-              s905x3-x96max
-              s912
-              s912-h96pro-plus
-              s912-x92
-          EOF
-              )
-              echo "openwrt_board=$openwrt_board" >> $GITHUB_ENV
-              ;;
-            *)
-              echo "openwrt_board=${{ env.TARGET }}" >> $GITHUB_ENV
-              ;;
-          esac
+          TYPE="ULO"
+          echo "TYPE=$TYPE" >> $GITHUB_ENV
+          MATRIXTARGET="${{ matrix.target }}"
+          echo "MATRIXTARGET=$MATRIXTARGET" >> $GITHUB_ENV
 
-          # Set architecture variables
+          # Target system configurations
           echo "PROFILE=generic" >> $GITHUB_ENV
           echo "TARGET_SYSTEM=armsr/armv8" >> $GITHUB_ENV
           echo "TARGET_NAME=armsr-armv8" >> $GITHUB_ENV
           echo "ARCH_1=arm64" >> $GITHUB_ENV
           echo "ARCH_2=aarch64" >> $GITHUB_ENV
           echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
+
+          case "$MATRIXTARGET" in
+            h5-*|h616-*|h618-*|h6-*)
+                KERNEL="6.1.31-AW64-DBAI"
+                ;;
+            s905*)
+                KERNEL="6.1.66-DBAI"
+                ;;
+            rk*)
+                KERNEL="5.10.160-rk35v-dbai"
+                ;;
+          esac
 
           # Set base distribution info
           BASE="${RELEASE_BRANCH%:*}"
@@ -200,14 +195,13 @@ jobs:
           echo "DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')" >> $GITHUB_ENV
           echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
 
-          echo "Build variables configured successfully"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Download and Prepare Image Builder
         id: download
         if: steps.variables.outputs.status == 'success'
         run: |
-          # Determine archive extension
+          # Determine archive extension based on version
           CURVER=$(echo "${{ env.BRANCH }}" | cut -d'.' -f1)
           archive_ext=$([ "${CURVER}" == "24" ] && echo "tar.zst" || echo "tar.xz")
 
@@ -216,7 +210,7 @@ jobs:
           echo "Downloading from: $RELEASE"
           wget --progress=dot:giga "$RELEASE"
 
-          # Extract archive
+          # Extract archive based on extension
           case "${archive_ext}" in
             tar.xz)
               tar -xJf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.xz
@@ -230,7 +224,6 @@ jobs:
           mv *-imagebuilder-* ${{ env.WORKING_DIR }}
           cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
 
-          echo "Image builder prepared successfully"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Download External Packages
@@ -241,8 +234,6 @@ jobs:
           chmod +x scripts/PACKAGES.sh
           ./scripts/PACKAGES.sh
 
-          PACKAGE_COUNT=$(find packages -type f -name "*.ipk" | wc -l)
-          echo "Downloaded $PACKAGE_COUNT external packages"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Apply Patches and Customizations
@@ -261,13 +252,8 @@ jobs:
 
           # Configure tunnel apps
           chmod +x scripts/TUNNEL.sh
-          if [[ "${{ env.TUNNEL }}" == "all" ]]; then
-            ./scripts/TUNNEL.sh openclash-passwall-nikki
-          elif [[ "${{ env.TUNNEL }}" =~ ^(openclash|passwall|nikki|openclash-passwall|nikki-passwall|nikki-openclash|openclash-passwall-nikki|no-tunne)$ ]]; then
-            ./scripts/TUNNEL.sh "${{ env.TUNNEL }}"
-          fi
+          ./scripts/TUNNEL.sh $TUNNEL
 
-          echo "Customizations applied successfully"
           df -hT ${PWD}
           echo "status=success" >> $GITHUB_OUTPUT
 
@@ -279,210 +265,42 @@ jobs:
           mkdir -p compiled_images
           chmod +x make-image.sh
 
-          build_image() {
-            local tunnel=$1
-            echo "Building with VPN Client: $tunnel"
-            
-            # Clean if requested
-            if [ "${{ env.CLEAN }}" == "true" ]; then
-              make clean
-            fi
-            
-            # Build image
-            time ./make-image.sh ${{ env.PROFILE }} $tunnel
-            
-            # Move and rename output files
-            for file in bin/targets/"${{ env.TARGET_SYSTEM }}"/*rootfs.tar.gz; do
-              if [ -f "$file" ]; then
-                new_name="RTA-WRT_$(basename "$file" .tar.gz)_${tunnel}.tar.gz"
-                mv "$file" compiled_images/$new_name
-              fi
-            done
-          }
-
-          if [[ "${{ env.TUNNEL }}" == "all" ]]; then
-            for tunnel in openclash passwall nikki openclash-passwall nikki-passwall nikki-openclash openclash-passwall-nikki no-tunnel; do
-              build_image $tunnel
-            done
-          else
-            build_image ${{ env.TUNNEL }}
+          # Clean if requested
+          if [ "${{ env.CLEAN }}" == "true" ]; then
+            make clean
           fi
+            
+          # Build image
+          time ./make-image.sh ${{ env.PROFILE }} $TUNNEL
+            
+          # Move and rename output files
+          for file in bin/targets/"${{ env.TARGET_SYSTEM }}"/*-rootfs.tar.gz; do
+            if [ -f "$file" ]; then
+              new_name="RTA-WRT_$(basename "$file" -rootfs.tar.gz)_${TUNNEL}-rootfs.tar.gz"
+              mv "$file" compiled_images/$new_name
+            fi
+          done
 
           echo "Images built successfully:"
           ls -la compiled_images/
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Package ULO Images
-        id: package
+      - name: Repack OpenWrt
+        id: repack
         if: steps.build.outputs.status == 'success'
         run: |
           cd ${{ env.WORKING_DIR }}
           chmod +x scripts/REPACKWRT.sh
-
-          # Define supported devices and their kernel versions
-          declare -A KERNEL_VERSIONS=(
-              ["h5"]="6.1.104-AW64-DBAI"    # Allwinner H5
-              ["h6"]="6.1.104-AW64-DBAI"    # Allwinner H6
-              ["h616"]="6.1.104-AW64-DBAI"  # Allwinner H616
-              ["h618"]="6.1.104-AW64-DBAI"  # Allwinner H618
-              ["s905"]="6.1.66-DBAI"        # Amlogic S905
-              ["rk"]="5.10.160-rk35v-dbai"  # Rockchip
-          )
-
-          # Define supported tunnels
-          readonly SUPPORTED_TUNNELS=(
-              "openclash"
-              "passwall"
-              "nikki"
-              "openclash-passwall"
-              "nikki-passwall"
-              "nikki-openclash"
-              "openclash-passwall-nikki"
-              "no-tunnel"
-          )
-
-          # Function to get kernel version based on device prefix
-          get_kernel_version() {
-              local device="$1"
-              local prefix=""
-              
-              # Extract device prefix
-              if [[ "$device" =~ ^(h5|h6|h616|h618) ]]; then
-                  prefix="${BASH_REMATCH[1]}"
-              elif [[ "$device" =~ ^(s905) ]]; then
-                  prefix="s905"
-              elif [[ "$device" =~ ^(rk) ]]; then
-                  prefix="rk"
-              else
-                  echo "ERROR: Unknown device type: $device"
-                  return 1
-              fi
-              
-              # Get kernel version
-              local kernel="${KERNEL_VERSIONS[$prefix]}"
-              if [[ -z "$kernel" ]]; then
-                  echo "ERROR: No kernel defined for device type: $device"
-                  return 1
-              fi
-              
-              echo "$kernel"
-              return 0
-          }
-
-          # Function to validate tunnel type
-          validate_tunnel() {
-              local tunnel="$1"
-              for supported_tunnel in "${SUPPORTED_TUNNELS[@]}"; do
-                  if [[ "$tunnel" == "$supported_tunnel" ]]; then
-                      return 0
-                  fi
-              done
-              echo "ERROR: Unsupported tunnel type: $tunnel"
-              return 1
-          }
-
-          # Function to build a single configuration
-          build_config() {
-              local device="$1"
-              local tunnel="$2"
-              local builder="$3"
-              
-              # Get appropriate kernel version
-              local kernel
-              kernel=$(get_kernel_version "$device")
-              if [[ $? -ne 0 ]]; then
-                  echo "$kernel"  # Error message from get_kernel_version
-                  return 1
-              fi
-              
-              # Validate tunnel type
-              if ! validate_tunnel "$tunnel"; then
-                  return 1
-              fi
-              
-              echo "Building for device: $device"
-              echo "Using kernel: $kernel"
-              echo "Tunnel type: $tunnel"
-              
-              if ! ./scripts/REPACKWRT.sh "$builder" "$device" "$kernel" "$tunnel"; then
-                  echo "ERROR: Build failed for device: $device, kernel: $kernel, tunnel: $tunnel"
-                  return 1
-              fi
-              
-              return 0
-          }
-
-          # Main build function
-          main() {
-              local devices="${{ env.TARGET }}"
-              local tunnel="${{ env.TUNNEL }}"
-              local builder="${{ env.PACKNAME }}"
-              
-              # All supported devices
-              local all_devices=(
-                  "s905x" "s905x2" "s905x3" "s905x4"
-                  "h5-orangepi-zeroplus2" "h5-orangepi-zeroplus" "h5-orangepi-prime" "h5-orangepi-pc2"
-                  "h6-orangepi-lite2" "h6-orangepi-1plus" "h6-orangepi-3" "h6-orangepi-3lts"
-                  "h616-orangepi-zero2" "h618-orangepi-zero2w" "h618-orangepi-zero3"
-                  "rk3566-orangepi-3b" "rk3588-orangepi-5plus" "rk3588s-orangepi-5"
-              )
-              
-              # Build for all devices or specific device
-              if [[ "$devices" == "all" ]]; then
-                  echo "Building for all devices"
-                  for device in "${all_devices[@]}"; do
-                      if [[ "$tunnel" == "all" ]]; then
-                          echo "Building all tunnel configurations for device: $device"
-                          for tunnel_type in "${SUPPORTED_TUNNELS[@]}"; do
-                              if ! build_config "$device" "$tunnel_type" "$builder"; then
-                                  echo "WARNING: Build failed for device: $device, tunnel: $tunnel_type"
-                                  continue
-                              fi
-                          done
-                      else
-                          if ! build_config "$device" "$tunnel" "$builder"; then
-                              echo "WARNING: Build failed for device: $device"
-                              continue
-                          fi
-                      fi
-                  done
-              else
-                  # Build for specific device
-                  if [[ "$tunnel" == "all" ]]; then
-                      echo "Building all tunnel configurations for device: $devices"
-                      for tunnel_type in "${SUPPORTED_TUNNELS[@]}"; do
-                          if ! build_config "$devices" "$tunnel_type" "$builder"; then
-                              echo "WARNING: Build failed for tunnel: $tunnel_type"
-                              continue
-                          fi
-                      done
-                  else
-                      if ! build_config "$devices" "$tunnel" "$builder"; then
-                          echo "ERROR: Build failed"
-                          exit 1
-                      fi
-                  fi
-              fi
-              
-              echo "Build process completed"
-          }
-
-          # Run main script
-          main
-
+          ./scripts/REPACKWRT.sh "ulo" "$MATRIXTARGET" "$KERNEL" "$TUNNEL"
           echo "status=success" >> $GITHUB_OUTPUT
-          ls -la compiled_images/
 
       - name: Mod SDCard
         id: modsdcard
-        if: steps.package.outputs.status == 'success'
+        if: steps.repack.outputs.status == 'success'
         run: |
           cd ${{ env.WORKING_DIR }}
-
           chmod +x scripts/MODSDCARD.sh
-          if [[ "$(find "$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images" -name "*_s905x_*.img.gz")" ]]; then
-            ./scripts/MODSDCARD.sh
-          fi
+          ./scripts/MODSDCARD.sh
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Create Release
@@ -493,7 +311,7 @@ jobs:
         with:
           tag_name: "rtawrt-ulo-${{ env.BASE }}-${{ env.BRANCH }}-${{ env.DATE }}"
           name: RTA-WRT-ULO-${{ env.BASE }}-${{ env.BRANCH }}-${{ env.DATE }}
-          files: ${{ env.WORKING_DIR }}/compiled_images/*.gz
+          files: ${{ env.WORKING_DIR }}/compiled_images/*.img.gz
           prerelease: ${{ github.ref_name == 'dev' }}
           body: |
             # 🚀 RTA-WRT - Release Information

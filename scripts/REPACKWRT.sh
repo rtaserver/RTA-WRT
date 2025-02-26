@@ -101,7 +101,7 @@ repackwrt() {
     fi
 
     # Find and validate rootfs file
-    local rootfs_files=("${work_dir}/compiled_images/"*"_${tunnel_type}.tar.gz")
+    local rootfs_files=("${work_dir}/compiled_images/"*"_${tunnel_type}-rootfs.tar.gz")
     if [[ ${#rootfs_files[@]} -ne 1 ]]; then
         error_msg "Expected exactly one rootfs file, found ${#rootfs_files[@]}"
         exit 1
