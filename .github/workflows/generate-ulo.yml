@@ -306,8 +306,21 @@ jobs:
           ./scripts/MODSDCARD.sh
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Create Release
+      - name: Before Upload
+        id: beforeupload
         if: steps.modsdcard.outputs.status == 'success'
+        run: |
+          cd ${{ env.WORKING_DIR }}
+          for file in "${{ env.WORKING_DIR }}"/compiled_images/*.img.gz; do
+            if [ -f "$file" ]; then
+              new_name="RTA-WRT_$(basename "$file" .img.gz)_${TUNNEL}.img.gz"
+              mv "$file" compiled_images/$new_name
+            fi
+          done
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        if: steps.beforeupload.outputs.status == 'success'
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

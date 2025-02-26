@@ -217,11 +217,11 @@ main() {
     
     # Configuration array with format device:dtb:model
     local builds=(
-        "_s905x_k5.15:meson-gxl-s905x-p212.dtb:HG680P"
-        "_s905x_k6.6:meson-gxl-s905x-p212.dtb:HG680P"
+        "_s905x_k5:meson-gxl-s905x-p212.dtb:HG680P"
+        "_s905x_k6:meson-gxl-s905x-p212.dtb:HG680P"
         "-s905x-:meson-gxl-s905x-p212.dtb:HG680P"
-        "_s905x-b860h_k5.15:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
-        "_s905x-b860h_k6.6:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
+        "_s905x-b860h_k5:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
+        "_s905x-b860h_k6:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
         "-s905x-:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
     )
     
