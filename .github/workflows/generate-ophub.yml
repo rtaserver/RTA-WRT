@@ -124,6 +124,8 @@ jobs:
       - name: Setup Release Environment
         id: setuprelease
         run: |
+          sudo apt-get -y update
+          sudo timedatectl set-timezone "${TZ}"
           BASE="${RELEASE_BRANCH%:*}"
           BRANCH="${RELEASE_BRANCH#*:}"
           # Set date variables
