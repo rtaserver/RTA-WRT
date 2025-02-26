@@ -191,7 +191,7 @@ jobs:
           echo "ARCH_2=aarch64" >> $GITHUB_ENV
           echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
 
-          KERNEL="6.6.y"
+          KERNEL="5.15.y_6.1.y"
           echo "KERNEL=$KERNEL" >> $GITHUB_ENV
 
           # Set base distribution info
