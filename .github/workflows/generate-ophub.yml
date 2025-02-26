@@ -163,7 +163,7 @@ jobs:
         with:
           tag_name: ${RELEASE_TAG}
           name: ${RELEASE_NAME}
-          prerelease: ${{ github.ref_name == 'dev'}
+          prerelease: ${{ github.ref_name == 'dev' }}
           body: |
             # 🚀 RTA-WRT - Release Information
 
