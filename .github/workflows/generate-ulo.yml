@@ -120,21 +120,23 @@ jobs:
       - name: Setup Release Environment
         id: setuprelease
         run: |
-          sudo apt-get -y update
           sudo timedatectl set-timezone "${TZ}"
           BASE="${RELEASE_BRANCH%:*}"
           BRANCH="${RELEASE_BRANCH#*:}"
+          DATE=$(date +'%d%m%Y')
+          DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')
+          DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')
           # Set date variables
-          echo "DATE=$(date +'%d%m%Y')" >> $GITHUB_ENV
-          echo "DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')" >> $GITHUB_ENV
-          echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
+          echo "DATE=$DATE" >> $GITHUB_ENV
+          echo "DATETIME=$DATETIME" >> $GITHUB_ENV
+          echo "DATEMONTH=$DATEMONTH" >> $GITHUB_ENV
 
           if [ "${BASE}" == "openwrt" ]; then
-            echo "RELEASE_NAME=RTA-WRT_ULO-OpenWRT-${BRANCH}-${{ env.DATE }}" >> $GITHUB_ENV
-            echo "RELEASE_TAG=rtawrt-ulo-openwrt-${BRANCH}-${{ env.DATE }}" >> $GITHUB_ENV
+            echo "RELEASE_NAME=RTA-WRT_ULO-OpenWRT-${BRANCH}-${DATE}" >> $GITHUB_ENV
+            echo "RELEASE_TAG=rtawrt-ulo-openwrt-${BRANCH}-${DATE}" >> $GITHUB_ENV
           else
-            echo "RELEASE_NAME=RTA-WRT_ULO-ImmortalWRT-${BRANCH}-${{ env.DATE }}" >> $GITHUB_ENV
-            echo "RELEASE_TAG=rtawrt-ulo-immortalwrt-${BRANCH}-${{ env.DATE }}" >> $GITHUB_ENV
+            echo "RELEASE_NAME=RTA-WRT_ULO-ImmortalWRT-${BRANCH}-${DATE}" >> $GITHUB_ENV
+            echo "RELEASE_TAG=rtawrt-ulo-immortalwrt-${BRANCH}-${DATE}" >> $GITHUB_ENV
           fi
           echo "status=success" >> $GITHUB_OUTPUT
 
