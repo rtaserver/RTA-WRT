@@ -122,7 +122,7 @@ jobs:
           echo "Selected tunnel option: [ $TUNNEL ]"
 
   build-firmware:
-    name: Build ${{ matrix.target }}-${{ matrix.tunnel }}
+    name: Build ${{ matrix.target }} Firmware
     needs: prebuild
     runs-on: ubuntu-22.04
     strategy:
