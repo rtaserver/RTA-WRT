@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release_branch:
-        description: "Select the release branch"
+        description: "Select the release branch:"
         required: true
         default: "openwrt:24.10.0"
         type: choice
@@ -41,7 +41,7 @@ on:
           - s912-h96pro-plus
           - s912-x92
       tunnel:
-        description: "Select VPN Client app"
+        description: "Select VPN Client app:"
         required: true
         default: "all-tunnel"
         type: choice
@@ -61,22 +61,18 @@ on:
         type: boolean
 
 env:
-  # Input variables
   TARGET: ${{ inputs.target }}
   RELEASE_BRANCH: ${{ inputs.release_branch }}
   TUNNEL: ${{ inputs.tunnel }}
   CLEAN: ${{ inputs.clean }}
-
-  # Environment settings
   TZ: Asia/Jakarta
   WORKING_DIR: imagebuilder
   DEBIAN_FRONTEND: noninteractive
 
 jobs:
-  # Job 1: Setup matrix and create initial release
   prebuild:
     runs-on: ubuntu-22.04
-    name: Setup Build Matrix (${{ inputs.release_branch }})
+    name: ${{ inputs.release_branch }}
     outputs:
       target: ${{ steps.set-matrix.outputs.target }}
     steps:
@@ -85,81 +81,92 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
 
-      - name: Configure Build Matrix
+      - name: Set Matrix Run
         id: set-matrix
         run: |
-          echo "Selected target: [ $TARGET ]"
+          echo "Selected target option: [ $TARGET ]"
+          TARGET_JSON=$(cat << 'EOJ'
+          {
+            "target": [
+              "s905",
+              "s905-beelink-mini",
+              "s905-mxqpro-plus",
+              "s905w",
+              "s905w-w95",
+              "s905w-x96-mini",
+              "s905w-x96w",
+              "s905x",
+              "s905x-b860h",
+              "s905x-nexbox-a95x",
+              "s905x2",
+              "s905x2-km3",
+              "s905x2-x96max-2g",
+              "s905x3",
+              "s905x3-h96max",
+              "s905x3-hk1",
+              "s905x3-x96max",
+              "s912",
+              "s912-h96pro-plus",
+              "s912-x92"
+            ]
+          }
+          EOJ
+          )
 
-          # Define available targets
-          TARGET_JSON='{"target": [
-            "s905", "s905-beelink-mini", "s905-mxqpro-plus", 
-            "s905w", "s905w-w95", "s905w-x96-mini", "s905w-x96w", 
-            "s905x", "s905x-b860h", "s905x-nexbox-a95x", 
-            "s905x2", "s905x2-km3", "s905x2-x96max-2g", 
-            "s905x3", "s905x3-h96max", "s905x3-hk1", "s905x3-x96max", 
-            "s912", "s912-h96pro-plus", "s912-x92"
-          ]}'
-
-          # Select all devices or just one
           if [ "${{ inputs.target }}" == "all-device" ]; then
             echo "target=$(echo "$TARGET_JSON" | jq -c '.target')" >> $GITHUB_OUTPUT
           else
             echo "target=$(jq -nc --arg d "${{ inputs.target }}" '[$d]')" >> $GITHUB_OUTPUT
           fi
 
-          echo "Selected tunnel: [ $TUNNEL ]"
+          echo "Selected tunnel option: [ $TUNNEL ]"
 
-      - name: Setup Release Variables
+      - name: Setup Release Environment
         id: setuprelease
         run: |
-          # Extract base and branch from release_branch
           BASE="${RELEASE_BRANCH%:*}"
           BRANCH="${RELEASE_BRANCH#*:}"
-
-          # Set date variables for versioning
+          # Set date variables
           echo "DATE=$(date +'%d%m%Y')" >> $GITHUB_ENV
           echo "DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')" >> $GITHUB_ENV
           echo "DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')" >> $GITHUB_ENV
 
-          # Set release naming based on distribution
           if [ "${BASE}" == "openwrt" ]; then
-            echo "RELEASE_NAME=RTA-WRT_OPHUB-OpenWRT-${BRANCH}-${DATE}" >> $GITHUB_ENV
-            echo "RELEASE_TAG=rtawrt-ophub-openwrt-${BRANCH}-${DATE}" >> $GITHUB_ENV
+            echo "RELEASE_NAME=RTA-WRT_OPHUB-OpenWRT-${BRANCH}-${{ env.DATE }}" >> $GITHUB_ENV
+            echo "RELEASE_TAG=rtawrt-ophub-openwrt-${BRANCH}-${{ env.DATE }}" >> $GITHUB_ENV
           else
-            echo "RELEASE_NAME=RTA-WRT_OPHUB-ImmortalWRT-${BRANCH}-${DATE}" >> $GITHUB_ENV
-            echo "RELEASE_TAG=rtawrt-ophub-immortalwrt-${BRANCH}-${DATE}" >> $GITHUB_ENV
+            echo "RELEASE_NAME=RTA-WRT_OPHUB-ImmortalWRT-${BRANCH}-${{ env.DATE }}" >> $GITHUB_ENV
+            echo "RELEASE_TAG=rtawrt-ophub-immortalwrt-${BRANCH}-${{ env.DATE }}" >> $GITHUB_ENV
           fi
-
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Create Initial Release
+      - name: Create Release
         if: steps.setuprelease.outputs.status == 'success'
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${RELEASE_TAG}
-          name: ${RELEASE_NAME}
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_NAME }}
           prerelease: ${{ github.ref_name == 'dev' }}
           body: |
             # 🚀 RTA-WRT - Release Information
 
             ## 📥 Download Statistics
-            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/${RELEASE_TAG}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/${{ env.RELEASE_TAG }}/total?style=for-the-badge&logo=Openwrt)
 
             ## 📢 Support Channels
             [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt)
             [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/backup_rtawrt)
             [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/RizkiKotet)
 
-            ## 📝 Device Support
+            ## NOTES
             `Amlogic s905x Support Mod SDCard`
 
-            ## 📋 Changelog
-            [**Changelog Firmware**](https://github.com/rizkikotet-dev/RTA-WRT/blob/main/CHANGELOG.md)
+            ## 📝 Changelog Firmware
+            [**Changelog Firmware**](https://github.com/rizkikotet-dev/RTA-WRT/blob/main/CHANGELOG.md "**Changelog Firmware**")
           generate_release_notes: true
 
-  # Job 2: Build firmware for each target
   build-firmware:
     name: Build ${{ matrix.target }} Firmware
     needs: prebuild
@@ -170,33 +177,23 @@ jobs:
         target: ${{ fromJSON(needs.prebuild.outputs.target) }}
 
     steps:
-      - name: Setup Build Environment
+      - name: Initialization environment
         id: init
         run: |
-          # Clean up system resources
           docker rmi $(docker images -q) 2>/dev/null
-          sudo swapoff -a
-          sudo rm -f /swapfile /mnt/swapfile
           [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
           sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
-
-          # Remove unnecessary packages
+          sudo swapoff -a
+          sudo rm -f /swapfile /mnt/swapfile
           sudo -E apt-get -y update
           sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
-
-          # Install build dependencies
           sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
           sudo -E systemctl daemon-reload
           sudo -E apt-get -y autoremove --purge
           sudo -E apt-get clean
-
-          # Cleanup user environment
           sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
           sudo rm -rf ~/{.cargo,.dotnet,.rustup}
-
-          # Set timezone
           sudo timedatectl set-timezone "${TZ}"
-
           echo "status=success" >> ${GITHUB_OUTPUT}
 
       - name: Checkout Repository
@@ -205,14 +202,15 @@ jobs:
           path: origin
           fetch-depth: 1
 
-      - name: Configure Build Variables
+      - name: Setup Build Variables
         id: variables
         run: |
-          # Set device type
-          echo "TYPE=AMLOGIC" >> $GITHUB_ENV
-          echo "MATRIXTARGET=${{ matrix.target }}" >> $GITHUB_ENV
+          TYPE="AMLOGIC"
+          echo "TYPE=$TYPE" >> $GITHUB_ENV
+          MATRIXTARGET="${{ matrix.target }}"
+          echo "MATRIXTARGET=$MATRIXTARGET" >> $GITHUB_ENV
 
-          # Set target system configuration
+          # Target system configurations
           echo "PROFILE=generic" >> $GITHUB_ENV
           echo "TARGET_SYSTEM=armsr/armv8" >> $GITHUB_ENV
           echo "TARGET_NAME=armsr-armv8" >> $GITHUB_ENV
@@ -220,10 +218,10 @@ jobs:
           echo "ARCH_2=aarch64" >> $GITHUB_ENV
           echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
 
-          # Set kernel version
-          echo "KERNEL=5.15.y_6.1.y" >> $GITHUB_ENV
+          KERNEL="5.15.y_6.1.y"
+          echo "KERNEL=$KERNEL" >> $GITHUB_ENV
 
-          # Extract distribution info
+          # Set base distribution info
           BASE="${RELEASE_BRANCH%:*}"
           BRANCH="${RELEASE_BRANCH#*:}"
           VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
@@ -235,26 +233,28 @@ jobs:
 
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Download Image Builder
+      - name: Download and Prepare Image Builder
         id: download
         if: steps.variables.outputs.status == 'success'
         run: |
-          # Determine archive format based on version
+          # Determine archive extension based on version
           CURVER=$(echo "${{ env.BRANCH }}" | cut -d'.' -f1)
           archive_ext=$([ "${CURVER}" == "24" ] && echo "tar.zst" || echo "tar.xz")
 
-          # Generate download URL
+          # Download image builder
           RELEASE="${{ env.DOWNLOAD_BASE }}/releases/${{ env.BRANCH }}/targets/${{ env.TARGET_SYSTEM }}/${{ env.BASE }}-imagebuilder-${{ env.BRANCH }}-${{ env.TARGET_NAME }}.Linux-x86_64.${archive_ext}"
           echo "Downloading from: $RELEASE"
-
-          # Download and extract imagebuilder
           wget --progress=dot:giga "$RELEASE"
 
-          if [ "${archive_ext}" == "tar.xz" ]; then
-            tar -xJf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.xz
-          else
-            tar --use-compress-program=unzstd -xf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.zst
-          fi
+          # Extract archive based on extension
+          case "${archive_ext}" in
+            tar.xz)
+              tar -xJf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.xz
+              ;;
+            tar.zst)
+              tar --use-compress-program=unzstd -xf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.zst
+              ;;
+          esac
 
           # Setup working directory
           mv *-imagebuilder-* ${{ env.WORKING_DIR }}
@@ -272,27 +272,28 @@ jobs:
 
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Apply Customizations
+      - name: Apply Patches and Customizations
         id: customize
         if: steps.packages.outputs.status == 'success'
         run: |
           cd ${{ env.WORKING_DIR }}
 
-          # Run customization scripts
+          # Apply patches
           chmod +x scripts/PATCH.sh
           ./scripts/PATCH.sh
 
+          # Apply miscellaneous changes
           chmod +x scripts/MISC.sh
           ./scripts/MISC.sh
 
+          # Configure tunnel apps
           chmod +x scripts/TUNNEL.sh
           ./scripts/TUNNEL.sh $TUNNEL
 
-          # Display disk space
           df -hT ${PWD}
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Build Firmware
+      - name: Build Firmware Images
         id: build
         if: steps.customize.outputs.status == 'success'
         run: |
@@ -300,15 +301,15 @@ jobs:
           mkdir -p compiled_images
           chmod +x make-image.sh
 
-          # Clean build environment if requested
+          # Clean if requested
           if [ "${{ env.CLEAN }}" == "true" ]; then
             make clean
           fi
-
-          # Build the image
+            
+          # Build image
           time ./make-image.sh ${{ env.PROFILE }} $TUNNEL
-
-          # Process output files
+            
+          # Move and rename output files
           for file in bin/targets/"${{ env.TARGET_SYSTEM }}"/*-rootfs.tar.gz; do
             if [ -f "$file" ]; then
               new_name="RTA-WRT_$(basename "$file" -rootfs.tar.gz)_${TUNNEL}-rootfs.tar.gz"
@@ -320,7 +321,7 @@ jobs:
           ls -la compiled_images/
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Repack Firmware
+      - name: Repack OpenWrt
         id: repack
         if: steps.build.outputs.status == 'success'
         run: |
@@ -329,7 +330,7 @@ jobs:
           ./scripts/REPACKWRT.sh "ophub" "$MATRIXTARGET" "$KERNEL" "$TUNNEL"
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Prepare SD Card Images
+      - name: Mod SDCard
         id: modsdcard
         if: steps.repack.outputs.status == 'success'
         run: |
@@ -338,29 +339,26 @@ jobs:
           ./scripts/MODSDCARD.sh
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Prepare Upload
+      - name: Before Upload
         id: beforeupload
         if: steps.modsdcard.outputs.status == 'success'
         run: |
           cd ${{ env.WORKING_DIR }}
-
-          # Rename image files with tunnel info
           for file in "${{ env.WORKING_DIR }}"/compiled_images/*.img.gz; do
             if [ -f "$file" ]; then
               new_name="RTA-WRT_$(basename "$file" .img.gz)_${TUNNEL}.img.gz"
               mv "$file" compiled_images/$new_name
             fi
           done
-
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Upload to Release
+      - name: Create Release
         if: steps.beforeupload.outputs.status == 'success'
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${RELEASE_TAG}
-          name: ${RELEASE_NAME}
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_NAME }}
           files: ${{ env.WORKING_DIR }}/compiled_images/*.img.gz
           prerelease: ${{ github.ref_name == 'dev' }}
