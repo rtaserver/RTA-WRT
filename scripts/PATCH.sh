@@ -50,19 +50,24 @@ configure_partitions() {
 
 # Apply Amlogic-specific configurations
 configure_amlogic() {
-    if [ "${TYPE}" == "AMLOGIC" ]; then
-        log "INFO" "Applying Amlogic-specific configurations"
-        local configs=(
-            "CONFIG_TARGET_ROOTFS_CPIOGZ"
-            "CONFIG_TARGET_ROOTFS_EXT4FS"
-            "CONFIG_TARGET_ROOTFS_SQUASHFS"
-            "CONFIG_TARGET_IMAGES_GZIP"
-        )
-        
-        for config in "${configs[@]}"; do
-            sed -i "s|${config}=.*|# ${config} is not set|g" .config
-        done
-    fi
+    case "${TYPE}" in
+        "OPHUB"|"ULO")
+            log "INFO" "Applying Amlogic-specific configurations"
+            local configs=(
+                "CONFIG_TARGET_ROOTFS_CPIOGZ"
+                "CONFIG_TARGET_ROOTFS_EXT4FS"
+                "CONFIG_TARGET_ROOTFS_SQUASHFS"
+                "CONFIG_TARGET_IMAGES_GZIP"
+            )
+            
+            for config in "${configs[@]}"; do
+                sed -i "s|${config}=.*|# ${config} is not set|g" .config
+            done
+            ;;
+        *)
+            log "INFO" "system type: ${TYPE}"
+            ;;
+    esac
 }
 
 # Apply x86_64-specific configurations

@@ -103,10 +103,15 @@ handle_profile_packages() {
         PACKAGES+=" kmod-iwlwifi iw-full pciutils"
     fi
 
-    if [ "$TYPE" == "AMLOGIC" ]; then
-        PACKAGES+=" luci-app-amlogic ath9k-htc-firmware btrfs-progs hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-cfg80211 kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs kmod-mac80211 wireless-tools wpa-cli wpa-supplicant"
-        EXCLUDED+=" -procd-ujail"
-    fi
+    case "${TYPE}" in
+        "OPHUB"|"ULO")
+            PACKAGES+=" ath9k-htc-firmware btrfs-progs hostapd hostapd-utils kmod-ath kmod-ath9k kmod-ath9k-common kmod-ath9k-htc kmod-cfg80211 kmod-crypto-acompress kmod-crypto-crc32c kmod-crypto-hash kmod-fs-btrfs kmod-mac80211 wireless-tools wpa-cli wpa-supplicant"
+            EXCLUDED+=" -procd-ujail"
+            ;;
+        "OPHUB")
+            PACKAGES+=" luci-app-amlogic"
+            ;;
+    esac
 }
 
 # Handle release branch specific packages

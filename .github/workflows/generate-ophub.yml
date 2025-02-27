@@ -61,10 +61,6 @@ on:
         type: boolean
 
 env:
-  TARGET: ${{ inputs.target }}
-  RELEASE_BRANCH: ${{ inputs.release_branch }}
-  TUNNEL: ${{ inputs.tunnel }}
-  CLEAN: ${{ inputs.clean }}
   TZ: Asia/Jakarta
   WORKING_DIR: imagebuilder
   DEBIAN_FRONTEND: noninteractive
@@ -94,7 +90,7 @@ jobs:
       - name: Set Matrix Run
         id: set-matrix
         run: |
-          echo "Selected target option: [ $TARGET ]"
+          echo "Selected target option: [ ${{ inputs.target }} ]"
           TARGET_JSON=$(cat << 'EOJ'
           {
             "target": [
@@ -129,16 +125,17 @@ jobs:
             echo "target=$(jq -nc --arg d "${{ inputs.target }}" '[$d]')" >> $GITHUB_OUTPUT
           fi
 
-          echo "Selected tunnel option: [ $TUNNEL ]"
+          echo "Selected tunnel option: [ ${{ inputs.tunnel }} ]"
 
       - name: Setup Release Environment
         id: setuprelease
         run: |
-          sudo timedatectl set-timezone "${TZ}"
+          sudo timedatectl set-timezone "${{ env.TZ }}"
 
-          TYPE="ULO"
+          TYPE="OPHUB"
           echo "TYPE=$TYPE" >> $GITHUB_OUTPUT
 
+          RELEASE_BRANCH="${{ inputs.release_branch }}"
           BASE="${RELEASE_BRANCH%:*}"
           BRANCH="${RELEASE_BRANCH#*:}"
           VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
@@ -175,14 +172,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${RELEASE_TAG}
-          name: ${RELEASE_NAME}
+          tag_name: ${{ steps.setuprelease.outputs.release_tag }}
+          name: ${{ steps.setuprelease.outputs.release_name }}
           prerelease: ${{ github.ref_name == 'dev' }}
           body: |
             # 🚀 RTA-WRT - Release Information
 
             ## 📥 Download Statistics
-            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/${RELEASE_TAG}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/${{ steps.setuprelease.outputs.release_tag }}/total?style=for-the-badge&logo=Openwrt)
 
             ## 📢 Support Channels
             [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt)
@@ -233,7 +230,7 @@ jobs:
           sudo -E apt-get clean
           sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
           sudo rm -rf ~/{.cargo,.dotnet,.rustup}
-          sudo timedatectl set-timezone "${TZ}"
+          sudo timedatectl set-timezone "${{ env.TZ }}"
           echo "status=success" >> ${GITHUB_OUTPUT}
 
       - name: Checkout Repository
@@ -247,6 +244,9 @@ jobs:
         run: |
           MATRIXTARGET="${{ matrix.target }}"
           echo "MATRIXTARGET=$MATRIXTARGET" >> $GITHUB_ENV
+          echo "TARGET=${{ inputs.target }}" >> $GITHUB_ENV
+          echo "TUNNEL=${{ inputs.tunnel }}" >> $GITHUB_ENV
+          echo "CLEAN=${{ inputs.clean }}" >> $GITHUB_ENV
 
           # Target system configurations
           echo "PROFILE=generic" >> $GITHUB_ENV
@@ -256,8 +256,12 @@ jobs:
           echo "ARCH_2=aarch64" >> $GITHUB_ENV
           echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
 
-          KERNEL="5.15.y_6.1.y"
-          echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+          case "$MATRIXTARGET" in
+            s905w-*|s905x-*|s905x2-*|s905x3-*|s912-*)
+                KERNEL="5.15.y_6.1.y"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                ;;
+          esac
 
           echo "status=success" >> $GITHUB_OUTPUT
 
@@ -316,7 +320,7 @@ jobs:
 
           # Configure tunnel apps
           chmod +x scripts/TUNNEL.sh
-          ./scripts/TUNNEL.sh $TUNNEL
+          ./scripts/TUNNEL.sh ${{ env.TUNNEL }}
 
           df -hT ${PWD}
           echo "status=success" >> $GITHUB_OUTPUT
@@ -335,12 +339,12 @@ jobs:
           fi
             
           # Build image
-          time ./make-image.sh ${PROFILE} $TUNNEL
+          time ./make-image.sh ${PROFILE} ${{ env.TUNNEL }}
             
           # Move and rename output files
           for file in bin/targets/"${TARGET_SYSTEM}"/*-rootfs.tar.gz; do
             if [ -f "$file" ]; then
-              new_name="RTA-WRT_$(basename "$file" -rootfs.tar.gz)_${TUNNEL}-rootfs.tar.gz"
+              new_name="RTA-WRT_$(basename "$file" -rootfs.tar.gz)_${{ env.TUNNEL }}-rootfs.tar.gz"
               mv "$file" compiled_images/$new_name
             fi
           done
@@ -355,7 +359,7 @@ jobs:
         run: |
           cd ${WORKING_DIR}
           chmod +x scripts/REPACKWRT.sh
-          ./scripts/REPACKWRT.sh "ophub" "$MATRIXTARGET" "$KERNEL" "$TUNNEL"
+          ./scripts/REPACKWRT.sh "ophub" "$MATRIXTARGET" "$KERNEL" "${{ env.TUNNEL }}"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Mod SDCard
@@ -374,7 +378,7 @@ jobs:
           cd ${WORKING_DIR}
           for file in "${WORKING_DIR}"/compiled_images/*.img.gz; do
             if [ -f "$file" ]; then
-              new_name="RTA-WRT_$(basename "$file" .img.gz)_${TUNNEL}.img.gz"
+              new_name="RTA-WRT_$(basename "$file" .img.gz)_${{ env.TUNNEL }}.img.gz"
               mv "$file" compiled_images/$new_name
             fi
           done
@@ -386,7 +390,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${RELEASE_TAG}
-          name: ${RELEASE_NAME}
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_NAME }}
           files: ${WORKING_DIR}/compiled_images/*.img.gz
           prerelease: ${{ github.ref_name == 'dev' }}

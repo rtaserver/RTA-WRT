@@ -87,7 +87,7 @@ packages_custom+=(
     "luci-app-neko_|https://api.github.com/repos/nosignals/openwrt-neko/releases/latest"
 )
 
-if [ "${TYPE}" == "AMLOGIC" ]; then
+if [ "${TYPE}" == "OPHUB" ]; then
     log "INFO" "Adding Amlogic-specific packages..."
     packages_custom+=(
         "luci-app-amlogic_|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest"
