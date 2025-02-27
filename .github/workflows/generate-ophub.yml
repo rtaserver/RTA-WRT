@@ -256,12 +256,8 @@ jobs:
           echo "ARCH_2=aarch64" >> $GITHUB_ENV
           echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
 
-          case "$MATRIXTARGET" in
-            s905w-*|s905x-*|s905x2-*|s905x3-*|s912-*)
-                KERNEL="5.15.y_6.1.y"
-                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
-                ;;
-          esac
+          KERNEL="5.15.y_6.1.y"
+          echo "KERNEL=$KERNEL" >> $GITHUB_ENV
 
           echo "status=success" >> $GITHUB_OUTPUT
 
