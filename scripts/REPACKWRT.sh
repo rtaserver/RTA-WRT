@@ -112,9 +112,9 @@ repackwrt() {
     log "INFO" "Copying rootfs file..."
     local target_path
     if [[ "$builder_type" == "--ophub" ]]; then
-        target_path="${builder_dir}/openwrt-armvirt/${{ env.BASE }}-armsr-armv8-generic-rootfs.tar.gz"
+        target_path="${builder_dir}/openwrt-armvirt/${BASE}-armsr-armv8-generic-rootfs.tar.gz"
     else
-        target_path="${builder_dir}/rootfs/${{ env.BASE }}-armsr-armv8-generic-rootfs.tar.gz"
+        target_path="${builder_dir}/rootfs/${BASE}-armsr-armv8-generic-rootfs.tar.gz"
     fi
 
     if ! cp -f "${rootfs_file}" "${target_path}"; then

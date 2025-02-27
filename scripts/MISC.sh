@@ -11,9 +11,9 @@ init_environment() {
 # Setup base-specific configurations
 setup_base_config() {
     # Update date in init settings
-    sed -i "s/Ouc3kNF6/${{ env.DATE }}/g" files/etc/uci-defaults/99-init-settings.sh
+    sed -i "s/Ouc3kNF6/${DATE}/g" files/etc/uci-defaults/99-init-settings.sh
     
-    case "${{ env.BASE}}" in
+    case "${BASE}}" in
         "openwrt")
             log "INFO" "Configuring OpenWrt specific settings"
             sed -i '/# setup misc settings/ a\mv \/www\/luci-static\/resources\/view\/status\/include\/29_temp.js \/www\/luci-static\/resources\/view\/status\/include\/17_temp.js' files/etc/uci-defaults/99-init-settings.sh
@@ -22,14 +22,14 @@ setup_base_config() {
             log "INFO" "Configuring ImmortalWrt specific settings"
             ;;
         *)
-            log "INFO" "Unknown base system: ${{ env.BASE}}"
+            log "INFO" "Unknown base system: ${BASE}}"
             ;;
     esac
 }
 
 # Handle Amlogic-specific files
 handle_amlogic_files() {
-    if [ "${{ env.TYPE }}" == "AMLOGIC" ]; then
+    if [ "${TYPE}" == "AMLOGIC" ]; then
         log "INFO" "Removing Amlogic-specific files"
         rm -f files/etc/uci-defaults/70-rootpt-resize
         rm -f files/etc/uci-defaults/80-rootfs-resize
@@ -39,7 +39,7 @@ handle_amlogic_files() {
 
 # Setup branch-specific configurations
 setup_branch_config() {
-    local branch_major=$(echo "${{ env.BRANCH }}" | cut -d'.' -f1)
+    local branch_major=$(echo "${BRANCH}" | cut -d'.' -f1)
     case "$branch_major" in
         "24")
             log "INFO" "Configuring for branch 24.x"
@@ -48,14 +48,14 @@ setup_branch_config() {
             log "INFO" "Configuring for branch 23.x"
             ;;
         *)
-            log "INFO" "Unknown branch version: ${{ env.BRANCH }}"
+            log "INFO" "Unknown branch version: ${BRANCH}"
             ;;
     esac
 }
 
 # Configure file permissions for Amlogic
 configure_amlogic_permissions() {
-    if [ "${{ env.TYPE }}" == "AMLOGIC" ]; then
+    if [ "${TYPE}" == "AMLOGIC" ]; then
         log "INFO" "Setting up Amlogic file permissions"
         local netifd_files=(
             "/lib/netifd/proto/3g.sh"

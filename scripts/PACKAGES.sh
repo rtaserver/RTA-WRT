@@ -11,11 +11,11 @@ fi
 # Define repositories with proper quoting
 declare -A REPOS
 REPOS+=(
-    ["KIDDIN9"]="https://dl.openwrt.ai/releases/24.10/packages/${{ env.ARCH_3 }}/kiddin9"
-    ["IMMORTALWRT"]="https://downloads.immortalwrt.org/releases/packages-$VEROP/${{ env.ARCH_3 }}"
-    ["OPENWRT"]="https://downloads.openwrt.org/releases/packages-$VEROP/${{ env.ARCH_3 }}"
+    ["KIDDIN9"]="https://dl.openwrt.ai/releases/24.10/packages/${ARCH_3}/kiddin9"
+    ["IMMORTALWRT"]="https://downloads.immortalwrt.org/releases/packages-${VEROP}/${ARCH_3}"
+    ["OPENWRT"]="https://downloads.openwrt.org/releases/packages-${VEROP}/${ARCH_3}"
     ["GSPOTX2F"]="https://github.com/gSpotx2f/packages-openwrt/raw/refs/heads/master/current"
-    ["FANTASTIC"]="https://fantastic-packages.github.io/packages/releases/$VEROP/packages/x86_64"
+    ["FANTASTIC"]="https://fantastic-packages.github.io/packages/releases/${VEROP}/packages/x86_64"
 )
 
 # Define package categories with improved structure
@@ -87,7 +87,7 @@ packages_custom+=(
     "luci-app-neko_|https://api.github.com/repos/nosignals/openwrt-neko/releases/latest"
 )
 
-if [ "${{ env.TYPE }}" == "AMLOGIC" ]; then
+if [ "${TYPE}" == "AMLOGIC" ]; then
     log "INFO" "Adding Amlogic-specific packages..."
     packages_custom+=(
         "luci-app-amlogic_|https://api.github.com/repos/ophub/luci-app-amlogic/releases/latest"
