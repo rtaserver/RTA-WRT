@@ -75,6 +75,16 @@ jobs:
     name: ${{ inputs.release_branch }}
     outputs:
       target: ${{ steps.set-matrix.outputs.target }}
+      type: ${{ steps.setuprelease.outputs.type }}
+      base: ${{ steps.setuprelease.outputs.base }}
+      branch: ${{ steps.setuprelease.outputs.branch }}
+      verop: ${{ steps.setuprelease.outputs.verop }}
+      download_base: ${{ steps.setuprelease.outputs.download_base }}
+      date: ${{ steps.setuprelease.outputs.date }}
+      datetime: ${{ steps.setuprelease.outputs.datetime }}
+      datemonth: ${{ steps.setuprelease.outputs.datemonth }}
+      release_name: ${{ steps.setuprelease.outputs.release_name }}
+      release_tag: ${{ steps.setuprelease.outputs.release_tag }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -127,31 +137,31 @@ jobs:
           sudo timedatectl set-timezone "${TZ}"
 
           TYPE="ULO"
-          echo "TYPE=$TYPE" >> $GITHUB_ENV
+          echo "TYPE=$TYPE" >> $GITHUB_OUTPUT
 
           BASE="${RELEASE_BRANCH%:*}"
           BRANCH="${RELEASE_BRANCH#*:}"
           VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
 
-          echo "BASE=$BASE" >> $GITHUB_ENV
-          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
-          echo "VEROP=$VEROP" >> $GITHUB_ENV
-          echo "DOWNLOAD_BASE=https://downloads.${BASE}.org" >> $GITHUB_ENV
+          echo "BASE=$BASE" >> $GITHUB_OUTPUT
+          echo "BRANCH=$BRANCH" >> $GITHUB_OUTPUT
+          echo "VEROP=$VEROP" >> $GITHUB_OUTPUT
+          echo "DOWNLOAD_BASE=https://downloads.${BASE}.org" >> $GITHUB_OUTPUT
 
           DATE=$(date +'%d%m%Y')
           DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')
           DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')
 
-          echo "DATE=$DATE" >> $GITHUB_ENV
-          echo "DATETIME=$DATETIME" >> $GITHUB_ENV
-          echo "DATEMONTH=$DATEMONTH" >> $GITHUB_ENV
+          echo "DATE=$DATE" >> $GITHUB_OUTPUT
+          echo "DATETIME=$DATETIME" >> $GITHUB_OUTPUT
+          echo "DATEMONTH=$DATEMONTH" >> $GITHUB_OUTPUT
 
           if [ "${BASE}" == "openwrt" ]; then
-            echo "RELEASE_NAME=RTA-WRT_OPHUB-OpenWRT-${BRANCH}-${DATE}" >> $GITHUB_ENV
-            echo "RELEASE_TAG=rtawrt-ophub-openwrt-${BRANCH}-${DATE}" >> $GITHUB_ENV
+            echo "RELEASE_NAME=RTA-WRT_OPHUB-OpenWRT-${BRANCH}-${DATE}" >> $GITHUB_OUTPUT
+            echo "RELEASE_TAG=rtawrt-ophub-openwrt-${BRANCH}-${DATE}" >> $GITHUB_OUTPUT
           else
-            echo "RELEASE_NAME=RTA-WRT_OPHUB-ImmortalWRT-${BRANCH}-${DATE}" >> $GITHUB_ENV
-            echo "RELEASE_TAG=rtawrt-ophub-immortalwrt-${BRANCH}-${DATE}" >> $GITHUB_ENV
+            echo "RELEASE_NAME=RTA-WRT_OPHUB-ImmortalWRT-${BRANCH}-${DATE}" >> $GITHUB_OUTPUT
+            echo "RELEASE_TAG=rtawrt-ophub-immortalwrt-${BRANCH}-${DATE}" >> $GITHUB_OUTPUT
           fi
           echo "status=success" >> $GITHUB_OUTPUT
 
@@ -186,6 +196,17 @@ jobs:
     name: Build ${{ matrix.target }} Firmware
     needs: prebuild
     runs-on: ubuntu-22.04
+    env:
+      TYPE: ${{ needs.prebuild.outputs.type }}
+      BASE: ${{ needs.prebuild.outputs.base }}
+      BRANCH: ${{ needs.prebuild.outputs.branch }}
+      VEROP: ${{ needs.prebuild.outputs.verop }}
+      DOWNLOAD_BASE: ${{ needs.prebuild.outputs.download_base }}
+      DATE: ${{ needs.prebuild.outputs.date }}
+      DATETIME: ${{ needs.prebuild.outputs.datetime }}
+      DATEMONTH: ${{ needs.prebuild.outputs.datemonth }}
+      RELEASE_NAME: ${{ needs.prebuild.outputs.release_name }}
+      RELEASE_TAG: ${{ needs.prebuild.outputs.release_tag }}
     strategy:
       fail-fast: false
       matrix:
