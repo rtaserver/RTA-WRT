@@ -371,14 +371,18 @@ jobs:
         id: beforeupload
         if: steps.modsdcard.outputs.status == 'success'
         run: |
-          cd ${WORKING_DIR}
-          for file in "${WORKING_DIR}"/compiled_images/*.img.gz; do
+          cd ${{ env.WORKING_DIR }}
+          for file in compiled_images/*.img.gz; do
             if [ -f "$file" ]; then
-              new_name="RTA-WRT_$(basename "$file" .img.gz)_${{ env.TUNNEL }}.img.gz"
-              mv "$file" compiled_images/$new_name
+              base_name=$(basename "$file" .img.gz)
+              new_name="RTA-WRT_${base_name}_${{ env.TUNNEL }}.img.gz"
+              mv "$file" "compiled_images/${new_name}"
+            else
+              echo "No image files found in compiled_images directory"
+              exit 1
             fi
           done
-          echo "status=success" >> $GITHUB_OUTPUT
+          echo "status=success" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
         if: steps.beforeupload.outputs.status == 'success'
@@ -388,5 +392,5 @@ jobs:
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           name: ${{ env.RELEASE_NAME }}
-          files: ${WORKING_DIR}/compiled_images/*.img.gz
+          files: ${{ env.WORKING_DIR }}/compiled_images/*.img.gz
           prerelease: ${{ github.ref_name == 'dev' }}
