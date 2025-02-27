@@ -131,8 +131,9 @@ jobs:
           TYPE="ULO"
           echo "TYPE=$TYPE" >> $GITHUB_OUTPUT
 
-          BASE="${{ inputs.release_branch%:* }}"
-          BRANCH="${{ inputs.release_branch#*: }}"
+          RELEASE_BRANCH="${{ inputs.release_branch }}"
+          BASE="${RELEASE_BRANCH%:*}"
+          BRANCH="${RELEASE_BRANCH#*:}"
           VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
 
           echo "BASE=$BASE" >> $GITHUB_OUTPUT
