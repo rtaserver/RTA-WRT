@@ -64,6 +64,10 @@ env:
   TZ: Asia/Jakarta
   WORKING_DIR: imagebuilder
   DEBIAN_FRONTEND: noninteractive
+  RELEASE_BRANCH: ${{ inputs.release_branch }}
+  TARGET: ${{ inputs.target }}
+  TUNNEL: ${{ inputs.tunnel }}
+  CLEAN: ${{ inputs.clean }}
 
 jobs:
   prebuild:
@@ -135,7 +139,6 @@ jobs:
           TYPE="OPHUB"
           echo "TYPE=$TYPE" >> $GITHUB_OUTPUT
 
-          RELEASE_BRANCH="${{ inputs.release_branch }}"
           BASE="${RELEASE_BRANCH%:*}"
           BRANCH="${RELEASE_BRANCH#*:}"
           VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
@@ -244,9 +247,6 @@ jobs:
         run: |
           MATRIXTARGET="${{ matrix.target }}"
           echo "MATRIXTARGET=$MATRIXTARGET" >> $GITHUB_ENV
-          echo "TARGET=${{ inputs.target }}" >> $GITHUB_ENV
-          echo "TUNNEL=${{ inputs.tunnel }}" >> $GITHUB_ENV
-          echo "CLEAN=${{ inputs.clean }}" >> $GITHUB_ENV
 
           # Target system configurations
           echo "PROFILE=generic" >> $GITHUB_ENV
