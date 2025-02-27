@@ -116,10 +116,10 @@ handle_profile_packages() {
 
 # Handle release branch specific packages
 handle_release_packages() {
-    if [ "${RELEASE_BRANCH%:*}" == "openwrt" ]; then
+    if [ "${BASE}" == "openwrt" ]; then
         PACKAGES+=" luci-app-temp-status luci-app-cpu-status-mini"
         EXCLUDED+=" -dnsmasq"
-    elif [ "${RELEASE_BRANCH%:*}" == "immortalwrt" ]; then
+    elif [ "${BASE}" == "immortalwrt" ]; then
         EXCLUDED+=" -dnsmasq -automount -libustream-openssl -default-settings-chn -luci-i18n-base-zh-cn"
         if [ "$ARCH_2" == "x86_64" ]; then
             EXCLUDED+=" -kmod-usb-net-rtl8152-vendor"
