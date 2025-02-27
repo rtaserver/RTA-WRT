@@ -153,11 +153,15 @@ jobs:
           echo "DATEMONTH=$DATEMONTH" >> $GITHUB_OUTPUT
 
           if [ "${BASE}" == "openwrt" ]; then
-            echo "RELEASE_NAME=RTA-WRT_ULO-OpenWRT-${BRANCH}-${DATE}" >> $GITHUB_OUTPUT
-            echo "RELEASE_TAG=rtawrt-ulo-openwrt-${BRANCH}-${DATE}" >> $GITHUB_OUTPUT
+            RELEASE_NAME="RTA-WRT_ULO-OpenWRT-${BRANCH}-${DATE}"
+            RELEASE_TAG="rtawrt-ulo-openwrt-${BRANCH}-${DATE}"
+            echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_OUTPUT
+            echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_OUTPUT
           else
-            echo "RELEASE_NAME=RTA-WRT_ULO-ImmortalWRT-${BRANCH}-${DATE}" >> $GITHUB_OUTPUT
-            echo "RELEASE_TAG=rtawrt-ulo-immortalwrt-${BRANCH}-${DATE}" >> $GITHUB_OUTPUT
+            RELEASE_NAME="RTA-WRT_ULO-ImmortalWRT-${BRANCH}-${DATE}"
+            RELEASE_TAG="rtawrt-ulo-immortalwrt-${BRANCH}-${DATE}"
+            echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_OUTPUT
+            echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_OUTPUT
           fi
           echo "status=success" >> $GITHUB_OUTPUT
 
@@ -167,14 +171,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          name: ${{ env.RELEASE_NAME }}
+          tag_name: ${RELEASE_TAG}
+          name: ${RELEASE_NAME}
           prerelease: ${{ github.ref_name == 'dev' }}
           body: |
             # 🚀 RTA-WRT - Release Information
 
             ## 📥 Download Statistics
-            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/${{ env.RELEASE_TAG }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/${RELEASE_TAG}/total?style=for-the-badge&logo=Openwrt)
 
             ## 📢 Support Channels
             [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt) [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/backup_rtawrt) [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/RizkiKotet)
