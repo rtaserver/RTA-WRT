@@ -398,7 +398,7 @@ jobs:
       - name: Generate file download links
         run: |
           RELEASE_URL="https://github.com/rizkikotet-dev/RTA-WRT/releases/download/${{ env.RELEASE_TAG }}"
-          ls compiled_images/*.gz | while read -r file; do
+          ls ${{ env.WORKING_DIR }}/compiled_images/*.img.gz | while read -r file; do
             filename=$(basename "$file")
             echo "$RELEASE_URL/$filename" >> artifacts.txt
           done
@@ -406,7 +406,7 @@ jobs:
       - name: Upload file links as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-links
+          name: release-links-${{ matrix.target }}
           path: artifacts.txt
 
   notify:
@@ -417,8 +417,12 @@ jobs:
       - name: Download file links as artifact
         uses: actions/download-artifact@v4
         with:
-          name: release-links
-          path: artifacts.txt
+          name: release-links-*
+          path: artifacts
+
+      - name: Combine artifacts
+        run: |
+          cat artifacts/*/artifacts.txt > combined_artifacts.txt
 
       - name: Telegram Notification
         run: |
@@ -479,7 +483,7 @@ jobs:
               filename=$(basename "$file_url")
               BUTTONS=$(echo "$BUTTONS" | jq --arg file "$filename" --arg url "$file_url" \
                 '. += [[{"text": "📥 Download \($file)", "url": "\($url)"}]]')
-          done < artifacts.txt
+          done < combined_artifacts.txt
 
           # Add a button to view the release
           BUTTONS=$(echo "$BUTTONS" | jq '. += [[{"text": "🔗 View Release", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${{ needs.prebuild.outputs.release_tag }}"}]]')
@@ -494,4 +498,4 @@ jobs:
               -d "reply_markup={\"inline_keyboard\":$BUTTONS}"
 
           # Clean up
-          rm -f artifacts.txt
+          rm -f combined_artifacts.txt
