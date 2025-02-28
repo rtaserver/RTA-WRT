@@ -62,27 +62,27 @@ env:
   TZ: Asia/Jakarta
   WORKING_DIR: imagebuilder
   DEBIAN_FRONTEND: noninteractive
-  RELEASE_BRANCH: ${{ inputs.release_branch }}
-  TARGET: ${{ inputs.target }}
-  TUNNEL: ${{ inputs.tunnel }}
-  CLEAN: ${{ inputs.clean }}
+  RELEASE_BRANCH: ${{ github.event.inputs.release_branch }}
+  TARGET: ${{ github.event.inputs.target }}
+  TUNNEL: ${{ github.event.inputs.tunnel }}
+  CLEAN: ${{ github.event.inputs.clean }}
 
 jobs:
   prebuild:
     runs-on: ubuntu-22.04
-    name: ${{ inputs.release_branch }}
+    name: ${{ github.event.inputs.release_branch }}
     outputs:
       target: ${{ steps.set-matrix.outputs.target }}
-      type: ${{ steps.setuprelease.outputs.type }}
-      base: ${{ steps.setuprelease.outputs.base }}
-      branch: ${{ steps.setuprelease.outputs.branch }}
-      verop: ${{ steps.setuprelease.outputs.verop }}
-      download_base: ${{ steps.setuprelease.outputs.download_base }}
-      date: ${{ steps.setuprelease.outputs.date }}
-      datetime: ${{ steps.setuprelease.outputs.datetime }}
-      datemonth: ${{ steps.setuprelease.outputs.datemonth }}
-      release_name: ${{ steps.setuprelease.outputs.release_name }}
-      release_tag: ${{ steps.setuprelease.outputs.release_tag }}
+      type: ${{ steps.setupenv.outputs.type }}
+      base: ${{ steps.setupenv.outputs.base }}
+      branch: ${{ steps.setupenv.outputs.branch }}
+      verop: ${{ steps.setupenv.outputs.verop }}
+      download_base: ${{ steps.setupenv.outputs.download_base }}
+      date: ${{ steps.setupenv.outputs.date }}
+      datetime: ${{ steps.setupenv.outputs.datetime }}
+      datemonth: ${{ steps.setupenv.outputs.datemonth }}
+      release_name: ${{ steps.setupenv.outputs.release_name }}
+      release_tag: ${{ steps.setupenv.outputs.release_tag }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -92,7 +92,7 @@ jobs:
       - name: Set Matrix Run
         id: set-matrix
         run: |
-          echo "Selected target option: [ ${{ inputs.target }} ]"
+          echo "Selected target option: [ ${{ github.event.inputs.target }} ]"
           TARGET_JSON=$(cat << 'EOJ'
           {
             "target": [
@@ -119,16 +119,16 @@ jobs:
           EOJ
           )
 
-          if [ "${{ inputs.target }}" == "all-device" ]; then
+          if [ "${{ github.event.inputs.target }}" == "all-device" ]; then
             echo "target=$(echo "$TARGET_JSON" | jq -c '.target')" >> $GITHUB_OUTPUT
           else
-            echo "target=$(jq -nc --arg d "${{ inputs.target }}" '[$d]')" >> $GITHUB_OUTPUT
+            echo "target=$(jq -nc --arg d "${{ github.event.inputs.target }}" '[$d]')" >> $GITHUB_OUTPUT
           fi
 
-          echo "Selected tunnel option: [ ${{ inputs.tunnel }} ]"
+          echo "Selected tunnel option: [ ${{ github.event.inputs.tunnel }} ]"
 
       - name: Setup Release Environment
-        id: setuprelease
+        id: setupenv
         run: |
           sudo timedatectl set-timezone "${{ env.TZ }}"
 
@@ -166,19 +166,19 @@ jobs:
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        if: steps.setuprelease.outputs.status == 'success'
+        if: steps.setupenv.outputs.status == 'success'
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.setuprelease.outputs.release_tag }}
-          name: ${{ steps.setuprelease.outputs.release_name }}
+          tag_name: ${{ steps.setupenv.outputs.release_tag }}
+          name: ${{ steps.setupenv.outputs.release_name }}
           prerelease: ${{ github.ref_name == 'dev' }}
           body: |
             # 🚀 RTA-WRT - Release Information
 
             ## 📥 Download Statistics
-            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/${{ steps.setuprelease.outputs.release_tag }}/total?style=for-the-badge&logo=Openwrt)
+            ![GitHub Downloads](https://img.shields.io/github/downloads/${{ github.repository }}/${{ steps.setupenv.outputs.release_tag }}/total?style=for-the-badge&logo=Openwrt)
 
             ## 📢 Support Channels
             [![Channel](https://img.shields.io/badge/Telegram-Channel-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/rtawrt) [![Group](https://img.shields.io/badge/Telegram-Group-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/backup_rtawrt) [![Personal](https://img.shields.io/badge/Telegram-Personal-%23059dfa?style=for-the-badge&logo=Telegram)](https://t.me/RizkiKotet)
@@ -400,3 +400,104 @@ jobs:
           name: ${{ env.RELEASE_NAME }}
           files: ${{ env.WORKING_DIR }}/compiled_images/*.img.gz
           prerelease: ${{ github.ref_name == 'dev' }}
+
+      - name: Generate file download links
+        run: |
+          RELEASE_URL="https://github.com/rizkikotet-dev/RTA-WRT/releases/download/${{ env.RELEASE_TAG }}"
+          ls compiled_images/*.gz | while read -r file; do
+            filename=$(basename "$file")
+            echo "$RELEASE_URL/$filename" >> artifacts.txt
+          done
+
+      - name: Upload file links as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-links
+          path: artifacts.txt
+
+  notify:
+    name: Notify Release
+    needs: [prebuild, build-firmware]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download file links as artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-links
+          path: artifacts.txt
+
+      - name: Telegram Notification
+        run: |
+          BOT_TOKEN="${{ secrets.BOT_TOKEN }}"
+          CHAT_ID="${{ secrets.CHAT_ID }}"
+          THREAD_ID="734"
+
+          # Build parameters
+          BUILD="${{ needs.prebuild.outputs.type }}"
+          SOURCE="${{ needs.prebuild.outputs.base }}"
+          VERSION="${{ needs.prebuild.outputs.branch }}"
+          BUILD_TYPE="${{ env.TUNNEL }}"
+          FOR="${{ github.ref_name }}"
+
+          # Set image URL based on source
+          if [ "$SOURCE" = "ImmortalWrt" ]; then
+              image_url="https://avatars.githubusercontent.com/u/53193414?s=200&v=4"
+          else
+              image_url="https://avatars.githubusercontent.com/u/2528830?s=200&v=4"
+          fi
+
+          # Generate message based on branch
+          if [ "$FOR" = "main" ]; then
+              message="━━━━━━━━━━━━━━━━━━━━━━
+          🎯 *RTA-WRT Firmware Update*
+          ✅ _Stable Release_
+
+          🔹 *Build:* ${BUILD}
+          🔹 *Version:* ${SOURCE}:${VERSION}
+          🔹 *Date:* $(date '+%d-%m-%Y %H:%M:%S')
+          🔹 *Build Type:* ${BUILD_TYPE}
+
+          📌 *Release Notes:*
+          • Stable version release
+          • Recommended for all users
+          • Includes latest features and bug fixes
+          ━━━━━━━━━━━━━━━━━━━━━━"
+          else
+              message="━━━━━━━━━━━━━━━━━━━━━━
+          🚀 *RTA-WRT Firmware Update*
+          🌟 _Development Release_
+
+          🔹 *Build:* ${BUILD}
+          🔹 *Version:* ${SOURCE}:${VERSION}
+          🔹 *Date:* $(date '+%d-%m-%Y %H:%M:%S')
+          🔹 *Build Type:* ${BUILD_TYPE}
+
+          📌 *Development Notes:*
+          • Suitable for testing
+          • Please provide feedback
+          • Report any bugs found
+          • Your feedback helps development
+          ━━━━━━━━━━━━━━━━━━━━━━"
+          fi
+
+          BUTTONS='[]'
+          while read -r file_url; do
+              filename=$(basename "$file_url")
+              BUTTONS=$(echo "$BUTTONS" | jq --arg file "$filename" --arg url "$file_url" \
+                '. += [[{"text": "📥 Download \($file)", "url": "\($url)"}]]')
+          done < artifacts.txt
+
+          # Add a button to view the release
+          BUTTONS=$(echo "$BUTTONS" | jq '. += [[{"text": "🔗 View Release", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${{ needs.prebuild.outputs.release_tag }}"}]]')
+
+          # Send message with photo
+          curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto" \
+              -d "chat_id=${CHAT_ID}" \
+              -d "photo=${image_url}" \
+              -d "caption=${message}" \
+              -d "parse_mode=Markdown" \
+              -d "message_thread_id=${THREAD_ID}" \
+              -d "reply_markup={\"inline_keyboard\":$BUTTONS}"
+
+          # Clean up
+          rm -f artifacts.txt
