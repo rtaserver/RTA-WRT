@@ -36,7 +36,6 @@ on:
           - h618-orangepi-zero2w
           - h618-orangepi-zero3
           - rk3566-orangepi-3b
-          - rk3588-orangepi-5plus
           - rk3588s-orangepi-5
       tunnel:
         description: "Select VPN Client app:"
@@ -112,7 +111,6 @@ jobs:
               "h618-orangepi-zero2w",
               "h618-orangepi-zero3",
               "rk3566-orangepi-3b",
-              "rk3588-orangepi-5plus",
               "rk3588s-orangepi-5"
             ]
           }
