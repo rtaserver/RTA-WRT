@@ -1,5 +1,12 @@
 # What's New!
 
+**Changelog Firmware** (28-02-2025)
+
+- Update Nikki to v1.19.5
+- Marge Branch Dev to Main
+- Fix Boot
+- Fix Tunnel
+
 **Changelog Firmware** (23-02-2025)
 
 - Remove Theme Material 3
