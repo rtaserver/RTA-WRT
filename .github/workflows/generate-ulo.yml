@@ -539,7 +539,7 @@ jobs:
           FOR="${{ github.ref_name }}"
 
           # Set image URL based on source
-          if [ "$SOURCE" = "ImmortalWrt" ]; then
+          if [ "$SOURCE" = "immortalwrt" ]; then
               image_url="https://avatars.githubusercontent.com/u/53193414?s=200&v=4"
           else
               image_url="https://avatars.githubusercontent.com/u/2528830?s=200&v=4"
