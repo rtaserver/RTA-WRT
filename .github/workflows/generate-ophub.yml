@@ -271,121 +271,121 @@ jobs:
           echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
 
           case "$MATRIXTARGET" in
-            Amlogic s905)
+            "Amlogic s905")
               TARGET_BUILD="s905"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905 Beelink Mini)
+            "Amlogic s905 Beelink Mini")
               TARGET_BUILD="s905-beelink-mini"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905 MXQ Pro Plus)
+            "Amlogic s905 MXQ Pro Plus")
               TARGET_BUILD="s905-mxqpro-plus"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905W)
+            "Amlogic s905W")
               TARGET_BUILD="s905w"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905W W95)
+            "Amlogic s905W W95")
               TARGET_BUILD="s905w-w95"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905W X96 Mini)
+            "Amlogic s905W X96 Mini")
               TARGET_BUILD="s905w-x96-mini"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905W X96W)
+            "Amlogic s905W X96W")
               TARGET_BUILD="s905w-x96w"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905X HG680P)
+            "Amlogic s905X HG680P")
               TARGET_BUILD="s905x"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905X B860H)
+            "Amlogic s905X B860H")
               TARGET_BUILD="s905x-b860h"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905X Nexbox A95X)
+            "Amlogic s905X Nexbox A95X")
               TARGET_BUILD="s905x-nexbox-a95x"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905X2)
+            "Amlogic s905X2")
               TARGET_BUILD="s905x2"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905X2 KM3)
+            "Amlogic s905X2 KM3")
               TARGET_BUILD="s905x2-km3"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905X2 X96 Max 2G)
+            "Amlogic s905X2 X96 Max 2G")
               TARGET_BUILD="s905x2-x96max-2g"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905X3)
+            "Amlogic s905X3")
               TARGET_BUILD="s905x3"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905X3 H96 Max)
+            "Amlogic s905X3 H96 Max")
               TARGET_BUILD="s905x3-h96max"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905X3 HK1)
+            "Amlogic s905X3 HK1")
               TARGET_BUILD="s905x3-hk1"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s905X3 X96 Max)
+            "Amlogic s905X3 X96 Max")
               TARGET_BUILD="s905x3-x96max"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s912)
+            "Amlogic s912")
               TARGET_BUILD="s912"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s912 H96 Pro Plus)
+            "Amlogic s912 H96 Pro Plus")
               TARGET_BUILD="s912-h96pro-plus"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
               echo "KERNEL=$KERNEL" >> $GITHUB_ENV
               ;;
-            Amlogic s912 X92)
+            "Amlogic s912 X92")
               TARGET_BUILD="s912-x92"
               KERNEL="5.15.y_6.1.y"
               echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV

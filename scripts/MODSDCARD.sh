@@ -148,7 +148,7 @@ build_mod_sdcard() {
 
     local kernel
     kernel=$(grep -oP 'k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)?' <<<"${file_name}")
-    local new_name="RTA-WRT-${OP_BASE}-${BRANCH}-Amlogic_s905x-${suffix}-${kernel}.img.gz"
+    local new_name="RTA-WRT-${OP_BASE}-${BRANCH}-Amlogic_s905X-${suffix}-${kernel}.img.gz"
 
     mv "${file_name}.gz" "../${new_name}" || {
         error_msg "Failed to rename image file"
@@ -191,14 +191,23 @@ main() {
     local img_dir="$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"
     
     # Configuration array with format device:dtb:model
-    local builds=(
-        "_s905x_k5:meson-gxl-s905x-p212.dtb:HG680P"
-        "_s905x_k6:meson-gxl-s905x-p212.dtb:HG680P"
-        "-s905x-:meson-gxl-s905x-p212.dtb:HG680P"
-        "_s905x-b860h_k5:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
-        "_s905x-b860h_k6:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
-        "-s905x-:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
-    )
+    local builds=()
+    case $MATRIXTARGET in
+        "Amlogic s905X HG680P")
+            builds=(
+                "_s905x_k5:meson-gxl-s905x-p212.dtb:HG680P"
+                "_s905x_k6:meson-gxl-s905x-p212.dtb:HG680P"
+                "-s905x-:meson-gxl-s905x-p212.dtb:HG680P"
+            )
+            ;;
+        "Amlogic s905X B860H")
+            builds=(
+                "_s905x-b860h_k5:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
+                "_s905x-b860h_k6:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
+                "-s905x-:meson-gxl-s905x-b860h.dtb:B860H_v1-v2"
+            )
+            ;;
+    esac
     
     # Validate environment
     if [[ ! -d "$img_dir" ]]; then
