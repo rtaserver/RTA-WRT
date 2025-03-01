@@ -368,7 +368,7 @@ jobs:
           RELEASE_URL="https://github.com/rizkikotet-dev/RTA-WRT/releases/download/${{ env.RELEASE_TAG }}"
           ls ${{ env.WORKING_DIR }}/compiled_images/*.img.gz | while read -r file; do
             filename=$(basename "$file")
-            echo "$RELEASE_URL/$filename" >> artifacts.txt
+            echo "$MATRIXTARGET|$RELEASE_URL/$filename" >> artifacts.txt
           done
 
       - name: Upload file links as artifact
@@ -449,13 +449,18 @@ jobs:
           TARGET_NAMES='${{ fromJSON(needs.prebuild.outputs.target) }}'
 
           BUTTONS='[]'
-          while read -r file_url; do
-              filename=$(basename "$file_url")
-              # Extract the target name from the filename
-              target_name=$(echo "$TARGET_NAMES" | jq -r --arg filename "$filename" '.[] | select(. | contains($filename))')
-              BUTTONS=$(echo "$BUTTONS" | jq --arg file "$target_name" --arg url "$file_url" \
-                '. += [[{"text": "📥 Download \($file)", "url": "\($url)"}]]')
-          done < combined_artifacts.txt
+          if [ -f "combined_artifacts.txt" ]; then
+              # Skip header dan proses setiap line
+              tail -n +2 combined_artifacts.txt | while IFS='|' read -r target_name file_url; do
+                  # Bersihkan whitespace berlebih
+                  target_name=$(echo "$target_name" | xargs)
+                  file_url=$(echo "$file_url" | xargs)
+                  
+                  # Tambahkan tombol
+                  BUTTONS=$(echo "$BUTTONS" | jq --arg name "$target_name" --arg url "$file_url" \
+                      '. += [[{"text": "📥 \($name)", "url": $url}]]')
+              done
+          fi
 
           # Add a button to view the release
           BUTTONS=$(echo "$BUTTONS" | jq '. += [[{"text": "🔗 View Release", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${{ needs.prebuild.outputs.release_tag }}"}]]')
