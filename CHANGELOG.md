@@ -1,12 +1,13 @@
 # What's New!
 
-**Changelog Firmware** (01-03-2025)
+**Changelog Firmware** (02-03-2025)
 
 - Update Nikki to v1.19.5
 - Marge Branch Dev to Main
 - Fix Boot
 - Fix Tunnel
 - Fix DTB HG680P
+- Fix Target Build
 
 **Changelog Firmware** (23-02-2025)
 
