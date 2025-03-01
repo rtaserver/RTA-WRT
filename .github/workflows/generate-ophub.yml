@@ -248,6 +248,20 @@ jobs:
           MATRIXTARGET="${{ matrix.target }}"
           echo "MATRIXTARGET=$MATRIXTARGET" >> $GITHUB_ENV
 
+          NAMA_MODIFIED=$(echo $MATRIXTARGET | sed 's/ /-/g')
+          echo "NAMA_MODIFIED=$NAMA_MODIFIED" >> $GITHUB_ENV
+
+          case $BASE in
+            openwrt)
+              OP_BASE="OpenWrt"
+              echo "OP_BASE=$OP_BASE" >> $GITHUB_ENV
+              ;;
+            immortalwrt)
+              OP_BASE="ImmortalWrt"
+              echo "OP_BASE=$OP_BASE" >> $GITHUB_ENV
+              ;;
+          esac
+
           # Target system configurations
           echo "PROFILE=generic" >> $GITHUB_ENV
           echo "TARGET_SYSTEM=armsr/armv8" >> $GITHUB_ENV
