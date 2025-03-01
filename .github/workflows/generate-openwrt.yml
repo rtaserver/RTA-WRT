@@ -329,8 +329,17 @@ jobs:
           ls -la compiled_images/
           echo "status=success" >> $GITHUB_OUTPUT
 
-      - name: Create Release
+      - name: Before Upload
+        id: beforeupload
         if: steps.build.outputs.status == 'success'
+        run: |
+          cd ${{ env.WORKING_DIR }}
+          chmod +x scripts/RENAMEFW.sh
+          ./scripts/RENAMEFW.sh
+          echo "status=success" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release
+        if: steps.beforeupload.outputs.status == 'success'
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

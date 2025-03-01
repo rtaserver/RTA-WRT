@@ -372,16 +372,8 @@ jobs:
         if: steps.modsdcard.outputs.status == 'success'
         run: |
           cd ${{ env.WORKING_DIR }}
-          for file in compiled_images/*.img.gz; do
-            if [ -f "$file" ]; then
-              base_name=$(basename "$file" .img.gz)
-              new_name="RTA-WRT_${base_name}_${{ env.TUNNEL }}.img.gz"
-              mv "$file" "compiled_images/${new_name}"
-            else
-              echo "No image files found in compiled_images directory"
-              exit 1
-            fi
-          done
+          chmod +x scripts/RENAMEFW.sh
+          ./scripts/RENAMEFW.sh
           echo "status=success" >> "$GITHUB_OUTPUT"
 
       - name: Create Release

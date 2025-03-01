@@ -20,23 +20,24 @@ on:
         type: choice
         options:
           - all-device
-          - s905x
-          - s905x2
-          - s905x3
-          - s905x4
-          - h5-orangepi-zeroplus2
-          - h5-orangepi-zeroplus
-          - h5-orangepi-prime
-          - h5-orangepi-pc2
-          - h6-orangepi-lite2
-          - h6-orangepi-1plus
-          - h6-orangepi-3
-          - h6-orangepi-3lts
-          - h616-orangepi-zero2
-          - h618-orangepi-zero2w
-          - h618-orangepi-zero3
-          - rk3566-orangepi-3b
-          - rk3588s-orangepi-5
+          - Amlogic s905x HG680P
+          - Amlogic s905x B860H
+          - Amlogic s905x2
+          - Amlogic s905x3
+          - Amlogic s905x4
+          - Allwinner H5 Orange Pi Zero Plus2
+          - Allwinner H5 Orange Pi Zero Plus
+          - Allwinner H5 Orange Pi Prime
+          - Allwinner H5 Orange Pi PC2
+          - Allwinner H6 Orange Pi Lite2
+          - Allwinner H6 Orange Pi 1 Plus
+          - Allwinner H6 Orange Pi 3
+          - Allwinner H6 Orange Pi 3 LTS
+          - Allwinner H616 Orange Pi Zero2
+          - Allwinner H618 Orange Pi Zero2W
+          - Allwinner H618 Orange Pi Zero3
+          - Rockchip rk3566 Orange Pi 3B
+          - Rockchip rk3588s Orange Pi 5
       tunnel:
         description: "Select VPN Client app:"
         required: true
@@ -95,23 +96,24 @@ jobs:
           TARGET_JSON=$(cat << 'EOJ'
           {
             "target": [
-              "s905x",
-              "s905x2",
-              "s905x3",
-              "s905x4",
-              "h5-orangepi-zeroplus2",
-              "h5-orangepi-zeroplus",
-              "h5-orangepi-prime",
-              "h5-orangepi-pc2",
-              "h6-orangepi-lite2",
-              "h6-orangepi-1plus",
-              "h6-orangepi-3",
-              "h6-orangepi-3lts",
-              "h616-orangepi-zero2",
-              "h618-orangepi-zero2w",
-              "h618-orangepi-zero3",
-              "rk3566-orangepi-3b",
-              "rk3588s-orangepi-5"
+              "Amlogic s905x HG680P",
+              "Amlogic s905x B860H",
+              "Amlogic s905x2",
+              "Amlogic s905x3",
+              "Amlogic s905x4",
+              "Allwinner H5 Orange Pi Zero Plus2",
+              "Allwinner H5 Orange Pi Zero Plus",
+              "Allwinner H5 Orange Pi Prime",
+              "Allwinner H5 Orange Pi PC2",
+              "Allwinner H6 Orange Pi Lite2",
+              "Allwinner H6 Orange Pi 1 Plus",
+              "Allwinner H6 Orange Pi 3",
+              "Allwinner H6 Orange Pi 3 LTS",
+              "Allwinner H616 Orange Pi Zero2",
+              "Allwinner H618 Orange Pi Zero2W",
+              "Allwinner H618 Orange Pi Zero3",
+              "Rockchip rk3566 Orange Pi 3B",
+              "Rockchip rk3588s Orange Pi 5"
             ]
           }
           EOJ
@@ -240,6 +242,20 @@ jobs:
           MATRIXTARGET="${{ matrix.target }}"
           echo "MATRIXTARGET=$MATRIXTARGET" >> $GITHUB_ENV
 
+          NAMA_MODIFIED=$(echo $MATRIXTARGET | sed 's/ /-/g')
+          echo "NAMA_MODIFIED=$NAMA_MODIFIED" >> $GITHUB_ENV
+
+          case $BASE in
+            openwrt)
+              OP_BASE="OpenWrt"
+              echo "OP_BASE=$OP_BASE" >> $GITHUB_ENV
+              ;;
+            immortalwrt)
+              OP_BASE="ImmortalWrt"
+              echo "OP_BASE=$OP_BASE" >> $GITHUB_ENV
+              ;;
+          esac
+
           # Target system configurations
           echo "PROFILE=generic" >> $GITHUB_ENV
           echo "TARGET_SYSTEM=armsr/armv8" >> $GITHUB_ENV
@@ -249,17 +265,107 @@ jobs:
           echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
 
           case "$MATRIXTARGET" in
-            h5-*|h616-*|h618-*|h6-*)
-                KERNEL="6.1.31-AW64-DBAI"
-                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
-                ;;
-            s905*)
+            *s905x*)
                 KERNEL="6.1.66-DBAI"
                 echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="s905x"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
                 ;;
-            rk*)
-                KERNEL="5.10.160-rk35v-dbai"
+            *s905x2*)
+                KERNEL="6.1.66-DBAI"
                 echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="s905x2"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *s905x3*)
+                KERNEL="6.1.66-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="s905x3"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *s905x4*)
+                KERNEL="6.1.66-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="s905x4"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *H5 Orange Pi Zero Plus2)
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h5-orangepi-zeroplus2"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *H5 Orange Pi Zero Plus)
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h5-orangepi-zeroplus"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *H5 Orange Pi Prime)
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h5-orangepi-prime"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *H5 Orange Pi PC2)
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h5-orangepi-pc2"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *H6 Orange Pi Lite2)
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h6-orangepi-lite2"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *H6 Orange Pi 1 Plus)
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h6-orangepi-1plus"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *H6 Orange Pi 3)
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h6-orangepi-3"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *H6 Orange Pi 3 LTS)
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h6-orangepi-3lts"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *H616 Orange Pi Zero2)
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h616-orangepi-zero2"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *H618 Orange Pi Zero2W)
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h618-orangepi-zero2w"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *H618 Orange Pi Zero3)
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h618-orangepi-zero3"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *rk3566 Orange Pi 3B)
+                KERNEL="5.10.160-rockchip-ulo"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="rk3566-orangepi-3b"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            *rk3588s Orange Pi 5)
+                KERNEL="5.10.160-rockchip-ulo"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="rk3588s-orangepi-5"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
                 ;;
           esac
 
@@ -359,7 +465,7 @@ jobs:
         run: |
           cd ${{ env.WORKING_DIR }}
           chmod +x scripts/REPACKWRT.sh
-          ./scripts/REPACKWRT.sh "ulo" "$MATRIXTARGET" "$KERNEL" "${{ env.TUNNEL }}"
+          ./scripts/REPACKWRT.sh "ulo" "$TARGET_BUILD" "$KERNEL" "${{ env.TUNNEL }}"
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Mod SDCard
@@ -376,16 +482,8 @@ jobs:
         if: steps.modsdcard.outputs.status == 'success'
         run: |
           cd ${{ env.WORKING_DIR }}
-          for file in compiled_images/*.img.gz; do
-            if [ -f "$file" ]; then
-              base_name=$(basename "$file" .img.gz)
-              new_name="RTA-WRT_${base_name}_${{ env.TUNNEL }}.img.gz"
-              mv "$file" "compiled_images/${new_name}"
-            else
-              echo "No image files found in compiled_images directory"
-              exit 1
-            fi
-          done
+          chmod +x scripts/RENAMEFW.sh
+          ./scripts/RENAMEFW.sh
           echo "status=success" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
