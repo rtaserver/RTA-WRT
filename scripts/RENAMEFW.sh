@@ -97,9 +97,9 @@ rename_firmware() {
                 fi
                 local new_name
                 if [[ -n "$kernel" ]]; then
-                    new_name="RTA-WRT-${OP_BASE}-${BRANCH}-${replace}-${kernel}.img.gz"
+                    new_name="RTA-WRT-${OP_BASE}-${BRANCH}-${replace}-${kernel}-${TUNNEL}.img.gz"
                 else
-                    new_name="RTA-WRT-${OP_BASE}-${BRANCH}-${replace}.img.gz"
+                    new_name="RTA-WRT-${OP_BASE}-${BRANCH}-${replace}-${TUNNEL}.img.gz"
                 fi
                 echo -e "${INFO} Renaming: $file → $new_name"
                 mv "$file" "$new_name" || {
@@ -111,7 +111,7 @@ rename_firmware() {
         for file in *"${search}"*.tar.gz; do
             if [[ -f "$file" ]]; then
                 local new_name
-                new_name="RTA-WRT-${OP_BASE}-${BRANCH}-${replace}.tar.gz"
+                new_name="RTA-WRT-${OP_BASE}-${BRANCH}-${replace}-${TUNNEL}.tar.gz"
                 echo -e "${INFO} Renaming: $file → $new_name"
                 mv "$file" "$new_name" || {
                     echo -e "${WARN} Failed to rename $file"

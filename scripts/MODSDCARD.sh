@@ -148,7 +148,7 @@ build_mod_sdcard() {
 
     local kernel
     kernel=$(grep -oP 'k[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9-]+)?' <<<"${file_name}")
-    local new_name="RTA-WRT-${OP_BASE}-${BRANCH}-Amlogic_s905X-${suffix}-${kernel}.img.gz"
+    local new_name="RTA-WRT-${OP_BASE}-${BRANCH}-Amlogic_s905X-${suffix}-${kernel}-${TUNNEL}.img.gz"
 
     mv "${file_name}.gz" "../${new_name}" || {
         error_msg "Failed to rename image file"
