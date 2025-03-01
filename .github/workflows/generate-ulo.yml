@@ -362,13 +362,13 @@ jobs:
                 echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
                 ;;
             "Rockchip rk3566 Orange Pi 3B")
-                KERNEL="5.10.160-rockchip-ulo"
+                KERNEL="5.10.160-rk35v-dbai"
                 echo "KERNEL=$KERNEL" >> $GITHUB_ENV
                 TARGET_BUILD="rk3566-orangepi-3b"
                 echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
                 ;;
             "Rockchip rk3588s Orange Pi 5")
-                KERNEL="5.10.160-rockchip-ulo"
+                KERNEL="5.10.160-rk35v-dbai"
                 echo "KERNEL=$KERNEL" >> $GITHUB_ENV
                 TARGET_BUILD="rk3588s-orangepi-5"
                 echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
