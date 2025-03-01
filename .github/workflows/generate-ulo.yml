@@ -585,22 +585,18 @@ jobs:
           ━━━━━━━━━━━━━━━━━━━━━━"
           fi
 
-          # Read the target names from the prebuild output
-          TARGET_NAMES='${{ fromJSON(needs.prebuild.outputs.target) }}'
-
           BUTTONS='[]'
-          if [ -f "combined_artifacts.txt" ]; then
-              # Skip header dan proses setiap line
-              tail -n +2 combined_artifacts.txt | while IFS='|' read -r target_name file_url; do
-                  # Bersihkan whitespace berlebih
-                  target_name=$(echo "$target_name" | xargs)
-                  file_url=$(echo "$file_url" | xargs)
-                  
-                  # Tambahkan tombol
+
+          while IFS='|' read -r target_name file_url || [[ -n "$target_name" ]]; do
+              target_name=$(echo "$target_name" | xargs)
+              file_url=$(echo "$file_url" | xargs)
+
+              if [[ -n "$target_name" && -n "$file_url" ]]; then
+                  echo "Menambahkan tombol: $target_name -> $file_url"
                   BUTTONS=$(echo "$BUTTONS" | jq --arg name "$target_name" --arg url "$file_url" \
                       '. += [[{"text": "📥 \($name)", "url": $url}]]')
-              done
-          fi
+              fi
+          done < combined_artifacts.txt
 
           # Add a button to view the release
           BUTTONS=$(echo "$BUTTONS" | jq '. += [[{"text": "🔗 View Release", "url": "https://github.com/rizkikotet-dev/RTA-WRT/releases/tag/${{ needs.prebuild.outputs.release_tag }}"}]]')
