@@ -7,7 +7,7 @@ rename_firmware() {
 
     # Validasi direktori firmware
     local firmware_dir="$GITHUB_WORKSPACE/$WORKING_DIR/compiled_images"
-    if [[ -z "$imagebuilder_path" ]] || [[ ! -d "$firmware_dir" ]]; then
+    if [[ ! -d "$firmware_dir" ]]; then
         error_msg "Invalid firmware directory: ${firmware_dir}"
     fi
 
