@@ -431,10 +431,15 @@ jobs:
           ━━━━━━━━━━━━━━━━━━━━━━"
           fi
 
+          # Read the target names from the prebuild output
+          TARGET_NAMES='${{ fromJSON(needs.prebuild.outputs.target) }}'
+
           BUTTONS='[]'
           while read -r file_url; do
               filename=$(basename "$file_url")
-              BUTTONS=$(echo "$BUTTONS" | jq --arg file "$filename" --arg url "$file_url" \
+              # Extract the target name from the filename
+              target_name=$(echo "$TARGET_NAMES" | jq -r --arg filename "$filename" '.[] | select(. | contains($filename))')
+              BUTTONS=$(echo "$BUTTONS" | jq --arg file "$target_name" --arg url "$file_url" \
                 '. += [[{"text": "📥 Download \($file)", "url": "\($url)"}]]')
           done < combined_artifacts.txt
 
