@@ -131,6 +131,8 @@ sed -i 's/;DatabaseDir "\/var\/lib\/vnstat"/DatabaseDir "\/etc\/vnstat"/' /etc/v
 mkdir -p /etc/vnstat
 chmod +x /etc/init.d/vnstat_backup
 bash /etc/init.d/vnstat_backup enable
+chmod +x /www/vnstati/vnstati.sh
+bash /www/vnstati/vnstati.sh
 
 # adjusting app catagory
 sed -i 's/services/modem/g' /usr/share/luci/menu.d/luci-app-lite-watchdog.json
