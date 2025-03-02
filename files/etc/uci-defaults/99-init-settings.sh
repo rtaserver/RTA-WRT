@@ -367,29 +367,6 @@ if [ -f "/etc/profile.d/30-sysinfo.sh-bak" ]; then
   log "Restored original system information script"
 fi
 
-# Add custom aliases to .bashrc
-log "Adding custom shell aliases..."
-cat > /root/.bashrc << 'EOF'
-# Custom aliases
-alias ll='ls -la'
-# alias restart='reboot'
-alias cls='clear'
-alias update='opkg update'
-# alias upgrade='opkg list-upgradable | cut -f 1 -d " " | xargs -r opkg upgrade'
-alias reload='service network restart; service firewall restart'
-alias wifi-restart='wifi down && sleep 2 && wifi up'
-alias mem='free -m'
-alias ping-test='ping -c 4 google.com'
-# alias modem-reset='ubus call modem reset'
-alias log-wifi='logread | grep wifi'
-alias log-net='logread | grep network'
-alias routes='route -n'
-
-# Custom welcome message
-# echo "Welcome to RTA-WRT Router OS"
-# echo "Type 'status' to see network status"
-EOF
-
 # Complete setup
 log "==================== CONFIGURATION COMPLETE ===================="
 log "All setup tasks completed successfully!"
